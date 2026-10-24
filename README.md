@@ -7,3 +7,7 @@ One shared set of rules makes every decision about an item: whether it shows up 
 ## Status
 
 Early development. There is no release yet.
+
+## License
+
+[MIT](LICENSE)
