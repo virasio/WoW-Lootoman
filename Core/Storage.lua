@@ -7,7 +7,7 @@ local Bus, Migrations = ns.Bus, ns.Migrations
 --
 -- Modules register their defaults, and a profile stores only the values that
 -- differ from them, so changed defaults reach every user. Values are booleans,
--- numbers or strings; structured data gets its own profile sections later.
+-- numbers or strings; structured data lives in profile sections (GetSection).
 local Storage = {
 	DEFAULT_PROFILE = "Default",
 	defaults = {},
@@ -119,6 +119,24 @@ function Storage:Set(module, key, value)
 	if value ~= old then
 		Bus:Send("SettingChanged", module, key, value)
 	end
+end
+
+-- Structured data of the current profile, such as frame positions: a table in
+-- profile.sections, created on first use. Copying or resetting a profile
+-- includes its sections. Ask again after ProfileChanged: another profile has
+-- other tables.
+function Storage:GetSection(name)
+	assert(type(name) == "string", "a section name must be a string")
+	local profile = self:GetProfile()
+	if type(profile.sections) ~= "table" then
+		profile.sections = {}
+	end
+	local sections = profile.sections
+	-- A saved value that is not a table cannot be a section: start it anew.
+	if type(sections[name]) ~= "table" then
+		sections[name] = {}
+	end
+	return sections[name]
 end
 
 -- Account-wide settings outside profiles, such as debug output.

@@ -125,6 +125,17 @@ describe("profiles", function()
 		assert.equals(8, Storage:Get("Feed", "rows"))
 	end)
 
+	it("copies the sections of a profile, independent of the source", function()
+		Storage:GetSection("positions").LootFeed = { Modern = { "CENTER", 200, 0 } }
+		Profiles.Copy("Default", "Copy")
+		Profiles.Switch("Copy")
+		local copied = Storage:GetSection("positions")
+		assert.same({ LootFeed = { Modern = { "CENTER", 200, 0 } } }, copied)
+		copied.LootFeed.Modern[2] = 50
+		Profiles.Switch("Default")
+		assert.equals(200, Storage:GetSection("positions").LootFeed.Modern[2])
+	end)
+
 	describe("renaming", function()
 		it("moves every character using the profile", function()
 			Profiles.Create("Main")
@@ -153,6 +164,12 @@ describe("profiles", function()
 		assert.is_true(Profiles.Reset("Default"))
 		assert.equals(5, Storage:Get("Feed", "rows"))
 		assert.same({ { "Default", "Default" } }, changes)
+	end)
+
+	it("clears the sections of a reset profile", function()
+		Storage:GetSection("positions").LootFeed = { Modern = { "CENTER", 200, 0 } }
+		Profiles.Reset("Default")
+		assert.same({}, Storage:GetSection("positions"))
 	end)
 
 	describe("deleting", function()
