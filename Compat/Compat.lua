@@ -78,10 +78,81 @@ function Compat.After(seconds, callback)
 	C_Timer.After(seconds, callback)
 end
 
+-- Seconds since an arbitrary point, with fractions; for measuring time.
+function Compat.GetTime()
+	return GetTime()
+end
+
 -- version ("12.1.5"), build, date, interface number (120105).
 function Compat.GetBuildInfo()
 	local version, build, date, interface = GetBuildInfo()
 	return version, build, date, interface
+end
+
+-- Loot window. The global loot functions are not in the generated API docs;
+-- Blizzard's LootFrame.lua uses them this way. Values may be secret in combat
+-- (to verify in game with the Dev loot dump).
+function Compat.GetNumLootItems()
+	return GetNumLootItems()
+end
+
+local slotKinds
+
+-- One loot slot as a table, or nil when the slot is empty (already looted):
+-- kind ("item", "money", "currency", or "unknown" when the client keeps the
+-- slot type secret), name, icon, quantity, quality, currencyID, link (items
+-- only), locked, isQuestItem. Values are passed on as the client returns them.
+function Compat.GetLootSlot(slot)
+	if not slotKinds then
+		local types = Enum.LootSlotType
+		slotKinds = { [types.Item] = "item", [types.Money] = "money", [types.Currency] = "currency" }
+	end
+	local slotType = GetLootSlotType(slot)
+	if Compat.IsSecret(slotType) then
+		return { kind = "unknown" }
+	end
+	local kind = slotKinds[slotType]
+	if not kind then
+		return nil
+	end
+	local icon, name, quantity, currencyID, quality, locked, isQuestItem = GetLootSlotInfo(slot)
+	return {
+		kind = kind,
+		name = name,
+		icon = icon,
+		quantity = quantity,
+		quality = quality,
+		currencyID = currencyID,
+		link = kind == "item" and GetLootSlotLink(slot) or nil,
+		locked = locked,
+		isQuestItem = isQuestItem,
+	}
+end
+
+function Compat.LootSlot(slot)
+	LootSlot(slot)
+end
+
+-- Picks up a bind-on-pickup item after LOOT_BIND_CONFIRM.
+function Compat.ConfirmLootSlot(slot)
+	ConfirmLootSlot(slot)
+end
+
+function Compat.CloseLoot()
+	CloseLoot()
+end
+
+function Compat.IsFishingLoot()
+	return IsFishingLoot() == true
+end
+
+-- The game's auto loot setting, reversed while the auto loot key is held.
+function Compat.IsAutoLootOn()
+	return (C_CVar.GetCVarBool("autoLootDefault") == true) ~= (IsModifiedClick("AUTOLOOTTOGGLE") == true)
+end
+
+function Compat.IsInGroup()
+	return IsInGroup() == true
 end
 
 function Compat.GetSaved(name)

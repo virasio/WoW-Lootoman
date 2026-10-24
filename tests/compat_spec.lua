@@ -84,6 +84,65 @@ describe("Compat", function()
 		assert.is_false(Compat.IsAddOnLoaded("StillLoading"))
 	end)
 
+	describe("loot", function()
+		local SLOT_TYPES = { None = 0, Item = 1, Money = 2, Currency = 3 }
+
+		before_each(function()
+			stub({
+				Enum = { LootSlotType = SLOT_TYPES },
+				issecretvalue = function(value) return value == "hidden" end,
+				GetLootSlotLink = function(slot) return "link" .. slot end,
+				GetLootSlotInfo = function(slot)
+					return "icon" .. slot, "name" .. slot, slot * 10, slot == 3 and 2815 or nil, 2, false, slot == 1
+				end,
+			})
+		end)
+
+		it("reads a slot as a table, with a link only for items", function()
+			stub({ GetLootSlotType = function(slot) return ({ 1, 0, 3, 2 })[slot] end })
+			assert.same({
+				kind = "item", name = "name1", icon = "icon1", quantity = 10, quality = 2,
+				link = "link1", locked = false, isQuestItem = true,
+			}, Compat.GetLootSlot(1))
+			assert.is_nil(Compat.GetLootSlot(2))
+			local currency = Compat.GetLootSlot(3)
+			assert.equals("currency", currency.kind)
+			assert.equals(2815, currency.currencyID)
+			assert.is_nil(currency.link)
+			assert.equals("money", Compat.GetLootSlot(4).kind)
+		end)
+
+		it("does not look up a slot type the client keeps secret", function()
+			stub({ GetLootSlotType = function() return "hidden" end })
+			assert.same({ kind = "unknown" }, Compat.GetLootSlot(1))
+		end)
+
+		it("passes loot actions to the client", function()
+			local calls = {}
+			stub({
+				LootSlot = function(slot) calls[#calls + 1] = "loot " .. slot end,
+				ConfirmLootSlot = function(slot) calls[#calls + 1] = "confirm " .. slot end,
+				CloseLoot = function(...) calls[#calls + 1] = "close " .. select("#", ...) end,
+			})
+			Compat.LootSlot(2)
+			Compat.ConfirmLootSlot(3)
+			Compat.CloseLoot()
+			assert.same({ "loot 2", "confirm 3", "close 0" }, calls)
+		end)
+
+		it("turns auto loot around while the auto loot key is held", function()
+			local cvar, held
+			stub({
+				C_CVar = { GetCVarBool = function(name) return name == "autoLootDefault" and cvar or nil end },
+				IsModifiedClick = function(action) return action == "AUTOLOOTTOGGLE" and held end,
+			})
+			for _, case in ipairs({ { true, false, true }, { true, true, false }, { nil, false, false }, { false, true, true } }) do
+				cvar, held = case[1], case[2]
+				assert.equals(case[3], Compat.IsAutoLootOn(), ("setting %s, key %s"):format(tostring(cvar), tostring(held)))
+			end
+		end)
+	end)
+
 	it("registers slash commands the way the game expects", function()
 		local handler = function() end
 		stub({ SlashCmdList = {} })
@@ -119,5 +178,41 @@ describe("Compat mock", function()
 		assert.is_true(Compat.InCombat())
 		Compat.Test.SetCombat(false)
 		assert.same({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" }, fired)
+	end)
+
+	it("has a loot window that keeps its size while slots are looted", function()
+		local cleared = {}
+		Compat.RegisterEvent("LOOT_SLOT_CLEARED", function(_, slot) cleared[#cleared + 1] = slot end)
+		Compat.Test.SetLoot({ { kind = "item", name = "Linen Cloth" }, { kind = "money", quantity = 150 } }, true)
+		assert.equals(2, Compat.GetNumLootItems())
+		assert.is_true(Compat.IsFishingLoot())
+		Compat.GetLootSlot(1).name = "changed by a caller"
+		assert.equals("Linen Cloth", Compat.GetLootSlot(1).name)
+		Compat.Test.ClearLootSlot(1)
+		assert.is_nil(Compat.GetLootSlot(1))
+		assert.equals(150, Compat.GetLootSlot(2).quantity)
+		assert.equals(2, Compat.GetNumLootItems())
+		assert.same({ 1 }, cleared)
+	end)
+
+	it("records loot actions in order", function()
+		Compat.LootSlot(2)
+		Compat.ConfirmLootSlot(2)
+		Compat.CloseLoot()
+		assert.same({ { "loot", 2 }, { "confirm", 2 }, { "close" } }, Compat.Test.state.lootActions)
+	end)
+
+	it("turns auto loot around while the auto loot key is held, like the client", function()
+		assert.is_true(Compat.IsAutoLootOn())
+		Compat.Test.SetModifier("AUTOLOOTTOGGLE", true)
+		assert.is_false(Compat.IsAutoLootOn())
+		Compat.Test.SetCVar("autoLootDefault", false)
+		assert.is_true(Compat.IsAutoLootOn())
+	end)
+
+	it("can put the player in a group", function()
+		assert.is_false(Compat.IsInGroup())
+		Compat.Test.SetGroup(true)
+		assert.is_true(Compat.IsInGroup())
 	end)
 end)
