@@ -17,3 +17,4 @@ Compat\Compat.lua
 Core\Init.lua
 Core\EventBus.lua
 Core\Migrations.lua
+Core\Storage.lua
