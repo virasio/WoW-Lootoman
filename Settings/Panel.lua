@@ -31,20 +31,68 @@ local function refresh(module, key)
 	end
 end
 
--- A checkbox bound to a boolean module setting, for BuildSettings. The variable
--- suffix keeps two checkboxes for the same setting apart.
-function Panel.AddCheckbox(category, module, key, label, tooltip, suffix)
+-- A proxy setting bound to a module setting, named LOOTOMAN_<MODULE>_<KEY>; the
+-- suffix keeps two controls for the same setting apart. convert, if given,
+-- turns a value from the control into the value to store.
+local function register(category, module, key, label, varType, suffix, convert)
 	local variable = ("LOOTOMAN_%s_%s%s"):format(module, key, suffix and ("_" .. suffix) or ""):upper()
-	local setting = Settings.RegisterProxySetting(category, variable, Settings.VarType.Boolean, label,
+	local setting = Settings.RegisterProxySetting(category, variable, varType, label,
 		Storage:GetDefault(module, key),
 		function()
 			return Storage:Get(module, key)
 		end,
 		function(value)
-			Storage:Set(module, key, value)
+			Storage:Set(module, key, convert and convert(value) or value)
 		end)
 	Panel.Track(setting, module, key)
+	return setting
+end
+
+-- A checkbox bound to a boolean module setting, for BuildSettings.
+function Panel.AddCheckbox(category, module, key, label, tooltip, suffix)
+	local setting = register(category, module, key, label, Settings.VarType.Boolean, suffix)
 	return Settings.CreateCheckbox(category, setting, tooltip)
+end
+
+-- A slider bound to a number module setting, from min to max in steps. format
+-- shows the value next to the slider: a format string such as "%d s", or a
+-- function(value) that returns the text.
+function Panel.AddSlider(category, module, key, label, tooltip, min, max, step, format)
+	assert(type(Storage:GetDefault(module, key)) == "number", ("%s.%s: a slider needs a number setting"):format(module, key))
+	local setting = register(category, module, key, label, Settings.VarType.Number, nil, function(value)
+		-- Stored on a step and without floating point noise: 0.3, not 0.30000000000000004.
+		local steps = math.floor((math.min(math.max(value, min), max) - min) / step + 0.5)
+		return tonumber(("%.10g"):format(min + steps * step))
+	end)
+	local options = Settings.CreateSliderOptions(min, max, step)
+	if format then
+		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, type(format) == "function" and format
+			or function(value)
+				return format:format(value)
+			end)
+	end
+	return Settings.CreateSlider(category, setting, options, tooltip)
+end
+
+-- A dropdown bound to a string or number module setting. choices lists
+-- { value, label } pairs in the order shown; the default must be one of them.
+function Panel.AddDropdown(category, module, key, label, tooltip, choices)
+	local default = Storage:GetDefault(module, key)
+	local found = false
+	for _, choice in ipairs(choices) do
+		found = found or choice[1] == default
+	end
+	assert(found, ("%s.%s: the default is not one of the choices"):format(module, key))
+	local varType = type(default) == "number" and Settings.VarType.Number or Settings.VarType.String
+	local setting = register(category, module, key, label, varType)
+	local function options()
+		local container = Settings.CreateControlTextContainer()
+		for _, choice in ipairs(choices) do
+			container:Add(choice[1], choice[2])
+		end
+		return container:GetData()
+	end
+	return Settings.CreateDropdown(category, setting, options, tooltip)
 end
 
 -- builder(category) adds a page below the module pages.

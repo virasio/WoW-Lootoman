@@ -64,6 +64,7 @@ files["Settings/"] = {
 		"CANCEL",
 		"CreateSettingsButtonInitializer",
 		"CreateSettingsListSectionHeaderInitializer",
+		"MinimalSliderWithSteppersMixin",
 		"Settings",
 		"StaticPopup_Show",
 	},

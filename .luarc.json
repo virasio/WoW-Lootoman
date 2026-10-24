@@ -21,6 +21,7 @@
     "CreateSettingsListSectionHeaderInitializer",
     "DEFAULT_CHAT_FRAME",
     "LootFrame",
+    "MinimalSliderWithSteppersMixin",
     "Settings",
     "SlashCmdList",
     "StaticPopup_Hide",

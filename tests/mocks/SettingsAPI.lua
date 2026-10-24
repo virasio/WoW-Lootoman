@@ -80,8 +80,10 @@ function SettingsAPI.Install()
 
 	function Settings.CreateControlTextContainer()
 		local container = { data = {} }
-		function container:Add(value, label)
-			self.data[#self.data + 1] = { value = value, label = label }
+		function container:Add(value, label, tooltip)
+			local data = { value = value, label = label, text = label, tooltip = tooltip }
+			self.data[#self.data + 1] = data
+			return data
 		end
 		function container:GetData()
 			return self.data
@@ -89,7 +91,22 @@ function SettingsAPI.Install()
 		return container
 	end
 
+	-- Like Blizzard_Settings.lua: steps = (max - min) / rate.
+	function Settings.CreateSliderOptions(minValue, maxValue, rate)
+		local options = { minValue = minValue, maxValue = maxValue, steps = (maxValue - minValue) / rate, formatters = {} }
+		function options:SetLabelFormatter(labelType, formatter)
+			self.formatters[labelType] = formatter
+		end
+		return options
+	end
+
+	function Settings.CreateSlider(category, setting, options, tooltip)
+		return addInitializer(category, { kind = "slider", setting = setting, options = options, tooltip = tooltip })
+	end
+
 	rawset(_G, "Settings", Settings)
+	-- EnumUtil.MakeEnum("Left", "Right", "Top", "Min", "Max") in MinimalSlider.lua.
+	rawset(_G, "MinimalSliderWithSteppersMixin", { Label = { Left = 1, Right = 2, Top = 3, Min = 4, Max = 5 } })
 	rawset(_G, "CANCEL", "Cancel")
 	rawset(_G, "CreateSettingsListSectionHeaderInitializer", function(name)
 		return { kind = "header", name = name }
