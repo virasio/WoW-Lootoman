@@ -1,0 +1,10 @@
+package-as: Lootoman
+
+ignore:
+  - tests
+  - Dev
+  - .github
+  - .busted
+  - .editorconfig
+  - .luacheckrc
+  - .luarc.json
