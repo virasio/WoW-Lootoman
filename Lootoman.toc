@@ -15,3 +15,4 @@ Locales\ruRU.lua
 Compat\Compat.lua
 
 Core\Init.lua
+Core\EventBus.lua
