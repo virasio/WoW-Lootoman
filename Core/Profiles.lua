@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Storage = ns.Bus, ns.Storage
+local Bus, Storage, Text = ns.Bus, ns.Storage, ns.Text
 
 -- Named sets of settings (techspec §7.1). Each character uses one profile;
 -- characters without one use Default, which cannot be renamed or deleted.
@@ -34,11 +34,11 @@ local function deepCopy(value)
 	return copy
 end
 
--- Profile names are unique regardless of letter case.
+-- Profile names are unique regardless of letter case, also in Cyrillic.
 local function findName(name)
-	local lower = name:lower()
+	local folded = Text.FoldCase(name)
 	for existing in pairs(Storage.db.profiles) do
-		if existing:lower() == lower then
+		if Text.FoldCase(existing) == folded then
 			return existing
 		end
 	end
@@ -68,7 +68,7 @@ function Profiles.List()
 		end
 	end
 	table.sort(names, function(a, b)
-		return a:lower() < b:lower()
+		return Text.FoldCase(a) < Text.FoldCase(b)
 	end)
 	table.insert(names, 1, DEFAULT)
 	return names
