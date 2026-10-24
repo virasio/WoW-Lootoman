@@ -18,3 +18,4 @@ Core\Init.lua
 Core\EventBus.lua
 Core\Migrations.lua
 Core\Storage.lua
+Core\Profiles.lua
