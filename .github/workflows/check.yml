@@ -1,0 +1,30 @@
+# Static analysis and unit tests. Same commands as the local /check.
+name: Check
+
+on:
+  push:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.1"
+
+      - uses: leafo/gh-actions-luarocks@v6
+
+      - name: Install luacheck and busted
+        run: |
+          luarocks install luacheck 1.2.0
+          luarocks install busted 2.3.0
+
+      - name: luacheck
+        run: luacheck .
+
+      - name: busted
+        run: busted
