@@ -36,6 +36,7 @@ Core\Startup.lua
 Providers\Bags.lua
 
 Modules\AutoLoot\AutoLoot.lua
+Modules\AutoLoot\LootWindow.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua

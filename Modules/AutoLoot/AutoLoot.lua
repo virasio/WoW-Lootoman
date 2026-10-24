@@ -4,8 +4,9 @@ local Bags, Bus, Compat, L = ns.Bags, ns.Bus, ns.Compat, ns.L
 -- Fast autoloot (techspec §7.2). When the game auto loots, every slot is taken
 -- at once, from the last to the first, one slot per server round trip: loot a
 -- slot, wait for its LOOT_SLOT_CLEARED, then the next. Items that do not fit
--- are skipped and reported (LootSkipped). Slots that are left, a slot that is
--- not cleared in time and a loot error show the loot window (LootWindowShown).
+-- are skipped and reported (LootSkipped). Blizzard's loot window stays hidden
+-- meanwhile (LootWindow.lua); slots that are left, a slot that is not cleared in
+-- time and a loot error show it (LootWindowShown).
 --
 -- The game sends LOOT_READY twice for one loot and can repeat
 -- LOOT_SLOT_CLEARED and LOOT_CLOSED (plans/0.1.md): repeats change nothing.
@@ -48,6 +49,7 @@ local function known(value)
 end
 
 local function showWindow(reason)
+	AutoLoot.LootWindow.Show()
 	ns.Debug(("Auto loot: loot window shown (%s)"):format(reason))
 	Bus:Send("LootWindowShown", reason)
 end
@@ -110,6 +112,7 @@ local function start(autoLoot)
 		loot.done = true
 		return
 	end
+	AutoLoot.LootWindow.Hide()
 	for slot = Compat.GetNumLootItems(), 1, -1 do
 		local info = Compat.GetLootSlot(slot)
 		if info then
@@ -132,6 +135,7 @@ local function start(autoLoot)
 end
 
 function AutoLoot:OnEnable()
+	self.LootWindow.Prepare()
 	self:OnEvent("LOOT_READY", function(_, autoLoot)
 		start(autoLoot)
 	end)
@@ -164,11 +168,13 @@ function AutoLoot:OnEnable()
 	end)
 	self:OnEvent("LOOT_CLOSED", function()
 		loot = nil
+		self.LootWindow.Reset()
 	end)
 end
 
 function AutoLoot:OnDisable()
 	loot = nil
+	self.LootWindow.Reset()
 end
 
 function AutoLoot:BuildSettings(category)
