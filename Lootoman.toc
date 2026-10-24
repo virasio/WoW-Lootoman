@@ -25,7 +25,13 @@ Core\Migrations.lua
 Core\Storage.lua
 Core\Profiles.lua
 Core\Modules.lua
+Core\Slash.lua
+Core\SelfTest.lua
 Core\Startup.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
+
+#@debug@
+Dev\SampleModule.lua
+#@end-debug@

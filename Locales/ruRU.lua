@@ -6,6 +6,14 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Core/Startup.lua
 	["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
 
+	-- Core/Slash.lua
+	["Debug messages are on."] = "Отладочные сообщения включены.",
+	["Debug messages are off."] = "Отладочные сообщения выключены.",
+	["Commands:"] = "Команды:",
+	["/lootoman or /ltm: open the settings"] = "/lootoman или /ltm: открыть настройки",
+	["/lootoman debug: turn debug messages on or off"] = "/lootoman debug: включить или выключить отладочные сообщения",
+	["/lootoman selftest: check the addon against the game client"] = "/lootoman selftest: проверить работу аддона с клиентом игры",
+
 	-- Settings/Panel.lua
 	["Modules"] = "Модули",
 	["Enabled"] = "Включено",
