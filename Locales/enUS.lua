@@ -30,6 +30,27 @@ ns.Locales.AddEnglish({
 	"Reputation with %s",
 	"%s reputation",
 
+	-- Modules/LootFeed/LootFeed.lua
+	"Loot feed",
+	"Shows what you pick up: items, currencies, money, reputation and, if you want, experience.",
+	"Items",
+	"Currencies",
+	"Money",
+	"Reputation",
+	"Minimum quality",
+	"Items of a lower quality are not shown.",
+	"Rows",
+	"How many rows are shown at once. When there are more, the oldest ones fade out at once.",
+	"New rows appear",
+	"On top: the oldest row stays at the bottom edge and new rows stack above it. At the bottom: the oldest row stays at the top edge and new rows stack below it.",
+	"On top",
+	"At the bottom",
+	"Time on screen",
+	"Seconds before a row starts to fade out.",
+	"%d s",
+	"Fade-out time",
+	"%.1f s",
+
 	-- Settings/Panel.lua
 	"Modules",
 	"Enabled",

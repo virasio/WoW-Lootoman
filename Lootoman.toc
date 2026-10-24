@@ -43,6 +43,7 @@ Modules\AutoLoot\LootWindow.lua
 Modules\LootFeed\Sources.lua
 Modules\LootFeed\Model.lua
 Modules\LootFeed\Frames.lua
+Modules\LootFeed\LootFeed.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
