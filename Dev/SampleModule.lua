@@ -38,5 +38,5 @@ end
 
 function Sample:BuildSettings(category)
 	ns.SettingsPanel.AddCheckbox(category, self.name, "verbose", "Report bag updates",
-		"Prints a debug message on every bag update. Needs /lootoman debug.")
+		"Prints a debug message on every bag update. Needs /lootoman debug on.")
 end

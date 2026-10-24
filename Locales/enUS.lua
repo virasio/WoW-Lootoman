@@ -7,11 +7,12 @@ ns.Locales.AddEnglish({
 	"Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update.",
 
 	-- Core/Slash.lua
-	"Debug messages are on.",
-	"Debug messages are off.",
+	"Debug messages are on for all characters.",
+	"Debug messages are off for all characters.",
+	"Unknown value “%s”. Use /lootoman debug on or /lootoman debug off.",
 	"Commands:",
 	"/lootoman or /ltm: open the settings",
-	"/lootoman debug: turn debug messages on or off",
+	"/lootoman debug [on | off]: show, turn on or turn off debug messages",
 	"/lootoman selftest: check the addon against the game client",
 
 	-- Settings/Panel.lua

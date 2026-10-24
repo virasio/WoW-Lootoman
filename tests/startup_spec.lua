@@ -47,7 +47,7 @@ describe("startup", function()
 		first.Profiles.Create("Main")
 		first.Profiles.Switch("Main")
 		first.Modules:SetEnabled("Feed", true)
-		first.Compat.Test.RunSlashCommand("LOOTOMAN", "debug")
+		first.Compat.Test.RunSlashCommand("LOOTOMAN", "debug on")
 		local saved = first.Compat.Test.state.saved.LootomanDB
 
 		-- Session 2, Bo: switches to Main and deletes it.
