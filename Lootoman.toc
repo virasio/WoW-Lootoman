@@ -47,6 +47,5 @@ Settings\Panel.lua
 Settings\Profiles.lua
 
 #@debug@
-Dev\SampleModule.lua
 Dev\LootDump.lua
 #@end-debug@

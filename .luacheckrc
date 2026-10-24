@@ -75,13 +75,6 @@ files["Settings/"] = {
 	},
 }
 
-files["Dev/"] = {
-	read_globals = {
-		"CreateFrame",
-		"UIParent",
-	},
-}
-
 files["tests/"] = {
 	std = "+busted",
 }
