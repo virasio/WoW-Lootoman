@@ -33,8 +33,11 @@ files["Compat/"] = {
 
 files["Settings/"] = {
 	read_globals = {
+		"CANCEL",
+		"CreateSettingsButtonInitializer",
 		"CreateSettingsListSectionHeaderInitializer",
 		"Settings",
+		"StaticPopup_Show",
 	},
 }
 
