@@ -1,0 +1,48 @@
+# Static analysis and unit tests. Same commands as the local /check.
+name: Check
+
+on:
+  push:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.1"
+
+      - uses: leafo/gh-actions-luarocks@v6
+
+      - name: Install luacheck and busted
+        run: |
+          luarocks install luacheck 1.2.0
+          luarocks install busted 2.3.0
+
+      - name: luacheck
+        run: luacheck .
+
+      - name: busted
+        run: busted
+
+  luals:
+    runs-on: ubuntu-latest
+    env:
+      LUALS_VERSION: "3.19.2"
+      WOW_API_VERSION: "0.22.3"
+    steps:
+      - uses: actions/checkout@v7
+
+      # Next to the checkout, where .luarc.json expects them.
+      - name: Install lua-language-server and the WoW annotations
+        run: |
+          mkdir -p ../.luals/server
+          curl -sSfL "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz" | tar -xz -C ../.luals/server
+          git clone --quiet --depth 1 --branch "${WOW_API_VERSION}" https://github.com/Ketho/vscode-wow-api ../.luals/vscode-wow-api
+
+      - name: lua-language-server
+        run: ../.luals/server/bin/lua-language-server --check . --checklevel=Warning --logpath "$RUNNER_TEMP/luals"

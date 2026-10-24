@@ -7,5 +7,32 @@
 ## Category: Inventory
 ## Category-ruRU: Инвентарь
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
+## SavedVariables: LootomanDB
+## SavedVariablesPerCharacter: LootomanCharDB
+
+Locales\Locales.lua
+Locales\enUS.lua
+Locales\ruRU.lua
+
+Compat\Compat.lua
+
+Data\Mainline\Data.lua [AllowLoadGameType standard]
+Data\Forever\Data.lua [AllowLoadGameType camelot]
 
 Core\Init.lua
+Core\Text.lua
+Core\EventBus.lua
+Core\Migrations.lua
+Core\Storage.lua
+Core\Profiles.lua
+Core\Modules.lua
+Core\Slash.lua
+Core\SelfTest.lua
+Core\Startup.lua
+
+Settings\Panel.lua
+Settings\Profiles.lua
+
+#@debug@
+Dev\SampleModule.lua
+#@end-debug@

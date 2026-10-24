@@ -1,0 +1,3 @@
+local _, ns = ...
+ns.loaded = ns.loaded or {}
+table.insert(ns.loaded, "Replacement")
