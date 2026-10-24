@@ -213,6 +213,47 @@ function Compat.GetItemInfo(item)
 	return { name = name, link = link, quality = quality, stackSize = stackSize, isCraftingReagent = isCraftingReagent }
 end
 
+-- An item's icon and quality, also before its full data is loaded; either can
+-- be nil.
+function Compat.GetItemLook(item)
+	return C_Item.GetItemIconByID(item), C_Item.GetItemQualityByID(item)
+end
+
+-- A currency as { name, icon, quality, quantity, discovered }, or nil.
+function Compat.GetCurrencyInfo(currencyID)
+	local info = C_CurrencyInfo.GetCurrencyInfo(currencyID)
+	if not info then
+		return nil
+	end
+	return {
+		name = info.name,
+		icon = info.iconFileID,
+		quality = info.quality,
+		quantity = info.quantity,
+		discovered = info.discovered,
+	}
+end
+
+-- Copper.
+function Compat.GetMoney()
+	return GetMoney()
+end
+
+-- Experience in the current level, and the experience the level needs.
+function Compat.GetXP()
+	return UnitXP("player"), UnitXPMax("player")
+end
+
+-- One of the client's global strings, such as the chat format LOOT_ITEM_SELF;
+-- nil when the client has no such string.
+function Compat.GetGlobalString(name)
+	local value = _G[name]
+	if type(value) == "string" then
+		return value
+	end
+	return nil
+end
+
 function Compat.GetSaved(name)
 	return _G[name]
 end

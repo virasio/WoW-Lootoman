@@ -31,6 +31,12 @@ local state = {
 	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link } } };
 	-- a bag that is not listed is not equipped. Items the client has loaded, by
 	-- ID: { name, link, quality, stackSize, family, isCraftingReagent }.
+	-- Feed sources: global strings (chat formats), money in copper, experience
+	-- and its level maximum, currencies by ID ({ name, icon, quality, quantity, discovered }).
+	globalStrings = {},
+	money = 0,
+	xp = { 0, 1000 },
+	currencies = {},
 	-- Game error names by error type, filled by Test.FireGameError.
 	gameErrors = {},
 	playerBags = { 0, 1, 2, 3, 4 },
@@ -190,6 +196,30 @@ function Compat.GetItemInfo(item)
 	}
 end
 
+function Compat.GetItemLook(item)
+	local info = findItem(item)
+	if not info then
+		return nil, nil
+	end
+	return info.icon, info.quality
+end
+
+function Compat.GetCurrencyInfo(currencyID)
+	return copy(state.currencies[currencyID])
+end
+
+function Compat.GetMoney()
+	return state.money
+end
+
+function Compat.GetXP()
+	return state.xp[1], state.xp[2]
+end
+
+function Compat.GetGlobalString(name)
+	return state.globalStrings[name]
+end
+
 function Compat.GetSaved(name)
 	return state.saved[name]
 end
@@ -273,6 +303,35 @@ end
 -- SetItems({ [2589] = { name = "Linen Cloth", stackSize = 200, isCraftingReagent = true } }).
 function Test.SetItems(items)
 	state.items = items
+end
+
+-- The client's global strings, e.g. the chat formats of one locale.
+function Test.SetGlobalStrings(strings)
+	state.globalStrings = strings
+end
+
+-- Sets the money and fires PLAYER_MONEY.
+function Test.SetMoney(copper)
+	state.money = copper
+	Test.FireEvent("PLAYER_MONEY")
+end
+
+-- Sets the experience and fires PLAYER_XP_UPDATE.
+function Test.SetXP(xp, max)
+	state.xp = { xp, max or state.xp[2] }
+	Test.FireEvent("PLAYER_XP_UPDATE", "player")
+end
+
+-- SetCurrency(3008, { name = "Valorstones", quantity = 10, discovered = true }).
+function Test.SetCurrency(currencyID, info)
+	state.currencies[currencyID] = info
+end
+
+-- Changes a currency's quantity and fires CURRENCY_DISPLAY_UPDATE like the client.
+function Test.ChangeCurrency(currencyID, change)
+	local info = state.currencies[currencyID]
+	info.quantity = info.quantity + change
+	Test.FireEvent("CURRENCY_DISPLAY_UPDATE", currencyID, info.quantity, change)
 end
 
 -- Fires UI_ERROR_MESSAGE for a game error by name, e.g. FireGameError("ERR_INV_FULL").
