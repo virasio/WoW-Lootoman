@@ -41,6 +41,7 @@ Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua
 
 Modules\LootFeed\Sources.lua
+Modules\LootFeed\Model.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
