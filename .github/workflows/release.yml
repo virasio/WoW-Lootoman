@@ -44,3 +44,6 @@ jobs:
         with:
           name: Lootoman
           path: .release/*.zip
+          # .release/ is a hidden folder, which the action skips by default.
+          # The path matches only the package zip.
+          include-hidden-files: true
