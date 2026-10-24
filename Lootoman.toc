@@ -1,0 +1,11 @@
+## Interface: 120105
+## Title: Lootoman
+## Notes: Bags, loot and vendor trading driven by one set of rules.
+## Notes-ruRU: Сумки, добыча и продажа торговцам по единому набору правил.
+## Author: Victor Surikov
+## Version: @project-version@
+## Category: Inventory
+## Category-ruRU: Инвентарь
+## IconTexture: Interface\Icons\INV_Misc_Bag_08
+
+Core\Init.lua
