@@ -12,7 +12,8 @@ local Bus, Compat = ns.Bus, ns.Compat
 --   money       PLAYER_MONEY: the gain in copper, except while a merchant, mail,
 --               trade, auction house, bank or guild bank window is open
 --   reputation  CHAT_MSG_COMBAT_FACTION_CHANGE: name is the faction as the
---               message writes it; amount is negative for a loss, nil when the
+--               message writes it, declined is true when the client declined
+--               it (Russian); amount is negative for a loss, nil when the
 --               message has no number
 --   xp          PLAYER_XP_UPDATE: the gain, also across a level-up
 --   skipped     LootSkipped from fast autoloot: an item that did not fit
@@ -65,17 +66,25 @@ local MONEY_WINDOWS = {
 
 local MAGIC = "[%^%$%(%)%%%.%[%]%*%+%-%?]"
 
--- A chat format as an anchored Lua pattern, and the argument number of each
--- capture: "You receive loot: %sx%d" → "^You receive loot: (.+)x(%-?%d+)$".
+-- A chat format as an anchored Lua pattern, the argument number of each
+-- capture, and the set of arguments the client declines:
+-- "You receive loot: %sx%d" → "^You receive loot: (.+)x(%-?%d+)$", { 1, 2 }, {}.
 -- Handles positional arguments (%2$s) and the Russian declension marker
 -- around an argument (|3-7(%s): the client writes the declined word).
 function Sources.ToPattern(format)
-	format = format:gsub("|3%-%d+%((%%[%d%$]*s)%)", "%1")
-	local parts, order = { "^" }, {}
+	local parts, order, declined = { "^" }, {}, {}
 	local position, sequence = 1, 0
+	local inMarker = false
 	while position <= #format do
 		local char = format:sub(position, position)
-		if char ~= "%" then
+		local _, markerEnd = format:find("^|3%-%d+%(%%", position)
+		if markerEnd then
+			inMarker = true
+			position = markerEnd
+		elseif inMarker and char == ")" then
+			inMarker = false
+			position = position + 1
+		elseif char ~= "%" then
 			parts[#parts + 1] = (char:gsub(MAGIC, "%%%0"))
 			position = position + 1
 		elseif format:sub(position + 1, position + 1) == "%" then
@@ -86,7 +95,7 @@ function Sources.ToPattern(format)
 			local index, spec = rest:match("^(%d+)%$([-+ #0]*%d*%.?%d*[sdf])")
 			local length
 			if index then
-				index, length = tonumber(index), #index + 1 + #spec
+				index, length = assert(tonumber(index)), #index + 1 + #spec
 			else
 				spec = assert(rest:match("^([-+ #0]*%d*%.?%d*[sdf])"), "unsupported format: " .. format)
 				sequence = sequence + 1
@@ -95,11 +104,12 @@ function Sources.ToPattern(format)
 			local conversion = spec:sub(-1)
 			parts[#parts + 1] = conversion == "s" and "(.+)" or conversion == "d" and "(%-?%d+)" or "(%-?[%d%.,]+)"
 			order[#order + 1] = index
+			declined[index] = inMarker or nil
 			position = position + 1 + length
 		end
 	end
 	parts[#parts + 1] = "$"
-	return table.concat(parts), order
+	return table.concat(parts), order, declined
 end
 
 -- The arguments of a chat message in the format's order, or nil.
@@ -127,8 +137,8 @@ local function compile(names)
 	for _, name in ipairs(names) do
 		local format = Compat.GetGlobalString(name)
 		if format then
-			local pattern, order = Sources.ToPattern(format)
-			list[#list + 1] = { name = name, pattern = pattern, order = order }
+			local pattern, order, declined = Sources.ToPattern(format)
+			list[#list + 1] = { name = name, pattern = pattern, order = order, declined = declined }
 		else
 			missing[#missing + 1] = name
 		end
@@ -194,6 +204,7 @@ function Sources.Start(owner, emit)
 				emit({
 					kind = "reputation",
 					name = args[1],
+					declined = compiled.declined[1],
 					amount = amount and amount * reputationSigns[compiled.name],
 				})
 				return

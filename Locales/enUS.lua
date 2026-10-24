@@ -21,6 +21,15 @@ ns.Locales.AddEnglish({
 	"Confirm bind-on-pickup items when alone",
 	"Picks up items that bind when picked up without asking, unless you are in a group.",
 
+	-- Modules/LootFeed/Frames.lua
+	"No room in bags",
+	"Experience",
+	-- A faction's reputation change. Russian clients decline the faction name in
+	-- most messages: "%s reputation" gets the declined name, "Reputation with %s"
+	-- the name as it is. English shows only the second.
+	"Reputation with %s",
+	"%s reputation",
+
 	-- Settings/Panel.lua
 	"Modules",
 	"Enabled",

@@ -56,7 +56,10 @@ files["Compat/"] = {
 
 files["Modules/"] = {
 	read_globals = {
+		"ColorManager",
 		"CreateFrame",
+		"GameTooltip",
+		"GetMoneyString",
 		"LibStub",
 		"LootFrame",
 		"StaticPopup_Hide",

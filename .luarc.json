@@ -17,6 +17,7 @@
   },
   "diagnostics.globals": [
     "CANCEL",
+    "ColorManager",
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",
     "DEFAULT_CHAT_FRAME",

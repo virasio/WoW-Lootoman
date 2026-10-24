@@ -10,12 +10,14 @@
 --   skip      list of path prefixes not to load, e.g. { "Settings/" }
 --   locale    what the global GetLocale() returns (default "enUS")
 --
--- GetLocale is the only game global the loader provides, because Locales load
--- before Compat. Everything else comes through the Compat mock.
+-- GetLocale is the only game global Load provides, because Locales load before
+-- Compat. Everything else comes through the Compat mock, and LoadAddon also
+-- installs the fake frame API of tests/mocks/UI.lua (Loader.ui).
 --
 -- Third-party libraries in Libs/ are never loaded: they need the real client.
 
 local Toc = require("tests.helpers.toc")
+local UI = require("tests.mocks.UI")
 
 local Loader = {}
 
@@ -82,8 +84,10 @@ function Loader.Load(options)
 	return ns
 end
 
--- The addon as unit tests use it: Compat replaced by the mock, no Settings UI.
+-- The addon as unit tests use it: Compat replaced by the mock, no Settings UI,
+-- and a fresh fake frame API in Loader.ui, so UI modules can start.
 function Loader.LoadAddon(options)
+	Loader.ui = UI.Install()
 	local merged = {
 		replace = { ["Compat/Compat.lua"] = "tests/mocks/Compat.lua" },
 		skip = { "Settings/" },

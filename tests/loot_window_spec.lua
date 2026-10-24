@@ -1,28 +1,13 @@
 local Loader = require("tests.helpers.loader")
+local UI = require("tests.mocks.UI")
 
--- Blizzard's loot window during fast autoloot, with just enough of the
--- frames for it: LootFrame, UIParent and CreateFrame.
+-- Blizzard's loot window during fast autoloot, with a fake LootFrame on the
+-- fake frame API.
 describe("loot window during fast autoloot", function()
 	local ns, Test, UIParent, LootFrame
 
 	local HEARTHSTONE = { kind = "item", name = "Hearthstone", link = "|Hitem:6948::|h[Hearthstone]|h", quantity = 1 }
 	local MONEY = { kind = "money", name = "21 Copper", quantity = 0 }
-
-	-- A frame takes its parent's strata when the parent changes.
-	local function newFrame(parent, shown, strata)
-		local frame = { parent = parent, shown = shown, strata = strata or "MEDIUM" }
-		function frame:SetParent(newParent)
-			self.parent = newParent
-			self.strata = newParent.strata
-		end
-		function frame:Show() self.shown = true end
-		function frame:Hide() self.shown = false end
-		function frame:IsShown() return self.shown end
-		function frame:IsVisible() return self.shown and (self.parent == nil or self.parent:IsVisible()) end
-		function frame:GetFrameStrata() return self.strata end
-		function frame:SetFrameStrata(value) self.strata = value end
-		return frame
-	end
 
 	local function backpack(free)
 		local items = {}
@@ -40,17 +25,16 @@ describe("loot window during fast autoloot", function()
 	end
 
 	before_each(function()
-		UIParent = newFrame(nil, true)
-		LootFrame = newFrame(UIParent, false, "HIGH")
+		ns = Loader.LoadAddon()
+		UIParent = Loader.ui.UIParent
+		LootFrame = UI.NewFake(UIParent, "HIGH")
+		LootFrame.shown = false
 		function LootFrame:Open()
 			self.opened = (self.opened or 0) + 1
 			self.shown = true
 		end
-		rawset(_G, "UIParent", UIParent)
 		rawset(_G, "LootFrame", LootFrame)
-		rawset(_G, "CreateFrame", function(_, _, parent) return newFrame(parent, true) end)
 		rawset(_G, "StaticPopup_Hide", function() end)
-		ns = Loader.LoadAddon()
 		Loader.Start(ns)
 		Test = ns.Compat.Test
 		Test.SetItems({ [1] = { name = "Filler", stackSize = 1 }, [6948] = { name = "Hearthstone", stackSize = 1 } })

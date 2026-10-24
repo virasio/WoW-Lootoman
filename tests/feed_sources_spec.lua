@@ -11,7 +11,7 @@ describe("Sources.ToPattern", function()
 	end)
 
 	it("turns a chat format into an anchored pattern with its argument order", function()
-		assert.same({ "^You receive loot: (.+)x(%-?%d+)$", { 1, 2 } }, { ToPattern("You receive loot: %sx%d") })
+		assert.same({ "^You receive loot: (.+)x(%-?%d+)$", { 1, 2 }, {} }, { ToPattern("You receive loot: %sx%d") })
 	end)
 
 	it("escapes magic characters and reads numbers with decimals", function()
@@ -20,11 +20,12 @@ describe("Sources.ToPattern", function()
 	end)
 
 	it("keeps positional arguments in their order", function()
-		assert.same({ "^(.+): (%-?%d+)$", { 2, 1 } }, { ToPattern("%2$s: %1$d") })
+		assert.same({ "^(.+): (%-?%d+)$", { 2, 1 }, {} }, { ToPattern("%2$s: %1$d") })
 	end)
 
-	it("reads a declined word inside a Russian declension marker", function()
-		assert.equals("^Отношение (.+) к вам улучшилось на (%-?%d+)%.$", (ToPattern("Отношение |3-7(%s) к вам улучшилось на %d.")))
+	it("reads a declined word inside a Russian declension marker, and says so", function()
+		assert.same({ "^Отношение (.+) к вам улучшилось на (%-?%d+)%.$", { 1, 2 }, { [1] = true } },
+			{ ToPattern("Отношение |3-7(%s) к вам улучшилось на %d.") })
 	end)
 end)
 
@@ -105,6 +106,7 @@ describe("loot feed sources", function()
 			end
 			assert.same({ "Stormwind 250", "Stormwind 250", "The Assembly of the Deeps 75", "Defias Brotherhood -10", "Darnassus nil" }, results)
 			assert.equals("reputation", entries[1].kind)
+			assert.is_nil(entries[1].declined)
 		end)
 
 		it("comes from Russian messages, with the faction as the message declines it", function()
@@ -112,9 +114,9 @@ describe("loot feed sources", function()
 			chat("CHAT_MSG_COMBAT_FACTION_CHANGE", "Отношение Штормграда к вам улучшилось на 250.")
 			chat("CHAT_MSG_COMBAT_FACTION_CHANGE", "Отношение фракции \"Штормград\" к вам улучшилось.")
 			chat("CHAT_MSG_COMBAT_FACTION_CHANGE", "Отношение Ассамблеи Глубин к вашему отряду ухудшилось на 5.")
-			assert.same({ "Штормграда", 250 }, { entries[1].name, entries[1].amount })
-			assert.same({ "Штормград" }, { entries[2].name, entries[2].amount })
-			assert.same({ "Ассамблеи Глубин", -5 }, { entries[3].name, entries[3].amount })
+			assert.same({ "Штормграда", 250, true }, { entries[1].name, entries[1].amount, entries[1].declined })
+			assert.same({ "Штормград" }, { entries[2].name, entries[2].amount, entries[2].declined })
+			assert.same({ "Ассамблеи Глубин", -5, true }, { entries[3].name, entries[3].amount, entries[3].declined })
 		end)
 	end)
 
