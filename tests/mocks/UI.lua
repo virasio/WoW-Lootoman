@@ -34,6 +34,10 @@ function methods:GetParent() return self.parent end
 function methods:SetFrameStrata(strata) self.strata = strata end
 function methods:GetFrameStrata() return self.strata end
 function methods:SetText(text) self.text = text end
+function methods:SetFont(file, size, flags) self.font = { file, size, flags } end
+-- About 7 pixels a letter, enough for widths that follow the text.
+function methods:GetUnboundedStringWidth() return #(self.text or "") * 7 end
+function methods:SetGradient(orientation, from, to) self.gradient = { orientation, from, to } end
 function methods:GetText() return self.text end
 function methods:SetTextColor(r, g, b) self.color = { r, g, b } end
 function methods:SetTexture(texture) self.texture = texture end
@@ -95,7 +99,17 @@ function UI.Install()
 		GetColorDataForItemQuality = function(quality)
 			return UI.QUALITY_COLORS[quality]
 		end,
+		-- Like the client: no loot border for Poor items.
+		GetAtlasDataForLootBorderItemQuality = function(quality)
+			return quality and quality >= 1 and "loottoast-itemborder-" .. quality or nil
+		end,
+		GetAtlasDataForNewItemQuality = function(quality)
+			return "bags-glow-" .. quality
+		end,
 	})
+	rawset(_G, "CreateColor", function(r, g, b, a) return { r = r, g = g, b = b, a = a } end)
+	rawset(_G, "GameFontNormal", { GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end })
+	rawset(_G, "NumberFontNormal", { GetFont = function() return "Fonts\\ARIALN.TTF", 14, "OUTLINE" end })
 	return api
 end
 

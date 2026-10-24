@@ -213,6 +213,11 @@ function Compat.GetItemInfo(item)
 	return { name = name, link = link, quality = quality, stackSize = stackSize, isCraftingReagent = isCraftingReagent }
 end
 
+-- How many of an item the character has in bags, bank and reagent bank.
+function Compat.GetItemCount(item)
+	return C_Item.GetItemCount(item, true, false, true, false)
+end
+
 -- An item's icon and quality, also before its full data is loaded; either can
 -- be nil.
 function Compat.GetItemLook(item)

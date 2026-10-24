@@ -1,10 +1,12 @@
 local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
--- Draws the loot feed's rows from the model (techspec §7.3), in the default
--- UI's style: an icon with a quality border, the name in its quality colour
--- and the amount on the right; money with coin icons. New rows fade in, old
--- ones fade out as the model says.
+-- Draws the loot feed's rows from the model (techspec §7.3) in the default
+-- UI's style, laid out by a design (Design.lua): a big icon with the quality
+-- border of the default UI's loot roll, a glow over rare and better items, the
+-- name in its quality colour with the amount after it, the owned count on the
+-- icon, and one soft background behind all rows. New rows fade in, old ones
+-- fade out as the model says.
 --
 -- The oldest row sits at the anchor edge of the feed and new rows stack away
 -- from it: with direction "up" new rows appear on top of the oldest one at the
@@ -17,23 +19,24 @@ local Compat, L = ns.Compat, ns.L
 -- frame is hidden, and costs nothing, while there are no rows.
 --
 --   local feed = Frames.Create(model)        -- out of combat, when the module starts
---   feed:SetOptions({ direction = "up", maxRows = 8 })
+--   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design, size),
+--       opacity = 0.5, showOwned = true, showGlow = true })
 --   feed:Wake()                              -- after model:Add
+--   feed:RefreshOwned()                      -- after the bags change
 --   feed:SetPreview(true)                    -- in Edit Mode
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
 
-Frames.WIDTH = 280
-Frames.ROW_HEIGHT = 28
-Frames.ROW_GAP = 2
 -- The most rows on screen: 20 rows, and a few fading out after a push.
 Frames.POOL = 24
 Frames.FADE_IN = 0.2
 -- Seconds a row takes to slide one place.
 Frames.SLIDE_TIME = 0.15
-
-local STEP = Frames.ROW_HEIGHT + Frames.ROW_GAP
+-- Items of this quality and better get a glow (Enum.ItemQuality.Rare).
+Frames.GLOW_QUALITY = 3
+-- The quality border is this much bigger than the icon, as on the loot roll.
+Frames.BORDER_SCALE = 42 / 34
 
 local ICONS = {
 	money = [[Interface\Icons\inv_misc_coin_01]],
@@ -54,26 +57,36 @@ local function signed(amount)
 	return ("%+d"):format(amount), amount < 0 and RED or GREEN
 end
 
--- What a row shows: { icon, label, labelColor, amount, amountColor, border }
--- (border is a colour, or nil for no quality border).
-function Frames.Describe(row)
+-- What a row shows: { icon, label, labelColor, amount, amountColor, border,
+-- glow, owned }. border and glow are atlas names, owned a count; each can be
+-- nil. options: showOwned, showGlow.
+function Frames.Describe(row, options)
+	options = options or {}
 	local kind = row.kind
 	if kind == "item" or kind == "currency" or kind == "skipped" then
-		local color = qualityColor(row.quality)
 		local amount, amountColor
 		if kind == "skipped" then
 			amount, amountColor = L["No room in bags"], RED
 		elseif (row.amount or 1) > 1 then
 			amount, amountColor = ("×%d"):format(row.amount), WHITE
 		end
-		return {
-			icon = row.icon,
-			label = row.name,
-			labelColor = color,
-			amount = amount,
-			amountColor = amountColor,
-			border = kind ~= "currency" and color or nil,
-		}
+		local look = { icon = row.icon, label = row.name, labelColor = qualityColor(row.quality), amount = amount, amountColor = amountColor }
+		if kind == "currency" then
+			look.owned = options.showOwned and row.total or nil
+		else
+			look.border = ColorManager.GetAtlasDataForLootBorderItemQuality(row.quality or 1) or "loottoast-itemborder-white"
+			if options.showGlow and (row.quality or 0) >= Frames.GLOW_QUALITY then
+				look.glow = ColorManager.GetAtlasDataForNewItemQuality(row.quality)
+			end
+			if options.showOwned and kind == "item" then
+				look.owned = row.owned or Compat.GetItemCount(row.link or row.id)
+			end
+		end
+		-- Right after looting the bags may not have caught up; none is not shown.
+		if look.owned == 0 then
+			look.owned = nil
+		end
+		return look
 	elseif kind == "money" then
 		return { icon = ICONS.money, label = GetMoneyString(row.amount, true), labelColor = WHITE }
 	elseif kind == "xp" then
@@ -116,56 +129,98 @@ end
 
 local function createRow(parent)
 	local rowFrame = CreateFrame("Frame", nil, parent)
-	rowFrame:SetSize(Frames.WIDTH, Frames.ROW_HEIGHT)
 	rowFrame:SetMouseClickEnabled(false)
 	rowFrame:SetMouseMotionEnabled(true)
-	rowFrame.Background = rowFrame:CreateTexture(nil, "BACKGROUND")
-	rowFrame.Background:SetAllPoints()
-	rowFrame.Background:SetColorTexture(0, 0, 0, 0.35)
 	rowFrame.Icon = rowFrame:CreateTexture(nil, "ARTWORK")
-	rowFrame.Icon:SetSize(Frames.ROW_HEIGHT - 4, Frames.ROW_HEIGHT - 4)
-	rowFrame.Icon:SetPoint("LEFT", 2, 0)
-	rowFrame.IconBorder = rowFrame:CreateTexture(nil, "OVERLAY")
-	rowFrame.IconBorder:SetTexture([[Interface\Common\WhiteIconFrame]])
-	rowFrame.IconBorder:SetAllPoints(rowFrame.Icon)
-	rowFrame.Amount = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	rowFrame.Amount:SetPoint("RIGHT", -6, 0)
-	rowFrame.Amount:SetJustifyH("RIGHT")
-	rowFrame.Label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	rowFrame.Label:SetPoint("LEFT", rowFrame.Icon, "RIGHT", 6, 0)
-	rowFrame.Label:SetPoint("RIGHT", rowFrame.Amount, "LEFT", -6, 0)
+	rowFrame.Glow = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
+	rowFrame.Glow:SetBlendMode("ADD")
+	rowFrame.IconBorder = rowFrame:CreateTexture(nil, "OVERLAY", nil, 2)
+	rowFrame.Owned = rowFrame:CreateFontString(nil, "OVERLAY")
+	rowFrame.Owned:SetJustifyH("RIGHT")
+	rowFrame.Label = rowFrame:CreateFontString(nil, "OVERLAY")
 	rowFrame.Label:SetJustifyH("LEFT")
 	rowFrame.Label:SetWordWrap(false)
+	rowFrame.Amount = rowFrame:CreateFontString(nil, "OVERLAY")
+	rowFrame.Amount:SetJustifyH("LEFT")
 	rowFrame:SetScript("OnEnter", showTooltip)
 	rowFrame:SetScript("OnLeave", hideTooltip)
 	rowFrame:Hide()
 	return rowFrame
 end
 
-local function fill(rowFrame, row)
-	local look = Frames.Describe(row)
+-- Sizes and places a row's parts for a layout.
+local function applyLayout(feed, rowFrame, layout)
+	local parts = layout.parts
+	rowFrame:SetSize(layout.width, layout.height)
+	local icon = parts.icon
+	rowFrame.Icon:SetSize(icon.size, icon.size)
+	rowFrame.Icon:ClearAllPoints()
+	rowFrame.Icon:SetPoint("LEFT", rowFrame, "LEFT", icon.x, icon.y)
+	local border = math.floor(icon.size * Frames.BORDER_SCALE + 0.5)
+	rowFrame.IconBorder:SetSize(border, border)
+	rowFrame.IconBorder:ClearAllPoints()
+	rowFrame.IconBorder:SetPoint("CENTER", rowFrame.Icon, "CENTER")
+	rowFrame.Glow:ClearAllPoints()
+	rowFrame.Glow:SetAllPoints(rowFrame.Icon)
+	local name = parts.name
+	rowFrame.Label:SetFont(feed.fonts.text[1], name.fontSize, feed.fonts.text[3])
+	rowFrame.Label:ClearAllPoints()
+	rowFrame.Label:SetPoint("LEFT", rowFrame, "LEFT", name.x, name.y)
+	local amount = parts.amount
+	rowFrame.Amount:SetFont(feed.fonts.text[1], amount.fontSize, feed.fonts.text[3])
+	rowFrame.Amount:ClearAllPoints()
+	rowFrame.Amount:SetPoint("LEFT", rowFrame.Label, "RIGHT", amount.x, amount.y)
+	local owned = parts.owned
+	rowFrame.Owned:SetFont(feed.fonts.number[1], owned.fontSize, feed.fonts.number[3])
+	rowFrame.Owned:ClearAllPoints()
+	rowFrame.Owned:SetPoint("BOTTOMRIGHT", rowFrame.Icon, "BOTTOMRIGHT", owned.x, owned.y)
+end
+
+local function fill(feed, rowFrame, row)
+	local parts = feed.options.layout.parts
+	local look = Frames.Describe(row, feed.options)
+	local iconShown = parts.icon.shown and look.icon ~= nil
+	rowFrame.Icon:SetShown(iconShown)
 	rowFrame.Icon:SetTexture(look.icon)
-	rowFrame.IconBorder:SetShown(look.border ~= nil)
+	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil)
 	if look.border then
-		rowFrame.IconBorder:SetVertexColor(look.border[1], look.border[2], look.border[3])
+		rowFrame.IconBorder:SetAtlas(look.border)
 	end
+	rowFrame.Glow:SetShown(iconShown and parts.glow.shown and look.glow ~= nil)
+	if look.glow then
+		rowFrame.Glow:SetAtlas(look.glow)
+	end
+	rowFrame.Owned:SetShown(iconShown and parts.owned.shown and look.owned ~= nil)
+	rowFrame.Owned:SetText(look.owned and tostring(look.owned) or "")
+	rowFrame.Label:SetShown(parts.name.shown)
 	rowFrame.Label:SetText(look.label)
 	rowFrame.Label:SetTextColor(look.labelColor[1], look.labelColor[2], look.labelColor[3])
+	-- The name takes the width of its text, up to the design's limit, so the
+	-- amount follows it.
+	rowFrame.Label:SetWidth(math.min(rowFrame.Label:GetUnboundedStringWidth(), parts.name.width))
+	rowFrame.Amount:SetShown(parts.amount.shown and look.amount ~= nil)
 	rowFrame.Amount:SetText(look.amount or "")
 	if look.amountColor then
 		rowFrame.Amount:SetTextColor(look.amountColor[1], look.amountColor[2], look.amountColor[3])
 	end
-	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
+	rowFrame.data, rowFrame.amount, rowFrame.total, rowFrame.version = row, row.amount, row.total, feed.version
 end
 
 local FeedMixin = {}
 FeedMixin.__index = FeedMixin
 
--- Rows shown in Edit Mode, so the feed has something to place.
-local PREVIEW = {
-	{ row = { kind = "money", amount = 123456 }, alpha = 1 },
-	{ row = { kind = "xp", amount = 1500 }, alpha = 1 },
-}
+-- Rows shown in Edit Mode, one of every kind, so the look can be judged while
+-- placing the feed.
+local function previewRows()
+	return {
+		{ row = { kind = "item", name = L["Sample item"], icon = [[Interface\Icons\inv_potion_54]], quality = 1, amount = 3, owned = 42 }, alpha = 1 },
+		{ row = { kind = "item", name = L["Sample rare item"], icon = [[Interface\Icons\inv_shield_1h_nzothraid_d_01]], quality = 4, amount = 1, owned = 1 }, alpha = 1 },
+		{ row = { kind = "money", amount = 123456 }, alpha = 1 },
+		{ row = { kind = "currency", name = L["Sample currency"], icon = [[Interface\Icons\inv_misc_coin_17]], quality = 3, amount = 5, total = 120 }, alpha = 1 },
+		{ row = { kind = "reputation", name = L["Sample faction"], amount = 250 }, alpha = 1 },
+		{ row = { kind = "skipped", name = L["Sample item"], icon = [[Interface\Icons\inv_misc_bag_08]], quality = 1, amount = 1 }, alpha = 1 },
+	}
+end
 
 -- Puts a row at a distance from the anchor edge.
 local function place(feed, rowFrame, offset)
@@ -186,16 +241,39 @@ local function release(feed, row, rowFrame)
 	feed.free[#feed.free + 1] = rowFrame
 end
 
+-- The shared background spans the rows on screen, from the anchor edge to the
+-- farthest row, with the gap as a margin; it fades out to the right.
+local function placeBackground(feed)
+	local far = 0
+	for _, rowFrame in pairs(feed.frameOf) do
+		far = math.max(far, rowFrame.offset + feed.options.layout.height)
+	end
+	local background = feed.frame.Background
+	background:SetShown(far > 0)
+	if far > 0 then
+		local margin = feed.options.layout.gap
+		background:ClearAllPoints()
+		if feed.options.direction == "down" then
+			background:SetPoint("TOPLEFT", feed.frame, "TOPLEFT", -margin, margin)
+		else
+			background:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -margin, -margin)
+		end
+		background:SetSize(feed.options.layout.width + 2 * margin, far + 2 * margin)
+	end
+end
+
 function Frames.Create(model)
 	local frame = CreateFrame("Frame", nil, UIParent)
-	frame:SetSize(Frames.WIDTH, Frames.ROW_HEIGHT)
 	frame:SetClampedToScreen(true)
 	frame:SetMouseClickEnabled(false)
 	frame:SetMouseMotionEnabled(false)
-	frame.PreviewBackground = frame:CreateTexture(nil, "BACKGROUND")
+	frame.PreviewBackground = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
 	frame.PreviewBackground:SetAllPoints()
-	frame.PreviewBackground:SetColorTexture(0, 0, 0, 0.3)
+	frame.PreviewBackground:SetColorTexture(0, 0, 0, 0.2)
 	frame.PreviewBackground:Hide()
+	frame.Background = frame:CreateTexture(nil, "BACKGROUND")
+	frame.Background:SetColorTexture(1, 1, 1, 1)
+	frame.Background:Hide()
 	local feed = setmetatable({
 		frame = frame,
 		model = model,
@@ -204,6 +282,8 @@ function Frames.Create(model)
 		-- The frame of each row on screen; a row keeps its frame while shown.
 		frameOf = {},
 		seen = setmetatable({}, { __mode = "k" }),
+		version = 0,
+		fonts = { text = { GameFontNormal:GetFont() }, number = { NumberFontNormal:GetFont() } },
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
 		feed.rows[index] = createRow(frame)
@@ -213,16 +293,24 @@ function Frames.Create(model)
 		feed:Draw(Compat.GetTime())
 	end)
 	frame:Hide()
-	feed:SetOptions({ direction = "up", maxRows = 8 })
+	local Design = ns.Feed.Design
+	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE, Design.BASE_SIZE), opacity = 0.5 })
 	return feed
 end
 
 function FeedMixin:SetOptions(options)
 	self.options = options
-	self.frame:SetHeight(options.maxRows * STEP - Frames.ROW_GAP)
+	local layout = options.layout
+	self.step = layout.height + layout.gap
+	self.frame:SetSize(layout.width, options.maxRows * self.step - layout.gap)
+	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, 0))
+	for _, rowFrame in ipairs(self.rows) do
+		applyLayout(self, rowFrame, layout)
+	end
 	for _, rowFrame in pairs(self.frameOf) do
 		place(self, rowFrame, rowFrame.offset)
 	end
+	self.version = self.version + 1
 end
 
 -- Shows the feed after the model got a row; it hides itself when it has none.
@@ -230,8 +318,13 @@ function FeedMixin:Wake()
 	self.frame:Show()
 end
 
+-- Owned counts are read again on the next draw.
+function FeedMixin:RefreshOwned()
+	self.version = self.version + 1
+end
+
 function FeedMixin:SetPreview(active)
-	self.preview = active
+	self.preview = active and previewRows() or nil
 	self.frame.PreviewBackground:SetShown(active)
 	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0)
 end
@@ -243,7 +336,13 @@ function FeedMixin:Draw(now)
 	local hovered = self.frame:IsMouseOver()
 	model:SetHover(hovered, now)
 	model:Update(now)
-	local views = self.preview and PREVIEW or model:Visible(now)
+	local views = model:Visible(now)
+	if self.preview then
+		views = {}
+		for index = 1, math.min(#self.preview, self.options.maxRows) do
+			views[index] = self.preview[index]
+		end
+	end
 
 	local shown = {}
 	for _, view in ipairs(views) do
@@ -258,10 +357,10 @@ function FeedMixin:Draw(now)
 	-- Views come newest first; the oldest of the live rows takes the place at the
 	-- anchor edge, and rows pushed out past maxRows get places beyond it.
 	local live = math.min(#views, self.options.maxRows)
-	local slide = STEP / Frames.SLIDE_TIME * elapsed
+	local slide = self.step / Frames.SLIDE_TIME * elapsed
 	for index, view in ipairs(views) do
 		local row = view.row
-		local target = (live - index) * STEP
+		local target = (live - index) * self.step
 		local rowFrame = self.frameOf[row]
 		if not rowFrame and #self.free > 0 then
 			rowFrame = table.remove(self.free)
@@ -273,8 +372,9 @@ function FeedMixin:Draw(now)
 				or rowFrame.offset + (distance > 0 and slide or -slide))
 		end
 		if rowFrame then
-			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total then
-				fill(rowFrame, row)
+			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total
+				or rowFrame.version ~= self.version then
+				fill(self, rowFrame, row)
 			end
 			self.seen[row] = self.seen[row] or now
 			local fadeIn = math.min(1, (now - self.seen[row]) / Frames.FADE_IN)
@@ -282,6 +382,7 @@ function FeedMixin:Draw(now)
 			rowFrame:Show()
 		end
 	end
+	placeBackground(self)
 
 	if #views == 0 and not hovered then
 		self.frame:Hide()

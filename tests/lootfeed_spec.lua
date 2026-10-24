@@ -51,7 +51,8 @@ describe("loot feed module", function()
 		assert.same({
 			"checkbox:Enabled", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
 			"checkbox:Experience", "dropdown:Minimum quality", "slider:Rows", "dropdown:New rows appear",
-			"slider:Time on screen", "slider:Fade-out time",
+			"slider:Time on screen", "slider:Fade-out time", "slider:Size", "slider:Background opacity",
+			"checkbox:Owned count", "checkbox:Glow for rare items",
 		}, api.Kinds(api.FindCategory("Loot feed")))
 	end)
 
@@ -72,7 +73,7 @@ describe("loot feed module", function()
 	it("puts the feed in Edit Mode right of the screen centre, with the same settings in its dialog", function()
 		local frame = module.feed.frame
 		assert.same({ "Loot feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
-		assert.equals(10, #lib.settings[frame])
+		assert.equals(14, #lib.settings[frame])
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
 		lib.Fire("exit")
@@ -91,6 +92,18 @@ describe("loot feed module", function()
 		assert.same({ ["150 copper"] = "", ["Linen Cloth"] = "×2" }, shown)
 	end)
 
+	it("reads owned counts again when the bags change", function()
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 132889, quality = 1, stackSize = 200, owned = 0 } })
+		Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LINK, "Tester")
+		module.feed:Draw(Test.state.time)
+		local row = next(module.feed.frameOf) and select(2, next(module.feed.frameOf))
+		assert.is_false(row.Owned.shown)
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 132889, quality = 1, stackSize = 200, owned = 7 } })
+		Test.FireEvent("BAG_UPDATE_DELAYED")
+		module.feed:Draw(Test.state.time)
+		assert.same({ true, "7" }, { row.Owned.shown, row.Owned.text })
+	end)
+
 	it("leaves experience out until it is turned on", function()
 		Test.SetXP(100)
 		assert.same({}, module.model:Visible(Test.state.time))
@@ -101,7 +114,11 @@ describe("loot feed module", function()
 
 	it("applies changed settings at once", function()
 		module:Set("maxRows", 3)
-		assert.equals(88, module.feed.frame.height)
+		assert.equals(119, module.feed.frame.height)
+		module:Set("size", 16)
+		assert.equals(369, module.feed.frame.width)
+		module:Set("backgroundOpacity", 80)
+		assert.equals(0.8, module.feed.frame.Background.gradient[2].a)
 		assert.equals(3, module.model.options.maxRows)
 		module:Set("direction", "down")
 		assert.equals("down", module.feed.options.direction)
@@ -114,7 +131,7 @@ describe("loot feed module", function()
 		ns.Profiles.Create("Small")
 		ns.Storage.db.profiles.Small.modules = { LootFeed = { maxRows = 4 } }
 		ns.Profiles.Switch("Small")
-		assert.equals(118, module.feed.frame.height)
+		assert.equals(161, module.feed.frame.height)
 	end)
 
 	it("stops reading events and hides when turned off", function()

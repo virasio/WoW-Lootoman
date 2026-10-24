@@ -24,6 +24,11 @@ ns.Locales.AddEnglish({
 	-- Modules/LootFeed/Frames.lua
 	"No room in bags",
 	"Experience",
+	-- Sample rows in Edit Mode.
+	"Sample item",
+	"Sample rare item",
+	"Sample currency",
+	"Sample faction",
 	-- A faction's reputation change. Russian clients decline the faction name in
 	-- most messages: "%s reputation" gets the declined name, "Reputation with %s"
 	-- the name as it is. English shows only the second.
@@ -50,6 +55,14 @@ ns.Locales.AddEnglish({
 	"%d s",
 	"Fade-out time",
 	"%.1f s",
+	"Size",
+	"The size of the text; the icons and rows follow it.",
+	"Background opacity",
+	"%d %%",
+	"Owned count",
+	"Shows on the icon how many of the item you have in your bags and bank, and the total of a currency.",
+	"Glow for rare items",
+	"Rare and better items glow in their quality colour.",
 
 	-- Settings/Panel.lua
 	"Modules",

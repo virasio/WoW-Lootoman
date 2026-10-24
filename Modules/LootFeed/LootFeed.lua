@@ -23,6 +23,10 @@ local LootFeed = ns.Modules:Register({
 		direction = "up",
 		duration = 6,
 		fade = 1,
+		size = 13,
+		backgroundOpacity = 50,
+		owned = true,
+		glow = true,
 	},
 })
 
@@ -56,6 +60,12 @@ local function settings()
 		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
 			min = 2, max = 30, step = 1, format = L["%d s"] },
 		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
+		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
+			min = 10, max = 16, step = 1, format = "%d" },
+		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
+		{ kind = "checkbox", key = "owned", label = L["Owned count"],
+			tooltip = L["Shows on the icon how many of the item you have in your bags and bank, and the total of a currency."] },
+		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
 	}
 end
 
@@ -77,7 +87,14 @@ end
 
 function LootFeed:Apply()
 	self.model:SetOptions(self:ModelOptions(), Compat.GetTime())
-	self.feed:SetOptions({ direction = self:Get("direction"), maxRows = self:Get("maxRows") })
+	self.feed:SetOptions({
+		direction = self:Get("direction"),
+		maxRows = self:Get("maxRows"),
+		layout = Feed.Design.Layout(Feed.Design.LARGE, self:Get("size")),
+		opacity = self:Get("backgroundOpacity") / 100,
+		showOwned = self:Get("owned"),
+		showGlow = self:Get("glow"),
+	})
 end
 
 function LootFeed:OnEnable()
@@ -105,6 +122,10 @@ function LootFeed:OnEnable()
 	end)
 	self:On("ProfileChanged", function()
 		self:Apply()
+	end)
+	-- Owned counts change when the looted items reach the bags.
+	self:OnEvent("BAG_UPDATE_DELAYED", function()
+		self.feed:RefreshOwned()
 	end)
 end
 

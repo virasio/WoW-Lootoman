@@ -42,6 +42,7 @@ Modules\AutoLoot\LootWindow.lua
 
 Modules\LootFeed\Sources.lua
 Modules\LootFeed\Model.lua
+Modules\LootFeed\Design.lua
 Modules\LootFeed\Frames.lua
 Modules\LootFeed\LootFeed.lua
 

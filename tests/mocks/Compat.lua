@@ -30,7 +30,7 @@ local state = {
 	lootActions = {},
 	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link } } };
 	-- a bag that is not listed is not equipped. Items the client has loaded, by
-	-- ID: { name, link, quality, stackSize, family, isCraftingReagent }.
+	-- ID: { name, link, quality, stackSize, family, isCraftingReagent, owned }.
 	-- Feed sources: global strings (chat formats), money in copper, experience
 	-- and its level maximum, currencies by ID ({ name, icon, quality, quantity, discovered }).
 	globalStrings = {},
@@ -194,6 +194,11 @@ function Compat.GetItemInfo(item)
 		stackSize = info.stackSize,
 		isCraftingReagent = info.isCraftingReagent,
 	}
+end
+
+function Compat.GetItemCount(item)
+	local info = findItem(item)
+	return info and info.owned or 0
 end
 
 function Compat.GetItemLook(item)
