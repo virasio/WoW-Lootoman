@@ -31,6 +31,8 @@ local state = {
 	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link } } };
 	-- a bag that is not listed is not equipped. Items the client has loaded, by
 	-- ID: { name, link, quality, stackSize, family, isCraftingReagent }.
+	-- Game error names by error type, filled by Test.FireGameError.
+	gameErrors = {},
 	playerBags = { 0, 1, 2, 3, 4 },
 	reagentBag = 5,
 	bags = {},
@@ -120,6 +122,10 @@ end
 
 function Compat.IsInGroup()
 	return state.group
+end
+
+function Compat.GetGameErrorName(errorType)
+	return state.gameErrors[errorType]
 end
 
 local function copy(source)
@@ -267,6 +273,13 @@ end
 -- SetItems({ [2589] = { name = "Linen Cloth", stackSize = 200, isCraftingReagent = true } }).
 function Test.SetItems(items)
 	state.items = items
+end
+
+-- Fires UI_ERROR_MESSAGE for a game error by name, e.g. FireGameError("ERR_INV_FULL").
+function Test.FireGameError(name)
+	local errorType = #state.gameErrors + 1
+	state.gameErrors[errorType] = name
+	Test.FireEvent("UI_ERROR_MESSAGE", errorType, name)
 end
 
 -- SetCVar("autoLootDefault", false); SetModifier("AUTOLOOTTOGGLE", true).

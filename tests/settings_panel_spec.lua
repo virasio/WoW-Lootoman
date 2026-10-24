@@ -6,7 +6,8 @@ describe("settings panel", function()
 
 	before_each(function()
 		api = SettingsAPI.Install()
-		ns = Loader.LoadAddon({ skip = {} })
+		-- Without the addon's own modules: these tests register their own.
+		ns = Loader.LoadAddon({ skip = { "Modules/" } })
 		built = {}
 		ns.Modules:Register({
 			name = "Feed",

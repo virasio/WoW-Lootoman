@@ -32,6 +32,7 @@ files["Compat/"] = {
 		"DEFAULT_CHAT_FRAME",
 		"Enum",
 		"GetBuildInfo",
+		"GetGameMessageInfo",
 		"GetLootSlotInfo",
 		"GetLootSlotLink",
 		"GetLootSlotType",
@@ -46,6 +47,12 @@ files["Compat/"] = {
 		"UnitFullName",
 		"geterrorhandler",
 		"issecretvalue",
+	},
+}
+
+files["Modules/"] = {
+	read_globals = {
+		"StaticPopup_Hide",
 	},
 }
 

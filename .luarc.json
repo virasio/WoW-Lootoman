@@ -22,6 +22,7 @@
     "DEFAULT_CHAT_FRAME",
     "Settings",
     "SlashCmdList",
+    "StaticPopup_Hide",
     "StaticPopup_Show"
   ]
 }

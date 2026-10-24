@@ -15,6 +15,12 @@ ns.Locales.AddEnglish({
 	"/lootoman debug [on | off]: show, turn on or turn off debug messages",
 	"/lootoman selftest: check the addon against the game client",
 
+	-- Modules/AutoLoot/AutoLoot.lua
+	"Fast autoloot",
+	"When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up.",
+	"Confirm bind-on-pickup items when alone",
+	"Picks up items that bind when picked up without asking, unless you are in a group.",
+
 	-- Settings/Panel.lua
 	"Modules",
 	"Enabled",

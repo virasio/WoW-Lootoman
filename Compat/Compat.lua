@@ -155,6 +155,12 @@ function Compat.IsInGroup()
 	return IsInGroup() == true
 end
 
+-- The name of a game error from UI_ERROR_MESSAGE, such as "ERR_INV_FULL", the
+-- same in every language (Blizzard's UIErrorsFrame reads it this way).
+function Compat.GetGameErrorName(errorType)
+	return (GetGameMessageInfo(errorType))
+end
+
 -- The player's bags, as Blizzard's ContainerFrame.lua finds them: a list of the
 -- backpack and the equipped bags, and the reagent bag, or nil on a client
 -- without one.
