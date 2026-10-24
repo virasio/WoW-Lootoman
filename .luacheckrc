@@ -9,7 +9,10 @@ exclude_files = {
 	".luarocks/",
 }
 
--- WoW API globals are added to read_globals as the code starts using them.
+-- WoW API globals are added here as the code starts using them.
+read_globals = {
+	"GetLocale",
+}
 
 files["tests/"] = {
 	std = "+busted",

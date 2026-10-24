@@ -8,6 +8,10 @@
 --   debug     also load files inside #@debug@ blocks (default false)
 --   replace   { ["Compat/Compat.lua"] = "tests/mocks/Compat.lua" } swaps files
 --   skip      list of path prefixes not to load, e.g. { "Settings/" }
+--   locale    what the global GetLocale() returns (default "enUS")
+--
+-- GetLocale is the only game global the loader provides, because Locales load
+-- before Compat. Everything else comes through the Compat mock.
 
 local Toc = require("tests.helpers.toc")
 
@@ -52,6 +56,11 @@ function Loader.Load(options)
 	local gameType = options.gameType or "standard"
 	local replace = options.replace or {}
 	local skip = options.skip or {}
+	local locale = options.locale or "enUS"
+
+	rawset(_G, "GetLocale", function()
+		return locale
+	end)
 
 	local ns = {}
 	for _, entry in ipairs(Toc.Parse(tocPath).files) do

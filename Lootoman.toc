@@ -8,4 +8,8 @@
 ## Category-ruRU: Инвентарь
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
 
+Locales\Locales.lua
+Locales\enUS.lua
+Locales\ruRU.lua
+
 Core\Init.lua
