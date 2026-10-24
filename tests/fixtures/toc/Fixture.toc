@@ -1,0 +1,12 @@
+## Interface: 120105, 16001
+## Title: Fixture
+## Notes-ruRU: Тест
+
+# A comment line
+Core\First.lua
+Data\Standard.lua [AllowLoadGameType standard]
+Data\Forever.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard]
+UI\Frame.xml
+#@debug@
+Dev\Debug.lua
+#@end-debug@
