@@ -10,6 +10,9 @@
 ## SavedVariables: LootomanDB
 ## SavedVariablesPerCharacter: LootomanCharDB
 
+Libs\LibStub\LibStub.lua
+Libs\LibEditMode\embed.xml
+
 Locales\Locales.lua
 Locales\enUS.lua
 Locales\ruRU.lua

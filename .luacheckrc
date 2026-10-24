@@ -4,6 +4,8 @@ self = false
 
 exclude_files = {
 	".release/",
+	-- Third-party libraries, kept exactly as released.
+	"Libs/",
 	-- Lua and LuaRocks installed into the checkout by CI.
 	".lua/",
 	".luarocks/",

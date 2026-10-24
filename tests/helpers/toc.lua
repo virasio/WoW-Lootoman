@@ -50,11 +50,29 @@ function Toc.ParseText(text)
 	return toc
 end
 
-function Toc.Parse(path)
+local function readFile(path)
 	local file = assert(io.open(path, "r"))
 	local text = file:read("*a")
 	file:close()
-	return Toc.ParseText(text)
+	return text
+end
+
+function Toc.Parse(path)
+	return Toc.ParseText(readFile(path))
+end
+
+-- Files an XML file loads with <Script file="…"/> and <Include file="…"/>,
+-- as paths next to the XML file, with forward slashes.
+function Toc.ParseXml(path)
+	local folder = path:match("^(.*)/[^/]*$")
+	local files = {}
+	for tag, _, file in readFile(path):gmatch("<(%a+)[^>]-%sfile%s*=%s*([\"'])(.-)%2") do
+		if tag == "Script" or tag == "Include" then
+			file = file:gsub("\\", "/")
+			files[#files + 1] = folder and (folder .. "/" .. file) or file
+		end
+	end
+	return files
 end
 
 return Toc

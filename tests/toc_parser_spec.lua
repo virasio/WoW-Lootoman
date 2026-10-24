@@ -36,4 +36,9 @@ describe("TOC parser", function()
 		assert.equals("X", parsed.metadata.Title)
 		assert.equals("Core/A.lua", parsed.files[1].path)
 	end)
+
+	it("reads the files an XML file loads, next to it", function()
+		assert.same({ "tests/fixtures/toc/UI/Frame.lua", "tests/fixtures/toc/UI/Widgets/Widgets.xml" },
+			Toc.ParseXml("tests/fixtures/toc/UI/Frame.xml"))
+	end)
 end)

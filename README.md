@@ -11,3 +11,8 @@ Early development. There is no release yet.
 ## License
 
 [MIT](LICENSE)
+
+Libraries bundled in `Libs/` keep their own licenses:
+
+- [LibStub](https://www.wowace.com/projects/libstub): public domain.
+- [LibEditMode](https://github.com/p3lim-wow/LibEditMode) by p3lim: [its license](Libs/LibEditMode/LICENSE.txt).

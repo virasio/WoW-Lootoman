@@ -8,6 +8,11 @@ describe("test loader", function()
 		assert.equals("Lootoman", ns.addonName)
 	end)
 
+	it("never loads the bundled libraries, even with nothing skipped", function()
+		Loader.LoadAddon({ skip = {} })
+		assert.is_nil(rawget(_G, "LibStub"))
+	end)
+
 	it("loads Lua files in TOC order for the standard game type", function()
 		local ns = Loader.Load({ toc = FIXTURE })
 		assert.same({ "First", "Standard" }, ns.loaded)

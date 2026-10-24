@@ -6,6 +6,7 @@
   ],
   "workspace.checkThirdParty": false,
   "workspace.ignoreDir": [
+    "Libs",
     "tests",
     ".release",
     ".lua",

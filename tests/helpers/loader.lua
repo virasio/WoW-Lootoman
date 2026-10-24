@@ -12,12 +12,16 @@
 --
 -- GetLocale is the only game global the loader provides, because Locales load
 -- before Compat. Everything else comes through the Compat mock.
+--
+-- Third-party libraries in Libs/ are never loaded: they need the real client.
 
 local Toc = require("tests.helpers.toc")
 
 local Loader = {}
 
 Loader.ADDON_NAME = "Lootoman"
+
+local LIBRARIES = "Libs/"
 
 local function contains(list, value)
 	for _, item in ipairs(list) do
@@ -67,6 +71,7 @@ function Loader.Load(options)
 		local wanted = (options.debug or not entry.debug)
 			and allowedForGameType(entry, gameType)
 			and not skipped(entry.path, skip)
+			and not skipped(entry.path, { LIBRARIES })
 		-- XML files only build UI and are not loaded in tests.
 		if wanted and entry.path:match("%.lua$") then
 			local path = replace[entry.path] or (root .. "/" .. entry.path)
