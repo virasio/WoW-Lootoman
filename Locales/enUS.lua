@@ -5,4 +5,8 @@ local _, ns = ...
 ns.Locales.AddEnglish({
 	-- Core/Startup.lua
 	"Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update.",
+
+	-- Settings/Panel.lua
+	"Modules",
+	"Enabled",
 })

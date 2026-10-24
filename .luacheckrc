@@ -31,6 +31,13 @@ files["Compat/"] = {
 	},
 }
 
+files["Settings/"] = {
+	read_globals = {
+		"CreateSettingsListSectionHeaderInitializer",
+		"Settings",
+	},
+}
+
 files["tests/"] = {
 	std = "+busted",
 }

@@ -23,3 +23,5 @@ Core\Storage.lua
 Core\Profiles.lua
 Core\Modules.lua
 Core\Startup.lua
+
+Settings\Panel.lua
