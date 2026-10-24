@@ -106,7 +106,18 @@ local function setActive(module, active)
 	Bus:Send("ModuleToggled", module.name, module.active)
 end
 
-local ready = false
+local MAX_PASSES = 10
+
+local ready, applying, again = false, false, false
+
+local function reconcile()
+	for _, module in ipairs(Modules.list) do
+		local wanted = Storage:Get(module.name, "enabled")
+		if wanted ~= module.active then
+			setActive(module, wanted)
+		end
+	end
+end
 
 function Modules:Apply()
 	if not ready then
@@ -119,11 +130,26 @@ function Modules:Apply()
 		end)
 		return
 	end
-	for _, module in ipairs(self.list) do
-		local wanted = Storage:Get(module.name, "enabled")
-		if wanted ~= module.active then
-			setActive(module, wanted)
+	-- A module may change settings or the profile while it starts or stops,
+	-- which calls Apply again. Finish the current pass, then run another.
+	if applying then
+		again = true
+		return
+	end
+	applying = true
+	local passes = 0
+	repeat
+		again = false
+		passes = passes + 1
+		local ok, err = pcall(reconcile)
+		if not ok then
+			Compat.ReportError(err)
 		end
+	until not again or passes >= MAX_PASSES
+	applying = false
+	if again then
+		again = false
+		Compat.ReportError(("Lootoman: modules kept changing their enabled setting; stopped after %d passes"):format(MAX_PASSES))
 	end
 end
 

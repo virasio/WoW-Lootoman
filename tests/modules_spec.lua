@@ -116,6 +116,41 @@ describe("modules", function()
 		assert.matches("setup failed", Test.state.errors[1])
 	end)
 
+	it("keeps a module off that turns itself off while starting", function()
+		local module = register("Self", true, {
+			OnEnable = function(self)
+				self:Set("enabled", false)
+			end,
+		})
+		Loader.Start(ns)
+		assert.is_false(ns.Storage:Get("Self", "enabled"))
+		assert.is_false(module:IsActive())
+	end)
+
+	it("follows a profile switch made by a module while it starts", function()
+		local other = register("Other", true)
+		register("Switcher", true, {
+			OnEnable = function()
+				ns.Profiles.Create("Quiet")
+				ns.Profiles.Switch("Quiet")
+				ns.Modules:SetEnabled("Other", false)
+			end,
+		})
+		Loader.Start(ns)
+		assert.equals("Quiet", ns.Profiles.GetCurrent())
+		assert.is_false(other:IsActive())
+	end)
+
+	it("stops and reports modules that keep switching themselves", function()
+		register("Flip", true, {
+			OnEnable = function(self) self:Set("enabled", false) end,
+			OnDisable = function(self) self:Set("enabled", true) end,
+		})
+		Loader.Start(ns)
+		assert.matches("kept changing", Test.state.errors[#Test.state.errors])
+		ns.Modules:SetEnabled("Flip", false)
+	end)
+
 	it("gives modules access to their own settings", function()
 		local module = register("Feed", true)
 		Loader.Start(ns)
