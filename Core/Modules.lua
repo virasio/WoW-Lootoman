@@ -14,7 +14,7 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 --       title = <localized name>,
 --       defaults = { enabled = true, rows = 5 },
 --       OnEnable = function(self) self:OnEvent("CHAT_MSG_LOOT", ...) end,
---       OnDisable = function(self) hide frames end,
+--       OnDisable = function(self) hide frames (also after a failed OnEnable) end,
 --       BuildSettings = function(self, category, layout) end,
 --   })
 local Modules = {
@@ -77,7 +77,17 @@ function Modules:SetEnabled(name, enabled)
 	Storage:Set(name, "enabled", enabled)
 end
 
--- A failing OnEnable leaves the module disabled, with its listeners removed.
+local function tearDown(module)
+	xpcall(function()
+		if module.OnDisable then
+			module:OnDisable()
+		end
+	end, Compat.ReportError)
+	Bus:OffAll(module)
+end
+
+-- A failing OnEnable is undone with OnDisable, so OnDisable must also handle a
+-- module that started only halfway (frames not created yet, for example).
 local function setActive(module, active)
 	if active then
 		local ok = xpcall(function()
@@ -86,16 +96,11 @@ local function setActive(module, active)
 			end
 		end, Compat.ReportError)
 		if not ok then
-			Bus:OffAll(module)
+			tearDown(module)
 		end
 		module.active = ok
 	else
-		xpcall(function()
-			if module.OnDisable then
-				module:OnDisable()
-			end
-		end, Compat.ReportError)
-		Bus:OffAll(module)
+		tearDown(module)
 		module.active = false
 	end
 	Bus:Send("ModuleToggled", module.name, module.active)

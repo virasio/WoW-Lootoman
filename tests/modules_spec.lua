@@ -97,6 +97,25 @@ describe("modules", function()
 		assert.matches("cannot start", Test.state.errors[1])
 	end)
 
+	it("undoes a start that failed halfway", function()
+		local frameShown = false
+		local module = register("Half", true, {
+			OnEnable = function(self)
+				frameShown = true
+				self:OnEvent("BAG_UPDATE_DELAYED", function() end)
+				error("setup failed")
+			end,
+			OnDisable = function()
+				frameShown = false
+			end,
+		})
+		Loader.Start(ns)
+		assert.is_false(frameShown)
+		assert.is_false(module:IsActive())
+		assert.same({}, ns.Bus:GetEvents(module))
+		assert.matches("setup failed", Test.state.errors[1])
+	end)
+
 	it("gives modules access to their own settings", function()
 		local module = register("Feed", true)
 		Loader.Start(ns)
