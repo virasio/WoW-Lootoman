@@ -33,6 +33,8 @@ Core\Slash.lua
 Core\SelfTest.lua
 Core\Startup.lua
 
+Providers\Bags.lua
+
 Settings\Panel.lua
 Settings\Profiles.lua
 

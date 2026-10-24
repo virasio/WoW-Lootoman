@@ -143,6 +143,66 @@ describe("Compat", function()
 		end)
 	end)
 
+	describe("bags", function()
+		it("lists the backpack and the equipped bags, and the reagent bag", function()
+			stub({
+				Enum = { BagIndex = { Backpack = 0, ReagentBag = 5 } },
+				Constants = { InventoryConstants = { NumBagSlots = 4, NumReagentBagSlots = 1 } },
+			})
+			local bags, reagentBag = Compat.GetPlayerBags()
+			assert.same({ 0, 1, 2, 3, 4 }, bags)
+			assert.equals(5, reagentBag)
+		end)
+
+		it("has no reagent bag on a client without one", function()
+			stub({
+				Enum = { BagIndex = { Backpack = 0 } },
+				Constants = { InventoryConstants = { NumBagSlots = 4 } },
+			})
+			assert.is_nil(select(2, Compat.GetPlayerBags()))
+			stub({
+				Enum = { BagIndex = { Backpack = 0, ReagentBag = 5 } },
+				Constants = { InventoryConstants = { NumBagSlots = 4, NumReagentBagSlots = 0 } },
+			})
+			assert.is_nil(select(2, Compat.GetPlayerBags()))
+		end)
+
+		it("reads free slots, bag families and items", function()
+			stub({
+				C_Container = {
+					GetContainerNumFreeSlots = function(bag) return bag + 3, bag == 1 and 32 or nil end,
+					GetContainerItemInfo = function(_, slot)
+						if slot == 1 then
+							return { itemID = 2589, stackCount = 7, hyperlink = "link", isLocked = false }
+						end
+					end,
+				},
+			})
+			assert.same({ 3, 0 }, { Compat.GetBagFreeSlots(0) })
+			assert.same({ 4, 32 }, { Compat.GetBagFreeSlots(1) })
+			assert.same({ itemID = 2589, count = 7, link = "link" }, Compat.GetBagItem(0, 1))
+			assert.is_nil(Compat.GetBagItem(0, 2))
+		end)
+
+		it("reads item data, or nothing while the client has not loaded the item", function()
+			stub({
+				C_Item = {
+					GetItemFamily = function(item) return item == 765 and 32 or nil end,
+					GetItemInfo = function(item)
+						if item == 2589 then
+							return "Linen Cloth", "link", 1, 5, 0, "Tradeskill", "Cloth", 200, "", 1, 13, 7, 5, 0, 0, nil, true
+						end
+					end,
+				},
+			})
+			assert.same({ name = "Linen Cloth", link = "link", quality = 1, stackSize = 200, isCraftingReagent = true },
+				Compat.GetItemInfo(2589))
+			assert.is_nil(Compat.GetItemInfo(999))
+			assert.equals(32, Compat.GetItemFamily(765))
+			assert.equals(0, Compat.GetItemFamily(2589))
+		end)
+	end)
+
 	it("registers slash commands the way the game expects", function()
 		local handler = function() end
 		stub({ SlashCmdList = {} })

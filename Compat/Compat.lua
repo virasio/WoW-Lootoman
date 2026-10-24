@@ -155,6 +155,58 @@ function Compat.IsInGroup()
 	return IsInGroup() == true
 end
 
+-- The player's bags, as Blizzard's ContainerFrame.lua finds them: a list of the
+-- backpack and the equipped bags, and the reagent bag, or nil on a client
+-- without one.
+function Compat.GetPlayerBags()
+	local constants = Constants.InventoryConstants
+	local bags = {}
+	for bag = Enum.BagIndex.Backpack, constants.NumBagSlots do
+		bags[#bags + 1] = bag
+	end
+	local reagentBag = Enum.BagIndex.ReagentBag
+	if reagentBag and (constants.NumReagentBagSlots or 0) >= 1 then
+		return bags, reagentBag
+	end
+	return bags, nil
+end
+
+-- Free slots and the bag family: 0 for general bags, a bit field for
+-- profession bags.
+function Compat.GetBagFreeSlots(bag)
+	local free, family = C_Container.GetContainerNumFreeSlots(bag)
+	return free, family or 0
+end
+
+-- Number of slots; 0 when no bag is equipped there.
+function Compat.GetBagSize(bag)
+	return C_Container.GetContainerNumSlots(bag)
+end
+
+-- The item in a bag slot as { itemID, count, link }, or nil for an empty slot.
+function Compat.GetBagItem(bag, slot)
+	local info = C_Container.GetContainerItemInfo(bag, slot)
+	if not info then
+		return nil
+	end
+	return { itemID = info.itemID, count = info.stackCount, link = info.hyperlink }
+end
+
+-- The bag families an item fits (a bit field), 0 for general bags only.
+function Compat.GetItemFamily(item)
+	return C_Item.GetItemFamily(item) or 0
+end
+
+-- Item data by ID, link or name: name, link, quality, stackSize,
+-- isCraftingReagent. Nil while the client has not loaded the item yet.
+function Compat.GetItemInfo(item)
+	local name, link, quality, _, _, _, _, stackSize, _, _, _, _, _, _, _, _, isCraftingReagent = C_Item.GetItemInfo(item)
+	if not name then
+		return nil
+	end
+	return { name = name, link = link, quality = quality, stackSize = stackSize, isCraftingReagent = isCraftingReagent }
+end
+
 function Compat.GetSaved(name)
 	return _G[name]
 end

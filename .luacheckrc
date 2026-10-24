@@ -22,9 +22,12 @@ files["Compat/"] = {
 	read_globals = {
 		"C_AddOns",
 		"C_CVar",
+		"C_Container",
+		"C_Item",
 		"C_Timer",
 		"CloseLoot",
 		"ConfirmLootSlot",
+		"Constants",
 		"CreateFrame",
 		"DEFAULT_CHAT_FRAME",
 		"Enum",

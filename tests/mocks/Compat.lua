@@ -28,6 +28,13 @@ local state = {
 	loot = { slots = {}, count = 0, fishing = false },
 	-- LootSlot, ConfirmLootSlot and CloseLoot calls, in order: { "loot", 2 }, { "close" }.
 	lootActions = {},
+	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link } } };
+	-- a bag that is not listed is not equipped. Items the client has loaded, by
+	-- ID: { name, link, quality, stackSize, family, isCraftingReagent }.
+	playerBags = { 0, 1, 2, 3, 4 },
+	reagentBag = 5,
+	bags = {},
+	items = {},
 }
 
 function Compat.Has(path)
@@ -115,6 +122,68 @@ function Compat.IsInGroup()
 	return state.group
 end
 
+local function copy(source)
+	if not source then
+		return nil
+	end
+	local result = {}
+	for key, value in pairs(source) do
+		result[key] = value
+	end
+	return result
+end
+
+-- Items are found by ID or by the ID inside a link.
+local function findItem(item)
+	local id = type(item) == "string" and tonumber(item:match("item:(%d+)")) or item
+	return state.items[id]
+end
+
+function Compat.GetPlayerBags()
+	return copy(state.playerBags), state.reagentBag
+end
+
+function Compat.GetBagFreeSlots(bag)
+	local info = state.bags[bag]
+	if not info then
+		return 0, 0
+	end
+	local used = 0
+	for _ in pairs(info.items or {}) do
+		used = used + 1
+	end
+	return info.size - used, info.family or 0
+end
+
+function Compat.GetBagSize(bag)
+	local info = state.bags[bag]
+	return info and info.size or 0
+end
+
+function Compat.GetBagItem(bag, slot)
+	local info = state.bags[bag]
+	return copy(info and info.items and info.items[slot])
+end
+
+function Compat.GetItemFamily(item)
+	local info = findItem(item)
+	return info and info.family or 0
+end
+
+function Compat.GetItemInfo(item)
+	local info = findItem(item)
+	if not info then
+		return nil
+	end
+	return {
+		name = info.name,
+		link = info.link,
+		quality = info.quality,
+		stackSize = info.stackSize,
+		isCraftingReagent = info.isCraftingReagent,
+	}
+end
+
 function Compat.GetSaved(name)
 	return state.saved[name]
 end
@@ -186,6 +255,18 @@ end
 function Test.ClearLootSlot(slot)
 	state.loot.slots[slot] = false
 	Test.FireEvent("LOOT_SLOT_CLEARED", slot)
+end
+
+-- SetBags({ [0] = { size = 16, items = { [1] = { itemID = 2589, count = 5 } } },
+-- [1] = { size = 20, family = 32 }, [5] = { size = 36 } }). Fire
+-- BAG_UPDATE_DELAYED afterwards when the bags change while the addon runs.
+function Test.SetBags(bags)
+	state.bags = bags
+end
+
+-- SetItems({ [2589] = { name = "Linen Cloth", stackSize = 200, isCraftingReagent = true } }).
+function Test.SetItems(items)
+	state.items = items
 end
 
 -- SetCVar("autoLootDefault", false); SetModifier("AUTOLOOTTOGGLE", true).
