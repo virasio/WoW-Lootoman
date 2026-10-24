@@ -11,12 +11,12 @@ local _, ns = ...
 -- Items below the minimum quality and turned-off kinds are dropped; rows about
 -- items that did not fit ("skipped") are warnings and always shown.
 --
--- When there are more than maxRows rows:
--- - push: the oldest rows fade out at once, over at most PUSH_FADE seconds;
--- - scroll: they stay in a history until they expire, and Scroll moves the view.
--- While the pointer is over the feed (SetHover), every timer stops.
+-- When there are more than maxRows rows, the oldest ones fade out at once,
+-- over at most PUSH_FADE seconds (the author chose this over a scrollable
+-- history after trying both in game). While the pointer is over the feed
+-- (SetHover), every timer stops.
 --
---   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, mode = "scroll", minQuality = 0,
+--   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, minQuality = 0,
 --       kinds = { item = true, currency = true, money = true, reputation = true, xp = false } }, now)
 --   model:Add(entry, now); model:Update(now)
 --   for _, view in ipairs(model:Visible(now)) do -- view.row, view.alpha
@@ -30,7 +30,7 @@ local ModelMixin = {}
 ModelMixin.__index = ModelMixin
 
 function Model.New(options, now)
-	local model = setmetatable({ rows = {}, offset = 0 }, ModelMixin)
+	local model = setmetatable({ rows = {} }, ModelMixin)
 	model:SetOptions(options, now or 0)
 	return model
 end
@@ -66,11 +66,8 @@ local function restart(model, row, now)
 	row.fadeEnd = row.fadeStart + model.options.fade
 end
 
--- Push mode: rows past maxRows start fading now, quickly.
+-- Rows past maxRows start fading now, quickly.
 local function pushOut(model, now)
-	if model.options.mode ~= "push" then
-		return
-	end
 	local fade = math.min(model.options.fade, Model.PUSH_FADE)
 	for index = model.options.maxRows + 1, #model.rows do
 		local row = model.rows[index]
@@ -80,16 +77,10 @@ local function pushOut(model, now)
 	end
 end
 
-local function clampOffset(model)
-	local most = math.max(0, #model.rows - model.options.maxRows)
-	model.offset = math.max(0, math.min(model.offset, most))
-end
-
--- New settings take effect at once: fewer rows in push mode push the oldest out.
+-- New settings take effect at once: fewer rows push the oldest out.
 function ModelMixin:SetOptions(options, now)
 	self.options = options
 	pushOut(self, clock(self, now))
-	clampOffset(self)
 end
 
 -- Adds an entry; returns its row, or nil when the entry is not shown.
@@ -118,15 +109,10 @@ function ModelMixin:Add(entry, now)
 		for field, value in pairs(entry) do
 			row[field] = value
 		end
-		-- A scrolled view keeps showing the same rows.
-		if self.offset > 0 then
-			self.offset = self.offset + 1
-		end
 	end
 	restart(self, row, now)
 	table.insert(self.rows, 1, row)
 	pushOut(self, now)
-	clampOffset(self)
 	return row
 end
 
@@ -140,7 +126,6 @@ function ModelMixin:Update(now)
 			removed = true
 		end
 	end
-	clampOffset(self)
 	return removed
 end
 
@@ -155,40 +140,17 @@ local function alpha(row, now)
 	return math.max(0, math.min(1, (row.fadeEnd - now) / length))
 end
 
--- The rows to draw, newest first, each as { row, alpha }. Push mode shows
--- maxRows rows plus the ones fading out after a push; scroll mode shows
--- maxRows rows from the scroll position.
+-- The rows to draw, newest first, each as { row, alpha }: up to maxRows
+-- rows, and after them the ones fading out after a push.
 function ModelMixin:Visible(now)
 	now = clock(self, now)
-	local first, last = 1, #self.rows
-	if self.options.mode == "scroll" then
-		first = self.offset + 1
-		last = math.min(#self.rows, self.offset + self.options.maxRows)
-	end
 	local list = {}
-	for index = first, last do
-		local row = self.rows[index]
+	for _, row in ipairs(self.rows) do
 		if row.fadeEnd > now then
 			list[#list + 1] = { row = row, alpha = alpha(row, now) }
 		end
 	end
 	return list
-end
-
--- Scroll mode: delta > 0 goes back to older rows, delta < 0 to newer ones.
-function ModelMixin:Scroll(delta)
-	if self.options.mode == "scroll" then
-		self.offset = self.offset + delta
-		clampOffset(self)
-	end
-end
-
--- Whether there are newer rows above the view and older rows below it.
-function ModelMixin:CanScroll()
-	if self.options.mode ~= "scroll" then
-		return false, false
-	end
-	return self.offset > 0, self.offset + self.options.maxRows < #self.rows
 end
 
 -- Pauses every timer while the pointer is over the feed; the time spent

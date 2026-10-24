@@ -6,7 +6,7 @@ describe("loot feed model", function()
 	local ALL = { item = true, currency = true, money = true, reputation = true, xp = true }
 
 	local function new(options)
-		local merged = { maxRows = 3, duration = 6, fade = 1, mode = "scroll", minQuality = 0, kinds = ALL }
+		local merged = { maxRows = 3, duration = 6, fade = 1, minQuality = 0, kinds = ALL }
 		for key, value in pairs(options or {}) do
 			merged[key] = value
 		end
@@ -114,9 +114,9 @@ describe("loot feed model", function()
 		end)
 	end)
 
-	describe("push mode", function()
+	describe("a full feed", function()
 		it("fades the oldest rows out at once, quickly, when there are too many", function()
-			local model = new({ mode = "push", fade = 2 })
+			local model = new({ fade = 2 })
 			for id = 1, 4 do
 				model:Add(item(id), 0)
 			end
@@ -126,53 +126,13 @@ describe("loot feed model", function()
 		end)
 
 		it("pushes rows out when the limit shrinks", function()
-			local model = new({ mode = "push", maxRows = 3 })
+			local model = new({ maxRows = 3 })
 			for id = 1, 3 do
 				model:Add(item(id), 0)
 			end
-			model:SetOptions({ maxRows = 1, duration = 6, fade = 1, mode = "push", minQuality = 0, kinds = ALL }, 1)
+			model:SetOptions({ maxRows = 1, duration = 6, fade = 1, minQuality = 0, kinds = ALL }, 1)
 			model:Update(1 + Model.PUSH_FADE)
 			assert.same({ "3×1@1.00" }, drawn(model, 1 + Model.PUSH_FADE))
-		end)
-	end)
-
-	describe("scroll mode", function()
-		local model
-
-		before_each(function()
-			model = new({ mode = "scroll" })
-			for id = 1, 5 do
-				model:Add(item(id), id)
-			end
-		end)
-
-		it("shows maxRows rows and keeps the older ones in a history", function()
-			assert.same({ "5×1@1.00", "4×1@1.00", "3×1@1.00" }, drawn(model, 5))
-			assert.same({ false, true }, { model:CanScroll() })
-		end)
-
-		it("scrolls through the history within its ends", function()
-			model:Scroll(1)
-			assert.same({ "4×1@1.00", "3×1@1.00", "2×1@1.00" }, drawn(model, 5))
-			model:Scroll(10)
-			assert.same({ "3×1@1.00", "2×1@1.00", "1×1@1.00" }, drawn(model, 5))
-			assert.same({ true, false }, { model:CanScroll() })
-			model:Scroll(-10)
-			assert.same({ "5×1@1.00", "4×1@1.00", "3×1@1.00" }, drawn(model, 5))
-		end)
-
-		it("keeps a scrolled view on the same rows when new rows arrive", function()
-			model:Scroll(1)
-			model:Add(item(6), 6)
-			assert.same({ "4×1@1.00", "3×1@1.00", "2×1@1.00" }, drawn(model, 6))
-		end)
-
-		it("lets history rows expire on their own time", function()
-			model:Scroll(2)
-			model:Update(8)
-			assert.same({ "4×1@1.00", "3×1@1.00", "2×1@1.00" }, drawn(model, 8))
-			model:Update(9)
-			assert.same({ "5×1@1.00", "4×1@1.00", "3×1@1.00" }, drawn(model, 9))
 		end)
 	end)
 end)
