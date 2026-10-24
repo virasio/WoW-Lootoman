@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.1",
+  "workspace.library": [
+    "../.luals/vscode-wow-api/Annotations/Core"
+  ],
+  "workspace.checkThirdParty": false,
+  "workspace.ignoreDir": [
+    "tests",
+    ".release",
+    ".lua",
+    ".luarocks"
+  ],
+  "diagnostics.groupFileStatus": {
+    "type-check": "Any"
+  },
+  "diagnostics.globals": [
+    "CANCEL",
+    "CreateSettingsButtonInitializer",
+    "CreateSettingsListSectionHeaderInitializer",
+    "DEFAULT_CHAT_FRAME",
+    "Settings",
+    "SlashCmdList",
+    "StaticPopup_Show"
+  ]
+}
