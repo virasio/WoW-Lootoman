@@ -60,9 +60,7 @@ end
 function Panel.AddSlider(category, module, key, label, tooltip, min, max, step, format)
 	assert(type(Storage:GetDefault(module, key)) == "number", ("%s.%s: a slider needs a number setting"):format(module, key))
 	local setting = register(category, module, key, label, Settings.VarType.Number, nil, function(value)
-		-- Stored on a step and without floating point noise: 0.3, not 0.30000000000000004.
-		local steps = math.floor((math.min(math.max(value, min), max) - min) / step + 0.5)
-		return tonumber(("%.10g"):format(min + steps * step))
+		return Storage.OnStep(value, min, max, step)
 	end)
 	local options = Settings.CreateSliderOptions(min, max, step)
 	if format then

@@ -53,6 +53,7 @@ files["Compat/"] = {
 files["Modules/"] = {
 	read_globals = {
 		"CreateFrame",
+		"LibStub",
 		"LootFrame",
 		"StaticPopup_Hide",
 		"UIParent",

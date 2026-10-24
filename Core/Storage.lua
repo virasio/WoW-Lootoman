@@ -139,6 +139,24 @@ function Storage:GetSection(name)
 	return sections[name]
 end
 
+-- Calls fn(section) for the section of every profile that has one, for data
+-- that changes in all profiles at once (an Edit Mode layout renamed, for example).
+function Storage:EachSection(name, fn)
+	for _, profile in pairs(self.db.profiles) do
+		local section = type(profile.sections) == "table" and profile.sections[name]
+		if type(section) == "table" then
+			fn(section)
+		end
+	end
+end
+
+-- A slider value as it is stored: between min and max, on a step, and without
+-- floating point noise (0.3, not 0.30000000000000004).
+function Storage.OnStep(value, min, max, step)
+	local steps = math.floor((math.min(math.max(value, min), max) - min) / step + 0.5)
+	return tonumber(("%.10g"):format(min + steps * step))
+end
+
 -- Account-wide settings outside profiles, such as debug output.
 function Storage:GetGlobal(key)
 	local default = self.globalDefaults[key]

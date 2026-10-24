@@ -20,6 +20,7 @@
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",
     "DEFAULT_CHAT_FRAME",
+    "LibStub",
     "LootFrame",
     "MinimalSliderWithSteppersMixin",
     "Settings",

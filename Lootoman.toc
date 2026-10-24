@@ -35,6 +35,8 @@ Core\Startup.lua
 
 Providers\Bags.lua
 
+Modules\Shared\EditMode.lua
+
 Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua
 

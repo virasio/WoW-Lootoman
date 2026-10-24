@@ -2,8 +2,9 @@ local _, ns = ...
 
 -- Exists only when the addon runs from the repository: the packager removes
 -- the #@debug@ block from the TOC. It lets us check the module lifecycle in the
--- game before real modules exist. When on, it shows a small frame and reports
--- bag updates in debug messages. Development text is not translated.
+-- game before real modules exist. When on, it shows a small frame, placed with
+-- Edit Mode, and reports bag updates in debug messages. Development text is
+-- not translated.
 local Sample = ns.Modules:Register({
 	name = "Sample",
 	title = "Sample module (dev)",
@@ -20,6 +21,13 @@ function Sample:OnEnable()
 		text:SetAllPoints()
 		text:SetText("Lootoman sample module")
 		self.frame = frame
+		ns.EditMode.Register(self, frame, {
+			default = { point = "TOP", x = 0, y = -120 },
+			settings = {
+				{ kind = "checkbox", key = "verbose", label = "Report bag updates",
+					tooltip = "Prints a debug message on every bag update. Needs /lootoman debug on." },
+			},
+		})
 		ns.Debug("Sample module: frame created")
 	end
 	self.frame:Show()
