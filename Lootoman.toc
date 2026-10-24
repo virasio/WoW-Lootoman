@@ -7,6 +7,8 @@
 ## Category: Inventory
 ## Category-ruRU: Инвентарь
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
+## SavedVariables: LootomanDB
+## SavedVariablesPerCharacter: LootomanCharDB
 
 Locales\Locales.lua
 Locales\enUS.lua
@@ -19,3 +21,5 @@ Core\EventBus.lua
 Core\Migrations.lua
 Core\Storage.lua
 Core\Profiles.lua
+Core\Modules.lua
+Core\Startup.lua

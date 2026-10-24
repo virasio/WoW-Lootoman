@@ -33,6 +33,8 @@ describe("Lootoman.toc", function()
 		assert.equals("Lootoman", toc.metadata.Title)
 		assert.equals("@project-version@", toc.metadata.Version)
 		assert.matches("^%d+[%d, ]*$", toc.metadata.Interface)
+		assert.equals("LootomanDB", toc.metadata.SavedVariables)
+		assert.equals("LootomanCharDB", toc.metadata.SavedVariablesPerCharacter)
 	end)
 
 	it("lists only files that exist", function()

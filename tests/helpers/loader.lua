@@ -89,4 +89,16 @@ function Loader.LoadAddon(options)
 	return Loader.Load(merged)
 end
 
+-- Plays the game's start sequence on an addon loaded with LoadAddon:
+-- ADDON_LOADED with the given saved variables, then PLAYER_LOGIN.
+function Loader.Start(ns, saved)
+	local Test = ns.Compat.Test
+	for name, value in pairs(saved or {}) do
+		Test.state.saved[name] = value
+	end
+	Test.FireEvent("ADDON_LOADED", Loader.ADDON_NAME)
+	Test.FireEvent("PLAYER_LOGIN")
+	return ns
+end
+
 return Loader
