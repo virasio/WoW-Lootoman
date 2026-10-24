@@ -9,9 +9,26 @@ exclude_files = {
 	".luarocks/",
 }
 
--- WoW API globals are added here as the code starts using them.
-read_globals = {
-	"GetLocale",
+-- Game globals are allowed per layer, so a game API call outside Compat shows
+-- up as an undefined global (techspec §3). Add new globals to the right layer.
+files["Locales/Locales.lua"] = {
+	read_globals = { "GetLocale" },
+}
+
+files["Compat/"] = {
+	globals = { "SlashCmdList" },
+	read_globals = {
+		"C_AddOns",
+		"C_Timer",
+		"CreateFrame",
+		"DEFAULT_CHAT_FRAME",
+		"GetBuildInfo",
+		"GetNormalizedRealmName",
+		"InCombatLockdown",
+		"UnitFullName",
+		"geterrorhandler",
+		"issecretvalue",
+	},
 }
 
 files["tests/"] = {

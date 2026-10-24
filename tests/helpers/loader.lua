@@ -77,4 +77,16 @@ function Loader.Load(options)
 	return ns
 end
 
+-- The addon as unit tests use it: Compat replaced by the mock, no Settings UI.
+function Loader.LoadAddon(options)
+	local merged = {
+		replace = { ["Compat/Compat.lua"] = "tests/mocks/Compat.lua" },
+		skip = { "Settings/" },
+	}
+	for key, value in pairs(options or {}) do
+		merged[key] = value
+	end
+	return Loader.Load(merged)
+end
+
 return Loader

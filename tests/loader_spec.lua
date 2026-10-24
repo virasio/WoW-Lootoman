@@ -4,7 +4,7 @@ local FIXTURE = "tests/fixtures/toc/Fixture.toc"
 
 describe("test loader", function()
 	it("loads the addon with its name and a shared namespace", function()
-		local ns = Loader.Load()
+		local ns = Loader.LoadAddon()
 		assert.equals("Lootoman", ns.addonName)
 	end)
 

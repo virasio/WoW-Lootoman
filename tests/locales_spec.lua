@@ -24,24 +24,24 @@ end
 
 describe("L", function()
 	it("falls back to the English key", function()
-		local ns = Loader.Load()
+		local ns = Loader.LoadAddon()
 		assert.equals("Sell junk", ns.L["Sell junk"])
 	end)
 
 	it("uses the translation of the client locale", function()
-		local ns = Loader.Load({ locale = "ruRU" })
+		local ns = Loader.LoadAddon({ locale = "ruRU" })
 		ns.Locales.AddTranslation("ruRU", { ["Sell junk"] = "Продать хлам" })
 		assert.equals("Продать хлам", ns.L["Sell junk"])
 	end)
 
 	it("ignores translations for other locales", function()
-		local ns = Loader.Load({ locale = "enUS" })
+		local ns = Loader.LoadAddon({ locale = "enUS" })
 		ns.Locales.AddTranslation("ruRU", { ["Sell junk"] = "Продать хлам" })
 		assert.equals("Sell junk", ns.L["Sell junk"])
 	end)
 
 	it("is read-only", function()
-		local ns = Loader.Load()
+		local ns = Loader.LoadAddon()
 		assert.has_error(function()
 			ns.L["Sell junk"] = "Sell"
 		end)
@@ -55,7 +55,7 @@ describe("locale files", function()
 
 	for _, locale in ipairs(translatedLocales) do
 		it(locale .. " translates only English keys, with the same placeholders", function()
-			local ns = Loader.Load({ locale = locale })
+			local ns = Loader.LoadAddon({ locale = locale })
 			for key, value in pairs(ns.Locales.translation) do
 				assert.is_true(ns.Locales.english[key] == true, ("%s: %q is not in enUS.lua"):format(locale, key))
 				assert.same(Strings.Placeholders(key), Strings.Placeholders(value),
@@ -65,7 +65,7 @@ describe("locale files", function()
 	end
 
 	it("enUS lists every key the code uses, and no others", function()
-		local ns = Loader.Load()
+		local ns = Loader.LoadAddon()
 		local used = {}
 		for _, path in ipairs(codeFiles) do
 			local keys, nonLiteral = Strings.FindKeys(read(path))

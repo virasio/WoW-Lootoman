@@ -1,0 +1,123 @@
+-- The real Compat against stubbed game globals, and the mock's contract.
+
+local function loadCompat(path)
+	local ns = {}
+	assert(loadfile(path))("Lootoman", ns)
+	return ns.Compat
+end
+
+local function functionNames(object)
+	local names = {}
+	for name, value in pairs(object) do
+		if type(value) == "function" then
+			names[#names + 1] = name
+		end
+	end
+	table.sort(names)
+	return names
+end
+
+local function stub(globals)
+	for name, value in pairs(globals) do
+		rawset(_G, name, value)
+	end
+end
+
+describe("Compat", function()
+	local Compat
+
+	before_each(function()
+		Compat = loadCompat("Compat/Compat.lua")
+	end)
+
+	it("has the same functions as its test mock", function()
+		assert.same(functionNames(Compat), functionNames(loadCompat("tests/mocks/Compat.lua")))
+	end)
+
+	it("detects capabilities by global and field path", function()
+		stub({ C_FakeContainer = { GetItem = function() end } })
+		assert.is_true(Compat.Has("C_FakeContainer"))
+		assert.is_true(Compat.Has("C_FakeContainer.GetItem"))
+		assert.is_false(Compat.Has("C_FakeContainer.Missing"))
+		assert.is_false(Compat.Has("C_FakeMissing.GetItem"))
+		assert.is_false(Compat.Has("C_FakeContainer.GetItem.Deeper"))
+	end)
+
+	it("builds the character key from name and realm", function()
+		stub({
+			UnitFullName = function() return "Ana", "Silvermoon" end,
+			GetNormalizedRealmName = function() return "Other" end,
+		})
+		assert.equals("Ana-Silvermoon", Compat.GetCharacterKey())
+	end)
+
+	it("falls back to the normalized realm name", function()
+		stub({
+			UnitFullName = function() return "Ana", nil end,
+			GetNormalizedRealmName = function() return "TwistingNether" end,
+		})
+		assert.equals("Ana-TwistingNether", Compat.GetCharacterKey())
+	end)
+
+	it("has no character key before the realm is known", function()
+		stub({
+			UnitFullName = function() return "Ana", "" end,
+			GetNormalizedRealmName = function() return nil end,
+		})
+		assert.is_nil(Compat.GetCharacterKey())
+	end)
+
+	it("treats every value as not secret when the client has no secret values", function()
+		rawset(_G, "issecretvalue", nil)
+		assert.is_false(Compat.IsSecret(42))
+	end)
+
+	it("asks the client about secret values when it can", function()
+		stub({ issecretvalue = function(value) return value == "hidden" end })
+		assert.is_true(Compat.IsSecret("hidden"))
+		assert.is_false(Compat.IsSecret("shown"))
+	end)
+
+	it("reports an addon as loaded only when loading has finished", function()
+		stub({ C_AddOns = { IsAddOnLoaded = function(name) return true, name == "Done" end } })
+		assert.is_true(Compat.IsAddOnLoaded("Done"))
+		assert.is_false(Compat.IsAddOnLoaded("StillLoading"))
+	end)
+
+	it("registers slash commands the way the game expects", function()
+		local handler = function() end
+		stub({ SlashCmdList = {} })
+		Compat.RegisterSlashCommand("FAKEADDON", { "/fake", "/fk" }, handler)
+		assert.equals("/fake", rawget(_G, "SLASH_FAKEADDON1"))
+		assert.equals("/fk", rawget(_G, "SLASH_FAKEADDON2"))
+		assert.equals(handler, rawget(_G, "SlashCmdList").FAKEADDON)
+	end)
+end)
+
+describe("Compat mock", function()
+	local Compat
+
+	before_each(function()
+		Compat = loadCompat("tests/mocks/Compat.lua")
+	end)
+
+	it("runs timers when time moves past them", function()
+		local ran = {}
+		Compat.After(1, function() ran[#ran + 1] = "one" end)
+		Compat.After(5, function() ran[#ran + 1] = "five" end)
+		Compat.Test.Advance(2)
+		assert.same({ "one" }, ran)
+		Compat.Test.Advance(3)
+		assert.same({ "one", "five" }, ran)
+	end)
+
+	it("fires combat events when combat changes", function()
+		local fired = {}
+		Compat.RegisterEvent("PLAYER_REGEN_DISABLED", function(event) fired[#fired + 1] = event end)
+		Compat.RegisterEvent("PLAYER_REGEN_ENABLED", function(event) fired[#fired + 1] = event end)
+		Compat.Test.SetCombat(true)
+		assert.is_true(Compat.InCombat())
+		Compat.Test.SetCombat(false)
+		assert.same({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" }, fired)
+	end)
+end)

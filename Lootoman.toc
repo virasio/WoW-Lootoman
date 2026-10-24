@@ -12,4 +12,6 @@ Locales\Locales.lua
 Locales\enUS.lua
 Locales\ruRU.lua
 
+Compat\Compat.lua
+
 Core\Init.lua
