@@ -57,22 +57,44 @@ function SelfTest.Run()
 			say("  " .. name .. ": FAILED, " .. tostring(ran and problem or ok))
 		end
 	end
-	Compat.After(0, function()
+	local scheduled, problem = pcall(Compat.After, 0, function()
 		say("  After: OK")
 	end)
+	if not scheduled then
+		failed = failed + 1
+		say("  After: FAILED, " .. tostring(problem))
+	end
 
-	local version, build, _, interface = Compat.GetBuildInfo()
-	say(("Client %s (%s), interface %s; addon %s"):format(tostring(version), tostring(build), tostring(interface),
-		tostring(Compat.GetAddOnMetadata(addonName, "Version"))))
-	say(("Character %s, profile %s"):format(tostring(Storage.character), Storage:GetProfileName()))
-	say(("Saved data: schema %s%s"):format(tostring(Storage.db.schema),
-		Storage.readOnly and ", read-only (saved by a newer version)" or ""))
-	say(("Data set: %s; locale: %s"):format(ns.Data and ns.Data.set or "none", ns.Locales.current))
+	-- Each line is built under protection, so a broken call cannot stop the
+	-- report; the line then shows the error instead.
+	local function report(build)
+		local ok, text = pcall(build)
+		say(ok and text or ("(" .. tostring(text) .. ")"))
+	end
 
+	report(function()
+		local version, build, _, interface = Compat.GetBuildInfo()
+		return ("Client %s (%s), interface %s"):format(tostring(version), tostring(build), tostring(interface))
+	end)
+	report(function()
+		return "Addon " .. tostring(Compat.GetAddOnMetadata(addonName, "Version"))
+	end)
+	report(function()
+		return ("Character %s, profile %s"):format(tostring(Storage.character), Storage:GetProfileName())
+	end)
+	report(function()
+		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema),
+			Storage.readOnly and ", read-only (saved by a newer version)" or "")
+	end)
+	report(function()
+		return ("Data set: %s; locale: %s"):format(ns.Data and ns.Data.set or "none", ns.Locales.current)
+	end)
 	for _, module in ipairs(Modules:List()) do
-		local events = Bus:GetEvents(module)
-		say(("Module %s: %s, events: %s"):format(module.name, module:IsActive() and "on" or "off",
-			#events > 0 and table.concat(events, ", ") or "none"))
+		report(function()
+			local events = Bus:GetEvents(module)
+			return ("Module %s: %s, events: %s"):format(module.name, module:IsActive() and "on" or "off",
+				#events > 0 and table.concat(events, ", ") or "none")
+		end)
 	end
 
 	say(failed == 0 and "All checks passed." or (failed .. " check(s) failed."))

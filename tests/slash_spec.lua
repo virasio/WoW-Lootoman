@@ -112,9 +112,29 @@ describe("slash commands", function()
 			assert.matches("GetBuildInfo: FAILED", output())
 		end)
 
+		it("finishes the report when game calls raise errors", function()
+			ns.Compat.GetBuildInfo = function() error("broken build info") end
+			ns.Compat.GetAddOnMetadata = function() error("broken metadata") end
+			run("selftest")
+			assert.matches("GetBuildInfo: FAILED", output())
+			assert.matches("GetAddOnMetadata: FAILED", output())
+			assert.matches("%(.*broken build info%)", output())
+			assert.matches("%(.*broken metadata%)", output())
+			assert.matches("Character Tester%-Realm", output())
+			assert.equals("2 check(s) failed.", printed[#printed]:match("[%d]+ check%(s%) failed%."))
+		end)
+
+		it("reports a timer that cannot be scheduled", function()
+			ns.Compat.After = function() error("no timers") end
+			run("selftest")
+			assert.matches("After: FAILED, .*no timers", output())
+			assert.matches("1 check%(s%) failed%.", output())
+		end)
+
 		it("describes the client, the character, the data and the modules", function()
 			run("selftest")
-			assert.matches("Client 12%.1%.5 %(70575%), interface 120105; addon @project%-version@", output())
+			assert.matches("Client 12%.1%.5 %(70575%), interface 120105\n", output())
+			assert.matches("Addon @project%-version@", output())
 			assert.matches("Character Tester%-Realm, profile Default", output())
 			assert.matches("Saved data: schema 1\n", output())
 			assert.matches("Data set: Mainline; locale: enUS", output())
