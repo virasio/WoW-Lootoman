@@ -1,5 +1,5 @@
 local _, ns = ...
-local L, Profiles, Storage = ns.L, ns.Profiles, ns.Storage
+local L, Profiles, Storage, Text = ns.L, ns.Profiles, ns.Storage, ns.Text
 local Panel = ns.SettingsPanel
 
 -- The Profiles page: which profile this character uses, and buttons to
@@ -15,11 +15,20 @@ local ERRORS = {
 }
 
 -- Default is stored under its English name and shown in the client language.
+-- If another profile already has that shown name (created under another
+-- client language), Default also shows its stored name, so the two differ.
 local function displayName(name)
-	if name == Storage.DEFAULT_PROFILE then
-		return L["Default"]
+	if name ~= Storage.DEFAULT_PROFILE then
+		return name
 	end
-	return name
+	local label = L["Default"]
+	local folded = Text.FoldCase(label)
+	for _, other in ipairs(Profiles.List()) do
+		if other ~= Storage.DEFAULT_PROFILE and Text.FoldCase(other) == folded then
+			return ("%s (%s)"):format(label, Storage.DEFAULT_PROFILE)
+		end
+	end
+	return label
 end
 
 local function report(result, err)

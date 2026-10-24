@@ -4,11 +4,11 @@ local SettingsAPI = require("tests.mocks.SettingsAPI")
 describe("profiles page", function()
 	local ns, api, page, Profiles
 
-	local function start(locale)
+	local function start(locale, saved)
 		api = SettingsAPI.Install()
 		ns = Loader.LoadAddon({ skip = {}, locale = locale })
 		ns.Modules:Register({ name = "Feed", defaults = { enabled = true, rows = 5 } })
-		Loader.Start(ns)
+		Loader.Start(ns, saved)
 		page = api.FindCategory(ns.L["Profiles"])
 		Profiles = ns.Profiles
 	end
@@ -47,6 +47,13 @@ describe("profiles page", function()
 		assert.same({ "Default=Default", "Main=Main" }, options())
 		start("ruRU")
 		assert.same({ "Default=По умолчанию" }, options())
+	end)
+
+	it("tells Default apart from a profile with the same shown name", function()
+		start("ruRU", {
+			LootomanDB = { schema = 1, profiles = { Default = {}, ["По умолчанию"] = {} }, profileKeys = {}, global = {} },
+		})
+		assert.same({ "Default=По умолчанию (Default)", "По умолчанию=По умолчанию" }, options())
 	end)
 
 	it("switches the profile from the dropdown, and the dropdown has no default", function()

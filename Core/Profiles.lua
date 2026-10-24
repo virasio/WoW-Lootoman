@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Storage, Text = ns.Bus, ns.Storage, ns.Text
+local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
 
 -- Named sets of settings (techspec §7.1). Each character uses one profile;
 -- characters without one use Default, which cannot be renamed or deleted.
@@ -54,6 +54,10 @@ local function validate(name, renaming)
 	end
 	local existing = findName(name)
 	if existing and existing ~= renaming then
+		return nil, "exists"
+	end
+	-- Default is shown under its translated name, so that name is taken too.
+	if Text.FoldCase(name) == Text.FoldCase(L["Default"]) then
 		return nil, "exists"
 	end
 	return name
