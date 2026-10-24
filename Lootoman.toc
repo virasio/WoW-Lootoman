@@ -16,6 +16,9 @@ Locales\ruRU.lua
 
 Compat\Compat.lua
 
+Data\Mainline\Data.lua [AllowLoadGameType standard]
+Data\Forever\Data.lua [AllowLoadGameType camelot]
+
 Core\Init.lua
 Core\EventBus.lua
 Core\Migrations.lua
