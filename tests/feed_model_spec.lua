@@ -64,6 +64,15 @@ describe("loot feed model", function()
 			assert.equals(17, model:Visible(5)[5].row.total)
 		end)
 
+		it("takes the details of an item the client had not loaded the first time", function()
+			local model = new()
+			model:Add({ kind = "item", id = 1, link = "|Hitem:1|h[1]|h", name = "1", amount = 1 }, 0)
+			model:Add({ kind = "item", id = 1, link = "|Hitem:1|h[1]|h", name = "1", amount = 2, icon = 134400, quality = 3 }, 1)
+			model:Add({ kind = "item", id = 1, link = "|Hitem:1|h[1]|h", name = "1", amount = 1 }, 2)
+			local row = model:Visible(2)[1].row
+			assert.same({ 4, 134400, 3 }, { row.amount, row.icon, row.quality })
+		end)
+
 		it("keeps different items apart, and starts a new row once the old one has faded out", function()
 			local model = new()
 			model:Add(item(1), 0)

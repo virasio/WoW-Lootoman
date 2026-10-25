@@ -99,7 +99,13 @@ function ModelMixin:Add(entry, now)
 		if row.amount or entry.amount then
 			row.amount = (row.amount or 0) + (entry.amount or 0)
 		end
-		row.total = entry.total or row.total
+		-- Everything else as the client knows it now: an item looted before its
+		-- data was loaded came without an icon or a quality.
+		for field, value in pairs(entry) do
+			if field ~= "amount" then
+				row[field] = value
+			end
+		end
 	else
 		row = { key = key }
 		for field, value in pairs(entry) do
