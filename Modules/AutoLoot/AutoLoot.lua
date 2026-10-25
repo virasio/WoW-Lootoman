@@ -118,13 +118,16 @@ local function start(autoLoot)
 		return
 	end
 	AutoLoot.LootWindow.Hide()
+	-- One plan for the whole loot: each item reserves its space, in the order
+	-- the slots are looted, so two items never count on the same free slot.
+	local space = Bags.Plan()
 	for slot = Compat.GetNumLootItems(), 1, -1 do
 		local info = Compat.GetLootSlot(slot)
 		if info then
 			local link = known(info.link)
 			if known(info.locked) == true then
 				loot.left = loot.left + 1
-			elseif info.kind == "item" and link and not Bags.Fits(link, known(info.quantity) or 1) then
+			elseif info.kind == "item" and link and not space:Take(link, known(info.quantity) or 1) then
 				loot.left = loot.left + 1
 				loot.skipped = true
 				Bus:Send("LootSkipped", skippedEntry(info))

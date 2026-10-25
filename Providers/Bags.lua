@@ -2,8 +2,8 @@ local _, ns = ...
 local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
 
 -- Free space in the player's bags: free slots per bag type, and
--- whether a looted stack fits. The bags are read on first use and read again
--- after the next BAG_UPDATE_DELAYED.
+-- whether the stacks of a loot fit. The bags are read on first use and read
+-- again after the next BAG_UPDATE_DELAYED.
 local Bags = {}
 ns.Bags = Bags
 
@@ -97,36 +97,83 @@ SelfTest.AddReport(function()
 	return "Bags: " .. (#parts > 0 and table.concat(parts, ", ") or "none")
 end)
 
--- Whether a looted stack of an item (ID or link) fits: into partial stacks of
--- the same item, a free slot in a general bag, in a profession bag of its
--- family or, for crafting reagents, in the reagent bag. An item the client has
--- not loaded yet counts as a single item that fits only a general bag.
-function Bags.Fits(item, count)
-	count = count or 1
+-- The space of one loot: the bags as they are now, minus what the items taken
+-- before in the same plan need, so two items never count on the same free
+-- slot or the same room in a stack.
+--
+--   local plan = Bags.Plan()
+--   plan:Take(link, 3)   -- true, and the space is reserved; false if it does not fit
+local PlanMixin = {}
+PlanMixin.__index = PlanMixin
+
+function Bags.Plan()
 	local bags = current()
+	local plan = setmetatable({ bags = bags.bags, free = {}, stacks = {} }, PlanMixin)
+	for index, bag in ipairs(bags.bags) do
+		plan.free[index] = bag.free
+	end
+	for itemID, stacks in pairs(bags.stacks) do
+		plan.stacks[itemID] = { unpack(stacks) }
+	end
+	return plan
+end
+
+-- Whether a looted stack of an item (ID or link) fits, and if so its space is
+-- reserved. The stack first fills partial stacks of the same item; what is
+-- left needs a free slot per stack, taken from the most specific bags first,
+-- as the game puts items: a profession bag of the item's family, the reagent
+-- bag for crafting reagents, then general bags. An item the client has not
+-- loaded yet counts as one stack that only a general bag takes.
+function PlanMixin:Take(item, count)
+	count = count or 1
 	local itemID = type(item) == "string" and tonumber(item:match("item:(%d+)")) or item
 	local info = Compat.GetItemInfo(item)
-	local stackSize = info and info.stackSize or 1
+	local stackSize = math.max(info and info.stackSize or count, 1)
+	local stacks = info and itemID and self.stacks[itemID] or {}
 
-	local room = 0
-	for _, stack in ipairs(itemID and bags.stacks[itemID] or {}) do
-		room = room + math.max(0, stackSize - stack)
-	end
-	if room >= count then
-		return true
+	local left, fills = count, {}
+	for index, stack in ipairs(stacks) do
+		local put = math.min(math.max(0, stackSize - stack), left)
+		if put > 0 then
+			fills[index], left = put, left - put
+		end
 	end
 
+	local needed = math.ceil(left / stackSize)
 	local family = info and Compat.GetItemFamily(item) or 0
-	for _, bag in ipairs(bags.bags) do
-		if bag.free > 0 then
-			if bag.reagent then
-				if info and info.isCraftingReagent then
-					return true
-				end
-			elseif bag.family == 0 or sharesFamily(family, bag.family) then
-				return true
+	local reagent = info and info.isCraftingReagent
+	local taken, found = {}, 0
+	local function take(accepts)
+		for index, bag in ipairs(self.bags) do
+			if found < needed and accepts(bag) then
+				local use = math.min(self.free[index] - (taken[index] or 0), needed - found)
+				taken[index], found = (taken[index] or 0) + use, found + use
 			end
 		end
 	end
-	return false
+	take(function(bag) return not bag.reagent and bag.family ~= 0 and sharesFamily(family, bag.family) end)
+	take(function(bag) return bag.reagent and reagent end)
+	take(function(bag) return not bag.reagent and bag.family == 0 end)
+	if found < needed then
+		return false
+	end
+
+	for index, use in pairs(taken) do
+		self.free[index] = self.free[index] - use
+	end
+	if info and itemID then
+		self.stacks[itemID] = stacks
+		for index, put in pairs(fills) do
+			stacks[index] = stacks[index] + put
+		end
+		for stack = 1, needed do
+			stacks[#stacks + 1] = stack < needed and stackSize or left - (needed - 1) * stackSize
+		end
+	end
+	return true
+end
+
+-- Whether a looted stack fits now, on its own (see PlanMixin:Take).
+function Bags.Fits(item, count)
+	return Bags.Plan():Take(item, count)
 end
