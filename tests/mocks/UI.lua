@@ -48,11 +48,21 @@ function methods:GetEffectiveScale() return self.scale or 1 end
 function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
+function methods:SetEnabled(enabled) self.enabled = enabled end
+function methods:SetFontObject(font) self.fontObject = font end
+function methods:HookScript(name, fn)
+	self.hooks = self.hooks or {}
+	self.hooks[name] = self.hooks[name] or {}
+	table.insert(self.hooks[name], fn)
+end
+-- The options panel's controls (DefaultTooltipMixin).
+function methods:SetTooltipFunc(fn) self.tooltipFunc = fn end
 -- Slider: MinimalSliderWithSteppersTemplate.
 function methods:Init(value, minValue, maxValue, steps) self.value, self.range = value, { minValue, maxValue, steps } end
 function methods:RegisterCallback(event, fn, owner) self.callbacks = self.callbacks or {}; self.callbacks[event] = { fn, owner } end
--- Dropdown: WowStyle1DropdownTemplate.
+-- Dropdown: WowStyle1DropdownTemplate and WowStyle2DropdownTemplate.
 function methods:SetupMenu(generator) self.menu = generator end
+function methods:GenerateMenu() self.generated = (self.generated or 0) + 1 end
 function methods:CreateTexture() return UI.NewFake(self) end
 function methods:CreateFontString() return UI.NewFake(self) end
 

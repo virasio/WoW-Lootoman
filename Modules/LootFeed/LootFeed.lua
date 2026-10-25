@@ -10,6 +10,7 @@ local Feed = ns.Feed
 local LootFeed = ns.Modules:Register({
 	name = "LootFeed",
 	title = L["Loot feed"],
+	switchLabel = L["Enable loot feed"],
 	description = L["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."],
 	defaults = {
 		enabled = true,
@@ -42,9 +43,11 @@ local function qualityChoices()
 	return choices
 end
 
--- The settings, for the options page and the Edit Mode dialog alike.
+-- The settings, in groups, for the options page and the Edit Mode dialog
+-- alike; the row designer's button ends the last group.
 local function settings()
 	return {
+		{ kind = "header", label = L["What the feed shows"] },
 		{ kind = "checkbox", key = "items", label = L["Items"] },
 		{ kind = "checkbox", key = "currencies", label = L["Currencies"] },
 		{ kind = "checkbox", key = "money", label = L["Money"] },
@@ -52,6 +55,7 @@ local function settings()
 		{ kind = "checkbox", key = "xp", label = L["Experience"] },
 		{ kind = "dropdown", key = "minQuality", label = L["Minimum quality"],
 			tooltip = L["Items of a lower quality are not shown."], choices = qualityChoices() },
+		{ kind = "header", label = L["Rows and timing"] },
 		{ kind = "slider", key = "maxRows", label = L["Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
 			min = 1, max = 20, step = 1, format = "%d" },
 		{ kind = "dropdown", key = "direction", label = L["New rows appear"],
@@ -60,6 +64,7 @@ local function settings()
 		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
 			min = 2, max = 30, step = 1, format = L["%d s"] },
 		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
+		{ kind = "header", label = L["Appearance"] },
 		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
 			min = 10, max = 16, step = 1, format = "%d" },
 		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
@@ -144,17 +149,8 @@ end
 
 function LootFeed:BuildSettings(category, layout)
 	local Panel = ns.SettingsPanel
+	Panel.AddSettings(category, layout, self.name, settings())
 	Panel.AddButton(layout, L["Row design"], L["Open the designer"], function()
 		self.Designer.Open()
 	end, L["Change how the feed's rows look: move and resize their parts."])
-	for _, setting in ipairs(settings()) do
-		if setting.kind == "checkbox" then
-			Panel.AddCheckbox(category, self.name, setting.key, setting.label, setting.tooltip)
-		elseif setting.kind == "slider" then
-			Panel.AddSlider(category, self.name, setting.key, setting.label, setting.tooltip,
-				setting.min, setting.max, setting.step, setting.format)
-		else
-			Panel.AddDropdown(category, self.name, setting.key, setting.label, setting.tooltip, setting.choices)
-		end
-	end
 end

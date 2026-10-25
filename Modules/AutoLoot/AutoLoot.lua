@@ -14,8 +14,13 @@ local Bags, Bus, Compat, L = ns.Bags, ns.Bus, ns.Compat, ns.L
 local AutoLoot = ns.Modules:Register({
 	name = "AutoLoot",
 	title = L["Fast autoloot"],
+	switchLabel = L["Enable fast autoloot"],
 	description = L["When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up."],
 	defaults = { enabled = true, confirmBind = true },
+	mainSettings = {
+		{ kind = "checkbox", key = "confirmBind", label = L["Confirm bind-on-pickup items when alone"],
+			tooltip = L["Picks up items that bind when picked up without asking, unless you are in a group."] },
+	},
 })
 
 -- A slot that is not cleared within this time stops looting; in game a slot
@@ -175,9 +180,4 @@ end
 function AutoLoot:OnDisable()
 	loot = nil
 	self.LootWindow.Reset()
-end
-
-function AutoLoot:BuildSettings(category)
-	ns.SettingsPanel.AddCheckbox(category, self.name, "confirmBind", L["Confirm bind-on-pickup items when alone"],
-		L["Picks up items that bind when picked up without asking, unless you are in a group."])
 end

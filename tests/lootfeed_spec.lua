@@ -7,7 +7,7 @@ local QUALITIES = { "Poor", "Common", "Uncommon", "Rare", "Epic", "Legendary" }
 
 -- Just enough of LibEditMode to see what the feed registers.
 local function newLibEditMode()
-	local lib = { frames = {}, settings = {}, callbacks = {}, SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 } }
+	local lib = { frames = {}, settings = {}, callbacks = {}, SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2, Divider = "divider" } }
 	function lib:AddFrame(frame, _, default, name) self.frames[frame] = { default = default, name = name } end
 	function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 	function lib:AddFrameSettingsButtons(_, buttons) self.buttons = buttons end
@@ -47,13 +47,15 @@ describe("loot feed module", function()
 		module = ns.Modules:Get("LootFeed")
 	end)
 
-	it("is on by default, with a settings page for every option", function()
+	it("is on by default, with a settings page for every option, in groups", function()
 		assert.is_true(module:IsActive())
 		assert.same({
-			"checkbox:Enabled", "button:Row design", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
-			"checkbox:Experience", "dropdown:Minimum quality", "slider:Rows", "dropdown:New rows appear",
-			"slider:Time on screen", "slider:Fade-out time", "slider:Size", "slider:Background opacity",
-			"checkbox:Owned count", "checkbox:Glow for rare items",
+			"checkbox:Enabled",
+			"header:What the feed shows", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
+			"checkbox:Experience", "dropdown:Minimum quality",
+			"header:Rows and timing", "slider:Rows", "dropdown:New rows appear", "slider:Time on screen", "slider:Fade-out time",
+			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Owned count", "checkbox:Glow for rare items",
+			"button:Row design",
 		}, api.Kinds(api.FindCategory("Loot feed")))
 	end)
 
@@ -74,7 +76,16 @@ describe("loot feed module", function()
 	it("puts the feed in Edit Mode right of the screen centre, with the same settings in its dialog", function()
 		local frame = module.feed.frame
 		assert.same({ "Loot feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
-		assert.equals(14, #lib.settings[frame])
+		-- The same groups, with a divider for each header.
+		local names = {}
+		for _, setting in ipairs(lib.settings[frame]) do
+			if setting.kind == "divider" then
+				names[#names + 1] = setting.name
+			end
+		end
+		assert.same({ "What the feed shows", "Rows and timing", "Appearance" }, names)
+		assert.equals(17, #lib.settings[frame])
+		assert.same({ "divider", "Items" }, { lib.settings[frame][1].kind, lib.settings[frame][2].name })
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
 		lib.Fire("exit")

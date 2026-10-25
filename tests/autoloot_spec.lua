@@ -2,14 +2,19 @@ local Loader = require("tests.helpers.loader")
 local SettingsAPI = require("tests.mocks.SettingsAPI")
 
 describe("fast autoloot settings", function()
-	it("has a page with its switch and the bind-on-pickup option, both on by default", function()
+	it("are on the options' main page: its switch and the bind-on-pickup option under it, both on by default", function()
 		local api = SettingsAPI.Install()
 		rawset(_G, "StaticPopup_Hide", function() end)
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
-		local page = api.FindCategory("Fast autoloot")
-		assert.same({ "checkbox:Enabled", "checkbox:Confirm bind-on-pickup items when alone" }, api.Kinds(page))
-		assert.is_true(api.settings.LOOTOMAN_AUTOLOOT_CONFIRMBIND:GetValue())
+		local shown = {}
+		for _, item in ipairs(ns.SettingsPanel.main.items) do
+			if item.kind == "checkbox" and (item.text or ""):match("autoloot") or (item.text or ""):match("bind%-on%-pickup") then
+				shown[#shown + 1] = ("%s@%d=%s"):format(item.text, item.indent, tostring(item.region.checked))
+			end
+		end
+		assert.same({ "Enable fast autoloot@0=true", "Confirm bind-on-pickup items when alone@24=true" }, shown)
+		assert.is_nil(api.FindCategory("Fast autoloot"))
 		assert.is_true(ns.Modules:Get("AutoLoot"):IsActive())
 	end)
 end)

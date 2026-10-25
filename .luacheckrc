@@ -78,10 +78,20 @@ files["Modules/"] = {
 files["Settings/"] = {
 	read_globals = {
 		"CANCEL",
+		"CreateAtlasMarkup",
+		"CreateFrame",
 		"CreateSettingsButtonInitializer",
 		"CreateSettingsListSectionHeaderInitializer",
+		"EventRegistry",
+		"GameTooltip_AddNormalLine",
+		"GameTooltip_SetTitle",
+		"MenuConstants",
+		"MenuTemplates",
+		"MenuVariants",
 		"MinimalSliderWithSteppersMixin",
 		"Settings",
+		"SettingsPanel",
+		"SettingsTooltip",
 		"StaticPopup_Show",
 	},
 }

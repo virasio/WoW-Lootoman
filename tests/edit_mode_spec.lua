@@ -192,6 +192,17 @@ describe("Edit Mode", function()
 		assert.same({ true, false, true }, previews)
 	end)
 
+	it("shows a header as a divider with its title, and leaves it out where LibEditMode has no dividers", function()
+		local grouped = { { kind = "header", label = "Shown" }, { kind = "checkbox", key = "money", label = "Money" } }
+		local other = newFrame()
+		ns.EditMode.Register(module, other, { key = "Other", default = { point = "CENTER", x = 0, y = 0 }, settings = grouped })
+		assert.same({ "Money" }, { lib.settings[other][1].name })
+		lib.SettingType.Divider = "divider"
+		local third = newFrame()
+		ns.EditMode.Register(module, third, { key = "Third", default = { point = "CENTER", x = 0, y = 0 }, settings = grouped })
+		assert.same({ { kind = "divider", name = "Shown" }, "Money" }, { lib.settings[third][1], lib.settings[third][2].name })
+	end)
+
 	it("rejects an unknown setting kind", function()
 		assert.error_matches(function()
 			ns.EditMode.Register(module, newFrame(), { default = { point = "CENTER", x = 0, y = 0 },

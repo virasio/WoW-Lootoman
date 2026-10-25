@@ -13,6 +13,7 @@ local Bus, Storage = ns.Bus, ns.Storage
 --       name = <localized name>,             -- shown in Edit Mode; default module.title
 --       default = { point = "CENTER", x = 250, y = 0 },
 --       settings = {                         -- shown in the Edit Mode dialog
+--           { kind = "header", label = … },  -- a divider with a title, starts a group
 --           { kind = "slider", key = "rows", label = …, tooltip = …, min = 1, max = 20, step = 1, format = "%d" },
 --           { kind = "dropdown", key = "direction", label = …, choices = { { "up", <label> }, … } },
 --           { kind = "checkbox", key = "money", label = … },
@@ -124,9 +125,13 @@ local function setup()
 end
 
 -- A module setting as a LibEditMode setting object. Settings are per profile,
--- so the layout name that LibEditMode passes is not used.
+-- so the layout name that LibEditMode passes is not used. A header becomes a
+-- divider with its title, or nothing where LibEditMode has no dividers.
 local function toLibSetting(module, setting)
 	local name = module.name
+	if setting.kind == "header" then
+		return lib.SettingType.Divider and { kind = lib.SettingType.Divider, name = setting.label } or nil
+	end
 	local object = {
 		name = setting.label,
 		desc = setting.tooltip,
@@ -193,8 +198,8 @@ function EditMode.Register(module, frame, options)
 	end, options.default, options.name or module.title)
 	if options.settings then
 		local objects = {}
-		for index, setting in ipairs(options.settings) do
-			objects[index] = toLibSetting(module, setting)
+		for _, setting in ipairs(options.settings) do
+			objects[#objects + 1] = toLibSetting(module, setting)
 		end
 		lib:AddFrameSettings(frame, objects)
 	end
