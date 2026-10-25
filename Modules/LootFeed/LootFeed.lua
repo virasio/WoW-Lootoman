@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 local Feed = ns.Feed
 
 -- The loot feed (techspec §7.3): what you pick up shows next to the screen
@@ -85,12 +85,17 @@ function LootFeed:ModelOptions()
 	}
 end
 
+-- The player's design of the rows, in the profile (Design.lua).
+function LootFeed:DesignSection()
+	return Storage:GetSection("feedDesign")
+end
+
 function LootFeed:Apply()
 	self.model:SetOptions(self:ModelOptions(), Compat.GetTime())
 	self.feed:SetOptions({
 		direction = self:Get("direction"),
 		maxRows = self:Get("maxRows"),
-		layout = Feed.Design.Layout(Feed.Design.LARGE, self:Get("size")),
+		layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size")),
 		opacity = self:Get("backgroundOpacity") / 100,
 		showOwned = self:Get("owned"),
 		showGlow = self:Get("glow"),
@@ -107,6 +112,7 @@ function LootFeed:OnEnable()
 			onEditMode = function(active)
 				self.feed:SetPreview(active)
 			end,
+			buttons = { { text = L["Design rows"], click = function() self.Designer.Open() end } },
 		})
 	end
 	self:Apply()
@@ -136,8 +142,11 @@ function LootFeed:OnDisable()
 	end
 end
 
-function LootFeed:BuildSettings(category)
+function LootFeed:BuildSettings(category, layout)
 	local Panel = ns.SettingsPanel
+	Panel.AddButton(layout, L["Row design"], L["Open the designer"], function()
+		self.Designer.Open()
+	end, L["Change how the feed's rows look: move and resize their parts."])
 	for _, setting in ipairs(settings()) do
 		if setting.kind == "checkbox" then
 			Panel.AddCheckbox(category, self.name, setting.key, setting.label, setting.tooltip)

@@ -33,10 +33,12 @@ describe("slash commands", function()
 
 	it("list the commands for help and for an unknown one", function()
 		run("help")
+		local lines = #printed
 		run("dance")
 		assert.matches("Commands:", printed[1])
-		assert.matches("Commands:", printed[5])
-		assert.equals(8, #printed)
+		assert.matches("Commands:", printed[lines + 1])
+		assert.equals(2 * lines, #printed)
+		assert.matches("/lootoman design", table.concat(printed, "\n"))
 	end)
 
 	describe("debug", function()

@@ -3,7 +3,7 @@ local Bus, Compat = ns.Bus, ns.Compat
 
 -- What the loot feed shows, from game events (techspec §7.3). Each entry is
 -- { kind, id, link, name, icon, quality, amount, total }, where kind is "item",
--- "currency", "money", "reputation", "xp" or "skipped":
+-- "currency", "money", "reputation" or "xp":
 --
 --   item        CHAT_MSG_LOOT in the player's own formats: looted, received,
 --               created, bonus roll; amount is the stack size
@@ -16,7 +16,6 @@ local Bus, Compat = ns.Bus, ns.Compat
 --               it (Russian); amount is negative for a loss, nil when the
 --               message has no number
 --   xp          PLAYER_XP_UPDATE: the gain, also across a level-up
---   skipped     LootSkipped from fast autoloot: an item that did not fit
 --
 -- Chat formats come from the client's own strings, so every locale works.
 -- None of these chat events is secret during chat messaging lockdown.
@@ -262,9 +261,5 @@ function Sources.Start(owner, emit)
 		if gain > 0 then
 			emit({ kind = "xp", amount = gain })
 		end
-	end)
-
-	Bus:On("LootSkipped", owner, function(_, entry)
-		emit(entry)
 	end)
 end

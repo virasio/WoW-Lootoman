@@ -13,6 +13,11 @@ local function newLibEditMode()
 		assert(self.frames[frame], "frame must be registered")
 		self.settings[frame] = settings
 	end
+	function lib:AddFrameSettingsButtons(frame, buttons)
+		assert(self.frames[frame], "frame must be registered")
+		self.buttons = self.buttons or {}
+		self.buttons[frame] = buttons
+	end
 	function lib:RegisterCallback(event, callback)
 		self.callbacks[event] = self.callbacks[event] or {}
 		table.insert(self.callbacks[event], callback)

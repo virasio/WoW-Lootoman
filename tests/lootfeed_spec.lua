@@ -10,6 +10,7 @@ local function newLibEditMode()
 	local lib = { frames = {}, settings = {}, callbacks = {}, SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 } }
 	function lib:AddFrame(frame, _, default, name) self.frames[frame] = { default = default, name = name } end
 	function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
+	function lib:AddFrameSettingsButtons(_, buttons) self.buttons = buttons end
 	function lib:RegisterCallback(event, callback)
 		self.callbacks[event] = self.callbacks[event] or {}
 		table.insert(self.callbacks[event], callback)
@@ -49,7 +50,7 @@ describe("loot feed module", function()
 	it("is on by default, with a settings page for every option", function()
 		assert.is_true(module:IsActive())
 		assert.same({
-			"checkbox:Enabled", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
+			"checkbox:Enabled", "button:Row design", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
 			"checkbox:Experience", "dropdown:Minimum quality", "slider:Rows", "dropdown:New rows appear",
 			"slider:Time on screen", "slider:Fade-out time", "slider:Size", "slider:Background opacity",
 			"checkbox:Owned count", "checkbox:Glow for rare items",
@@ -59,7 +60,7 @@ describe("loot feed module", function()
 	it("offers the client's item quality names", function()
 		local dropdown
 		for _, initializer in ipairs(api.FindCategory("Loot feed").initializers) do
-			if initializer.setting.variable == "LOOTOMAN_LOOTFEED_MINQUALITY" then
+			if initializer.setting and initializer.setting.variable == "LOOTOMAN_LOOTFEED_MINQUALITY" then
 				dropdown = initializer
 			end
 		end

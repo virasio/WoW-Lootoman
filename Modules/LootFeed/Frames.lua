@@ -27,6 +27,7 @@ local Compat, L = ns.Compat, ns.L
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
+local Design = ns.Feed.Design
 
 -- The most rows on screen: 20 rows, and a few fading out after a push.
 Frames.POOL = 24
@@ -63,14 +64,11 @@ end
 function Frames.Describe(row, options)
 	options = options or {}
 	local kind = row.kind
-	if kind == "item" or kind == "currency" or kind == "skipped" then
-		local amount, amountColor
-		if kind == "skipped" then
-			amount, amountColor = L["No room in bags"], RED
-		elseif (row.amount or 1) > 1 then
-			amount, amountColor = ("×%d"):format(row.amount), WHITE
+	if kind == "item" or kind == "currency" then
+		local look = { icon = row.icon, label = row.name, labelColor = qualityColor(row.quality) }
+		if (row.amount or 1) > 1 then
+			look.amount, look.amountColor = ("×%d"):format(row.amount), WHITE
 		end
-		local look = { icon = row.icon, label = row.name, labelColor = qualityColor(row.quality), amount = amount, amountColor = amountColor }
 		if kind == "currency" then
 			look.owned = options.showOwned and row.total or nil
 		else
@@ -78,7 +76,7 @@ function Frames.Describe(row, options)
 			if options.showGlow and (row.quality or 0) >= Frames.GLOW_QUALITY then
 				look.glow = ColorManager.GetAtlasDataForNewItemQuality(row.quality)
 			end
-			if options.showOwned and kind == "item" then
+			if options.showOwned then
 				look.owned = row.owned or Compat.GetItemCount(row.link or row.id)
 			end
 		end
@@ -110,7 +108,7 @@ local function showTooltip(rowFrame)
 	if not row then
 		return
 	end
-	if row.link and (row.kind == "item" or row.kind == "skipped") then
+	if row.link and row.kind == "item" then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip:SetHyperlink(row.link)
 		GameTooltip:Show()
@@ -127,7 +125,16 @@ local function hideTooltip(rowFrame)
 	end
 end
 
-local function createRow(parent)
+local fonts
+
+-- The default UI's text and number fonts, read once the game has them.
+local function getFonts()
+	fonts = fonts or { text = { GameFontNormal:GetFont() }, number = { NumberFontNormal:GetFont() } }
+	return fonts
+end
+
+-- A row frame with all its parts; ApplyLayout sizes it, Fill shows a row.
+function Frames.CreateRow(parent)
 	local rowFrame = CreateFrame("Frame", nil, parent)
 	rowFrame:SetMouseClickEnabled(false)
 	rowFrame:SetMouseMotionEnabled(true)
@@ -136,49 +143,54 @@ local function createRow(parent)
 	rowFrame.Glow:SetBlendMode("ADD")
 	rowFrame.IconBorder = rowFrame:CreateTexture(nil, "OVERLAY", nil, 2)
 	rowFrame.Owned = rowFrame:CreateFontString(nil, "OVERLAY")
-	rowFrame.Owned:SetJustifyH("RIGHT")
 	rowFrame.Label = rowFrame:CreateFontString(nil, "OVERLAY")
-	rowFrame.Label:SetJustifyH("LEFT")
-	rowFrame.Label:SetWordWrap(false)
 	rowFrame.Amount = rowFrame:CreateFontString(nil, "OVERLAY")
-	rowFrame.Amount:SetJustifyH("LEFT")
+	for _, text in ipairs({ rowFrame.Owned, rowFrame.Label, rowFrame.Amount }) do
+		text:SetWordWrap(false)
+	end
 	rowFrame:SetScript("OnEnter", showTooltip)
 	rowFrame:SetScript("OnLeave", hideTooltip)
 	rowFrame:Hide()
 	return rowFrame
 end
 
--- Sizes and places a row's parts for a layout.
-local function applyLayout(feed, rowFrame, layout)
+-- The region of a row frame that draws each part of a design.
+Frames.REGIONS = { icon = "Icon", name = "Label", amount = "Amount", owned = "Owned" }
+
+local function regionOf(rowFrame, element)
+	return element == "row" and rowFrame or rowFrame[Frames.REGIONS[element]]
+end
+
+-- Sizes and places a row's parts for a layout: each part on its anchor's
+-- point, the texts in their fonts and alignment.
+function Frames.ApplyLayout(rowFrame, layout)
+	local font = getFonts()
 	local parts = layout.parts
 	rowFrame:SetSize(layout.width, layout.height)
-	local icon = parts.icon
-	rowFrame.Icon:SetSize(icon.size, icon.size)
-	rowFrame.Icon:ClearAllPoints()
-	rowFrame.Icon:SetPoint("LEFT", rowFrame, "LEFT", icon.x, icon.y)
-	local border = math.floor(icon.size * Frames.BORDER_SCALE + 0.5)
+	local size = parts.icon.pixels
+	rowFrame.Icon:SetSize(size, size)
+	local border = math.floor(size * Frames.BORDER_SCALE + 0.5)
 	rowFrame.IconBorder:SetSize(border, border)
 	rowFrame.IconBorder:ClearAllPoints()
 	rowFrame.IconBorder:SetPoint("CENTER", rowFrame.Icon, "CENTER")
 	rowFrame.Glow:ClearAllPoints()
 	rowFrame.Glow:SetAllPoints(rowFrame.Icon)
-	local name = parts.name
-	rowFrame.Label:SetFont(feed.fonts.text[1], name.fontSize, feed.fonts.text[3])
-	rowFrame.Label:ClearAllPoints()
-	rowFrame.Label:SetPoint("LEFT", rowFrame, "LEFT", name.x, name.y)
-	local amount = parts.amount
-	rowFrame.Amount:SetFont(feed.fonts.text[1], amount.fontSize, feed.fonts.text[3])
-	rowFrame.Amount:ClearAllPoints()
-	rowFrame.Amount:SetPoint("LEFT", rowFrame.Label, "RIGHT", amount.x, amount.y)
-	local owned = parts.owned
-	rowFrame.Owned:SetFont(feed.fonts.number[1], owned.fontSize, feed.fonts.number[3])
-	rowFrame.Owned:ClearAllPoints()
-	rowFrame.Owned:SetPoint("BOTTOMRIGHT", rowFrame.Icon, "BOTTOMRIGHT", owned.x, owned.y)
+	for _, name in ipairs(Design.PLACED) do
+		local part, region = parts[name], regionOf(rowFrame, name)
+		region:ClearAllPoints()
+		region:SetPoint(Design.OwnPoint(layout, name), regionOf(rowFrame, part.anchor), part.point, part.x, part.y)
+		if Design.TEXTS[name] then
+			local face = name == "owned" and font.number or font.text
+			region:SetFont(face[1], part.fontSize, face[3])
+			region:SetJustifyH(part.align)
+		end
+	end
 end
 
-local function fill(feed, rowFrame, row)
-	local parts = feed.options.layout.parts
-	local look = Frames.Describe(row, feed.options)
+-- Shows a row in a row frame; options as for the feed (layout, showOwned, showGlow).
+function Frames.Fill(rowFrame, row, options)
+	local parts = options.layout.parts
+	local look = Frames.Describe(row, options)
 	local iconShown = parts.icon.shown and look.icon ~= nil
 	rowFrame.Icon:SetShown(iconShown)
 	rowFrame.Icon:SetTexture(look.icon)
@@ -190,35 +202,46 @@ local function fill(feed, rowFrame, row)
 	if look.glow then
 		rowFrame.Glow:SetAtlas(look.glow)
 	end
-	rowFrame.Owned:SetShown(iconShown and parts.owned.shown and look.owned ~= nil)
+	-- On the icon, the owned count goes with it.
+	rowFrame.Owned:SetShown(parts.owned.shown and look.owned ~= nil and (iconShown or parts.owned.anchor ~= "icon"))
 	rowFrame.Owned:SetText(look.owned and tostring(look.owned) or "")
-	rowFrame.Label:SetShown(parts.name.shown)
-	rowFrame.Label:SetText(look.label)
-	rowFrame.Label:SetTextColor(look.labelColor[1], look.labelColor[2], look.labelColor[3])
-	-- The name takes the width of its text, up to the design's limit, so the
-	-- amount follows it.
-	rowFrame.Label:SetWidth(math.min(rowFrame.Label:GetUnboundedStringWidth(), parts.name.width))
 	rowFrame.Amount:SetShown(parts.amount.shown and look.amount ~= nil)
 	rowFrame.Amount:SetText(look.amount or "")
 	if look.amountColor then
 		rowFrame.Amount:SetTextColor(look.amountColor[1], look.amountColor[2], look.amountColor[3])
 	end
-	rowFrame.data, rowFrame.amount, rowFrame.total, rowFrame.version = row, row.amount, row.total, feed.version
+	rowFrame.Label:SetShown(parts.name.shown)
+	rowFrame.Label:SetText(look.label)
+	rowFrame.Label:SetTextColor(look.labelColor[1], look.labelColor[2], look.labelColor[3])
+	-- Each text takes the width of its words, as far as the design and the room
+	-- up to the row's edge allow; a long name leaves room for the amount after it.
+	local widths = {}
+	for name in pairs(Design.TEXTS) do
+		local region = rowFrame[Frames.REGIONS[name]]
+		widths[name] = region:IsShown() and region:GetUnboundedStringWidth() or 0
+	end
+	local rects = Design.Arrange(options.layout, widths)
+	for name in pairs(Design.TEXTS) do
+		local region, width = rowFrame[Frames.REGIONS[name]], rects[name].width
+		-- A width of 0 would let the text take all it wants.
+		region:SetWidth(math.max(1, width))
+		region:SetShown(region:IsShown() and width >= 1)
+	end
+	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
 end
 
 local FeedMixin = {}
 FeedMixin.__index = FeedMixin
 
--- Rows shown in Edit Mode, one of every kind, so the look can be judged while
--- placing the feed.
-local function previewRows()
+-- Sample rows, one of every kind, newest first: for Edit Mode, so the look can
+-- be judged while placing the feed, and for the designer.
+function Frames.PreviewRows()
 	return {
 		{ row = { kind = "item", name = L["Sample item"], icon = [[Interface\Icons\inv_potion_54]], quality = 1, amount = 3, owned = 42 }, alpha = 1 },
 		{ row = { kind = "item", name = L["Sample rare item"], icon = [[Interface\Icons\inv_shield_1h_nzothraid_d_01]], quality = 4, amount = 1, owned = 1 }, alpha = 1 },
 		{ row = { kind = "money", amount = 123456 }, alpha = 1 },
 		{ row = { kind = "currency", name = L["Sample currency"], icon = [[Interface\Icons\inv_misc_coin_17]], quality = 3, amount = 5, total = 120 }, alpha = 1 },
 		{ row = { kind = "reputation", name = L["Sample faction"], amount = 250 }, alpha = 1 },
-		{ row = { kind = "skipped", name = L["Sample item"], icon = [[Interface\Icons\inv_misc_bag_08]], quality = 1, amount = 1 }, alpha = 1 },
 	}
 end
 
@@ -283,17 +306,15 @@ function Frames.Create(model)
 		frameOf = {},
 		seen = setmetatable({}, { __mode = "k" }),
 		version = 0,
-		fonts = { text = { GameFontNormal:GetFont() }, number = { NumberFontNormal:GetFont() } },
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
-		feed.rows[index] = createRow(frame)
+		feed.rows[index] = Frames.CreateRow(frame)
 		feed.free[index] = feed.rows[index]
 	end
 	frame:SetScript("OnUpdate", function()
 		feed:Draw(Compat.GetTime())
 	end)
 	frame:Hide()
-	local Design = ns.Feed.Design
 	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE, Design.BASE_SIZE), opacity = 0.5 })
 	return feed
 end
@@ -305,7 +326,7 @@ function FeedMixin:SetOptions(options)
 	self.frame:SetSize(layout.width, options.maxRows * self.step - layout.gap)
 	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, 0))
 	for _, rowFrame in ipairs(self.rows) do
-		applyLayout(self, rowFrame, layout)
+		Frames.ApplyLayout(rowFrame, layout)
 	end
 	for _, rowFrame in pairs(self.frameOf) do
 		place(self, rowFrame, rowFrame.offset)
@@ -324,7 +345,7 @@ function FeedMixin:RefreshOwned()
 end
 
 function FeedMixin:SetPreview(active)
-	self.preview = active and previewRows() or nil
+	self.preview = active and Frames.PreviewRows() or nil
 	self.frame.PreviewBackground:SetShown(active)
 	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0)
 end
@@ -374,7 +395,8 @@ function FeedMixin:Draw(now)
 		if rowFrame then
 			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total
 				or rowFrame.version ~= self.version then
-				fill(self, rowFrame, row)
+				Frames.Fill(rowFrame, row, self.options)
+				rowFrame.version = self.version
 			end
 			self.seen[row] = self.seen[row] or now
 			local fadeIn = math.min(1, (now - self.seen[row]) / Frames.FADE_IN)

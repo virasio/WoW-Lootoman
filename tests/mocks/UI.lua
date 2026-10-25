@@ -35,14 +35,24 @@ function methods:SetFrameStrata(strata) self.strata = strata end
 function methods:GetFrameStrata() return self.strata end
 function methods:SetText(text) self.text = text end
 function methods:SetFont(file, size, flags) self.font = { file, size, flags } end
--- About 7 pixels a letter, enough for widths that follow the text.
-function methods:GetUnboundedStringWidth() return #(self.text or "") * 7 end
+-- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
+function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
 function methods:SetGradient(orientation, from, to) self.gradient = { orientation, from, to } end
 function methods:GetText() return self.text end
 function methods:SetTextColor(r, g, b) self.color = { r, g, b } end
+function methods:SetJustifyH(justify) self.justify = justify end
 function methods:SetTexture(texture) self.texture = texture end
 function methods:SetAtlas(atlas) self.atlas = atlas end
 function methods:SetVertexColor(r, g, b) self.vertex = { r, g, b } end
+function methods:GetEffectiveScale() return self.scale or 1 end
+function methods:GetFrameLevel() return self.level or 0 end
+function methods:SetChecked(checked) self.checked = checked end
+function methods:GetChecked() return self.checked end
+-- Slider: MinimalSliderWithSteppersTemplate.
+function methods:Init(value, minValue, maxValue, steps) self.value, self.range = value, { minValue, maxValue, steps } end
+function methods:RegisterCallback(event, fn, owner) self.callbacks = self.callbacks or {}; self.callbacks[event] = { fn, owner } end
+-- Dropdown: WowStyle1DropdownTemplate.
+function methods:SetupMenu(generator) self.menu = generator end
 function methods:CreateTexture() return UI.NewFake(self) end
 function methods:CreateFontString() return UI.NewFake(self) end
 
@@ -108,6 +118,16 @@ function UI.Install()
 		end,
 	})
 	rawset(_G, "CreateColor", function(r, g, b, a) return { r = r, g = g, b = b, a = a } end)
+	api.cursor = { 0, 0 }
+	rawset(_G, "GetCursorPosition", function() return api.cursor[1], api.cursor[2] end)
+	api.escHandlers = {}
+	rawset(_G, "GameMenuEscPriority", { AddOn = 8 })
+	rawset(_G, "RegisterGameMenuEscHandler", function(_, handler) api.escHandlers[#api.escHandlers + 1] = handler end)
+	rawset(_G, "MinimalSliderWithSteppersMixin", {
+		Label = { Left = 1, Right = 2, Top = 3, Min = 4, Max = 5 },
+		Event = { OnValueChanged = "OnValueChanged" },
+	})
+	rawset(_G, "CreateMinimalSliderFormatter", function(_, formatter) return formatter or tostring end)
 	rawset(_G, "GameFontNormal", { GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end })
 	rawset(_G, "NumberFontNormal", { GetFont = function() return "Fonts\\ARIALN.TTF", 14, "OUTLINE" end })
 	return api

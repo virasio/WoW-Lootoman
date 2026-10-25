@@ -56,11 +56,6 @@ describe("loot feed frames", function()
 			assert.is_nil(Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" }).owned)
 		end)
 
-		it("marks an item that did not fit", function()
-			local look = Frames.Describe({ kind = "skipped", name = "Hearthstone", quality = 1, amount = 1 })
-			assert.same({ "No room in bags", { 1, 0.13, 0.13 } }, { look.amount, look.amountColor })
-		end)
-
 		it("shows a currency with its count and no border", function()
 			local look = Frames.Describe({ kind = "currency", name = "Valorstones", quality = 4, amount = 5 })
 			assert.same({ "×5", nil }, { look.amount, look.border })
@@ -211,6 +206,52 @@ describe("loot feed frames", function()
 			assert.equals("×2", row.Amount.text)
 		end)
 
+		it("shortens a long name so the amount after it stays inside the row", function()
+			local Design = ns.Feed.Design
+			local section = {}
+			Design.Set(section, "name", "width", 400)
+			local long = ("x"):rep(50)
+			model:Add({ kind = "item", id = 1, name = long, amount = 3, quality = 1 }, 0)
+			feed:SetOptions(options({ layout = Design.Layout(Design.Current(section), 13) }))
+			feed:Draw(1)
+			-- 300 wide, the name starts at 46, the amount takes 6 + 14.
+			assert.equals(234, frameWith(long).Label.width)
+		end)
+
+		it("anchors every part to its element's point, and aligns the texts", function()
+			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 1 }, 0)
+			feed:Draw(1)
+			local row = frameWith("Linen Cloth")
+			assert.same({ "LEFT", row, "LEFT", 0, 0 }, row.Icon.points[1])
+			assert.same({ "LEFT", row.Icon, "RIGHT", 11, 0 }, row.Label.points[1])
+			assert.same({ "BOTTOMRIGHT", row.Icon, "BOTTOMRIGHT", -4, 3 }, row.Owned.points[1])
+			assert.same({ "LEFT", "RIGHT" }, { row.Label.justify, row.Owned.justify })
+
+			local Design = ns.Feed.Design
+			local section = {}
+			Design.Set(section, "name", "anchor", "row")
+			Design.Set(section, "name", "align", "RIGHT")
+			feed:SetOptions(options({ layout = Design.Layout(Design.Current(section), 13) }))
+			feed:Draw(1)
+			assert.same({ "RIGHT", row, "RIGHT", 0, 0 }, row.Label.points[1])
+			assert.same({ "RIGHT", 77 }, { row.Label.justify, row.Label.width })
+		end)
+
+		it("shows the owned count without an icon when it is not on the icon", function()
+			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42 } })
+			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", amount = 1, quality = 1 }, 0)
+			local Design = ns.Feed.Design
+			local section = {}
+			Design.Set(section, "icon", "shown", false)
+			feed:SetOptions(options({ showOwned = true, layout = Design.Layout(Design.Current(section), 13) }))
+			feed:Draw(1)
+			assert.is_false(frameWith("Linen Cloth").Owned.shown)
+			Design.Set(section, "owned", "anchor", "row")
+			feed:SetOptions(options({ showOwned = true, layout = Design.Layout(Design.Current(section), 13) }))
+			feed:Draw(1)
+			assert.same({ true, "42" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
+		end)
+
 		it("shows the owned count and the glow, and hides them when turned off", function()
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42 } })
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 4 }, 0)
@@ -256,7 +297,7 @@ describe("loot feed frames", function()
 			assert.same({ "123456 copper@0", "Sample rare item@42", "Sample item@84" }, layout())
 			feed:SetOptions(options({ maxRows = 8 }))
 			feed:Draw(0)
-			assert.equals(6, #layout())
+			assert.equals(5, #layout())
 			assert.is_true(feed.frame.PreviewBackground.shown)
 			feed:SetPreview(false)
 			assert.is_false(feed.frame.shown)

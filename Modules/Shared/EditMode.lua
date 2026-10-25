@@ -18,6 +18,7 @@ local Bus, Storage = ns.Bus, ns.Storage
 --           { kind = "checkbox", key = "money", label = … },
 --       },
 --       onEditMode = function(active) end,   -- show a preview while Edit Mode is on
+--       buttons = { { text = …, click = function() end } },   -- in the Edit Mode dialog
 --   })
 --
 -- LibEditMode draws the selection on the frame itself, so a hidden frame
@@ -196,6 +197,9 @@ function EditMode.Register(module, frame, options)
 			objects[index] = toLibSetting(module, setting)
 		end
 		lib:AddFrameSettings(frame, objects)
+	end
+	if options.buttons then
+		lib:AddFrameSettingsButtons(frame, options.buttons)
 	end
 	apply(entry)
 	if lib:IsInEditMode() then

@@ -190,11 +190,10 @@ describe("loot feed sources", function()
 		end)
 	end)
 
-	it("passes on items that fast autoloot skipped", function()
+	it("leaves items that fast autoloot skipped out of the feed", function()
 		start()
-		local entry = { kind = "skipped", name = "Hearthstone", amount = 1 }
-		ns.Bus:Send("LootSkipped", entry)
-		assert.same({ entry }, entries)
+		ns.Bus:Send("LootSkipped", { kind = "skipped", name = "Hearthstone", amount = 1 })
+		assert.same({}, entries)
 	end)
 
 	it("reports formats the client does not have, and works with the others", function()

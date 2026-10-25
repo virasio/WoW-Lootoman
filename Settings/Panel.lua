@@ -93,6 +93,13 @@ function Panel.AddDropdown(category, module, key, label, tooltip, choices)
 	return Settings.CreateDropdown(category, setting, options, tooltip)
 end
 
+-- A button on a page, for BuildSettings(category, layout).
+function Panel.AddButton(layout, label, buttonText, onClick, tooltip)
+	local initializer = CreateSettingsButtonInitializer(label, buttonText, onClick, tooltip, true)
+	layout:AddInitializer(initializer)
+	return initializer
+end
+
 -- builder(category) adds a page below the module pages.
 function Panel.AddPage(builder)
 	Panel.pages[#Panel.pages + 1] = builder

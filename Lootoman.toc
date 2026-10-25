@@ -45,6 +45,7 @@ Modules\LootFeed\Model.lua
 Modules\LootFeed\Design.lua
 Modules\LootFeed\Frames.lua
 Modules\LootFeed\LootFeed.lua
+Modules\LootFeed\Designer.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua

@@ -48,11 +48,25 @@ commands.selftest = function()
 	ns.SelfTest.Run()
 end
 
+local moduleHelp = {}
+
+-- Commands that modules add: handler(argument), and a line for the help.
+ns.Slash = {}
+
+function ns.Slash.Register(name, handler, help)
+	assert(not commands[name], ("the command %s is already registered"):format(name))
+	commands[name] = handler
+	moduleHelp[#moduleHelp + 1] = help
+end
+
 commands.help = function()
 	ns.Print(L["Commands:"])
 	ns.Print(L["/lootoman or /ltm: open the settings"])
 	ns.Print(L["/lootoman debug [on | off]: show, turn on or turn off debug messages"])
 	ns.Print(L["/lootoman selftest: check the addon against the game client"])
+	for _, line in ipairs(moduleHelp) do
+		ns.Print(line)
+	end
 end
 
 Compat.RegisterSlashCommand("LOOTOMAN", { "/lootoman", "/ltm" }, function(message)

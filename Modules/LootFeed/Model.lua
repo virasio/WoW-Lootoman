@@ -8,8 +8,7 @@ local _, ns = ...
 -- (the same item, currency, faction, or money or experience) merges into it:
 -- the amounts add up, the timer restarts and the row moves to the top.
 --
--- Items below the minimum quality and turned-off kinds are dropped; rows about
--- items that did not fit ("skipped") are warnings and always shown.
+-- Items below the minimum quality and turned-off kinds are dropped.
 --
 -- When there are more than maxRows rows, the oldest ones fade out at once,
 -- over at most PUSH_FADE seconds (the author chose this over a scrollable
@@ -47,9 +46,6 @@ local function keyOf(entry)
 end
 
 local function shown(model, entry)
-	if entry.kind == "skipped" then
-		return true
-	end
 	if not model.options.kinds[entry.kind] then
 		return false
 	end
