@@ -18,6 +18,7 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Profession bag.** General bags full, a herb bag with free slots; loot herbs together with other items. *Expected:* the herbs go into the herb bag; the window opens with the other items only.
 - [ ] **All bags full.** Loot something. *Expected:* the window opens with what is left; the feed shows only what was looted.
 - [ ] **One free slot, two new items.** One free general slot; loot a corpse with two items that do not stack with anything you have, and money. *Expected:* the money and one item are looted, the other item stays in the window, and there is no "Inventory is full" error. The same with a stack of 18 of 20 herbs: looting 1–2 more needs no free slot, 3 or more do.
+- [ ] **Profession bag first.** One free general slot and one free slot in a herb bag; loot herbs together with an item that is not a herb. *Expected:* both are looted, the herbs go into the herb bag, and there is no "Inventory is full" error. The same with crafting reagents and a free slot in the reagent bag.
 - [ ] **Large pull.** Area loot of many corpses at once (a dungeon pull). *Expected:* no disconnect, nothing left behind that fits.
 - [ ] **In combat.** Loot in combat in the open world and in a dungeon. *Expected:* no errors.
 - [ ] **Bind on pickup.** Alone: a bind-on-pickup item is looted without asking. In a group: the window opens and asks. With *Confirm bind-on-pickup items when alone* off, alone: the game asks.
