@@ -1,13 +1,14 @@
 local addonName, ns = ...
 local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 
--- /lootoman selftest (techspec §9): calls Compat against the real client and
+-- /lootoman selftest: calls Compat against the real client and
 -- prints what the addon knows about itself. The output is for bug reports, so
 -- it is not translated.
 local SelfTest = {}
 ns.SelfTest = SelfTest
 
--- Each check returns true, or false and what went wrong.
+-- Each check returns true, false and what went wrong, or nil and why the
+-- client cannot have it (not a failure: the addon turns that feature off).
 local checks = {
 	{ "Has", function()
 		return Compat.Has("C_AddOns.GetAddOnMetadata") and not Compat.Has("C_LootomanMissing.Nothing"),
@@ -40,7 +41,23 @@ local checks = {
 	{ "RegisterEvent", function()
 		return Storage.db ~= nil and Storage.character ~= nil, "ADDON_LOADED or PLAYER_LOGIN was not received"
 	end },
+	{ "Encode", function()
+		if not Compat.CanEncode() then
+			return nil, "no C_EncodingUtil, so Import and Share are off"
+		end
+		local value = Compat.Decode(Compat.Encode({ check = { 1, "two" } }))
+		return type(value) == "table" and type(value.check) == "table" and value.check[2] == "two",
+			"a text did not read back"
+	end },
 }
+
+-- Lines that other parts add to the report (providers, modules): each builder
+-- returns a line of text.
+local reports = {}
+
+function SelfTest.AddReport(build)
+	reports[#reports + 1] = build
+end
 
 function SelfTest.Run()
 	local say = ns.Print
@@ -52,6 +69,8 @@ function SelfTest.Run()
 		local ran, ok, problem = pcall(fn)
 		if ran and ok then
 			say("  " .. name .. ": OK")
+		elseif ran and ok == nil then
+			say("  " .. name .. ": not available, " .. tostring(problem))
 		else
 			failed = failed + 1
 			say("  " .. name .. ": FAILED, " .. tostring(ran and problem or ok))
@@ -86,9 +105,17 @@ function SelfTest.Run()
 		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema),
 			Storage.readOnly and ", read-only (saved by a newer version)" or "")
 	end)
+	-- The client fills in [Game] and [Family] of these TOC fields: they show
+	-- what a new client (WoW Forever) calls itself in TOC conditions.
 	report(function()
-		return ("Data set: %s; locale: %s"):format(ns.Data and ns.Data.set or "none", ns.Locales.current)
+		return ("Game %s, family %s; data set: %s; locale: %s"):format(
+			tostring(Compat.GetAddOnMetadata(addonName, "X-Game")),
+			tostring(Compat.GetAddOnMetadata(addonName, "X-Family")),
+			ns.Data and ns.Data.set or "none", ns.Locales.current)
 	end)
+	for _, build in ipairs(reports) do
+		report(build)
+	end
 	for _, module in ipairs(Modules:List()) do
 		report(function()
 			local events = Bus:GetEvents(module)

@@ -1,4 +1,5 @@
 local Loader = require("tests.helpers.loader")
+local Formats = require("tests.fixtures.globalstrings")
 
 describe("slash commands", function()
 	local ns, Test, printed
@@ -33,10 +34,12 @@ describe("slash commands", function()
 
 	it("list the commands for help and for an unknown one", function()
 		run("help")
+		local lines = #printed
 		run("dance")
 		assert.matches("Commands:", printed[1])
-		assert.matches("Commands:", printed[5])
-		assert.equals(8, #printed)
+		assert.matches("Commands:", printed[lines + 1])
+		assert.equals(2 * lines, #printed)
+		assert.matches("/lootoman design", table.concat(printed, "\n"))
 	end)
 
 	describe("debug", function()
@@ -136,8 +139,17 @@ describe("slash commands", function()
 			assert.matches("Client 12%.1%.5 %(70575%), interface 120105\n", output())
 			assert.matches("Addon @project%-version@", output())
 			assert.matches("Character Tester%-Realm, profile Default", output())
-			assert.matches("Saved data: schema 1\n", output())
-			assert.matches("Data set: Mainline; locale: enUS", output())
+			assert.matches("Saved data: schema 2\n", output())
+			assert.matches("Game Standard, family Mainline; data set: Mainline; locale: enUS", output())
+		end)
+
+		it("shows what WoW Forever calls itself and its data set", function()
+			Test.state.printed = {}
+			local fresh = Loader.LoadAddon({ gameType = "camelot" })
+			Loader.Start(fresh)
+			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
+			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
+			assert.matches("Game Camelot, family Mainline; data set: Forever; locale: enUS", text)
 		end)
 
 		it("shows each module with its events", function()
@@ -153,6 +165,61 @@ describe("slash commands", function()
 			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
 			assert.is_true(module:IsActive())
 			assert.matches("Module Feed: on, events: CHAT_MSG_LOOT", text)
+		end)
+
+		it("checks that a profile text reads back", function()
+			run("selftest")
+			assert.matches("Encode: OK", output())
+		end)
+
+		it("reports a profile text that does not read back", function()
+			ns.Compat.Decode = function() return nil end
+			run("selftest")
+			assert.matches("Encode: FAILED, a text did not read back", output())
+			assert.matches("1 check%(s%) failed%.", output())
+		end)
+
+		it("does not count a client without an encoder as a failure", function()
+			Test.state.encoder = false
+			run("selftest")
+			assert.matches("Encode: not available, no C_EncodingUtil, so Import and Share are off", output())
+			assert.matches("All checks passed%.", output())
+		end)
+
+		it("lists the equipped bags with their families", function()
+			Test.SetBags({
+				[0] = { size = 16, items = { [1] = { itemID = 2589, count = 5 } } },
+				[1] = { size = 20, family = 32 },
+				[5] = { size = 36 },
+			})
+			run("selftest")
+			assert.matches("Bags: 0 %(16 slots, 15 free%), 1 %(20 slots, 20 free, family 32%), "
+				.. "reagent 5 %(36 slots, 36 free%)\n", output())
+		end)
+
+		it("says when no bag is equipped", function()
+			run("selftest")
+			assert.matches("Bags: none\n", output())
+		end)
+
+		it("counts the chat formats the loot feed can read", function()
+			Test.SetGlobalStrings(Formats.ruRU)
+			run("selftest")
+			assert.matches("Loot feed chat formats: 20 of 20\n", output())
+		end)
+
+		it("names the chat formats that are missing or unreadable", function()
+			local strings = {}
+			for name, format in pairs(Formats.enUS) do
+				strings[name] = format
+			end
+			strings.LOOT_ITEM_SELF = nil
+			strings.FACTION_STANDING_DECREASED = "Reputation with %s decreased by %i."
+			Test.SetGlobalStrings(strings)
+			run("selftest")
+			assert.matches("Loot feed chat formats: 18 of 20; LOOT_ITEM_SELF missing, "
+				.. "FACTION_STANDING_DECREASED unreadable\n", output())
+			assert.matches("All checks passed%.", output())
 		end)
 
 		it("confirms timers once they run", function()

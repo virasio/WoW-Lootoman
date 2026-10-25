@@ -3,6 +3,8 @@
 -- settings behave like Blizzard's (Blizzard_Setting.lua): SetValue locks the
 -- setting while the setter runs, NotifyUpdate re-reads the value.
 
+local UI = require("tests.mocks.UI")
+
 local SettingsAPI = {}
 
 function SettingsAPI.Install()
@@ -12,6 +14,9 @@ function SettingsAPI.Install()
 		local category = { name = name, parent = parent, id = #api.categories + 1, initializers = {} }
 		function category:GetID()
 			return self.id
+		end
+		function category:GetParentCategory()
+			return self.parent
 		end
 		local layout = {}
 		function layout:AddInitializer(initializer)
@@ -37,6 +42,27 @@ function SettingsAPI.Install()
 
 	function Settings.RegisterVerticalLayoutSubcategory(parent, name)
 		return newCategory(name, parent)
+	end
+
+	-- A page that is the addon's own frame; Blizzard calls frame:OnRefresh()
+	-- when it shows the page.
+	function Settings.RegisterCanvasLayoutCategory(frame, name)
+		local category, layout = newCategory(name)
+		category.frame = frame
+		return category, layout
+	end
+
+	-- The options panel's tooltip (SettingsTooltip): its lines.
+	local settingsTooltip = { lines = {} }
+	function settingsTooltip:SetOwner(owner)
+		self.owner, self.lines = owner, {}
+	end
+	function settingsTooltip:Show() self.shown = true end
+	function settingsTooltip:Hide() self.shown = false end
+	api.tooltip = settingsTooltip
+	rawset(_G, "SettingsTooltip", settingsTooltip)
+	function Settings.InitTooltip(name, text)
+		settingsTooltip.lines = { name, text }
 	end
 
 	function Settings.RegisterAddOnCategory(category)
@@ -80,8 +106,10 @@ function SettingsAPI.Install()
 
 	function Settings.CreateControlTextContainer()
 		local container = { data = {} }
-		function container:Add(value, label)
-			self.data[#self.data + 1] = { value = value, label = label }
+		function container:Add(value, label, tooltip)
+			local data = { value = value, label = label, text = label, tooltip = tooltip }
+			self.data[#self.data + 1] = data
+			return data
 		end
 		function container:GetData()
 			return self.data
@@ -89,10 +117,66 @@ function SettingsAPI.Install()
 		return container
 	end
 
+	-- Like Blizzard_Settings.lua: steps = (max - min) / rate.
+	function Settings.CreateSliderOptions(minValue, maxValue, rate)
+		local options = { minValue = minValue, maxValue = maxValue, steps = (maxValue - minValue) / rate, formatters = {} }
+		function options:SetLabelFormatter(labelType, formatter)
+			self.formatters[labelType] = formatter
+		end
+		return options
+	end
+
+	function Settings.CreateSlider(category, setting, options, tooltip)
+		return addInitializer(category, { kind = "slider", setting = setting, options = options, tooltip = tooltip })
+	end
+
 	rawset(_G, "Settings", Settings)
+	-- EnumUtil.MakeEnum("Left", "Right", "Top", "Min", "Max") in MinimalSlider.lua.
+	rawset(_G, "MinimalSliderWithSteppersMixin", { Label = { Left = 1, Right = 2, Top = 3, Min = 4, Max = 5 } })
 	rawset(_G, "CANCEL", "Cancel")
-	rawset(_G, "CreateSettingsListSectionHeaderInitializer", function(name)
-		return { kind = "header", name = name }
+
+	-- EventRegistry (CallbackRegistry): an owner's callback gets (owner, ...).
+	local callbacks = {}
+	rawset(_G, "EventRegistry", {
+		RegisterCallback = function(_, event, callback, owner)
+			callbacks[event] = callbacks[event] or {}
+			table.insert(callbacks[event], { callback, owner })
+		end,
+		TriggerEvent = function(_, event, ...)
+			for _, entry in ipairs(callbacks[event] or {}) do
+				entry[1](entry[2], ...)
+			end
+		end,
+	})
+
+	-- The options window: the header's Defaults button, shown on every page
+	-- (Blizzard_SettingsPanel.lua), and the page being shown.
+	local defaults = { shown = true, hooks = {} }
+	function defaults:Show()
+		self.shown = true
+		for _, hook in ipairs(self.hooks.OnShow or {}) do
+			hook(self)
+		end
+	end
+	function defaults:Hide() self.shown = false end
+	function defaults:SetShown(shown)
+		if shown then
+			self:Show()
+		else
+			self:Hide()
+		end
+	end
+	function defaults:HookScript(script, hook)
+		self.hooks[script] = self.hooks[script] or {}
+		table.insert(self.hooks[script], hook)
+	end
+	api.defaultsButton = defaults
+	local panel = { list = { Header = { DefaultsButton = defaults } } }
+	function panel:GetSettingsList() return self.list end
+	function panel:GetCurrentCategory() return self.current end
+	rawset(_G, "SettingsPanel", panel)
+	rawset(_G, "CreateSettingsListSectionHeaderInitializer", function(name, tooltip)
+		return { kind = "header", name = name, tooltip = tooltip }
 	end)
 	rawset(_G, "CreateSettingsButtonInitializer", function(name, buttonText, onClick, tooltip)
 		return { kind = "button", name = name, buttonText = buttonText, onClick = onClick, tooltip = tooltip }
@@ -138,6 +222,17 @@ function SettingsAPI.Install()
 			kinds[index] = initializer.kind .. ":" .. (initializer.name or initializer.setting.name)
 		end
 		return kinds
+	end
+
+	-- The menu of a dropdown as it opens (the UI fake's menus).
+	function api.OpenMenu(dropdown)
+		return UI.OpenMenu(dropdown)
+	end
+
+	-- What the options window does when the player picks a page (SelectCategory).
+	function api.SelectCategory(category)
+		panel.current = category
+		_G.EventRegistry:TriggerEvent("Settings.CategoryChanged", category)
 	end
 
 	-- Accepts the last dialog, typing text into it if it has an edit box.

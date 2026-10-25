@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 
--- User-facing features register here (techspec §3). Each module has an
+-- User-facing features register here. Each module has an
 -- "enabled" setting in the profile, and the registry turns modules on and off
 -- to match it: on Ready, on a profile change and on a toggle, without /reload.
 -- A disabled module has no listeners on the bus.
@@ -12,10 +12,12 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 --   local Feed = ns.Modules:Register({
 --       name = "LootFeed",
 --       title = <localized name>,
+--       switchLabel = <localized "Enable …">,     -- the switch on the options' main page
 --       defaults = { enabled = true, rows = 5 },
+--       mainSettings = { { kind = "checkbox", key = …, label = …, tooltip = … } },  -- under the switch
 --       OnEnable = function(self) self:OnEvent("CHAT_MSG_LOOT", ...) end,
 --       OnDisable = function(self) hide frames (also after a failed OnEnable) end,
---       BuildSettings = function(self, category, layout) end,
+--       BuildSettings = function(self, category, layout) end,   -- the module's own options page
 --   })
 local Modules = {
 	list = {},

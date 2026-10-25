@@ -2,13 +2,15 @@
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime.version": "Lua 5.1",
   "workspace.library": [
-    "../.luals/vscode-wow-api/Annotations/Core"
+    ".luals/vscode-wow-api/Annotations/Core"
   ],
   "workspace.checkThirdParty": false,
   "workspace.ignoreDir": [
+    "Libs",
     "tests",
     ".release",
     ".lua",
+    ".luals",
     ".luarocks"
   ],
   "diagnostics.groupFileStatus": {
@@ -16,11 +18,27 @@
   },
   "diagnostics.globals": [
     "CANCEL",
+    "CLOSE",
+    "ColorManager",
+    "CreateMinimalSliderFormatter",
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",
     "DEFAULT_CHAT_FRAME",
+    "GameMenuEscPriority",
+    "GameTooltip_AddNormalLine",
+    "GameTooltip_SetTitle",
+    "LibStub",
+    "LootFrame",
+    "MenuConstants",
+    "MenuTemplates",
+    "MenuVariants",
+    "MinimalSliderWithSteppersMixin",
+    "RegisterGameMenuEscHandler",
     "Settings",
+    "SettingsPanel",
+    "SettingsTooltip",
     "SlashCmdList",
+    "StaticPopup_Hide",
     "StaticPopup_Show"
   ]
 }

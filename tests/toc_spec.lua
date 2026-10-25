@@ -1,8 +1,8 @@
 local lfs = require("lfs")
 local Toc = require("tests.helpers.toc")
 
--- Top-level folders in load order (techspec §3).
-local LAYERS = { "Locales", "Compat", "Data", "Core", "Rules", "Providers", "Integrations", "Modules", "Settings", "Dev" }
+-- Top-level folders in load order: the addon's layers, bottom-up.
+local LAYERS = { "Libs", "Locales", "Compat", "Data", "Core", "Rules", "Providers", "Integrations", "Modules", "Settings", "Dev" }
 
 -- Top-level folders that are not part of the addon.
 local NOT_ADDON = { tests = true }
@@ -26,6 +26,24 @@ local function addonFiles(dir, prefix, found)
 	return found
 end
 
+-- Every file the game loads: the TOC's files and, inside them, the files that
+-- XML files load (libraries list their files in an embed.xml).
+local function loadedFiles(toc)
+	local files = {}
+	local function add(path)
+		files[#files + 1] = path
+		if path:match("%.xml$") and lfs.attributes(path, "mode") == "file" then
+			for _, included in ipairs(Toc.ParseXml(path)) do
+				add(included)
+			end
+		end
+	end
+	for _, entry in ipairs(toc.files) do
+		add(entry.path)
+	end
+	return files
+end
+
 describe("Lootoman.toc", function()
 	local toc = Toc.Parse("Lootoman.toc")
 
@@ -35,18 +53,20 @@ describe("Lootoman.toc", function()
 		assert.matches("^%d+[%d, ]*$", toc.metadata.Interface)
 		assert.equals("LootomanDB", toc.metadata.SavedVariables)
 		assert.equals("LootomanCharDB", toc.metadata.SavedVariablesPerCharacter)
+		assert.equals("[Game]", toc.metadata["X-Game"])
+		assert.equals("[Family]", toc.metadata["X-Family"])
 	end)
 
-	it("lists only files that exist", function()
-		for _, entry in ipairs(toc.files) do
-			assert.equals("file", lfs.attributes(entry.path, "mode"), entry.path .. " is missing")
+	it("loads only files that exist", function()
+		for _, path in ipairs(loadedFiles(toc)) do
+			assert.equals("file", lfs.attributes(path, "mode"), path .. " is missing")
 		end
 	end)
 
-	it("lists every Lua and XML file of the addon", function()
+	it("loads every Lua and XML file of the addon", function()
 		local listed = {}
-		for _, entry in ipairs(toc.files) do
-			listed[entry.path] = true
+		for _, path in ipairs(loadedFiles(toc)) do
+			listed[path] = true
 		end
 		for _, path in ipairs(addonFiles(".")) do
 			assert.is_true(listed[path] == true, path .. " is not in the TOC")

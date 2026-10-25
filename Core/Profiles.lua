@@ -1,7 +1,7 @@
 local _, ns = ...
-local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
+local Bus, Storage, Text = ns.Bus, ns.Storage, ns.Text
 
--- Named sets of settings (techspec §7.1). Each character uses one profile;
+-- Named sets of settings. Each character uses one profile;
 -- characters without one use Default, which cannot be renamed or deleted.
 --
 -- Functions that can fail return nil and an error code: "empty", "too_long",
@@ -14,15 +14,6 @@ ns.Profiles = Profiles
 
 local DEFAULT = Storage.DEFAULT_PROFILE
 
-local function trim(text)
-	return (text:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
--- Characters, not bytes: Cyrillic letters take two bytes in UTF-8.
-local function length(text)
-	return select(2, text:gsub("[^\128-\191]", ""))
-end
-
 local function deepCopy(value)
 	if type(value) ~= "table" then
 		return value
@@ -34,33 +25,9 @@ local function deepCopy(value)
 	return copy
 end
 
--- Profile names are unique regardless of letter case, also in Cyrillic.
-local function findName(name)
-	local folded = Text.FoldCase(name)
-	for existing in pairs(Storage.db.profiles) do
-		if Text.FoldCase(existing) == folded then
-			return existing
-		end
-	end
-end
-
+-- Profile names are unique regardless of letter case (Text.CheckName).
 local function validate(name, renaming)
-	name = trim(name or "")
-	if name == "" then
-		return nil, "empty"
-	end
-	if length(name) > Profiles.MAX_NAME_LENGTH then
-		return nil, "too_long"
-	end
-	local existing = findName(name)
-	if existing and existing ~= renaming then
-		return nil, "exists"
-	end
-	-- Default is shown under its translated name, so that name is taken too.
-	if Text.FoldCase(name) == Text.FoldCase(L["Default"]) then
-		return nil, "exists"
-	end
-	return name
+	return Text.CheckName(name, Storage.db.profiles, Profiles.MAX_NAME_LENGTH, renaming)
 end
 
 -- Default first, then the others in alphabetical order.

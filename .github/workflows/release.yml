@@ -1,4 +1,4 @@
-# Packages the addon with the BigWigs packager (techspec §10).
+# Packages the addon with the BigWigs packager.
 # A pushed tag builds the package and uploads it to CurseForge, Wago and
 # GitHub Releases; a tag containing "alpha" becomes an alpha file.
 # A manual run only builds the package and attaches the zip to the run.

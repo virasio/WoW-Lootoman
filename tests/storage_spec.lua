@@ -85,6 +85,41 @@ describe("storage", function()
 		assert.equals("Default", Storage:GetProfileName())
 	end)
 
+	describe("sections", function()
+		it("are tables in the current profile, created on first use", function()
+			local db = load(nil, nil)
+			local positions = Storage:GetSection("positions")
+			positions.LootFeed = { Modern = { "CENTER", 200, 0 } }
+			assert.equals(positions, Storage:GetSection("positions"))
+			assert.same({ sections = { positions = { LootFeed = { Modern = { "CENTER", 200, 0 } } } } }, db.profiles.Default)
+		end)
+
+		it("are kept apart by name", function()
+			load(nil, nil)
+			assert.are_not.equal(Storage:GetSection("positions"), Storage:GetSection("rules"))
+		end)
+
+		it("follow the profile of the current character", function()
+			load({ schema = 1, profiles = { Default = {}, Alt = {} }, profileKeys = { ["Bo-Realm"] = "Alt" }, global = {} })
+			Storage:GetSection("positions").frame = "Ana"
+			Storage:SetCharacter("Bo-Realm")
+			assert.same({}, Storage:GetSection("positions"))
+		end)
+
+		it("replace saved values that are not tables", function()
+			local db = load({ schema = 1, profiles = { Default = { sections = { positions = 5 } }, Alt = { sections = "x" } }, profileKeys = { ["Bo-Realm"] = "Alt" }, global = {} })
+			assert.same({}, Storage:GetSection("positions"))
+			Storage:SetCharacter("Bo-Realm")
+			assert.same({}, Storage:GetSection("positions"))
+			assert.same({ sections = { positions = {} } }, db.profiles.Alt)
+		end)
+
+		it("need a name", function()
+			load(nil, nil)
+			assert.has_error(function() Storage:GetSection() end)
+		end)
+	end)
+
 	it("returns the saved tables to keep", function()
 		local account, character = { schema = 1, profiles = { Default = {} }, profileKeys = {}, global = {} }, { schema = 1 }
 		local db, charDB = load(account, character)

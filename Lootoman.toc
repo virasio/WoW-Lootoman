@@ -9,6 +9,11 @@
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
 ## SavedVariables: LootomanDB
 ## SavedVariablesPerCharacter: LootomanCharDB
+## X-Game: [Game]
+## X-Family: [Family]
+
+Libs\LibStub\LibStub.lua
+Libs\LibEditMode\embed.xml
 
 Locales\Locales.lua
 Locales\enUS.lua
@@ -16,8 +21,10 @@ Locales\ruRU.lua
 
 Compat\Compat.lua
 
+# The retail client does not know the game type camelot and loads a file
+# allowed only for it; the exclusion keeps the Forever data off retail.
 Data\Mainline\Data.lua [AllowLoadGameType standard]
-Data\Forever\Data.lua [AllowLoadGameType camelot]
+Data\Forever\Data.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
 
 Core\Init.lua
 Core\Text.lua
@@ -26,13 +33,31 @@ Core\Migrations.lua
 Core\Storage.lua
 Core\Profiles.lua
 Core\Modules.lua
+Core\Share.lua
 Core\Slash.lua
 Core\SelfTest.lua
 Core\Startup.lua
 
+Providers\Bags.lua
+
+Modules\Shared\EditMode.lua
+Modules\Shared\NameMenu.lua
+
+Modules\AutoLoot\AutoLoot.lua
+Modules\AutoLoot\LootWindow.lua
+
+Modules\LootFeed\Sources.lua
+Modules\LootFeed\Model.lua
+Modules\LootFeed\Design.lua
+Modules\LootFeed\Layouts.lua
+Modules\LootFeed\Frames.lua
+Modules\LootFeed\LootFeed.lua
+Modules\LootFeed\Designer.lua
+
 Settings\Panel.lua
 Settings\Profiles.lua
+Settings\Share.lua
 
 #@debug@
-Dev\SampleModule.lua
+Dev\LootDump.lua
 #@end-debug@

@@ -1,0 +1,5 @@
+<Ui>
+	<Script file='Frame.lua'/>
+	<Include file="Widgets\Widgets.xml"/>
+	<Frame name="FixtureFrame"/>
+</Ui>

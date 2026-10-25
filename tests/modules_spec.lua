@@ -23,7 +23,8 @@ describe("modules", function()
 	end
 
 	before_each(function()
-		ns = Loader.LoadAddon()
+		-- Without the addon's own modules: these tests register their own.
+		ns = Loader.LoadAddon({ skip = { "Settings/", "Modules/" } })
 		Modules, Test = ns.Modules, ns.Compat.Test
 		log = {}
 	end)
