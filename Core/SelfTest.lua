@@ -7,7 +7,8 @@ local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 local SelfTest = {}
 ns.SelfTest = SelfTest
 
--- Each check returns true, or false and what went wrong.
+-- Each check returns true, false and what went wrong, or nil and why the
+-- client cannot have it (not a failure: the addon turns that feature off).
 local checks = {
 	{ "Has", function()
 		return Compat.Has("C_AddOns.GetAddOnMetadata") and not Compat.Has("C_LootomanMissing.Nothing"),
@@ -40,7 +41,23 @@ local checks = {
 	{ "RegisterEvent", function()
 		return Storage.db ~= nil and Storage.character ~= nil, "ADDON_LOADED or PLAYER_LOGIN was not received"
 	end },
+	{ "Encode", function()
+		if not Compat.CanEncode() then
+			return nil, "no C_EncodingUtil, so Import and Share are off"
+		end
+		local value = Compat.Decode(Compat.Encode({ check = { 1, "two" } }))
+		return type(value) == "table" and type(value.check) == "table" and value.check[2] == "two",
+			"a text did not read back"
+	end },
 }
+
+-- Lines that other parts add to the report (providers, modules): each builder
+-- returns a line of text.
+local reports = {}
+
+function SelfTest.AddReport(build)
+	reports[#reports + 1] = build
+end
 
 function SelfTest.Run()
 	local say = ns.Print
@@ -52,6 +69,8 @@ function SelfTest.Run()
 		local ran, ok, problem = pcall(fn)
 		if ran and ok then
 			say("  " .. name .. ": OK")
+		elseif ran and ok == nil then
+			say("  " .. name .. ": not available, " .. tostring(problem))
 		else
 			failed = failed + 1
 			say("  " .. name .. ": FAILED, " .. tostring(ran and problem or ok))
@@ -89,6 +108,9 @@ function SelfTest.Run()
 	report(function()
 		return ("Data set: %s; locale: %s"):format(ns.Data and ns.Data.set or "none", ns.Locales.current)
 	end)
+	for _, build in ipairs(reports) do
+		report(build)
+	end
 	for _, module in ipairs(Modules:List()) do
 		report(function()
 			local events = Bus:GetEvents(module)

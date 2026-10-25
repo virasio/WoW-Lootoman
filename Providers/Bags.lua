@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Compat = ns.Bus, ns.Compat
+local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
 
 -- Free space in the player's bags (techspec §3): free slots per bag type, and
 -- whether a looted stack fits. The bags are read on first use and read again
@@ -73,6 +73,29 @@ function Bags.FreeSlots()
 	end
 	return slots
 end
+
+-- The self-test lists every equipped bag with its family as the client gives
+-- it: the family bits are known from the community, not from Blizzard, and are
+-- checked in game before free-slot bars name them (plans/0.3.md).
+SelfTest.AddReport(function()
+	local bags, reagentBag = Compat.GetPlayerBags()
+	local parts = {}
+	local function describe(bag, label)
+		local size = Compat.GetBagSize(bag)
+		if size > 0 then
+			local free, family = Compat.GetBagFreeSlots(bag)
+			parts[#parts + 1] = ("%s%d (%d slots, %d free%s)"):format(label, bag, size, free,
+				family ~= 0 and (", family " .. family) or "")
+		end
+	end
+	for _, bag in ipairs(bags) do
+		describe(bag, "")
+	end
+	if reagentBag then
+		describe(reagentBag, "reagent ")
+	end
+	return "Bags: " .. (#parts > 0 and table.concat(parts, ", ") or "none")
+end)
 
 -- Whether a looted stack of an item (ID or link) fits: into partial stacks of
 -- the same item, a free slot in a general bag, in a profession bag of its

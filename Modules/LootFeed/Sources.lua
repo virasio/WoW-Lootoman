@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Compat = ns.Bus, ns.Compat
+local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
 
 -- What the loot feed shows, from game events (techspec §7.3). Each entry is
 -- { kind, id, link, name, icon, quality, amount, total }, where kind is "item",
@@ -124,13 +124,6 @@ local function match(compiled, text)
 	return args
 end
 
-local missing = {}
-
--- Formats the client did not have, for the self-test.
-function Sources.MissingFormats()
-	return missing
-end
-
 local function compile(names)
 	local list = {}
 	for _, name in ipairs(names) do
@@ -138,12 +131,41 @@ local function compile(names)
 		if format then
 			local pattern, order, declined = Sources.ToPattern(format)
 			list[#list + 1] = { name = name, pattern = pattern, order = order, declined = declined }
-		else
-			missing[#missing + 1] = name
 		end
 	end
 	return list
 end
+
+-- For the self-test, whether the feed is on or not: how many of the chat
+-- formats the client has and the feed can read, of how many, and the names of
+-- the others, each marked missing or unreadable.
+function Sources.CheckFormats()
+	local names = {}
+	for _, name in ipairs(ITEM_FORMATS) do
+		names[#names + 1] = name
+	end
+	for _, format in ipairs(REPUTATION_FORMATS) do
+		names[#names + 1] = format[1]
+	end
+	local found, problems = 0, {}
+	for _, name in ipairs(names) do
+		local format = Compat.GetGlobalString(name)
+		if not format then
+			problems[#problems + 1] = name .. " missing"
+		elseif not pcall(Sources.ToPattern, format) then
+			problems[#problems + 1] = name .. " unreadable"
+		else
+			found = found + 1
+		end
+	end
+	return found, #names, problems
+end
+
+SelfTest.AddReport(function()
+	local found, total, problems = Sources.CheckFormats()
+	return ("Loot feed chat formats: %d of %d%s"):format(found, total,
+		#problems > 0 and ("; " .. table.concat(problems, ", ")) or "")
+end)
 
 -- A value the client keeps secret cannot be used; nil instead.
 local function known(value)
@@ -169,7 +191,6 @@ end
 -- Starts reading the events for owner (the loot feed module, whose listeners
 -- the registry removes when it stops) and calls emit(entry) for each gain.
 function Sources.Start(owner, emit)
-	missing = {}
 	local itemFormats = compile(ITEM_FORMATS)
 	local reputationNames, reputationSigns = {}, {}
 	for index, format in ipairs(REPUTATION_FORMATS) do
