@@ -33,6 +33,19 @@ function Text.Length(text)
 	return select(2, text:gsub("[^\128-\191]", ""))
 end
 
+-- The first maxLength characters of a text, never half a character.
+function Text.Truncate(text, maxLength)
+	local count, cut = 0, 0
+	for start, char in text:gmatch("()([^\128-\191][\128-\191]*)") do
+		count = count + 1
+		if count > maxLength then
+			break
+		end
+		cut = start + #char - 1
+	end
+	return text:sub(1, cut)
+end
+
 -- A name for a profile or a layout: without spaces around it, not empty, at
 -- most maxLength characters, and none of the keys of names regardless of
 -- letter case, also in Cyrillic. "Default" is shown in the client language,

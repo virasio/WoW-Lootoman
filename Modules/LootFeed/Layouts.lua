@@ -98,12 +98,15 @@ function Layouts.Taken(name)
 	end
 end
 
--- A free name like the given one: the name itself, or "Name 2", "Name 3", …
+-- A free name like the given one: the name itself, or "Name 2", "Name 3", …,
+-- with the name shortened so the number fits in the longest name allowed.
 function Layouts.FreeName(name)
 	local free, number = name, 1
 	while Layouts.Taken(free) do
 		number = number + 1
-		free = ("%s %d"):format(name, number)
+		local suffix = (" %d"):format(number)
+		local base = Text.Truncate(name, Layouts.MAX_NAME_LENGTH - #suffix):gsub("%s+$", "")
+		free = base .. suffix
 	end
 	return free
 end

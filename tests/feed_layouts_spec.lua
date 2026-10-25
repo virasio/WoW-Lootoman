@@ -105,4 +105,16 @@ describe("loot feed layouts", function()
 		assert.same({ "Raid", "Default", nil }, { Layouts.Taken("RAID"), Layouts.Taken("default"), Layouts.Taken("Solo") })
 		assert.same({ "Raid 3", "Solo" }, { Layouts.FreeName("Raid"), Layouts.FreeName("Solo") })
 	end)
+
+	it("find a free name within the longest name allowed, shortening the name by characters", function()
+		local latin = ("a"):rep(47) .. "b"
+		local cyrillic = ("я"):rep(47) .. "ж"
+		Layouts.Create(latin, "large")
+		Layouts.Create(cyrillic, "large")
+		assert.equals(("a"):rep(46) .. " 2", Layouts.FreeName(latin))
+		assert.equals(("я"):rep(46) .. " 2", Layouts.FreeName(cyrillic))
+		local free = Layouts.FreeName(cyrillic)
+		assert.equals(free, Layouts.Create(free, "large"))
+		assert.equals(("я"):rep(46) .. " 3", Layouts.FreeName(cyrillic))
+	end)
 end)
