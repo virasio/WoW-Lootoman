@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- How a loot feed row looks (plans/0.1.md, C38–C40). A design is data: the
+-- How a loot feed row looks. A design is data: the
 -- row's box and the parts inside it, in pixels at the base size 13. The size
 -- setting (10–16) scales a design, so one design fits every size. Frames draws
 -- any design; the row designer edits the player's one.

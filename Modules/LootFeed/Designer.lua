@@ -2,7 +2,7 @@ local _, ns = ...
 local Bus, Compat, L, NameMenu = ns.Bus, ns.Compat, ns.L, ns.NameMenu
 local Feed = ns.Feed
 
--- The row designer (plans/0.1.md, task 14, C40), in the spirit of Platynator's
+-- The row designer, in the spirit of Platynator's
 -- nameplate designer: sample rows of every kind, drawn by the feed's own code
 -- at the player's size, each in its box: the row's height and width. Click a
 -- part to choose it, drag it to move it on the grid; a gold frame marks the

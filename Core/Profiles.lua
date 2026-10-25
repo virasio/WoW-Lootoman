@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Storage, Text = ns.Bus, ns.Storage, ns.Text
 
--- Named sets of settings (techspec §7.1). Each character uses one profile;
+-- Named sets of settings. Each character uses one profile;
 -- characters without one use Default, which cannot be renamed or deleted.
 --
 -- Functions that can fail return nil and an error code: "empty", "too_long",

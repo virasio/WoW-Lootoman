@@ -37,12 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Next to the checkout, where .luarc.json expects them.
+      # Into the checkout (ignored by git), where .luarc.json expects them.
       - name: Install lua-language-server and the WoW annotations
         run: |
-          mkdir -p ../.luals/server
-          curl -sSfL "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz" | tar -xz -C ../.luals/server
-          git clone --quiet --depth 1 --branch "${WOW_API_VERSION}" https://github.com/Ketho/vscode-wow-api ../.luals/vscode-wow-api
+          mkdir -p .luals/server
+          curl -sSfL "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz" | tar -xz -C .luals/server
+          git clone --quiet --depth 1 --branch "${WOW_API_VERSION}" https://github.com/Ketho/vscode-wow-api .luals/vscode-wow-api
 
       - name: lua-language-server
-        run: ../.luals/server/bin/lua-language-server --check . --checklevel=Warning --logpath "$RUNNER_TEMP/luals"
+        run: .luals/server/bin/lua-language-server --check . --checklevel=Warning --logpath "$RUNNER_TEMP/luals"

@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
 
--- Free space in the player's bags (techspec §3): free slots per bag type, and
+-- Free space in the player's bags: free slots per bag type, and
 -- whether a looted stack fits. The bags are read on first use and read again
 -- after the next BAG_UPDATE_DELAYED.
 local Bags = {}
@@ -75,8 +75,8 @@ function Bags.FreeSlots()
 end
 
 -- The self-test lists every equipped bag with its family as the client gives
--- it: the family bits are known from the community, not from Blizzard, and are
--- checked in game before free-slot bars name them (plans/0.3.md).
+-- it: the family bits are known from the community, not from Blizzard, so
+-- they are checked in game before anything names them.
 SelfTest.AddReport(function()
 	local bags, reagentBag = Compat.GetPlayerBags()
 	local parts = {}

@@ -1,9 +1,9 @@
 local _, ns = ...
 local Compat = ns.Compat
 
--- Modules never call each other; they send and listen to messages here
--- (techspec §3). Game events go through the bus too, so all listeners of one
--- owner can be removed at once when a module is disabled.
+-- Modules never call each other; they send and listen to messages here.
+-- Game events go through the bus too, so all listeners of one owner can be
+-- removed at once when a module is disabled.
 --
 -- Listeners are called as fn(name, ...), where name is the message or event.
 -- Each owner has at most one listener per name; listeners run in the order

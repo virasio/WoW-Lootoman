@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Migrations = ns.Bus, ns.Migrations
 
--- Saved settings (techspec §5). LootomanDB, account-wide: profiles, the
+-- Saved settings. LootomanDB, account-wide: profiles, the
 -- profile of each character, account-wide settings. LootomanCharDB: data of
 -- one character.
 --

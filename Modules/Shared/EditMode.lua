@@ -1,8 +1,8 @@
 local _, ns = ...
 local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
 
--- Places module frames with Blizzard's Edit Mode through LibEditMode
--- (techspec §6, §7.1). Positions are kept per Edit Mode layout in the profile
+-- Places module frames with Blizzard's Edit Mode through LibEditMode.
+-- Positions are kept per Edit Mode layout in the profile
 -- section "positions": positions[key][layoutName] = { point, x, y }. They are
 -- restored when the layout or the profile changes, and follow a layout that
 -- is renamed or copied. Module settings can also be shown in the frame's

@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- English strings are the keys: L["Sell junk"] (techspec §8). A string with no
+-- English strings are the keys: L["Sell junk"]. A string with no
 -- translation for the client locale falls back to its English key.
 --
 -- Locales load before Compat, so this is the one place outside Compat that

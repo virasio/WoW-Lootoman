@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
 
--- What the loot feed shows, from game events (techspec §7.3). Each entry is
+-- What the loot feed shows, from game events. Each entry is
 -- { kind, id, link, name, icon, quality, amount, total }, where kind is "item",
 -- "currency", "money", "reputation" or "xp":
 --

@@ -4,8 +4,8 @@ local Bus, Compat = ns.Bus, ns.Compat
 -- Exists only when the addon runs from the repository: the packager removes
 -- the #@debug@ block from the TOC. After /lootoman debug on, it prints the loot
 -- window and the loot events with their times, and shows values the client
--- keeps secret as <secret>, to check the loot functions in combat (plans/0.1.md,
--- risks). Development text is not translated.
+-- keeps secret as <secret>, to check the loot functions in combat.
+-- Development text is not translated.
 
 local EVENTS = { "LOOT_READY", "LOOT_OPENED", "LOOT_SLOT_CLEARED", "LOOT_BIND_CONFIRM", "LOOT_CLOSED" }
 local FIELDS = { "kind", "name", "quantity", "quality", "currencyID", "locked", "isQuestItem", "link" }

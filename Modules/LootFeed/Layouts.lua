@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
 
--- Named layouts of the loot feed's rows (plans/0.1.md, task 16, Q14–Q17, C42),
+-- Named layouts of the loot feed's rows,
 -- shared by every profile as in Platynator. The account-wide section
 -- "feedLayouts" holds { [name] = design } (Design.lua: { schema, base,
 -- changes }); the loot feed's setting "layout" names the one a profile uses.

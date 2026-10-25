@@ -1,11 +1,11 @@
 local _, ns = ...
 
--- The only code that reads the game's data and state (techspec §3). Tests
+-- The only code that reads the game's data and state. Tests
 -- replace this file with tests/mocks/Compat.lua, which has the same functions.
 local Compat = {}
 ns.Compat = Compat
 
--- Capability detection (techspec §2): Has("C_Container.GetContainerItemInfo")
+-- Capability detection: Has("C_Container.GetContainerItemInfo")
 -- is true when that global, or field path below a global, exists.
 function Compat.Has(path)
 	local value = _G

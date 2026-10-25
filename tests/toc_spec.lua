@@ -1,7 +1,7 @@
 local lfs = require("lfs")
 local Toc = require("tests.helpers.toc")
 
--- Top-level folders in load order (techspec §3).
+-- Top-level folders in load order: the addon's layers, bottom-up.
 local LAYERS = { "Libs", "Locales", "Compat", "Data", "Core", "Rules", "Providers", "Integrations", "Modules", "Settings", "Dev" }
 
 -- Top-level folders that are not part of the addon.

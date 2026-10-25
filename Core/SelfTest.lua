@@ -1,7 +1,7 @@
 local addonName, ns = ...
 local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 
--- /lootoman selftest (techspec §9): calls Compat against the real client and
+-- /lootoman selftest: calls Compat against the real client and
 -- prints what the addon knows about itself. The output is for bug reports, so
 -- it is not translated.
 local SelfTest = {}

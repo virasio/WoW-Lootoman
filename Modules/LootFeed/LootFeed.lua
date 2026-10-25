@@ -2,7 +2,7 @@ local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 local Feed = ns.Feed
 
--- The loot feed (techspec §7.3): what you pick up shows next to the screen
+-- The loot feed: what you pick up shows next to the screen
 -- centre and fades out. Sources reads the game's events, Model keeps the rows,
 -- Frames draws them; this module connects them to the settings, the options
 -- page and Edit Mode, where the feed is placed and where the same settings

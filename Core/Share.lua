@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Compat, L, Modules, Profiles, Storage, Text = ns.Bus, ns.Compat, ns.L, ns.Modules, ns.Profiles, ns.Storage, ns.Text
 
--- Profile texts (techspec §7.1; plans/0.1.md, task 16): parts of the current
+-- Profile texts: parts of the current
 -- profile and named items of the whole account as one line of text to copy,
 -- and such a text read back.
 --

@@ -1,7 +1,7 @@
 local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
--- Draws the loot feed's rows from the model (techspec §7.3) in the default
+-- Draws the loot feed's rows from the model in the default
 -- UI's style, laid out by a design (Design.lua): a big icon with the quality
 -- border of the default UI's loot roll, a glow over rare and better items, the
 -- name in its quality colour with the amount after it, the owned count on the
@@ -92,7 +92,7 @@ function Frames.Describe(row, options)
 		return { icon = ICONS.xp, label = L["Experience"], labelColor = WHITE, amount = amount, amountColor = color }
 	elseif kind == "reputation" then
 		-- A Russian client declines the faction name in most messages; each
-		-- form gets a phrase that fits it (plans/0.1.md).
+		-- form gets a phrase that fits it.
 		local phrase = row.declined and L["%s reputation"] or L["Reputation with %s"]
 		local amount, color
 		if row.amount then

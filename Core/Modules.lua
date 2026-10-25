@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 
--- User-facing features register here (techspec §3). Each module has an
+-- User-facing features register here. Each module has an
 -- "enabled" setting in the profile, and the registry turns modules on and off
 -- to match it: on Ready, on a profile change and on a toggle, without /reload.
 -- A disabled module has no listeners on the bus.

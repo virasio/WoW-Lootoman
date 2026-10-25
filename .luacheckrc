@@ -9,10 +9,12 @@ exclude_files = {
 	-- Lua and LuaRocks installed into the checkout by CI.
 	".lua/",
 	".luarocks/",
+	-- lua-language-server and the WoW annotations, ignored by git.
+	".luals/",
 }
 
 -- Game globals are allowed per layer, so a game API call outside Compat shows
--- up as an undefined global (techspec §3). Add new globals to the right layer.
+-- up as an undefined global. Add new globals to the right layer.
 files["Locales/Locales.lua"] = {
 	read_globals = { "GetLocale" },
 }

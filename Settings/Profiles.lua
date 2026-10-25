@@ -2,7 +2,7 @@ local _, ns = ...
 local L, NameMenu, Profiles, Storage, Text = ns.L, ns.NameMenu, ns.Profiles, ns.Storage, ns.Text
 local Panel = ns.SettingsPanel
 
--- The profile on top of the main page (techspec §7.1): the label "Profile",
+-- The profile on top of the main page: the label "Profile",
 -- under it a dropdown with the profile this character uses and a menu in the
 -- spirit of Edit Mode's layout menu (NameMenu). Every profile shows, on hover,
 -- a gear with Copy, Rename and Reset, and a button to delete it (Default can

@@ -1,6 +1,6 @@
 # Manual tests
 
-What the unit tests cannot cover: checks in the game, run before every release. Each release adds the checks for its features, so the whole list is the full regression (1.0). The heading of each section names the release that added it and the acceptance criteria of `techspec.md` it covers.
+What the unit tests cannot cover: checks in the game, run before every release. Each release adds the checks for its features, so the whole list is the full regression (1.0). The heading of each section names the release that added it.
 
 **Setup for every round:** the branch under test checked out into `Interface/AddOns/Lootoman`; BugSack and BugGrabber on; the taint log on (`/console taintLog 1`, then `/reload`). After each section, open BugSack: no Lootoman errors. At the end, `/reload` or log out, so the SavedVariables, BugGrabber's errors and `Logs/taint.log` are written; the game overwrites the log at the next start. Turn the taint log off with `/console taintLog 0` when done.
 
@@ -9,7 +9,7 @@ What the unit tests cannot cover: checks in the game, run before every release. 
 - [ ] **Self-test.** `/lootoman selftest`. *Expected:* every check `OK` (`Encode` included); `Game Standard, family Mainline; data set: Mainline`; a `Bags:` line with every equipped bag (a profession bag shows its family); `Loot feed chat formats: 20 of 20`; every module `on`; `All checks passed.`, then `After: OK`.
 - [ ] **Commands.** `/ltm` opens the options; `/lootoman help` lists the commands; `/lootoman debug` shows the state, `on` and `off` change it.
 
-## Fast autoloot (0.1, §7.2)
+## Fast autoloot (0.1)
 
 The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 
@@ -21,7 +21,7 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **In combat.** Loot in combat in the open world and in a dungeon. *Expected:* no errors.
 - [ ] **Bind on pickup.** Alone: a bind-on-pickup item is looted without asking. In a group: the window opens and asks. With *Confirm bind-on-pickup items when alone* off, alone: the game asks.
 
-## Loot feed (0.1, §7.3)
+## Loot feed (0.1)
 
 - [ ] **Sources.** Pick up items, currencies, money and reputation; turn *Experience* on and gain experience. *Expected:* each shows a row with its icon, name and amount; money from a merchant, mail or trade does not.
 - [ ] **Merging.** Loot the same item from several corpses quickly. *Expected:* one row with the total.
@@ -30,14 +30,14 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Edit Mode.** Open Edit Mode. *Expected:* the loot feed is listed with sample rows, can be moved, and keeps its position per Edit Mode layout and across `/reload`. Its dialog shows the same option groups and a *Design rows* button; changes apply at once.
 - [ ] **Look.** The Default layout. *Expected:* a big icon with its quality border, the owned count on it, a glow on rare and better items, one shared background.
 
-## Row designer and layouts (0.1, §7.3)
+## Row designer and layouts (0.1)
 
 - [ ] **Opening.** From the loot feed's options page, the Edit Mode dialog and `/lootoman design`. *Expected:* it opens; in combat it refuses with a message.
 - [ ] **Editing.** Click each part (row, icon, name, amount, owned count) and the row background; drag parts; change every control by slider and by typing. *Expected:* the selected text shows its maximum width; parts stay inside the row; the feed follows at once and after `/reload`.
 - [ ] **Layouts.** *+ New layout* from each template; copy, rename, reset to template, delete (the delete button appears on hover). *Expected:* Default cannot be renamed or deleted; a deleted layout's profiles switch to Default.
 - [ ] **Shared by profiles.** Two profiles use the same layout; change it in one. *Expected:* the other shows the change.
 
-## Options and profiles (0.1, §7.1)
+## Options and profiles (0.1)
 
 - [ ] **Main page.** Options → AddOns → Lootoman. *Expected:* *Profile* above its dropdown with *Reset* beside it, a divider, *Enable fast autoloot* with its bind-on-pickup option under it (greyed out while autoloot is off), *Enable loot feed* with *Configure* under it (opens the loot feed page). Hovering a checkbox highlights only its row. The panel's *Defaults* button is hidden on Lootoman's pages and back on others.
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.

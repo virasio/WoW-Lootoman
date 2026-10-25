@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bus, Compat, L, Modules, Storage = ns.Bus, ns.Compat, ns.L, ns.Modules, ns.Storage
 
--- The addon's pages in the game options (techspec §7.1), built with Blizzard's
+-- The addon's pages in the game options, built with Blizzard's
 -- Settings API on Ready, so they look like the game's own options.
 --
 -- The main page is the addon's own frame (a canvas page), laid out the way a

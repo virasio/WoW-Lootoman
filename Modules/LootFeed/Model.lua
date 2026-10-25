@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- The loot feed's rows, without frames (techspec §7.3). Pure logic: every call
+-- The loot feed's rows, without frames. Pure logic: every call
 -- that depends on time takes the current time, so tests need no clock.
 --
 -- A row shows an entry from Sources for `duration` seconds, then fades out over

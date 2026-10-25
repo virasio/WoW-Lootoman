@@ -1,7 +1,7 @@
 local _, ns = ...
 local Bags, Bus, Compat, L = ns.Bags, ns.Bus, ns.Compat, ns.L
 
--- Fast autoloot (techspec §7.2). When the game auto loots, every slot is taken
+-- Fast autoloot. When the game auto loots, every slot is taken
 -- at once, from the last to the first, one slot per server round trip: loot a
 -- slot, wait for its LOOT_SLOT_CLEARED, then the next. Items that do not fit
 -- are skipped and reported (LootSkipped). Blizzard's loot window stays hidden
@@ -9,7 +9,7 @@ local Bags, Bus, Compat, L = ns.Bags, ns.Bus, ns.Compat, ns.L
 -- time and a loot error show it (LootWindowShown).
 --
 -- The game sends LOOT_READY twice for one loot and can repeat
--- LOOT_SLOT_CLEARED and LOOT_CLOSED (plans/0.1.md): repeats change nothing.
+-- LOOT_SLOT_CLEARED and LOOT_CLOSED: repeats change nothing.
 -- Looting never retries a slot: repeated LootSlot calls can disconnect.
 local AutoLoot = ns.Modules:Register({
 	name = "AutoLoot",

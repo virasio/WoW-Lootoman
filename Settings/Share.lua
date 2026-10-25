@@ -2,7 +2,7 @@ local _, ns = ...
 local Bus, Compat, L, NameMenu, Profiles, Share = ns.Bus, ns.Compat, ns.L, ns.NameMenu, ns.Profiles, ns.Share
 local Panel = ns.SettingsPanel
 
--- The Share and Import dialogs of profile texts (plans/0.1.md, task 16). They
+-- The Share and Import dialogs of profile texts. They
 -- open from the profile menu for a whole profile ("profile"), or from a
 -- menu of named items, such as the loot feed's layouts, for the items only
 -- ("layouts", the name of the collection).

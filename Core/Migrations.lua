@@ -1,7 +1,7 @@
 local _, ns = ...
 
 -- Every saved table carries a schema version; on load, migrations bring older
--- data up to the current schema (techspec §5). Step n upgrades schema n - 1 to
+-- data up to the current schema. Step n upgrades schema n - 1 to
 -- n, so the current schema is the number of steps. Data without a schema is
 -- treated as schema 0.
 local Migrations = {}
@@ -23,7 +23,7 @@ Migrations.account = {
 		ensureTable(db, "global")
 	end,
 	-- 2: the loot feed's row design moves from each profile to named layouts of
-	-- the whole account (plans/0.1.md, task 16). A profile's design with changes
+	-- the whole account. A profile's design with changes
 	-- becomes a layout named after the profile, which the profile then uses
 	-- (Default's becomes the layout Default, which every profile uses unless set).
 	function(db)
