@@ -53,14 +53,16 @@ local REPUTATION_FORMATS = {
 	{ "FACTION_STANDING_DECREASED_GENERIC_ACCOUNT_WIDE", -1 },
 }
 
--- While one of these windows is open, money changes are trades, not loot.
+-- While one of these windows is open, money changes are trades, not loot:
+-- the events that open and close it, and the kinds of interaction that tell
+-- whether it was already open when the feed started.
 local MONEY_WINDOWS = {
-	MERCHANT_SHOW = "MERCHANT_CLOSED",
-	MAIL_SHOW = "MAIL_CLOSED",
-	TRADE_SHOW = "TRADE_CLOSED",
-	AUCTION_HOUSE_SHOW = "AUCTION_HOUSE_CLOSED",
-	BANKFRAME_OPENED = "BANKFRAME_CLOSED",
-	GUILDBANKFRAME_OPENED = "GUILDBANKFRAME_CLOSED",
+	{ "MERCHANT_SHOW", "MERCHANT_CLOSED", { "Merchant" } },
+	{ "MAIL_SHOW", "MAIL_CLOSED", { "MailInfo" } },
+	{ "TRADE_SHOW", "TRADE_CLOSED", { "TradePartner" } },
+	{ "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", { "Auctioneer" } },
+	{ "BANKFRAME_OPENED", "BANKFRAME_CLOSED", { "Banker", "AccountBanker" } },
+	{ "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", { "GuildBanker" } },
 }
 
 local MAGIC = "[%^%$%(%)%%%.%[%]%*%+%-%?]"
@@ -253,7 +255,13 @@ function Sources.Start(owner, emit)
 
 	local money = Compat.GetMoney()
 	local openWindows = {}
-	for showEvent, closeEvent in pairs(MONEY_WINDOWS) do
+	for _, window in ipairs(MONEY_WINDOWS) do
+		local showEvent, closeEvent, kinds = window[1], window[2], window[3]
+		for _, kind in ipairs(kinds) do
+			if known(Compat.IsInteracting(kind)) == true then
+				openWindows[showEvent] = true
+			end
+		end
 		Bus:OnEvent(showEvent, owner, function()
 			openWindows[showEvent] = true
 		end)

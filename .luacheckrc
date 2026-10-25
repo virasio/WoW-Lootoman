@@ -28,6 +28,7 @@ files["Compat/"] = {
 		"C_CurrencyInfo",
 		"C_EncodingUtil",
 		"C_Item",
+		"C_PlayerInteractionManager",
 		"C_Timer",
 		"CloseLoot",
 		"ConfirmLootSlot",

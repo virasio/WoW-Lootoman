@@ -37,6 +37,8 @@ local state = {
 	money = 0,
 	xp = { 0, 1000 },
 	currencies = {},
+	-- Windows open with an NPC or a player, by kind: { Merchant = true }.
+	interacting = {},
 	-- Game error names by error type, filled by Test.FireGameError.
 	gameErrors = {},
 	playerBags = { 0, 1, 2, 3, 4 },
@@ -132,6 +134,10 @@ end
 
 function Compat.IsInGroup()
 	return state.group
+end
+
+function Compat.IsInteracting(kind)
+	return state.interacting[kind] == true
 end
 
 function Compat.GetGameErrorName(errorType)

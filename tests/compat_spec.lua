@@ -78,6 +78,18 @@ describe("Compat", function()
 		assert.is_false(Compat.IsSecret("shown"))
 	end)
 
+	it("asks the interaction manager which kind of window is open", function()
+		stub({
+			Enum = { PlayerInteractionType = { Merchant = 5, MailInfo = 17 } },
+			C_PlayerInteractionManager = { IsInteractingWithNpcOfType = function(kind) return kind == 5 end },
+		})
+		assert.is_true(Compat.IsInteracting("Merchant"))
+		assert.is_false(Compat.IsInteracting("MailInfo"))
+		assert.is_false(Compat.IsInteracting("Unknown"))
+		stub({ C_PlayerInteractionManager = {} })
+		assert.is_false(Compat.IsInteracting("Merchant"))
+	end)
+
 	it("reports an addon as loaded only when loading has finished", function()
 		stub({ C_AddOns = { IsAddOnLoaded = function(name) return true, name == "Done" end } })
 		assert.is_true(Compat.IsAddOnLoaded("Done"))

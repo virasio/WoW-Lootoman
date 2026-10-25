@@ -167,6 +167,16 @@ describe("loot feed sources", function()
 			Test.SetMoney(money + 7)
 			assert.same({ { kind = "money", amount = 7 } }, entries)
 		end)
+
+		it("leaves money out at a window that was already open when the feed started", function()
+			Test.state.interacting.Merchant = true
+			start()
+			Test.SetMoney(100)
+			assert.same({}, entries)
+			Test.FireEvent("MERCHANT_CLOSED")
+			Test.SetMoney(107)
+			assert.same({ { kind = "money", amount = 7 } }, entries)
+		end)
 	end)
 
 	describe("experience", function()

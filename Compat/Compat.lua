@@ -155,6 +155,17 @@ function Compat.IsInGroup()
 	return IsInGroup() == true
 end
 
+-- Whether a window of this kind is open with an NPC or a player: a name of
+-- Enum.PlayerInteractionType, such as "Merchant", "MailInfo" or "Banker". False
+-- on a client without the interaction manager or that kind.
+function Compat.IsInteracting(kind)
+	local interaction = Enum.PlayerInteractionType and Enum.PlayerInteractionType[kind]
+	if not interaction or not Compat.Has("C_PlayerInteractionManager.IsInteractingWithNpcOfType") then
+		return false
+	end
+	return C_PlayerInteractionManager.IsInteractingWithNpcOfType(interaction) == true
+end
+
 -- The name of a game error from UI_ERROR_MESSAGE, such as "ERR_INV_FULL", the
 -- same in every language (Blizzard's UIErrorsFrame reads it this way).
 function Compat.GetGameErrorName(errorType)
