@@ -18,6 +18,7 @@
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
 ## SavedVariables: LootomanDB
 ## SavedVariablesPerCharacter: LootomanCharDB
+## X-Curse-Project-ID: 1765586
 ## X-Game: [Game]
 ## X-Family: [Family]
 
