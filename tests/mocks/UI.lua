@@ -93,13 +93,68 @@ UI.QUALITY_COLORS = {
 	[5] = { r = 1, g = 0.5, b = 0 },
 }
 
+-- A menu description (Blizzard_Menu's ElementMenuDescription) that records
+-- what is built into it.
+local function newDescription(kind, text)
+	local description = { kind = kind, text = text, entries = {}, initializers = {} }
+	local function add(entry)
+		description.entries[#description.entries + 1] = entry
+		return entry
+	end
+	function description:CreateRadio(radioText, isSelected, setSelected, data)
+		local radio = add(newDescription("radio", radioText))
+		radio.isSelected, radio.setSelected, radio.data = isSelected, setSelected, data
+		return radio
+	end
+	function description:CreateButton(buttonText, callback)
+		local button = add(newDescription("button", buttonText))
+		button.callback = callback
+		return button
+	end
+	function description:CreateDivider()
+		return add(newDescription("divider"))
+	end
+	function description:SetGridMode(direction, columns) self.grid = { direction, columns } end
+	function description:DeactivateSubmenu() self.submenuDeactivated = true end
+	function description:ForceOpenSubmenu() self.submenuOpened = true end
+	function description:AddInitializer(initializer) self.initializers[#self.initializers + 1] = initializer end
+	function description:SetTooltip(fn) self.tooltip = fn end
+	function description:SetEnabled(enabled) self.enabled = enabled end
+	-- Test helpers: the tooltip's lines, and what shows on hover.
+	function description:TooltipLines()
+		local lines = {}
+		self.tooltip(lines, self)
+		return lines
+	end
+	function description:Hover()
+		local button, menu = { attached = {} }, { closed = false }
+		function menu:Close() self.closed = true end
+		for _, initializer in ipairs(self.initializers) do
+			initializer(button, self, menu)
+		end
+		return button.attached, menu
+	end
+	return description
+end
+
+-- The menu of a dropdown (DropdownButton:SetupMenu) as it opens.
+function UI.OpenMenu(dropdown)
+	local root = newDescription("root")
+	dropdown.menu(dropdown, root)
+	return root
+end
+
 function UI.Install()
 	local api = { frames = {} }
 
 	api.UIParent = UI.NewFake()
 	rawset(_G, "UIParent", api.UIParent)
-	rawset(_G, "CreateFrame", function(_, _, parent)
+	rawset(_G, "CreateFrame", function(_, _, parent, template)
 		local frame = UI.NewFake(parent)
+		-- What a template's frame holds that the code reads.
+		if template == "InputScrollFrameTemplate" then
+			frame.EditBox, frame.CharCount = UI.NewFake(frame), UI.NewFake(frame)
+		end
 		api.frames[#api.frames + 1] = frame
 		return frame
 	end)
@@ -128,6 +183,27 @@ function UI.Install()
 		end,
 	})
 	rawset(_G, "CreateColor", function(r, g, b, a) return { r = r, g = g, b = b, a = a } end)
+	-- Blizzard's menu API (Blizzard_Menu), as far as a dropdown's menu uses it.
+	rawset(_G, "MenuConstants", { VerticalGridDirection = 2 })
+	rawset(_G, "MenuVariants", { GearButtonAnchor = "gear anchor", CancelButtonAnchor = "cancel anchor" })
+	local function attach(kind)
+		return function(parent)
+			local button = { kind = kind }
+			parent.attached[#parent.attached + 1] = button
+			return button
+		end
+	end
+	rawset(_G, "MenuTemplates", {
+		AttachAutoHideGearButton = attach("gear"),
+		AttachAutoHideCancelButton = attach("cancel"),
+		SetUtilityButtonTooltipText = function(button, text) button.tooltip = text end,
+		SetUtilityButtonAnchor = function(button, anchor, relativeTo) button.anchor = { anchor, relativeTo } end,
+		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
+	})
+	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
+	rawset(_G, "GameTooltip_SetTitle", function(lines, text) lines[#lines + 1] = text end)
+	rawset(_G, "GameTooltip_AddNormalLine", function(lines, text) lines[#lines + 1] = text end)
+	api.OpenMenu = UI.OpenMenu
 	api.cursor = { 0, 0 }
 	rawset(_G, "GetCursorPosition", function() return api.cursor[1], api.cursor[2] end)
 	api.escHandlers = {}

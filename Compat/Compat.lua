@@ -259,6 +259,38 @@ function Compat.GetGlobalString(name)
 	return nil
 end
 
+-- A table as text and back, for profile texts: CBOR, Deflate and Base64, as
+-- Blizzard's own import strings (C_EncodingUtil, 11.1). Both return nil when
+-- the client has no encoder or the text is broken; reading a text never runs
+-- code. The calls may return nothing (API docs); errors are caught too.
+function Compat.CanEncode()
+	return Compat.Has("C_EncodingUtil.SerializeCBOR")
+end
+
+function Compat.Encode(value)
+	if not Compat.CanEncode() then
+		return nil
+	end
+	local ok, text = pcall(function()
+		local cbor = C_EncodingUtil.SerializeCBOR(value)
+		local packed = cbor and C_EncodingUtil.CompressString(cbor, Enum.CompressionMethod.Deflate)
+		return packed and C_EncodingUtil.EncodeBase64(packed)
+	end)
+	return ok and text or nil
+end
+
+function Compat.Decode(text)
+	if not Compat.CanEncode() or type(text) ~= "string" then
+		return nil
+	end
+	local ok, value = pcall(function()
+		local packed = C_EncodingUtil.DecodeBase64(text)
+		local cbor = packed and C_EncodingUtil.DecompressString(packed, Enum.CompressionMethod.Deflate)
+		return cbor and C_EncodingUtil.DeserializeCBOR(cbor)
+	end)
+	return ok and value or nil
+end
+
 function Compat.GetSaved(name)
 	return _G[name]
 end

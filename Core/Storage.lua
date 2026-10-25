@@ -150,6 +150,20 @@ function Storage:EachSection(name, fn)
 	end
 end
 
+-- Structured data of the whole account, the same in every profile (the loot
+-- feed's named layouts): a table in LootomanDB.sections, created on first use.
+function Storage:GetGlobalSection(name)
+	assert(type(name) == "string", "a section name must be a string")
+	if type(self.db.sections) ~= "table" then
+		self.db.sections = {}
+	end
+	local sections = self.db.sections
+	if type(sections[name]) ~= "table" then
+		sections[name] = {}
+	end
+	return sections[name]
+end
+
 -- A slider value as it is stored: between min and max, on a step, and without
 -- floating point noise (0.3, not 0.30000000000000004).
 function Storage.OnStep(value, min, max, step)

@@ -180,14 +180,6 @@ describe("loot feed designer", function()
 			assert.equals("Owned count", window.inspectorTitle.text)
 		end)
 
-		it("starts from a built-in design and resets to it", function()
-			assert.same({ "Large*", "Compact", "Minimal" }, menu(window.designs, "compact"))
-			assert.equals(24, module.feed.options.layout.height)
-			Designer.Change("name", "x", 60)
-			Designer.Reset()
-			assert.same(ns.Feed.Design.COMPACT, design())
-		end)
-
 		it("hides on Escape and with its close button, and the command toggles it", function()
 			assert.is_true(ui.escHandlers[1]())
 			assert.is_false(window.shown)
@@ -206,6 +198,146 @@ describe("loot feed designer", function()
 		assert.matches("out of combat", Test.state.printed[#Test.state.printed])
 		Test.SetCombat(false)
 		assert.is_true(Designer.Open())
+	end)
+end)
+
+describe("loot feed designer's layout menu", function()
+	local ns, api, Designer, Layouts, module
+
+	local function openMenu()
+		return api.OpenMenu(Designer.window.layouts)
+	end
+
+	-- "kind:text", with a star on the chosen one.
+	local function texts(entries)
+		local list = {}
+		for index, entry in ipairs(entries) do
+			list[index] = entry.kind .. ":" .. (entry.text or "") .. (entry.isSelected and entry.isSelected(entry.data) and "*" or "")
+		end
+		return list
+	end
+
+	-- The menu's entry whose text has this in it.
+	local function find(text)
+		for _, entry in ipairs(openMenu().entries) do
+			if entry.text and entry.text:find(text, 1, true) then
+				return entry
+			end
+		end
+	end
+
+	local function layoutEntry(name)
+		for _, entry in ipairs(openMenu().entries) do
+			if entry.kind == "radio" and entry.data == name then
+				return entry
+			end
+		end
+	end
+
+	local function act(name, text)
+		for _, entry in ipairs(layoutEntry(name).entries) do
+			if entry.text == text then
+				return entry.callback()
+			end
+		end
+		error("no action " .. text)
+	end
+
+	local function height()
+		return module.feed.options.layout.height
+	end
+
+	before_each(function()
+		api = SettingsAPI.Install()
+		ns = Loader.LoadAddon()
+		Loader.Start(ns)
+		module = ns.Modules:Get("LootFeed")
+		Designer, Layouts = module.Designer, ns.Feed.Layouts
+		assert.is_true(Designer.Open())
+	end)
+
+	it("lists the layouts, the profile's one chosen, then New layout with the built-in designs, Import and Share", function()
+		Layouts.Create("Raid", "compact")
+		local root = openMenu()
+		assert.same({
+			"radio:Default*", "radio:Raid", "divider:",
+			"button:|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New layout|r", "button:Import", "button:Share",
+		}, texts(root.entries))
+		assert.same({ "button:Large", "button:Compact", "button:Minimal" }, texts(root.entries[4].entries))
+		assert.same({ 2, 1 }, root.grid)
+	end)
+
+	it("starts a layout from a built-in design, named by the player, and the profile uses it", function()
+		local generated = Designer.window.layouts.generated
+		find("New layout").entries[2].callback()
+		api.AcceptPopup("Raid")
+		assert.same({ "Raid", 24 }, { Layouts.Current(), height() })
+		assert.is_true(Designer.window.layouts.generated > generated)
+		find("New layout").entries[1].callback()
+		api.AcceptPopup("raid")
+		assert.matches("already exists", ns.Compat.Test.state.printed[#ns.Compat.Test.state.printed])
+	end)
+
+	it("uses the layout chosen in it", function()
+		Layouts.Create("Raid", "compact")
+		local raid = layoutEntry("Raid")
+		raid.setSelected(raid.data)
+		assert.same({ "Raid", 24 }, { Layouts.Current(), height() })
+	end)
+
+	it("copies and renames a layout from its gear, and deletes it after a confirmation", function()
+		Layouts.Create("Raid", "compact")
+		local buttons = layoutEntry("Raid"):Hover()
+		assert.same({ "gear", "Copy, rename or reset", "cancel", "Delete layout" }, { buttons[1].kind, buttons[1].tooltip, buttons[2].kind, buttons[2].tooltip })
+		assert.same({ "button:Copy", "button:Rename", "button:Reset" }, texts(layoutEntry("Raid").entries))
+		act("Raid", "Copy")
+		api.AcceptPopup("Solo")
+		assert.same({ "Solo", 24 }, { Layouts.Current(), height() })
+		act("Solo", "Rename")
+		assert.equals("Solo", api.popups[#api.popups].editBox:GetText())
+		api.AcceptPopup("Dungeon")
+		assert.equals("Dungeon", Layouts.Current())
+		local hovered, menu = layoutEntry("Dungeon"):Hover()
+		hovered[2].click()
+		assert.is_true(menu.closed)
+		assert.equals("Dungeon", api.popups[#api.popups].data.text_arg1)
+		api.AcceptPopup()
+		assert.same({ "Default", { "Default", "Raid" } }, { Layouts.Current(), Layouts.List() })
+	end)
+
+	it("can neither rename nor delete Default", function()
+		assert.same({ "button:Copy", "button:Reset" }, texts(layoutEntry("Default").entries))
+		local buttons = layoutEntry("Default"):Hover()
+		assert.same({ 1, "Copy or reset" }, { #buttons, buttons[1].tooltip })
+	end)
+
+	it("returns the layout to its template, from its gear or with Reset beside it, after a confirmation", function()
+		ns.Feed.Design.Set(Layouts.CurrentDesign(), "row", "height", 40)
+		module:Apply()
+		Designer.window.reset.scripts.OnClick(Designer.window.reset)
+		assert.equals(40, height())
+		api.AcceptPopup()
+		assert.same({ 35, { schema = 2, base = "large" } }, { height(), Layouts.Get("Default") })
+		ns.Feed.Design.Set(Layouts.CurrentDesign(), "row", "height", 40)
+		act("Default", "Reset")
+		api.AcceptPopup()
+		assert.is_nil(Layouts.Get("Default").changes)
+	end)
+
+	it("opens the dialogs of layout texts with Import and Share", function()
+		local opened = {}
+		ns.Bus:On("OpenImportDialog", "test", function(name, mode) opened[#opened + 1] = name .. ":" .. mode end)
+		ns.Bus:On("OpenShareDialog", "test", function(name, mode) opened[#opened + 1] = name .. ":" .. mode end)
+		find("Import").callback()
+		find("Share").callback()
+		assert.same({ "OpenImportDialog:layouts", "OpenShareDialog:layouts" }, opened)
+	end)
+
+	it("follows a layout changed elsewhere", function()
+		local generated = Designer.window.layouts.generated
+		Layouts.Put("Default", { schema = 2, base = "minimal" })
+		assert.is_true(Designer.window.layouts.generated > generated)
+		assert.equals(16, height())
 	end)
 end)
 

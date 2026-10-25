@@ -43,6 +43,10 @@ local state = {
 	reagentBag = 5,
 	bags = {},
 	items = {},
+	-- Profile texts: the client has an encoder unless this is false; the
+	-- tables encoded so far, a text "ENC<n>" for the n-th.
+	encoder = true,
+	encoded = {},
 }
 
 function Compat.Has(path)
@@ -223,6 +227,35 @@ end
 
 function Compat.GetGlobalString(name)
 	return state.globalStrings[name]
+end
+
+function Compat.CanEncode()
+	return state.encoder ~= false
+end
+
+local function deepCopy(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local result = {}
+	for key, item in pairs(value) do
+		result[deepCopy(key)] = deepCopy(item)
+	end
+	return result
+end
+
+-- Copies, so a text read back is not the table that was encoded.
+function Compat.Encode(value)
+	if state.encoder == false then
+		return nil
+	end
+	state.encoded[#state.encoded + 1] = deepCopy(value)
+	return "ENC" .. #state.encoded
+end
+
+function Compat.Decode(text)
+	local index = state.encoder ~= false and type(text) == "string" and tonumber(text:match("^ENC(%d+)$"))
+	return index and state.encoded[index] and deepCopy(state.encoded[index]) or nil
 end
 
 function Compat.GetSaved(name)

@@ -15,6 +15,18 @@ ns.Locales.AddEnglish({
 	"/lootoman debug [on | off]: show, turn on or turn off debug messages",
 	"/lootoman selftest: check the addon against the game client",
 
+	-- Core/Share.lua
+	"%s settings",
+
+	-- Modules/Shared/EditMode.lua
+	"Position",
+
+	-- Modules/Shared/NameMenu.lua
+	"Import",
+	"Share",
+	"Reads a text made with Share, on another character or by another player.",
+	"This game client cannot make or read profile texts.",
+
 	-- Modules/AutoLoot/AutoLoot.lua
 	"Fast autoloot",
 	"Enable fast autoloot",
@@ -72,10 +84,26 @@ ns.Locales.AddEnglish({
 	"Open the designer",
 	"Change how the feed's rows look: move and resize their parts.",
 	"Design rows",
+	"Use layout “%s”",
+	"Loot feed layouts",
 
 	-- Modules/LootFeed/Designer.lua
 	"Loot feed design",
-	"Start from:",
+	"Layout:",
+	"Enter a layout name.",
+	"The layout name is too long.",
+	"A layout with this name already exists.",
+	"This layout no longer exists.",
+	"Name of the new layout:",
+	"Return layout “%s” to its template?",
+	"Delete layout “%s”? Profiles that use it switch to the Default layout.",
+	"Creates a copy of this layout, and this profile uses it.",
+	"Renames this layout in every profile that uses it.",
+	"Returns this layout to its template.",
+	"Delete layout",
+	"New layout",
+	"Starts a layout from a built-in design, and this profile uses it.",
+	"Makes a text of your layouts to copy and give to another character or player.",
 	"Large",
 	"Compact",
 	"Minimal",
@@ -140,4 +168,27 @@ ns.Locales.AddEnglish({
 	"The profile name is too long.",
 	"A profile with this name already exists.",
 	"This profile no longer exists.",
+	"Makes a text of the current profile to copy and give to another character or player.",
+
+	-- Settings/Share.lua
+	"This is not a Lootoman profile text.",
+	"This text comes from a newer version of Lootoman. Update the addon to import it.",
+	"This text is damaged. Copy it again.",
+	"This text has nothing this version of Lootoman can import.",
+	"Keep both",
+	"Replace",
+	"Keep mine",
+	"Imported",
+	"It holds the parts ticked below. Left out, from a newer version of Lootoman: %s.",
+	"It holds the parts ticked below.",
+	"Paste a text made with Share.",
+	"Imported into profile “%s”.",
+	"Imported %s: %s.",
+	"Values left out, unknown to this version of Lootoman or not valid: %d.",
+	"Replace the ticked parts of profile “%s” with the imported ones?",
+	"Text:",
+	"Put the parts into the current profile instead",
+	"This window opens out of combat.",
+	"Copy this text with Ctrl+C and give it to another character or player: they paste it under Import in the profile menu. It holds the parts ticked below.",
+	"Copy this text with Ctrl+C and give it to another character or player: they paste it under Import in the same menu. It holds the parts ticked below.",
 })

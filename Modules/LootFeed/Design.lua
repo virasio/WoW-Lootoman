@@ -21,12 +21,12 @@ local _, ns = ...
 -- is never wider than its maximum and the room it has to the row's edge, less
 -- the texts that follow it, like the amount after the name (Arrange).
 --
--- The player's design is the profile section "feedDesign":
+-- A player's design is a named layout (Layouts.lua):
 --   { schema = 2, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
--- It keeps only the values that differ from its built-in base design, so later
--- improvements to a built-in design reach every value the player did not
--- change. Changes saved with schema 1 (fixed anchors, the icon size in pixels)
--- are dropped.
+-- It keeps only the values that differ from its built-in base design, its
+-- template, so later improvements to a built-in design reach every value the
+-- player did not change. Changes saved with schema 1 (fixed anchors, the icon
+-- size in pixels) are dropped.
 ns.Feed = ns.Feed or {}
 local Design = {}
 ns.Feed.Design = Design
@@ -428,12 +428,18 @@ function Design.Set(section, part, key, value)
 	return value
 end
 
--- Starts the player's design anew from a built-in one.
-function Design.Choose(section, name)
-	assert(Design.BUILT_IN[name], "unknown design " .. tostring(name))
-	section.schema = Design.SCHEMA
-	section.base = name
-	section.changes = nil
+-- A design from a profile text, as it may be imported: its schema, base and
+-- changes (Current leaves out what it cannot use); nil and "newer" for a
+-- design of a newer schema.
+function Design.Clean(section)
+	if type(section.schema) == "number" and section.schema > Design.SCHEMA then
+		return nil, "newer"
+	end
+	return {
+		schema = type(section.schema) == "number" and section.schema or nil,
+		base = Design.BUILT_IN[section.base] and section.base or nil,
+		changes = type(section.changes) == "table" and section.changes or nil,
+	}
 end
 
 -- Drops the player's changes to the built-in design.

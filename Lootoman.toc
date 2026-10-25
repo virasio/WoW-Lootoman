@@ -29,6 +29,7 @@ Core\Migrations.lua
 Core\Storage.lua
 Core\Profiles.lua
 Core\Modules.lua
+Core\Share.lua
 Core\Slash.lua
 Core\SelfTest.lua
 Core\Startup.lua
@@ -36,6 +37,7 @@ Core\Startup.lua
 Providers\Bags.lua
 
 Modules\Shared\EditMode.lua
+Modules\Shared\NameMenu.lua
 
 Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua
@@ -43,12 +45,14 @@ Modules\AutoLoot\LootWindow.lua
 Modules\LootFeed\Sources.lua
 Modules\LootFeed\Model.lua
 Modules\LootFeed\Design.lua
+Modules\LootFeed\Layouts.lua
 Modules\LootFeed\Frames.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\Designer.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
+Settings\Share.lua
 
 #@debug@
 Dev\LootDump.lua

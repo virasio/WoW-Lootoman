@@ -16,7 +16,7 @@ describe("startup", function()
 
 	it("creates and keeps the saved variables of a fresh install", function()
 		Loader.Start(ns)
-		assert.equals(1, Test.state.saved.LootomanDB.schema)
+		assert.equals(2, Test.state.saved.LootomanDB.schema)
 		assert.equals(1, Test.state.saved.LootomanCharDB.schema)
 		assert.equals(ns.Storage.db, Test.state.saved.LootomanDB)
 	end)

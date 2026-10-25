@@ -3,6 +3,8 @@
 -- settings behave like Blizzard's (Blizzard_Setting.lua): SetValue locks the
 -- setting while the setter runs, NotifyUpdate re-reads the value.
 
+local UI = require("tests.mocks.UI")
+
 local SettingsAPI = {}
 
 function SettingsAPI.Install()
@@ -179,26 +181,6 @@ function SettingsAPI.Install()
 	rawset(_G, "CreateSettingsButtonInitializer", function(name, buttonText, onClick, tooltip)
 		return { kind = "button", name = name, buttonText = buttonText, onClick = onClick, tooltip = tooltip }
 	end)
-	-- Blizzard's menu API (Blizzard_Menu), as far as a dropdown's menu uses it.
-	rawset(_G, "MenuConstants", { VerticalGridDirection = 2 })
-	rawset(_G, "MenuVariants", { GearButtonAnchor = "gear anchor", CancelButtonAnchor = "cancel anchor" })
-	local function attach(kind)
-		return function(parent)
-			local button = { kind = kind }
-			parent.attached[#parent.attached + 1] = button
-			return button
-		end
-	end
-	rawset(_G, "MenuTemplates", {
-		AttachAutoHideGearButton = attach("gear"),
-		AttachAutoHideCancelButton = attach("cancel"),
-		SetUtilityButtonTooltipText = function(button, text) button.tooltip = text end,
-		SetUtilityButtonAnchor = function(button, anchor, relativeTo) button.anchor = { anchor, relativeTo } end,
-		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
-	})
-	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
-	rawset(_G, "GameTooltip_SetTitle", function(tooltip, text) tooltip[#tooltip + 1] = text end)
-	rawset(_G, "GameTooltip_AddNormalLine", function(tooltip, text) tooltip[#tooltip + 1] = text end)
 	rawset(_G, "StaticPopup_Show", function(which, _, _, data)
 		local editBox = { text = "" }
 		function editBox:SetText(text)
@@ -242,54 +224,9 @@ function SettingsAPI.Install()
 		return kinds
 	end
 
-	-- A menu description (Blizzard_Menu's ElementMenuDescription) that records
-	-- what is built into it.
-	local function newDescription(kind, text)
-		local description = { kind = kind, text = text, entries = {}, initializers = {} }
-		local function add(entry)
-			description.entries[#description.entries + 1] = entry
-			return entry
-		end
-		function description:CreateRadio(radioText, isSelected, setSelected, data)
-			local radio = add(newDescription("radio", radioText))
-			radio.isSelected, radio.setSelected, radio.data = isSelected, setSelected, data
-			return radio
-		end
-		function description:CreateButton(buttonText, callback)
-			local button = add(newDescription("button", buttonText))
-			button.callback = callback
-			return button
-		end
-		function description:CreateDivider()
-			return add(newDescription("divider"))
-		end
-		function description:SetGridMode(direction, columns) self.grid = { direction, columns } end
-		function description:DeactivateSubmenu() self.submenuDeactivated = true end
-		function description:ForceOpenSubmenu() self.submenuOpened = true end
-		function description:AddInitializer(initializer) self.initializers[#self.initializers + 1] = initializer end
-		function description:SetTooltip(fn) self.tooltip = fn end
-		-- Test helpers: the tooltip's lines, and what shows on hover.
-		function description:TooltipLines()
-			local lines = {}
-			self.tooltip(lines, self)
-			return lines
-		end
-		function description:Hover()
-			local button, menu = { attached = {} }, { closed = false }
-			function menu:Close() self.closed = true end
-			for _, initializer in ipairs(self.initializers) do
-				initializer(button, self, menu)
-			end
-			return button.attached, menu
-		end
-		return description
-	end
-
-	-- The menu of a dropdown (DropdownButton:SetupMenu) as it opens.
+	-- The menu of a dropdown as it opens (the UI fake's menus).
 	function api.OpenMenu(dropdown)
-		local root = newDescription("root")
-		dropdown.menu(dropdown, root)
-		return root
+		return UI.OpenMenu(dropdown)
 	end
 
 	-- What the options window does when the player picks a page (SelectCategory).

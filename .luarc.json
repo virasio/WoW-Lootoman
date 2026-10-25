@@ -17,6 +17,7 @@
   },
   "diagnostics.globals": [
     "CANCEL",
+    "CLOSE",
     "ColorManager",
     "CreateMinimalSliderFormatter",
     "CreateSettingsButtonInitializer",

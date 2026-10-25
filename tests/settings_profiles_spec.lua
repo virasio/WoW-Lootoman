@@ -52,8 +52,11 @@ describe("profile control", function()
 	end
 
 	local function newProfile()
-		local entries = api.OpenMenu(dropdown).entries
-		entries[#entries].callback()
+		for _, entry in ipairs(api.OpenMenu(dropdown).entries) do
+			if entry.kind == "button" and entry.text:find("New profile") then
+				return entry.callback()
+			end
+		end
 	end
 
 	before_each(function()
@@ -152,7 +155,7 @@ describe("profile control", function()
 		assert.same({ 1, "Copy or reset" }, { #buttons, buttons[1].tooltip })
 	end)
 
-	it("creates a profile from the last menu entry, after a divider, and switches to it", function()
+	it("creates a profile from the menu entry after the profiles and a divider, and switches to it", function()
 		local entries = api.OpenMenu(dropdown).entries
 		assert.same({ "radio", "divider", "button" }, { entries[1].kind, entries[2].kind, entries[3].kind })
 		assert.equals("|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New profile|r", entries[3].text)

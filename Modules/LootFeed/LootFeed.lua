@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
+local Compat, L = ns.Compat, ns.L
 local Feed = ns.Feed
 
 -- The loot feed (techspec §7.3): what you pick up shows next to the screen
@@ -28,6 +28,8 @@ local LootFeed = ns.Modules:Register({
 		backgroundOpacity = 50,
 		owned = true,
 		glow = true,
+		-- The named layout of the rows (Layouts.lua).
+		layout = "Default",
 	},
 })
 
@@ -74,6 +76,66 @@ local function settings()
 	}
 end
 
+-- Whether a value is one the controls can set; profile texts are read with it
+-- (Share). The value already has the default's type.
+function LootFeed:Validate(key, value)
+	for _, setting in ipairs(settings()) do
+		if setting.key == key and setting.kind == "slider" then
+			return value >= setting.min and value <= setting.max
+		elseif setting.key == key and setting.kind == "dropdown" then
+			for _, choice in ipairs(setting.choices) do
+				if choice[1] == value then
+					return true
+				end
+			end
+			return false
+		end
+	end
+	return true
+end
+
+-- In profile texts (Share): the feed's position and the layout it uses under
+-- its settings, and the player's layouts.
+local Layouts = Feed.Layouts
+ns.EditMode.SharePosition(LootFeed.name, LootFeed.name)
+ns.Share.RegisterPart({
+	name = "layout:LootFeed",
+	module = LootFeed.name,
+	owns = "layout",
+	label = function(data)
+		return L["Use layout “%s”"]:format(Layouts.DisplayName(data.layout or Layouts.DEFAULT))
+	end,
+	get = function()
+		return { layout = Layouts.Current() }
+	end,
+	set = function(profile, data, renamed)
+		local name = renamed.layouts and renamed.layouts[data.layout]
+		if name then
+			profile.modules = type(profile.modules) == "table" and profile.modules or {}
+			local values = type(profile.modules.LootFeed) == "table" and profile.modules.LootFeed or {}
+			values.layout = name ~= Layouts.DEFAULT and name or nil
+			profile.modules.LootFeed = next(values) and values or nil
+		end
+	end,
+	clean = function(data)
+		return type(data.layout) == "string" and { layout = data.layout } or nil
+	end,
+	needs = function(data)
+		return "layouts", data.layout
+	end,
+})
+ns.Share.RegisterCollection({
+	name = "layouts",
+	label = L["Loot feed layouts"],
+	list = Layouts.List,
+	get = Layouts.Get,
+	taken = Layouts.Taken,
+	freeName = Layouts.FreeName,
+	put = Layouts.Put,
+	display = Layouts.DisplayName,
+	clean = Feed.Design.Clean,
+})
+
 function LootFeed:ModelOptions()
 	return {
 		maxRows = self:Get("maxRows"),
@@ -90,9 +152,9 @@ function LootFeed:ModelOptions()
 	}
 end
 
--- The player's design of the rows, in the profile (Design.lua).
+-- The design of the rows: the layout the profile uses (Layouts.lua).
 function LootFeed:DesignSection()
-	return Storage:GetSection("feedDesign")
+	return Layouts.CurrentDesign()
 end
 
 function LootFeed:Apply()
@@ -133,6 +195,12 @@ function LootFeed:OnEnable()
 	end)
 	self:On("ProfileChanged", function()
 		self:Apply()
+	end)
+	-- The designer, a reset or an import changed the layout's design.
+	self:On("FeedLayoutChanged", function(_, name)
+		if name == Layouts.Current() then
+			self:Apply()
+		end
 	end)
 	-- Owned counts change when the looted items reach the bags.
 	self:OnEvent("BAG_UPDATE_DELAYED", function()

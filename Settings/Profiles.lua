@@ -1,15 +1,16 @@
 local _, ns = ...
-local L, Profiles, Storage, Text = ns.L, ns.Profiles, ns.Storage, ns.Text
+local L, NameMenu, Profiles, Storage, Text = ns.L, ns.NameMenu, ns.Profiles, ns.Storage, ns.Text
 local Panel = ns.SettingsPanel
 
 -- The profile on top of the main page (techspec §7.1): the label "Profile",
 -- under it a dropdown with the profile this character uses and a menu in the
--- spirit of Edit Mode's layout menu. Every profile shows, on hover, a gear
--- with Copy, Rename and Reset, and a button to delete it (Default can be
--- neither renamed nor deleted); below them, New profile. The actions work on
--- the profile they belong to; names are typed in Blizzard's input dialog.
--- Right of the dropdown, Reset resets the current profile; it takes the place
--- of Blizzard's Defaults button, which is hidden on Lootoman's pages.
+-- spirit of Edit Mode's layout menu (NameMenu). Every profile shows, on hover,
+-- a gear with Copy, Rename and Reset, and a button to delete it (Default can
+-- be neither renamed nor deleted); below them, New profile. The actions work
+-- on the profile they belong to. Right of the dropdown, Reset resets the
+-- current profile; it takes the place of Blizzard's Defaults button, which is
+-- hidden on Lootoman's pages. Import and Share at the end of the menu open the
+-- dialogs of Share.lua.
 
 local ERRORS = {
 	empty = L["Enter a profile name."],
@@ -43,27 +44,11 @@ local function report(result, err)
 end
 
 local function askName(text, textArg, initial, callback)
-	local dialog = StaticPopup_Show("GENERIC_INPUT_BOX", nil, nil, {
-		text = text,
-		text_arg1 = textArg,
-		callback = callback,
-		maxLetters = Profiles.MAX_NAME_LENGTH,
-	})
-	if dialog and initial then
-		dialog:GetEditBox():SetText(initial)
-		dialog:GetEditBox():HighlightText()
-	end
+	NameMenu.AskName(text, textArg, initial, Profiles.MAX_NAME_LENGTH, callback)
 end
 
-local function confirm(text, textArg, acceptText, callback)
-	StaticPopup_Show("GENERIC_CONFIRMATION", nil, nil, {
-		text = text,
-		text_arg1 = textArg,
-		acceptText = acceptText,
-		cancelText = CANCEL,
-		callback = callback,
-	})
-end
+-- For the other profile dialogs (Share.lua).
+Panel.ProfileTools = { displayName = displayName, report = report }
 
 local function create()
 	askName(L["Name of the new profile:"], nil, nil, function(name)
@@ -90,64 +75,48 @@ local function rename(name)
 end
 
 local function reset(name)
-	confirm(L["Reset profile “%s” to the default settings?"], displayName(name), L["Reset"], function()
+	NameMenu.Confirm(L["Reset profile “%s” to the default settings?"], displayName(name), L["Reset"], function()
 		report(Profiles.Reset(name))
 	end)
 end
 
 local function delete(name)
-	confirm(L["Delete profile “%s”? Characters that use it switch to the Default profile."], name, L["Delete"], function()
+	NameMenu.Confirm(L["Delete profile “%s”? Characters that use it switch to the Default profile."], name, L["Delete"], function()
 		report(Profiles.Delete(name))
 	end)
 end
 
--- A menu entry's tooltip: its title and what it does.
-local function describe(description, title, text)
-	description:SetTooltip(function(tooltip)
-		GameTooltip_SetTitle(tooltip, title)
-		GameTooltip_AddNormalLine(tooltip, text)
-	end)
-end
-
--- One profile in the menu: chosen by a click; its gear opens the submenu with
--- the actions, which does not open on hover; the delete button sits left of
--- the gear. Both show while the pointer is over the profile.
 local function addProfile(root, name)
 	local isDefault = name == Storage.DEFAULT_PROFILE
-	local radio = root:CreateRadio(displayName(name), function()
-		return Profiles.GetCurrent() == name
-	end, function()
-		report(Profiles.Switch(name))
-	end, name)
-	describe(radio:CreateButton(L["Copy"], function()
-		copy(name)
-	end), L["Copy"], L["Creates a copy of this profile and switches this character to it."])
+	local actions = {
+		{ text = L["Copy"], tooltip = L["Creates a copy of this profile and switches this character to it."], run = function()
+			copy(name)
+		end },
+	}
 	if not isDefault then
-		describe(radio:CreateButton(L["Rename"], function()
+		actions[#actions + 1] = { text = L["Rename"], tooltip = L["Renames this profile for every character that uses it."], run = function()
 			rename(name)
-		end), L["Rename"], L["Renames this profile for every character that uses it."])
+		end }
 	end
-	describe(radio:CreateButton(L["Reset"], function()
+	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Returns every setting of this profile to its default."], run = function()
 		reset(name)
-	end), L["Reset"], L["Returns every setting of this profile to its default."])
-	radio:DeactivateSubmenu()
-	radio:AddInitializer(function(button, description, menu)
-		local gear = MenuTemplates.AttachAutoHideGearButton(button)
-		MenuTemplates.SetUtilityButtonTooltipText(gear, isDefault and L["Copy or reset"] or L["Copy, rename or reset"])
-		MenuTemplates.SetUtilityButtonAnchor(gear, MenuVariants.GearButtonAnchor, button)
-		MenuTemplates.SetUtilityButtonClickHandler(gear, function()
-			description:ForceOpenSubmenu()
-		end)
-		if not isDefault then
-			local remove = MenuTemplates.AttachAutoHideCancelButton(button)
-			MenuTemplates.SetUtilityButtonTooltipText(remove, L["Delete profile"])
-			MenuTemplates.SetUtilityButtonAnchor(remove, MenuVariants.CancelButtonAnchor, gear)
-			MenuTemplates.SetUtilityButtonClickHandler(remove, function()
-				delete(name)
-				menu:Close()
-			end)
-		end
-	end)
+	end }
+	NameMenu.AddName(root, {
+		text = displayName(name),
+		data = name,
+		isSelected = function()
+			return Profiles.GetCurrent() == name
+		end,
+		select = function()
+			report(Profiles.Switch(name))
+		end,
+		actions = actions,
+		gearTooltip = isDefault and L["Copy or reset"] or L["Copy, rename or reset"],
+		deleteTooltip = L["Delete profile"],
+		delete = not isDefault and function()
+			delete(name)
+		end or nil,
+	})
 end
 
 -- Blizzard's Defaults button on top of every options page resets the settings
@@ -173,16 +142,19 @@ local function hideDefaultsButton(main)
 	end)
 end
 
--- The whole menu: the profiles in one column, however many there are, then
--- New profile.
+-- The whole menu: the profiles, then New profile, Import and Share.
 local function buildMenu(_, root)
-	root:SetGridMode(MenuConstants.VerticalGridDirection, 1)
+	NameMenu.OneColumn(root)
 	for _, name in ipairs(Profiles.List()) do
 		addProfile(root, name)
 	end
 	root:CreateDivider()
-	local new = root:CreateButton(("%s |cnPURE_GREEN_COLOR:%s|r"):format(CreateAtlasMarkup("editmode-new-layout-plus"), L["New profile"]), create)
-	describe(new, L["New profile"], L["Creates an empty profile and switches this character to it."])
+	NameMenu.AddNew(root, L["New profile"], L["Creates an empty profile and switches this character to it."], create)
+	NameMenu.AddShareEntries(root, function()
+		Panel.Share.OpenImport("profile")
+	end, function()
+		Panel.Share.OpenShare("profile")
+	end, L["Makes a text of the current profile to copy and give to another character or player."])
 end
 
 -- A tooltip in the options panel's own style while the pointer is over a frame.

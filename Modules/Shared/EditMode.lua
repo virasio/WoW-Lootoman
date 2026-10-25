@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Storage = ns.Bus, ns.Storage
+local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
 
 -- Places module frames with Blizzard's Edit Mode through LibEditMode
 -- (techspec §6, §7.1). Positions are kept per Edit Mode layout in the profile
@@ -34,6 +34,46 @@ local layoutName
 
 local function positions()
 	return Storage:GetSection("positions")
+end
+
+local POINTS = {
+	TOPLEFT = true, TOP = true, TOPRIGHT = true, LEFT = true, CENTER = true,
+	RIGHT = true, BOTTOMLEFT = true, BOTTOM = true, BOTTOMRIGHT = true,
+}
+
+-- A frame's positions from a profile text: only well-formed ones, { point, x,
+-- y } per Edit Mode layout.
+local function cleanPositions(layouts)
+	local kept = {}
+	for layout, position in pairs(layouts) do
+		if type(layout) == "string" and type(position) == "table" and POINTS[position.point]
+			and type(position.x) == "number" and type(position.y) == "number" then
+			kept[layout] = { point = position.point, x = position.x, y = position.y }
+		end
+	end
+	return kept
+end
+
+-- A module's frame positions (key as in Register) can be shared with its
+-- settings in profile texts (Share), as the part "Position" under them.
+function EditMode.SharePosition(module, key)
+	ns.Share.RegisterPart({
+		name = "positions:" .. key,
+		module = module,
+		label = L["Position"],
+		get = function(profile)
+			local sections = type(profile.sections) == "table" and profile.sections
+			local saved = sections and type(sections.positions) == "table" and sections.positions[key]
+			return type(saved) == "table" and saved or nil
+		end,
+		set = function(profile, layouts)
+			profile.sections = type(profile.sections) == "table" and profile.sections or {}
+			local saved = profile.sections.positions
+			profile.sections.positions = type(saved) == "table" and saved or {}
+			profile.sections.positions[key] = layouts
+		end,
+		clean = cleanPositions,
+	})
 end
 
 local function apply(entry)
