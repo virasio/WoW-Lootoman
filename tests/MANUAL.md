@@ -17,6 +17,7 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Game auto loot off.** Turn the game's *Auto Loot* off and loot. *Expected:* the normal loot window. Hold the auto loot key while looting: fast loot again. With *Auto Loot* on, the key gives the normal window.
 - [ ] **Profession bag.** General bags full, a herb bag with free slots; loot herbs together with other items. *Expected:* the herbs go into the herb bag; the window opens with the other items only.
 - [ ] **All bags full.** Loot something. *Expected:* the window opens with what is left; the feed shows only what was looted.
+- [ ] **One free slot, two new items.** One free general slot; loot a corpse with two items that do not stack with anything you have, and money. *Expected:* the money and one item are looted, the other item stays in the window, and there is no "Inventory is full" error. The same with a stack of 18 of 20 herbs: looting 1–2 more needs no free slot, 3 or more do.
 - [ ] **Large pull.** Area loot of many corpses at once (a dungeon pull). *Expected:* no disconnect, nothing left behind that fits.
 - [ ] **In combat.** Loot in combat in the open world and in a dungeon. *Expected:* no errors.
 - [ ] **Bind on pickup.** Alone: a bind-on-pickup item is looted without asking. In a group: the window opens and asks. With *Confirm bind-on-pickup items when alone* off, alone: the game asks.
@@ -27,7 +28,7 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Merging.** Loot the same item from several corpses quickly. *Expected:* one row with the total.
 - [ ] **Options.** Change each: what the feed shows, minimum quality, rows, where new rows appear, time on screen, fade-out time, size, background opacity, owned count, glow for rare items. *Expected:* the feed changes at once, also after `/reload`. A full feed fades its oldest rows out.
 - [ ] **Tooltips.** Point at an item row and at a currency row. *Expected:* their tooltips; the rows wait while the pointer is over them; clicks and the mouse wheel reach the game world.
-- [ ] **Edit Mode.** Open Edit Mode. *Expected:* the loot feed is listed with sample rows, can be moved, and keeps its position per Edit Mode layout and across `/reload`. Its dialog shows the same option groups and a *Design rows* button; changes apply at once.
+- [ ] **Edit Mode.** Open Edit Mode. *Expected:* the loot feed is listed with sample rows, can be moved, and keeps its position per Edit Mode layout and across `/reload`. Its dialog shows the same option groups and a *Design rows* button; changes apply at once. Dragging a slider in the dialog moves smoothly from end to end.
 - [ ] **Look.** The Default layout. *Expected:* a big icon with its quality border, the owned count on it, a glow on rare and better items, one shared background.
 
 ## Row designer and layouts (0.1)
