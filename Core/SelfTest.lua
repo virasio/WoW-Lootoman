@@ -105,8 +105,13 @@ function SelfTest.Run()
 		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema),
 			Storage.readOnly and ", read-only (saved by a newer version)" or "")
 	end)
+	-- The client fills in [Game] and [Family] of these TOC fields: they show
+	-- what a new client (WoW Forever) calls itself in TOC conditions.
 	report(function()
-		return ("Data set: %s; locale: %s"):format(ns.Data and ns.Data.set or "none", ns.Locales.current)
+		return ("Game %s, family %s; data set: %s; locale: %s"):format(
+			tostring(Compat.GetAddOnMetadata(addonName, "X-Game")),
+			tostring(Compat.GetAddOnMetadata(addonName, "X-Family")),
+			ns.Data and ns.Data.set or "none", ns.Locales.current)
 	end)
 	for _, build in ipairs(reports) do
 		report(build)

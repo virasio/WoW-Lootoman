@@ -140,7 +140,16 @@ describe("slash commands", function()
 			assert.matches("Addon @project%-version@", output())
 			assert.matches("Character Tester%-Realm, profile Default", output())
 			assert.matches("Saved data: schema 2\n", output())
-			assert.matches("Data set: Mainline; locale: enUS", output())
+			assert.matches("Game Standard, family Mainline; data set: Mainline; locale: enUS", output())
+		end)
+
+		it("shows what WoW Forever calls itself and its data set", function()
+			Test.state.printed = {}
+			local fresh = Loader.LoadAddon({ gameType = "camelot" })
+			Loader.Start(fresh)
+			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
+			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
+			assert.matches("Game Camelot, family Mainline; data set: Forever; locale: enUS", text)
 		end)
 
 		it("shows each module with its events", function()

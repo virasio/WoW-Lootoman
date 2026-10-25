@@ -1,0 +1,7 @@
+## Title: GameTypes
+
+# Game type conditions as the retail and Forever clients read them.
+Data\Standard.lua [AllowLoadGameType standard]
+Data\Forever.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard]
+Data\Unguarded.lua [AllowLoadGameType camelot]
+Data\Mainline.lua [AllowLoadGameType mainline]

@@ -23,6 +23,25 @@ describe("test loader", function()
 		assert.same({ "First", "Forever" }, ns.loaded)
 	end)
 
+	describe("reads game type conditions as the clients do", function()
+		local GAME_TYPES = "tests/fixtures/toc/GameTypes.toc"
+
+		it("on retail, loading a file allowed only for camelot, which retail does not know, unless excluded", function()
+			assert.same({ "Standard", "Unguarded", "Mainline" }, Loader.Load({ toc = GAME_TYPES }).loaded)
+		end)
+
+		it("on WoW Forever, loading the camelot files and those of the mainline family", function()
+			local ns = Loader.Load({ toc = GAME_TYPES, gameType = "camelot" })
+			assert.same({ "Forever", "Unguarded", "Mainline" }, ns.loaded)
+		end)
+
+		it("for clients it knows only", function()
+			assert.has_error(function()
+				Loader.Load({ toc = GAME_TYPES, gameType = "wrath" })
+			end, "unknown game type wrath")
+		end)
+	end)
+
 	it("loads files inside #@debug@ blocks only when asked", function()
 		local ns = Loader.Load({ toc = FIXTURE, debug = true })
 		assert.same({ "First", "Standard", "Debug" }, ns.loaded)

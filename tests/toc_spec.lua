@@ -53,6 +53,8 @@ describe("Lootoman.toc", function()
 		assert.matches("^%d+[%d, ]*$", toc.metadata.Interface)
 		assert.equals("LootomanDB", toc.metadata.SavedVariables)
 		assert.equals("LootomanCharDB", toc.metadata.SavedVariablesPerCharacter)
+		assert.equals("[Game]", toc.metadata["X-Game"])
+		assert.equals("[Family]", toc.metadata["X-Family"])
 	end)
 
 	it("loads only files that exist", function()
