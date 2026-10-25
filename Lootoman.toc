@@ -1,11 +1,20 @@
 ## Interface: 120105
 ## Title: Lootoman
-## Notes: Bags, loot and vendor trading driven by one set of rules.
-## Notes-ruRU: Сумки, добыча и продажа торговцам по единому набору правил.
+## Notes: Fast autoloot that picks up everything at once, and a loot feed you can design.
+## Notes-ruRU: Быстрый автолут, который подбирает всё сразу, и лента лута с настраиваемым видом.
 ## Author: Victor Surikov
 ## Version: @project-version@
-## Category: Inventory
-## Category-ruRU: Инвентарь
+## Category: Loot
+## Category-deDE: Beute
+## Category-esES: Botín
+## Category-esMX: Botín
+## Category-frFR: Butin
+## Category-itIT: Bottino
+## Category-koKR: 전리품
+## Category-ptBR: Saque
+## Category-ruRU: Добыча
+## Category-zhCN: 战利品
+## Category-zhTW: 戰利品
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
 ## SavedVariables: LootomanDB
 ## SavedVariablesPerCharacter: LootomanCharDB
