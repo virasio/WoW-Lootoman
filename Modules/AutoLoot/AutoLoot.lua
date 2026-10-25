@@ -6,7 +6,7 @@ local Bags, Bus, Compat, L = ns.Bags, ns.Bus, ns.Compat, ns.L
 -- slot, wait for its LOOT_SLOT_CLEARED, then the next. Items that do not fit
 -- are skipped and reported (LootSkipped). Blizzard's loot window stays hidden
 -- meanwhile (LootWindow.lua); slots that are left, a slot that is not cleared in
--- time and a loot error show it (LootWindowShown).
+-- time and a loot error show it.
 --
 -- The game sends LOOT_READY twice for one loot and can repeat
 -- LOOT_SLOT_CLEARED and LOOT_CLOSED: repeats change nothing.
@@ -56,7 +56,6 @@ end
 local function showWindow(reason)
 	AutoLoot.LootWindow.Show()
 	ns.Debug(("Auto loot: loot window shown (%s)"):format(reason))
-	Bus:Send("LootWindowShown", reason)
 end
 
 local function stop(reason)

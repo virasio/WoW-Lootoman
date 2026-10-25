@@ -33,14 +33,14 @@ describe("loot feed designs", function()
 			Design.Set(section, "name", "x", 50)
 			Design.Set(section, "row", "height", 40)
 			Design.Set(section, "icon", "shown", false)
-			assert.same({ schema = 2, changes = { name = { x = 50 }, row = { height = 40 }, icon = { shown = false } } }, section)
+			assert.same({ schema = 1, changes = { name = { x = 50 }, row = { height = 40 }, icon = { shown = false } } }, section)
 			local design = Design.Current(section)
 			assert.same({ 50, 40, false }, { design.parts.name.x, design.height, design.parts.icon.shown })
 			assert.equals(13, design.parts.name.fontSize)
 			Design.Set(section, "name", "x", 11)
 			Design.Set(section, "row", "height", 35)
 			Design.Set(section, "icon", "shown", true)
-			assert.same({ schema = 2, changes = {} }, section)
+			assert.same({ schema = 1, changes = {} }, section)
 		end)
 
 		it("keeps numbers within their limits", function()
@@ -72,24 +72,24 @@ describe("loot feed designs", function()
 		end)
 
 		it("ignores saved changes it does not know, or of the wrong type", function()
-			section.schema = 2
+			section.schema = 1
 			section.changes = { name = { x = "far", colour = 3, point = "MIDDLE" }, tail = { x = 1 }, row = { parts = {} },
 				icon = { anchor = "amount" }, owned = 7 }
 			assert.same(Design.LARGE, Design.Current(section))
 		end)
 
-		it("drops the changes saved by the first designer", function()
-			section.schema, section.base, section.changes = 1, "compact", { icon = { size = 24 } }
+		it("drops changes saved under another schema", function()
+			section.schema, section.base, section.changes = 0, "compact", { icon = { size = 24 } }
 			assert.same(Design.COMPACT, Design.Current(section))
 			Design.Set(section, "row", "gap", 5)
-			assert.same({ schema = 2, base = "compact", changes = { row = { gap = 5 } } }, section)
+			assert.same({ schema = 1, base = "compact", changes = { row = { gap = 5 } } }, section)
 		end)
 
 		it("starts from another built-in design", function()
 			section.base = "compact"
 			assert.same(Design.COMPACT, Design.Current(section))
 			Design.Set(section, "name", "fontSize", 14)
-			assert.same({ schema = 2, base = "compact", changes = { name = { fontSize = 14 } } }, section)
+			assert.same({ schema = 1, base = "compact", changes = { name = { fontSize = 14 } } }, section)
 		end)
 
 		it("goes back to its built-in design on reset", function()

@@ -14,6 +14,11 @@ describe("Bags provider", function()
 		return items
 	end
 
+	-- Whether a stack fits now, on its own: a plan for one item.
+	local function fits(item, count)
+		return Bags.Plan():Take(item, count)
+	end
+
 	before_each(function()
 		ns = Loader.LoadAddon()
 		Loader.Start(ns)
@@ -28,27 +33,16 @@ describe("Bags provider", function()
 		})
 	end)
 
-	it("counts free slots per bag type", function()
-		Test.SetBags({
-			[0] = { size = 16, items = filled(5) },
-			[1] = { size = 12, items = filled(12) },
-			[2] = { size = 20, family = HERBS, items = filled(2, 765) },
-			[3] = { size = 10, family = HERBS },
-			[5] = { size = 36, items = filled(10, 2589) },
-		})
-		assert.same({ total = 11 + 0 + 18 + 10 + 26, general = 11, reagent = 26, families = { [HERBS] = 28 } }, Bags.FreeSlots())
-	end)
-
 	describe("fits", function()
 		it("an item in a free general slot", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(15) } })
-			assert.is_true(Bags.Fits(6948))
+			assert.is_true(fits(6948))
 		end)
 
 		it("nothing when every bag is full", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [5] = { size = 36, items = filled(36) } })
-			assert.is_false(Bags.Fits(6948))
-			assert.is_false(Bags.Fits(2589))
+			assert.is_false(fits(6948))
+			assert.is_false(fits(2589))
 		end)
 
 		it("a stack into partial stacks of the same item, up to their room", function()
@@ -56,60 +50,59 @@ describe("Bags provider", function()
 			items[15] = { itemID = 2589, count = 197 }
 			items[16] = { itemID = 2589, count = 198 }
 			Test.SetBags({ [0] = { size = 16, items = items } })
-			assert.is_true(Bags.Fits(2589, 5))
-			assert.is_false(Bags.Fits(2589, 6))
+			assert.is_true(fits(2589, 5))
+			assert.is_false(fits(2589, 6))
 		end)
 
 		it("herbs into a free herb bag when the general bags are full, but not ore or other items", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [1] = { size = 20, family = HERBS } })
-			assert.is_true(Bags.Fits(765, 3))
-			assert.is_false(Bags.Fits(2770))
-			assert.is_false(Bags.Fits(6948))
+			assert.is_true(fits(765, 3))
+			assert.is_false(fits(2770))
+			assert.is_false(fits(6948))
 		end)
 
 		it("crafting reagents into the reagent bag, but no other items", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [5] = { size = 36 } })
-			assert.is_true(Bags.Fits(2589, 20))
-			assert.is_false(Bags.Fits(6948))
+			assert.is_true(fits(2589, 20))
+			assert.is_false(fits(6948))
 		end)
 
 		it("nothing into a reagent bag on a client without one", function()
 			Test.state.reagentBag = nil
 			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [5] = { size = 36 } })
-			assert.is_false(Bags.Fits(2589))
-			assert.equals(0, Bags.FreeSlots().reagent)
+			assert.is_false(fits(2589))
 		end)
 
 		it("an item given by its link", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [1] = { size = 20, family = HERBS } })
-			assert.is_true(Bags.Fits("|cffffffff|Hitem:765::::::::80:::::|h[Silverleaf]|h|r"))
+			assert.is_true(fits("|cffffffff|Hitem:765::::::::80:::::|h[Silverleaf]|h|r"))
 		end)
 
 		it("a stack that fills a partial stack only with what does not fit there in a free slot", function()
 			local items = filled(15)
 			items[16] = { itemID = 3820, count = 18 }
 			Test.SetBags({ [0] = { size = 16, items = items } })
-			assert.is_true(Bags.Fits(3820, 2))
-			assert.is_false(Bags.Fits(3820, 3))
+			assert.is_true(fits(3820, 2))
+			assert.is_false(fits(3820, 3))
 			Test.SetBags({ [0] = { size = 17, items = items } })
 			Test.FireEvent("BAG_UPDATE_DELAYED")
-			assert.is_true(Bags.Fits(3820, 3))
-			assert.is_true(Bags.Fits(3820, 22))
-			assert.is_false(Bags.Fits(3820, 23))
+			assert.is_true(fits(3820, 3))
+			assert.is_true(fits(3820, 22))
+			assert.is_false(fits(3820, 23))
 		end)
 
 		it("a stack bigger than the item's stack size only with a free slot for each stack", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(14) } })
-			assert.is_true(Bags.Fits(2589, 400))
-			assert.is_false(Bags.Fits(2589, 401))
+			assert.is_true(fits(2589, 400))
+			assert.is_false(fits(2589, 401))
 		end)
 
 		it("an item the client has not loaded only into a general slot", function()
 			Test.SetBags({ [0] = { size = 16, items = filled(15, 999) }, [1] = { size = 20, family = HERBS } })
-			assert.is_true(Bags.Fits(999))
+			assert.is_true(fits(999))
 			Test.SetBags({ [0] = { size = 16, items = filled(16, 999) }, [1] = { size = 20, family = HERBS } })
 			Test.FireEvent("BAG_UPDATE_DELAYED")
-			assert.is_false(Bags.Fits(999))
+			assert.is_false(fits(999))
 		end)
 	end)
 
@@ -119,7 +112,7 @@ describe("Bags provider", function()
 			local plan = Bags.Plan()
 			assert.is_true(plan:Take(6948))
 			assert.is_false(plan:Take(6948))
-			assert.is_true(Bags.Fits(6948))
+			assert.is_true(fits(6948))
 		end)
 
 		it("reserves the room in partial stacks and the stacks it starts", function()
@@ -148,12 +141,12 @@ describe("Bags provider", function()
 
 	it("reads the bags on first use and again after they change", function()
 		assert.same({}, ns.Bus:GetEvents("Bags"))
-		Test.SetBags({ [0] = { size = 16 } })
-		assert.equals(16, Bags.FreeSlots().general)
+		Test.SetBags({ [0] = { size = 16, items = filled(15) } })
+		assert.is_true(fits(6948))
 		assert.same({ "BAG_UPDATE_DELAYED" }, ns.Bus:GetEvents("Bags"))
 		Test.SetBags({ [0] = { size = 16, items = filled(16) } })
-		assert.equals(16, Bags.FreeSlots().general)
+		assert.is_true(fits(6948))
 		Test.FireEvent("BAG_UPDATE_DELAYED")
-		assert.equals(0, Bags.FreeSlots().general)
+		assert.is_false(fits(6948))
 	end)
 end)

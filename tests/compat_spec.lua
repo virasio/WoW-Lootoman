@@ -134,12 +134,10 @@ describe("Compat", function()
 			stub({
 				LootSlot = function(slot) calls[#calls + 1] = "loot " .. slot end,
 				ConfirmLootSlot = function(slot) calls[#calls + 1] = "confirm " .. slot end,
-				CloseLoot = function(...) calls[#calls + 1] = "close " .. select("#", ...) end,
 			})
 			Compat.LootSlot(2)
 			Compat.ConfirmLootSlot(3)
-			Compat.CloseLoot()
-			assert.same({ "loot 2", "confirm 3", "close 0" }, calls)
+			assert.same({ "loot 2", "confirm 3" }, calls)
 		end)
 
 		it("turns auto loot around while the auto loot key is held", function()
@@ -270,8 +268,7 @@ describe("Compat mock", function()
 	it("records loot actions in order", function()
 		Compat.LootSlot(2)
 		Compat.ConfirmLootSlot(2)
-		Compat.CloseLoot()
-		assert.same({ { "loot", 2 }, { "confirm", 2 }, { "close" } }, Compat.Test.state.lootActions)
+		assert.same({ { "loot", 2 }, { "confirm", 2 } }, Compat.Test.state.lootActions)
 	end)
 
 	it("turns auto loot around while the auto loot key is held, like the client", function()

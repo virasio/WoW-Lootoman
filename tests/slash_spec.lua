@@ -139,7 +139,7 @@ describe("slash commands", function()
 			assert.matches("Client 12%.1%.5 %(70575%), interface 120105\n", output())
 			assert.matches("Addon @project%-version@", output())
 			assert.matches("Character Tester%-Realm, profile Default", output())
-			assert.matches("Saved data: schema 2\n", output())
+			assert.matches("Saved data: schema 1\n", output())
 			assert.matches("Game Standard, family Mainline; data set: Mainline; locale: enUS", output())
 		end)
 

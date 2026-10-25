@@ -30,7 +30,6 @@ files["Compat/"] = {
 		"C_Item",
 		"C_PlayerInteractionManager",
 		"C_Timer",
-		"CloseLoot",
 		"ConfirmLootSlot",
 		"Constants",
 		"CreateFrame",

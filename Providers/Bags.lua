@@ -1,9 +1,8 @@
 local _, ns = ...
 local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
 
--- Free space in the player's bags: free slots per bag type, and
--- whether the stacks of a loot fit. The bags are read on first use and read
--- again after the next BAG_UPDATE_DELAYED.
+-- Free space in the player's bags: whether the stacks of a loot fit. The bags
+-- are read on first use and read again after the next BAG_UPDATE_DELAYED.
 local Bags = {}
 ns.Bags = Bags
 
@@ -55,23 +54,6 @@ local function current()
 	end
 	cache = cache or read()
 	return cache
-end
-
--- { total, general, reagent, families = { [bag family] = free } }: general
--- counts the backpack and the bags of family 0, families the profession bags.
-function Bags.FreeSlots()
-	local slots = { total = 0, general = 0, reagent = 0, families = {} }
-	for _, bag in ipairs(current().bags) do
-		slots.total = slots.total + bag.free
-		if bag.reagent then
-			slots.reagent = slots.reagent + bag.free
-		elseif bag.family == 0 then
-			slots.general = slots.general + bag.free
-		else
-			slots.families[bag.family] = (slots.families[bag.family] or 0) + bag.free
-		end
-	end
-	return slots
 end
 
 -- The self-test lists every equipped bag with its family as the client gives
@@ -171,9 +153,4 @@ function PlanMixin:Take(item, count)
 		end
 	end
 	return true
-end
-
--- Whether a looted stack fits now, on its own (see PlanMixin:Take).
-function Bags.Fits(item, count)
-	return Bags.Plan():Take(item, count)
 end

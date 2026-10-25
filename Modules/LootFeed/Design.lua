@@ -22,17 +22,16 @@ local _, ns = ...
 -- the texts that follow it, like the amount after the name (Arrange).
 --
 -- A player's design is a named layout (Layouts.lua):
---   { schema = 2, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
+--   { schema = 1, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
 -- It keeps only the values that differ from its built-in base design, its
 -- template, so later improvements to a built-in design reach every value the
--- player did not change. Changes saved with schema 1 (fixed anchors, the icon
--- size in pixels) are dropped.
+-- player did not change. Changes saved under another schema are dropped.
 ns.Feed = ns.Feed or {}
 local Design = {}
 ns.Feed.Design = Design
 
 Design.BASE_SIZE = 13
-Design.SCHEMA = 2
+Design.SCHEMA = 1
 -- Parts move on a grid of this many design pixels.
 Design.GRID = 2
 -- The least room a text keeps up to the row's edge, so it cannot vanish: about
@@ -337,7 +336,7 @@ local function valid(design, part, key, value)
 end
 
 -- The player's design: its base with the player's changes, inside its row.
--- Changes that are not valid, or from an older schema, are left out.
+-- Changes that are not valid, or from another schema, are left out.
 function Design.Current(section)
 	local design = copy(baseOf(section))
 	if section.schema ~= Design.SCHEMA or type(section.changes) ~= "table" then

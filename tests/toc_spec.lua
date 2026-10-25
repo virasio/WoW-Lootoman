@@ -86,4 +86,51 @@ describe("Lootoman.toc", function()
 			last = index
 		end
 	end)
+
+	it("loads the development files only from the repository", function()
+		for _, entry in ipairs(toc.files) do
+			assert.equals(entry.path:match("^Dev/") ~= nil, entry.debug, entry.path)
+		end
+	end)
+end)
+
+-- What the packager puts into the release: every file in git, less what
+-- .pkgmeta ignores. Only the addon itself, its README and its license may go.
+describe("the release package", function()
+	local function ignored()
+		local names, inList = {}, false
+		for line in io.lines(".pkgmeta") do
+			if line:match("^ignore:") then
+				inList = true
+			elseif line:match("^%S") then
+				inList = false
+			elseif inList and line:match("^%s*%-") then
+				names[line:match("^%s*%-%s*(.-)%s*$")] = true
+			end
+		end
+		return names
+	end
+
+	it("leaves out the tests, the development files and the tool configs", function()
+		local names = ignored()
+		for _, name in ipairs({ "tests", "Dev", ".github", ".busted", ".editorconfig", ".luacheckrc", ".luarc.json" }) do
+			assert.is_true(names[name] == true, name .. " is not ignored by .pkgmeta")
+		end
+	end)
+
+	it("holds only the addon, its README and its license", function()
+		local allowed = { ["Lootoman.toc"] = true, ["README.md"] = true, LICENSE = true, [".pkgmeta"] = true, [".gitignore"] = true }
+		for _, layer in ipairs(LAYERS) do
+			allowed[layer] = true
+		end
+		for name in pairs(ignored()) do
+			allowed[name] = true
+		end
+		local git = assert(io.popen("git ls-files"))
+		for path in git:lines() do
+			local top = path:match("^[^/]+")
+			assert.is_true(allowed[top] == true, path .. " would go into the package")
+		end
+		git:close()
+	end)
 end)

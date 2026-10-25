@@ -11,8 +11,7 @@ local _, ns = ...
 -- Items below the minimum quality and turned-off kinds are dropped.
 --
 -- When there are more than maxRows rows, the oldest ones fade out at once,
--- over at most PUSH_FADE seconds (the author chose this over a scrollable
--- history after trying both in game). While the pointer is over the feed
+-- over at most PUSH_FADE seconds. While the pointer is over the feed
 -- (SetHover), every timer stops.
 --
 --   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, minQuality = 0,
