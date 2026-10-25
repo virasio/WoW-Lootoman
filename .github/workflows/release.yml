@@ -3,8 +3,10 @@
 # GitHub Releases; a tag containing "alpha" becomes an alpha file.
 # A manual run only builds the package and attaches the zip to the run.
 #
-# Repository secrets: CF_API_KEY (CurseForge), WAGO_API_TOKEN (Wago). The
-# TOC needs ## X-Curse-Project-ID and ## X-Wago-ID before the first upload.
+# Repository secrets: CF_API_TOKEN (CurseForge) and, optionally,
+# WAGO_API_TOKEN (Wago). The TOC needs ## X-Curse-Project-ID (and ## X-Wago-ID
+# for Wago) before the first upload. GitHub Releases use the workflow's own
+# token.
 name: Release
 
 on:
@@ -28,9 +30,9 @@ jobs:
         if: github.event_name == 'push'
         uses: BigWigsMods/packager@v2
         env:
-          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package only
         if: github.event_name == 'workflow_dispatch'
