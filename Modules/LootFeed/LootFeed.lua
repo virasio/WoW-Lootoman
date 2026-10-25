@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 local Feed = ns.Feed
 
 -- The loot feed: what you pick up shows next to the screen
@@ -77,11 +77,13 @@ local function settings()
 end
 
 -- Whether a value is one the controls can set; profile texts are read with it
--- (Share). The value already has the default's type.
+-- (Share). The value already has the default's type. A slider value must also
+-- lie on its step: 1.5 rows would break the feed.
 function LootFeed:Validate(key, value)
 	for _, setting in ipairs(settings()) do
 		if setting.key == key and setting.kind == "slider" then
 			return value >= setting.min and value <= setting.max
+				and Storage.OnStep(value, setting.min, setting.max, setting.step) == value
 		elseif setting.key == key and setting.kind == "dropdown" then
 			for _, choice in ipairs(setting.choices) do
 				if choice[1] == value then

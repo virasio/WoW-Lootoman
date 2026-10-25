@@ -114,6 +114,15 @@ describe("profile texts", function()
 		assert.equals(11, read.skipped)
 	end)
 
+	it("leave out slider values between their steps", function()
+		local read = assert(Share.Read(text({
+			format = 1,
+			sections = { ["module:LootFeed"] = { maxRows = 1.5, fade = 1.3, duration = 6.5, size = 12, backgroundOpacity = 42 } },
+		})))
+		assert.same({ fade = 1.3, size = 12 }, read.sections["module:LootFeed"])
+		assert.equals(3, read.skipped)
+	end)
+
 	it("leave out a layout from a newer version, and say so", function()
 		local read = assert(Share.Read(text({ format = 1, collections = { layouts = { Future = { schema = 99 }, Now = { base = "huge", extra = 1 } } } })))
 		assert.same({ { "Now" }, { "Future" } }, { read.collections.layouts.names, read.newer })
