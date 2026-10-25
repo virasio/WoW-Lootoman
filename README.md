@@ -40,7 +40,7 @@ English and Russian.
 
 ## Status
 
-Alpha: features and options may still change between versions. Please report problems on [GitHub](https://github.com/virasio/lootoman/issues), with the output of `/lootoman selftest`.
+Alpha: features and options may still change between versions. Please report problems in the comments on [Lootoman's CurseForge page](https://www.curseforge.com/wow/addons/lootoman), with the output of `/lootoman selftest`.
 
 ## License
 
