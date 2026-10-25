@@ -31,6 +31,8 @@ ns.EditMode = EditMode
 local entries = {}
 local lib
 local layoutName
+-- True while a value set in the Edit Mode dialog is being stored.
+local fromDialog = false
 
 local function positions()
 	return Storage:GetSection("positions")
@@ -153,8 +155,10 @@ local function setup()
 		end
 	end)
 	-- A value changed on the options page shows in an open Edit Mode dialog.
+	-- A change made in the dialog itself does not rebuild it: that would hide
+	-- and recreate the slider being dragged.
 	Bus:On("SettingChanged", EditMode, function(_, name)
-		if lib:IsInEditMode() then
+		if lib:IsInEditMode() and not fromDialog then
 			for _, entry in ipairs(entries) do
 				if entry.module.name == name and entry.settings then
 					lib:RefreshFrameSettings(entry.frame)
@@ -162,6 +166,16 @@ local function setup()
 			end
 		end
 	end)
+end
+
+-- Stores a value set in the Edit Mode dialog, marked as coming from it.
+local function store(name, key, value)
+	fromDialog = true
+	local ok, problem = pcall(Storage.Set, Storage, name, key, value)
+	fromDialog = false
+	if not ok then
+		error(problem, 0)
+	end
 end
 
 -- A module setting as a LibEditMode setting object. Settings are per profile,
@@ -180,7 +194,7 @@ local function toLibSetting(module, setting)
 			return Storage:Get(name, setting.key)
 		end,
 		set = function(_, value)
-			Storage:Set(name, setting.key, value)
+			store(name, setting.key, value)
 		end,
 	}
 	if setting.kind == "checkbox" then
@@ -189,7 +203,7 @@ local function toLibSetting(module, setting)
 		object.kind = lib.SettingType.Slider
 		object.minValue, object.maxValue, object.valueStep = setting.min, setting.max, setting.step
 		object.set = function(_, value)
-			Storage:Set(name, setting.key, Storage.OnStep(value, setting.min, setting.max, setting.step))
+			store(name, setting.key, Storage.OnStep(value, setting.min, setting.max, setting.step))
 		end
 		local format = setting.format
 		if format then
