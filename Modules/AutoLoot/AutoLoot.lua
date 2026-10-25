@@ -182,5 +182,5 @@ end
 
 function AutoLoot:OnDisable()
 	loot = nil
-	self.LootWindow.Reset()
+	self.LootWindow.Release()
 end

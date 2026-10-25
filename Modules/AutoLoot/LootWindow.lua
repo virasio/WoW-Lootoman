@@ -63,7 +63,17 @@ function Window.Show()
 	end
 end
 
--- When the loot closes or the module stops.
+-- When the module stops: a loot that is still open gets its window back with
+-- the slots that are left, as after an error; no LOOT_OPENED would show it.
+function Window.Release()
+	if hidden and LootFrame:IsShown() then
+		Window.Show()
+	else
+		Window.Reset()
+	end
+end
+
+-- When the loot closes.
 function Window.Reset()
 	if not hidden then
 		return
