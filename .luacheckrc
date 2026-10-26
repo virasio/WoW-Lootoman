@@ -1,0 +1,114 @@
+std = "lua51"
+max_line_length = false
+self = false
+
+exclude_files = {
+	".release/",
+	-- Third-party libraries, kept exactly as released.
+	"Libs/",
+	-- Lua and LuaRocks installed into the checkout by CI.
+	".lua/",
+	".luarocks/",
+	-- lua-language-server and the WoW annotations, ignored by git.
+	".luals/",
+}
+
+-- Game globals are allowed per layer, so a game API call outside Compat shows
+-- up as an undefined global. Add new globals to the right layer.
+files["Locales/Locales.lua"] = {
+	read_globals = { "GetLocale" },
+}
+
+files["Compat/"] = {
+	globals = { "SlashCmdList" },
+	read_globals = {
+		"C_AddOns",
+		"C_CVar",
+		"C_Container",
+		"C_CurrencyInfo",
+		"C_EncodingUtil",
+		"C_Item",
+		"C_PlayerInteractionManager",
+		"C_Timer",
+		"ConfirmLootSlot",
+		"Constants",
+		"CreateFrame",
+		"DEFAULT_CHAT_FRAME",
+		"Enum",
+		"GetBuildInfo",
+		"GetGameMessageInfo",
+		"GetLootSlotInfo",
+		"GetLootSlotLink",
+		"GetLootSlotType",
+		"GetMoney",
+		"GetNormalizedRealmName",
+		"GetNumLootItems",
+		"GetTime",
+		"InCombatLockdown",
+		"IsFishingLoot",
+		"IsInGroup",
+		"IsModifiedClick",
+		"LootSlot",
+		"UnitFullName",
+		"UnitXP",
+		"UnitXPMax",
+		"geterrorhandler",
+		"issecretvalue",
+	},
+}
+
+files["Modules/"] = {
+	read_globals = {
+		"CANCEL",
+		"ColorManager",
+		"CreateAtlasMarkup",
+		"CreateColor",
+		"CreateFrame",
+		"CreateMinimalSliderFormatter",
+		"GameFontNormal",
+		"GameTooltip",
+		"GameTooltip_AddNormalLine",
+		"GameTooltip_SetTitle",
+		"GetCursorPosition",
+		"GetMoneyString",
+		"LibStub",
+		"LootFrame",
+		"MenuConstants",
+		"MenuTemplates",
+		"MenuVariants",
+		"MinimalSliderWithSteppersMixin",
+		"NumberFontNormal",
+		"UISpecialFrames",
+		"StaticPopup_Hide",
+		"StaticPopup_Show",
+		"UIParent",
+	},
+}
+
+files["Settings/"] = {
+	read_globals = {
+		"CANCEL",
+		"CLOSE",
+		"CreateAtlasMarkup",
+		"CreateFrame",
+		"CreateSettingsButtonInitializer",
+		"CreateSettingsListSectionHeaderInitializer",
+		"EventRegistry",
+		"GameTooltip_AddNormalLine",
+		"GameTooltip_SetTitle",
+		"MenuConstants",
+		"MenuTemplates",
+		"MenuVariants",
+		"MinimalSliderWithSteppersMixin",
+		"UISpecialFrames",
+		"Settings",
+		"SettingsPanel",
+		"SettingsTooltip",
+		"StaticPopup_Show",
+		"UIParent",
+	},
+}
+
+files["tests/"] = {
+	std = "+busted",
+}
