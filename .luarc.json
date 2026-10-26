@@ -24,7 +24,6 @@
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",
     "DEFAULT_CHAT_FRAME",
-    "GameMenuEscPriority",
     "GameTooltip_AddNormalLine",
     "GameTooltip_SetTitle",
     "LibStub",
@@ -33,12 +32,12 @@
     "MenuTemplates",
     "MenuVariants",
     "MinimalSliderWithSteppersMixin",
-    "RegisterGameMenuEscHandler",
     "Settings",
     "SettingsPanel",
     "SettingsTooltip",
     "SlashCmdList",
     "StaticPopup_Hide",
-    "StaticPopup_Show"
+    "StaticPopup_Show",
+    "UISpecialFrames"
   ]
 }

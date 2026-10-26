@@ -43,8 +43,9 @@ local HOW_NAMES = { both = L["Keep both"], replace = L["Replace"], keep = L["Kee
 
 local share, import
 
-local function newDialog(title)
-	local frame = CreateFrame("Frame", nil, UIParent, "DefaultPanelFlatTemplate")
+-- name is the frame's global name, for UISpecialFrames.
+local function newDialog(title, name)
+	local frame = CreateFrame("Frame", name, UIParent, "DefaultPanelFlatTemplate")
 	frame:SetWidth(Dialogs.WIDTH)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("DIALOG")
@@ -61,15 +62,9 @@ local function newDialog(title)
 	close:SetScript("OnClick", function()
 		frame:Hide()
 	end)
-	if RegisterGameMenuEscHandler then
-		RegisterGameMenuEscHandler(GameMenuEscPriority.AddOn, function()
-			if frame:IsShown() then
-				frame:Hide()
-				return true
-			end
-			return false
-		end)
-	end
+	-- Escape closes it as it closes the game's own windows (see the designer:
+	-- RegisterGameMenuEscHandler would taint the game menu).
+	table.insert(UISpecialFrames, name)
 	frame.rows, frame.headers = {}, {}
 	frame.checked, frame.how = {}, {}
 	return frame
@@ -277,7 +272,7 @@ function Dialogs.UpdateShare()
 end
 
 local function buildShare()
-	local frame = newDialog(L["Share"])
+	local frame = newDialog(L["Share"], "LootomanShareDialog")
 	frame.hint = newText(frame, "GameFontHighlight")
 	frame.hint:SetPoint("TOPLEFT", 24, -34)
 	frame.box = newTextBox(frame, 110)
@@ -433,7 +428,7 @@ function Dialogs.Import()
 end
 
 local function buildImport()
-	local frame = newDialog(L["Import"])
+	local frame = newDialog(L["Import"], "LootomanImportDialog")
 	local label = newText(frame, "GameFontNormal")
 	label:SetPoint("TOPLEFT", 24, -36)
 	label:SetText(L["Text:"])

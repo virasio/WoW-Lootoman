@@ -39,6 +39,7 @@ function methods:SetParent(parent)
 	self.strata = parent.strata
 end
 function methods:GetParent() return self.parent end
+function methods:GetName() return self.name end
 function methods:SetFrameStrata(strata) self.strata = strata end
 function methods:GetFrameStrata() return self.strata end
 function methods:SetText(text) self.text = text end
@@ -163,8 +164,13 @@ function UI.Install()
 
 	api.UIParent = UI.NewFake()
 	rawset(_G, "UIParent", api.UIParent)
-	rawset(_G, "CreateFrame", function(_, _, parent, template)
+	rawset(_G, "CreateFrame", function(_, name, parent, template)
 		local frame = UI.NewFake(parent)
+		-- A named frame is a global, as in the client.
+		if name then
+			frame.name = name
+			rawset(_G, name, frame)
+		end
 		-- What a template's frame holds that the code reads.
 		if template == "InputScrollFrameTemplate" then
 			frame.EditBox, frame.CharCount = UI.NewFake(frame), UI.NewFake(frame)
@@ -222,9 +228,21 @@ function UI.Install()
 	api.OpenMenu = UI.OpenMenu
 	api.cursor = { 0, 0 }
 	rawset(_G, "GetCursorPosition", function() return api.cursor[1], api.cursor[2] end)
-	api.escHandlers = {}
-	rawset(_G, "GameMenuEscPriority", { AddOn = 8 })
-	rawset(_G, "RegisterGameMenuEscHandler", function(_, handler) api.escHandlers[#api.escHandlers + 1] = handler end)
+	-- Escape: Blizzard hides the frames named in UISpecialFrames
+	-- (CloseSpecialWindows in UIParentPanelManager.lua).
+	local specialFrames = {}
+	rawset(_G, "UISpecialFrames", specialFrames)
+	function api.PressEscape()
+		local found = false
+		for _, name in pairs(specialFrames) do
+			local frame = _G[name]
+			if frame and frame:IsShown() then
+				frame:Hide()
+				found = true
+			end
+		end
+		return found
+	end
 	rawset(_G, "MinimalSliderWithSteppersMixin", {
 		Label = { Left = 1, Right = 2, Top = 3, Min = 4, Max = 5 },
 		Event = { OnValueChanged = "OnValueChanged" },
