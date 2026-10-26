@@ -1,0 +1,25 @@
+name: Suggestion
+description: An idea for a new feature or a better way for something to work.
+title: "[Idea] "
+labels: [feature]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      description: The situation or the problem, not yet the solution.
+      placeholder: When my bags are full in a dungeon, I …
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: How you imagine Lootoman could help with it.
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you do it today?
+      description: Other addons or workarounds you use for it now, if any.
