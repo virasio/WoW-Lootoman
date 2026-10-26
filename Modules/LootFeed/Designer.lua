@@ -311,6 +311,8 @@ function Designer.UpdateInspector()
 		local kind = spec and (KINDS[spec.key] or "number")
 		control.spec, control.part, control.kind = spec, selected, kind
 		control.value = spec and values[spec.key]
+		-- Before the dropdown is shown: showing it builds its menu from them.
+		control.choices = kind == "choice" and choices(spec.key, design, selected) or nil
 		control.label:SetShown(spec ~= nil)
 		control.check:SetShown(kind == "check")
 		control.slider:SetShown(kind == "number")
@@ -326,7 +328,6 @@ function Designer.UpdateInspector()
 			control.slider:Init(control.value, control.low, control.high, math.max(1, control.high - control.low))
 			control.input:SetText(tostring(control.value))
 		elseif kind == "choice" then
-			control.choices = choices(spec.key, design, selected)
 			control.choice:GenerateMenu()
 		end
 	end

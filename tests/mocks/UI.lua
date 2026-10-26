@@ -11,9 +11,17 @@ local function noop() end
 
 local methods = {}
 
-function methods:Show() self.shown = true end
-function methods:Hide() self.shown = false end
-function methods:SetShown(shown) self.shown = shown and true or false end
+-- A dropdown builds its menu when it is shown, as Blizzard's does
+-- (DropdownSelectionTextMixin:OnShow calls GenerateMenu).
+function methods:SetShown(shown)
+	local was = self.shown
+	self.shown = shown and true or false
+	if self.dropdown and self.shown and not was then
+		self:GenerateMenu()
+	end
+end
+function methods:Show() self:SetShown(true) end
+function methods:Hide() self:SetShown(false) end
 function methods:IsShown() return self.shown end
 function methods:IsVisible() return self.shown and (self.parent == nil or self.parent:IsVisible()) end
 function methods:SetAlpha(alpha) self.alpha = alpha end
@@ -62,7 +70,13 @@ function methods:Init(value, minValue, maxValue, steps) self.value, self.range =
 function methods:RegisterCallback(event, fn, owner) self.callbacks = self.callbacks or {}; self.callbacks[event] = { fn, owner } end
 -- Dropdown: WowStyle1DropdownTemplate and WowStyle2DropdownTemplate.
 function methods:SetupMenu(generator) self.menu = generator end
-function methods:GenerateMenu() self.generated = (self.generated or 0) + 1 end
+-- Like Blizzard's: the menu is built only once a generator is set.
+function methods:GenerateMenu()
+	self.generated = (self.generated or 0) + 1
+	if self.menu then
+		UI.OpenMenu(self)
+	end
+end
 function methods:CreateTexture() return UI.NewFake(self) end
 function methods:CreateFontString() return UI.NewFake(self) end
 
@@ -154,6 +168,8 @@ function UI.Install()
 		-- What a template's frame holds that the code reads.
 		if template == "InputScrollFrameTemplate" then
 			frame.EditBox, frame.CharCount = UI.NewFake(frame), UI.NewFake(frame)
+		elseif template and template:match("DropdownTemplate$") then
+			frame.dropdown = true
 		end
 		api.frames[#api.frames + 1] = frame
 		return frame
