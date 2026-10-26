@@ -1,5 +1,10 @@
 package-as: Lootoman
 
+# The changelog the packager uploads with each release, written by hand.
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - tests
   - Dev

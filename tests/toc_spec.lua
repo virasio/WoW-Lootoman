@@ -96,7 +96,8 @@ describe("Lootoman.toc", function()
 end)
 
 -- What the packager puts into the release: every file in git, less what
--- .pkgmeta ignores. Only the addon itself, its README and its license may go.
+-- .pkgmeta ignores. Only the addon itself, its README, its license and its
+-- changelog may go.
 describe("the release package", function()
 	local function ignored()
 		local names, inList = {}, false
@@ -119,8 +120,9 @@ describe("the release package", function()
 		end
 	end)
 
-	it("holds only the addon, its README and its license", function()
-		local allowed = { ["Lootoman.toc"] = true, ["README.md"] = true, LICENSE = true, [".pkgmeta"] = true, [".gitignore"] = true }
+	it("holds only the addon, its README, its license and its changelog", function()
+		local allowed = { ["Lootoman.toc"] = true, ["README.md"] = true, LICENSE = true, ["CHANGELOG.md"] = true,
+			[".pkgmeta"] = true, [".gitignore"] = true }
 		for _, layer in ipairs(LAYERS) do
 			allowed[layer] = true
 		end
@@ -133,5 +135,18 @@ describe("the release package", function()
 			assert.is_true(allowed[top] == true, path .. " would go into the package")
 		end
 		git:close()
+	end)
+
+	it("uploads the hand-written changelog, which has an entry", function()
+		local filename
+		for line in io.lines(".pkgmeta") do
+			filename = filename or line:match("^%s+filename:%s*(%S+)")
+		end
+		assert.equals("CHANGELOG.md", filename)
+		local entry
+		for line in io.lines(filename) do
+			entry = entry or line:match("^## (%S+)")
+		end
+		assert.is_not_nil(entry, "CHANGELOG.md has no release entry")
 	end)
 end)
