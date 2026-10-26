@@ -138,10 +138,6 @@ function Compat.ConfirmLootSlot(slot)
 	ConfirmLootSlot(slot)
 end
 
-function Compat.CloseLoot()
-	CloseLoot()
-end
-
 function Compat.IsFishingLoot()
 	return IsFishingLoot() == true
 end

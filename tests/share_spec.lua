@@ -47,7 +47,7 @@ describe("profile texts", function()
 		assert.same({ maxRows = 12 }, read.sections["module:LootFeed"])
 		assert.same({ Modern = { point = "TOP", x = 10, y = -20 } }, read.sections["positions:LootFeed"])
 		assert.same({ layout = "Raid" }, read.sections["layout:LootFeed"])
-		assert.same({ names = { "Raid" }, items = { Raid = { schema = 2, base = "compact" } }, taken = { Raid = "Raid" } },
+		assert.same({ names = { "Raid" }, items = { Raid = { schema = 1, base = "compact" } }, taken = { Raid = "Raid" } },
 			read.collections.layouts)
 		assert.same({ 0, {} }, { read.skipped, read.newer })
 	end)
@@ -141,7 +141,7 @@ describe("profile texts", function()
 					["module:LootFeed"] = { maxRows = 12 },
 					["layout:LootFeed"] = { layout = "Raid" },
 				},
-				collections = { layouts = { Raid = { schema = 2, base = "compact" }, Solo = { schema = 2, base = "minimal" } } },
+				collections = { layouts = { Raid = { schema = 1, base = "compact" }, Solo = { schema = 1, base = "minimal" } } },
 			})))
 			Storage:Set("LootFeed", "maxRows", 3)
 			Storage:Set("LootFeed", "fade", 2)
@@ -234,7 +234,7 @@ describe("profile texts", function()
 		end)
 
 		it("as the layout Default too, kept as both under a name in the client language", function()
-			read = assert(Share.Read(text({ format = 1, collections = { layouts = { Default = { schema = 2, base = "compact" } } } })))
+			read = assert(Share.Read(text({ format = 1, collections = { layouts = { Default = { schema = 1, base = "compact" } } } })))
 			assert.equals("Default", read.collections.layouts.taken.Default)
 			local _, renamed = Share.Import(read, { collections = { layouts = { Default = "both" } } })
 			assert.same({ "Default 2", "compact", "large" }, { renamed.layouts.Default, Layouts.Get("Default 2").base, Layouts.Get("Default").base })

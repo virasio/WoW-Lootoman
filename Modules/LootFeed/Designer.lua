@@ -34,6 +34,8 @@ Designer.PREVIEW_WIDTH = 440
 -- The inspector's controls are this far apart; each one's label is nearer to
 -- it than to the one before.
 Designer.CONTROL_HEIGHT = 52
+-- The window's global name, for UISpecialFrames.
+Designer.NAME = "LootomanDesigner"
 
 local NAMES = { large = L["Large"], compact = L["Compact"], minimal = L["Minimal"] }
 local TITLES = { row = L["Row"], icon = L["Icon"], name = L["Name"], amount = L["Amount"], owned = L["Owned count"] }
@@ -311,6 +313,8 @@ function Designer.UpdateInspector()
 		local kind = spec and (KINDS[spec.key] or "number")
 		control.spec, control.part, control.kind = spec, selected, kind
 		control.value = spec and values[spec.key]
+		-- Before the dropdown is shown: showing it builds its menu from them.
+		control.choices = kind == "choice" and choices(spec.key, design, selected) or nil
 		control.label:SetShown(spec ~= nil)
 		control.check:SetShown(kind == "check")
 		control.slider:SetShown(kind == "number")
@@ -326,7 +330,6 @@ function Designer.UpdateInspector()
 			control.slider:Init(control.value, control.low, control.high, math.max(1, control.high - control.low))
 			control.input:SetText(tostring(control.value))
 		elseif kind == "choice" then
-			control.choices = choices(spec.key, design, selected)
 			control.choice:GenerateMenu()
 		end
 	end
@@ -468,7 +471,7 @@ local function createControl(parent, index)
 end
 
 local function build()
-	local frame = CreateFrame("Frame", nil, UIParent, "DefaultPanelFlatTemplate")
+	local frame = CreateFrame("Frame", Designer.NAME, UIParent, "DefaultPanelFlatTemplate")
 	frame:SetSize(Designer.WIDTH, Designer.HEIGHT)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("DIALOG")
@@ -488,15 +491,11 @@ local function build()
 	close:SetScript("OnClick", function()
 		frame:Hide()
 	end)
-	if RegisterGameMenuEscHandler then
-		RegisterGameMenuEscHandler(GameMenuEscPriority.AddOn, function()
-			if frame:IsShown() then
-				frame:Hide()
-				return true
-			end
-			return false
-		end)
-	end
+	-- Escape closes it as it closes the game's own windows: Blizzard's secure
+	-- code hides the frames named in UISpecialFrames. (Registering a handler
+	-- with RegisterGameMenuEscHandler would re-sort Blizzard's list from
+	-- Lootoman's code and taint the game menu, which then cannot stop a cast.)
+	table.insert(UISpecialFrames, Designer.NAME)
 
 	local layoutLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	layoutLabel:SetPoint("TOPLEFT", 20, -36)

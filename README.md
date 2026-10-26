@@ -38,9 +38,29 @@ English and Russian.
 - `/lootoman debug on` or `off`: turn debug messages on or off for all characters.
 - `/lootoman selftest`: check the addon against the game client. Its output helps with bug reports.
 
+## Screenshots
+
+The loot feed after picking up herbs, leather and experience:
+
+![The loot feed](screenshots/loot-feed.png)
+
+The loot feed in Edit Mode, with its options in the Edit Mode dialog:
+
+![The loot feed in Edit Mode](screenshots/edit-mode.png)
+
+The row designer, with its menu of row layouts:
+
+![The row designer](screenshots/designer.png)
+
+The options: the main page, and the loot feed's own page:
+
+![The options' main page](screenshots/options.png)
+
+![The loot feed's options](screenshots/options-loot-feed.png)
+
 ## Status
 
-Alpha: features and options may still change between versions. Please report problems on [GitHub](https://github.com/virasio/lootoman/issues), with the output of `/lootoman selftest`.
+Alpha: features and options may still change between versions. Please report problems on [GitHub Issues](https://github.com/virasio/WoW-Lootoman/issues) or in the comments on [Lootoman's CurseForge page](https://www.curseforge.com/wow/addons/lootoman), with the output of `/lootoman selftest`.
 
 ## License
 

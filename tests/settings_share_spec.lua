@@ -80,6 +80,16 @@ describe("share and import dialogs", function()
 		assert.same({ false, true, "profile" }, { Dialogs.shareFrame.shown, Dialogs.importFrame.shown, Dialogs.importFrame.mode })
 	end)
 
+	it("close on Escape, through the game's own list of windows", function()
+		Dialogs.OpenShare("profile")
+		assert.is_true(Loader.ui.PressEscape())
+		assert.is_false(Dialogs.shareFrame.shown)
+		Dialogs.OpenImport("profile")
+		assert.is_true(Loader.ui.PressEscape())
+		assert.is_false(Dialogs.importFrame.shown)
+		assert.is_false(Loader.ui.PressEscape())
+	end)
+
 	it("cannot be opened on a client that cannot make profile texts", function()
 		Test.state.encoder = false
 		for _, text in ipairs({ "Import", "Share" }) do

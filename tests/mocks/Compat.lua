@@ -26,7 +26,7 @@ local state = {
 	group = false,
 	-- The loot window: count stays the same while looted slots become false.
 	loot = { slots = {}, count = 0, fishing = false },
-	-- LootSlot, ConfirmLootSlot and CloseLoot calls, in order: { "loot", 2 }, { "close" }.
+	-- LootSlot and ConfirmLootSlot calls, in order: { "loot", 2 }, { "confirm", 2 }.
 	lootActions = {},
 	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link } } };
 	-- a bag that is not listed is not equipped. Items the client has loaded, by
@@ -118,10 +118,6 @@ end
 
 function Compat.ConfirmLootSlot(slot)
 	state.lootActions[#state.lootActions + 1] = { "confirm", slot }
-end
-
-function Compat.CloseLoot()
-	state.lootActions[#state.lootActions + 1] = { "close" }
 end
 
 function Compat.IsFishingLoot()

@@ -11,9 +11,17 @@ local function noop() end
 
 local methods = {}
 
-function methods:Show() self.shown = true end
-function methods:Hide() self.shown = false end
-function methods:SetShown(shown) self.shown = shown and true or false end
+-- A dropdown builds its menu when it is shown, as Blizzard's does
+-- (DropdownSelectionTextMixin:OnShow calls GenerateMenu).
+function methods:SetShown(shown)
+	local was = self.shown
+	self.shown = shown and true or false
+	if self.dropdown and self.shown and not was then
+		self:GenerateMenu()
+	end
+end
+function methods:Show() self:SetShown(true) end
+function methods:Hide() self:SetShown(false) end
 function methods:IsShown() return self.shown end
 function methods:IsVisible() return self.shown and (self.parent == nil or self.parent:IsVisible()) end
 function methods:SetAlpha(alpha) self.alpha = alpha end
@@ -31,6 +39,7 @@ function methods:SetParent(parent)
 	self.strata = parent.strata
 end
 function methods:GetParent() return self.parent end
+function methods:GetName() return self.name end
 function methods:SetFrameStrata(strata) self.strata = strata end
 function methods:GetFrameStrata() return self.strata end
 function methods:SetText(text) self.text = text end
@@ -62,7 +71,13 @@ function methods:Init(value, minValue, maxValue, steps) self.value, self.range =
 function methods:RegisterCallback(event, fn, owner) self.callbacks = self.callbacks or {}; self.callbacks[event] = { fn, owner } end
 -- Dropdown: WowStyle1DropdownTemplate and WowStyle2DropdownTemplate.
 function methods:SetupMenu(generator) self.menu = generator end
-function methods:GenerateMenu() self.generated = (self.generated or 0) + 1 end
+-- Like Blizzard's: the menu is built only once a generator is set.
+function methods:GenerateMenu()
+	self.generated = (self.generated or 0) + 1
+	if self.menu then
+		UI.OpenMenu(self)
+	end
+end
 function methods:CreateTexture() return UI.NewFake(self) end
 function methods:CreateFontString() return UI.NewFake(self) end
 
@@ -149,11 +164,18 @@ function UI.Install()
 
 	api.UIParent = UI.NewFake()
 	rawset(_G, "UIParent", api.UIParent)
-	rawset(_G, "CreateFrame", function(_, _, parent, template)
+	rawset(_G, "CreateFrame", function(_, name, parent, template)
 		local frame = UI.NewFake(parent)
+		-- A named frame is a global, as in the client.
+		if name then
+			frame.name = name
+			rawset(_G, name, frame)
+		end
 		-- What a template's frame holds that the code reads.
 		if template == "InputScrollFrameTemplate" then
 			frame.EditBox, frame.CharCount = UI.NewFake(frame), UI.NewFake(frame)
+		elseif template and template:match("DropdownTemplate$") then
+			frame.dropdown = true
 		end
 		api.frames[#api.frames + 1] = frame
 		return frame
@@ -206,9 +228,21 @@ function UI.Install()
 	api.OpenMenu = UI.OpenMenu
 	api.cursor = { 0, 0 }
 	rawset(_G, "GetCursorPosition", function() return api.cursor[1], api.cursor[2] end)
-	api.escHandlers = {}
-	rawset(_G, "GameMenuEscPriority", { AddOn = 8 })
-	rawset(_G, "RegisterGameMenuEscHandler", function(_, handler) api.escHandlers[#api.escHandlers + 1] = handler end)
+	-- Escape: Blizzard hides the frames named in UISpecialFrames
+	-- (CloseSpecialWindows in UIParentPanelManager.lua).
+	local specialFrames = {}
+	rawset(_G, "UISpecialFrames", specialFrames)
+	function api.PressEscape()
+		local found = false
+		for _, name in pairs(specialFrames) do
+			local frame = _G[name]
+			if frame and frame:IsShown() then
+				frame:Hide()
+				found = true
+			end
+		end
+		return found
+	end
 	rawset(_G, "MinimalSliderWithSteppersMixin", {
 		Label = { Left = 1, Right = 2, Top = 3, Min = 4, Max = 5 },
 		Event = { OnValueChanged = "OnValueChanged" },

@@ -20,7 +20,7 @@ describe("fast autoloot settings", function()
 end)
 
 describe("fast autoloot", function()
-	local ns, Test, actions, skipped, shown, hiddenPopups
+	local ns, Test, actions, skipped, hiddenPopups
 
 	local LINEN = { kind = "item", name = "Linen Cloth", link = "|Hitem:2589::|h[Linen Cloth]|h", quantity = 2, quality = 1 }
 	local HEARTHSTONE = { kind = "item", name = "Hearthstone", link = "|Hitem:6948::|h[Hearthstone]|h", quantity = 1, quality = 1 }
@@ -35,6 +35,15 @@ describe("fast autoloot", function()
 		end
 		Test.SetBags({ [0] = { size = 16, items = items } })
 		Test.FireEvent("BAG_UPDATE_DELAYED")
+	end
+
+	-- Why the loot window was shown, from the debug output.
+	local function shown()
+		local reasons = {}
+		for _, line in ipairs(Test.state.printed) do
+			reasons[#reasons + 1] = line:match("loot window shown %((.-)%)")
+		end
+		return reasons
 	end
 
 	local function open(slots, autoLoot)
@@ -55,9 +64,9 @@ describe("fast autoloot", function()
 			[6948] = { name = "Hearthstone", stackSize = 1 },
 		})
 		backpack(10)
-		skipped, shown = {}, {}
+		skipped = {}
 		ns.Bus:On("LootSkipped", "test", function(_, entry) skipped[#skipped + 1] = entry end)
-		ns.Bus:On("LootWindowShown", "test", function(_, reason) shown[#shown + 1] = reason end)
+		ns.Storage:SetGlobal("debug", true)
 	end)
 
 	it("loots one slot at a time, from the last, each after the previous one is cleared", function()
@@ -68,7 +77,7 @@ describe("fast autoloot", function()
 		Test.ClearLootSlot(2)
 		Test.ClearLootSlot(1)
 		assert.same({ { "loot", 3 }, { "loot", 2 }, { "loot", 1 } }, actions)
-		assert.same({}, shown)
+		assert.same({}, shown())
 	end)
 
 	it("takes the first event of a loot and ignores its repeats", function()
@@ -123,7 +132,7 @@ describe("fast autoloot", function()
 		Test.ClearLootSlot(3)
 		Test.ClearLootSlot(2)
 		assert.same({ { "loot", 3 }, { "loot", 2 } }, actions)
-		assert.same({ "no room" }, shown)
+		assert.same({ "no room" }, shown())
 	end)
 
 	it("does not let two items count on the same free slot", function()
@@ -134,7 +143,7 @@ describe("fast autoloot", function()
 		Test.ClearLootSlot(3)
 		Test.ClearLootSlot(2)
 		assert.same({ { "loot", 3 }, { "loot", 2 } }, actions)
-		assert.same({ "no room" }, shown)
+		assert.same({ "no room" }, shown())
 	end)
 
 	it("loots money and currency with full bags, and stacks that fit into partial stacks", function()
@@ -151,7 +160,7 @@ describe("fast autoloot", function()
 		open({ { kind = "item", name = "Rolled", link = "|Hitem:6948::|h[Rolled]|h", locked = true }, MONEY })
 		Test.ClearLootSlot(2)
 		assert.same({ { "loot", 2 } }, actions)
-		assert.same({ "locked" }, shown)
+		assert.same({ "locked" }, shown())
 	end)
 
 	it("tries a slot whose link the client keeps secret", function()
@@ -164,7 +173,7 @@ describe("fast autoloot", function()
 	it("stops when a slot is not cleared in time, and does not continue later", function()
 		open({ LINEN, HEARTHSTONE })
 		Test.Advance(ns.Modules:Get("AutoLoot").SLOT_TIMEOUT)
-		assert.same({ "timeout" }, shown)
+		assert.same({ "timeout" }, shown())
 		Test.ClearLootSlot(2)
 		assert.same({ { "loot", 2 } }, actions)
 	end)
@@ -174,15 +183,15 @@ describe("fast autoloot", function()
 		Test.Advance(0.5)
 		Test.ClearLootSlot(2)
 		Test.Advance(0.6)
-		assert.same({}, shown)
+		assert.same({}, shown())
 	end)
 
 	it("stops on a loot error, but not on other errors", function()
 		open({ LINEN, HEARTHSTONE })
 		Test.FireGameError("ERR_OUT_OF_RANGE")
-		assert.same({}, shown)
+		assert.same({}, shown())
 		Test.FireGameError("ERR_INV_FULL")
-		assert.same({ "error" }, shown)
+		assert.same({ "error" }, shown())
 		Test.ClearLootSlot(2)
 		assert.same({ { "loot", 2 } }, actions)
 	end)
@@ -201,14 +210,14 @@ describe("fast autoloot", function()
 		open({ LINEN, HEARTHSTONE })
 		Test.FireEvent("LOOT_BIND_CONFIRM", 2)
 		assert.same({ { "loot", 2 } }, actions)
-		assert.same({ "bind" }, shown)
+		assert.same({ "bind" }, shown())
 	end)
 
 	it("leaves bind-on-pickup items to the player when the setting is off", function()
 		ns.Storage:Set("AutoLoot", "confirmBind", false)
 		open({ LINEN, HEARTHSTONE })
 		Test.FireEvent("LOOT_BIND_CONFIRM", 2)
-		assert.same({ "bind" }, shown)
+		assert.same({ "bind" }, shown())
 		assert.same({}, hiddenPopups)
 	end)
 
