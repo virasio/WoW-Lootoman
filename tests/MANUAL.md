@@ -51,7 +51,7 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Layout name taken.** Import a text with a layout whose name exists, once with each choice. *Expected:* keep both adds the layout under a free name and the imported profile uses it; replace overwrites yours; keep mine leaves yours, and the imported profile uses it.
 - [ ] **Layouts alone.** Share and import layouts from the designer's layout menu.
 - [ ] **Bad texts.** Import random text, a cut text and an empty field. *Expected:* a message, nothing imported.
-- [ ] **Closing the options.** Close the options with the *Close* button and with Escape, after visiting Lootoman's pages, using *Configure*, the profile menu, the search box and the Keybindings page. *Expected:* no `ADDON_ACTION_FORBIDDEN` (`SpellStopCasting`); if it comes back, keep the taint log.
+- [ ] **Closing the options and Escape.** Open the row designer and the Share and Import windows, and close each with Escape; then close the options with the *Close* button, with the X and with Escape, after visiting Lootoman's pages, using *Configure*, the profile menu, the search box and the Keybindings page; then press Escape in the world, also while casting. *Expected:* each window closes on Escape, the game menu opens as usual, and there is no `ADDON_ACTION_FORBIDDEN` (`SpellStopCasting`); if it comes back, keep the taint log.
 
 ## Russian client (0.1)
 
