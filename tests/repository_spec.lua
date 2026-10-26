@@ -14,6 +14,9 @@ local OUTSIDE = {
 -- tools installed into the checkout.
 local SKIP = { [".git"] = true, Libs = true, [".luals"] = true, [".lua"] = true, [".luarocks"] = true, [".release"] = true }
 
+-- Images are not text: their bytes can look like anything.
+local IMAGES = { png = true, jpg = true, jpeg = true, tga = true, blp = true }
+
 local function files(dir, found)
 	found = found or {}
 	for name in lfs.dir(dir) do
@@ -21,7 +24,7 @@ local function files(dir, found)
 			local path = dir .. "/" .. name
 			if lfs.attributes(path, "mode") == "directory" then
 				files(path, found)
-			elseif name ~= ".DS_Store" then
+			elseif name ~= ".DS_Store" and not IMAGES[(name:match("%.(%w+)$") or ""):lower()] then
 				found[#found + 1] = path
 			end
 		end
