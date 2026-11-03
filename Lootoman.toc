@@ -50,6 +50,9 @@ Core\Startup.lua
 
 Providers\Inventory.lua
 Providers\Bags.lua
+Providers\Prices.lua
+
+Integrations\Auctionator.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua

@@ -17,6 +17,7 @@
     "type-check": "Any"
   },
   "diagnostics.globals": [
+    "Auctionator",
     "CANCEL",
     "CLOSE",
     "ColorManager",

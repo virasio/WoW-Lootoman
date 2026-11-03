@@ -62,6 +62,11 @@ files["Compat/"] = {
 	},
 }
 
+-- Third-party addons' APIs, each read only by its integration.
+files["Integrations/Auctionator.lua"] = {
+	read_globals = { "Auctionator" },
+}
+
 files["Modules/"] = {
 	read_globals = {
 		"CANCEL",
