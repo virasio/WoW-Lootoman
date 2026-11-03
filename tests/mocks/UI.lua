@@ -174,6 +174,9 @@ function UI.Install()
 		-- What a template's frame holds that the code reads.
 		if template == "InputScrollFrameTemplate" then
 			frame.EditBox, frame.CharCount = UI.NewFake(frame), UI.NewFake(frame)
+		elseif template == "ScrollFrameTemplate" then
+			-- ScrollFrame_OnLoad makes the bar.
+			frame.ScrollBar = UI.NewFake(frame)
 		elseif template and template:match("DropdownTemplate$") then
 			frame.dropdown = true
 		end
@@ -181,8 +184,10 @@ function UI.Install()
 		return frame
 	end)
 
-	local tooltip = { shown = false }
-	function tooltip:SetOwner(owner) self.owner = owner end
+	local tooltip = { shown = false, lines = {} }
+	function tooltip:SetOwner(owner) self.owner, self.lines, self.bagItem, self.compared = owner, {}, nil, false end
+	function tooltip:SetBagItem(bag, slot) self.bagItem = { bag, slot } end
+	function tooltip:AddLine(text) self.lines[#self.lines + 1] = text end
 	function tooltip:SetHyperlink(link) self.link = link end
 	function tooltip:SetCurrencyByID(id) self.currency = id end
 	function tooltip:Show() self.shown = true end
@@ -190,6 +195,10 @@ function UI.Install()
 	function tooltip:IsOwned(owner) return self.owner == owner end
 	api.tooltip = tooltip
 	rawset(_G, "GameTooltip", tooltip)
+	-- The comparison with what is equipped shows while the compare key is held
+	-- (TooltipUtil.lua); api.compare holds it.
+	rawset(_G, "TooltipUtil", { ShouldDoItemComparison = function() return api.compare == true end })
+	rawset(_G, "GameTooltip_ShowCompareItem", function(owner) owner.compared = true end)
 
 	rawset(_G, "GetMoneyString", function(copper) return copper .. " copper" end)
 	rawset(_G, "ColorManager", {

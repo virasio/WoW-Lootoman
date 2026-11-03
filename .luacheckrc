@@ -79,6 +79,7 @@ files["Modules/"] = {
 		"GameTooltip",
 		"GameTooltip_AddNormalLine",
 		"GameTooltip_SetTitle",
+		"GameTooltip_ShowCompareItem",
 		"GetCursorPosition",
 		"GetMoneyString",
 		"LibStub",
@@ -91,6 +92,7 @@ files["Modules/"] = {
 		"UISpecialFrames",
 		"StaticPopup_Hide",
 		"StaticPopup_Show",
+		"TooltipUtil",
 		"UIParent",
 	},
 }

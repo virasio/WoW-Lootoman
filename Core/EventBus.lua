@@ -27,11 +27,9 @@ Bus.MESSAGES = {
 	OpenShareDialog = { payload = "mode: \"profile\", or a collection's name to share only its items", from = "the row designer" },
 	OpenImportDialog = { payload = "mode: \"profile\", or a collection's name to import only its items", from = "the row designer" },
 	FeedLayoutChanged = { payload = "name: the layout that changed", from = "Layouts" },
-	MarksChanged = { payload = "itemID, mark: the new mark, nil when removed; nil, nil when all were cleared", from = "Marks",
-		unheard = "nothing shows marks yet" },
+	MarksChanged = { payload = "itemID, mark: the new mark, nil when removed; nil, nil when all were cleared", from = "Marks" },
 	InventoryChanged = { payload = "", from = "Inventory, after the bags changed (BAG_UPDATE_DELAYED)" },
-	PricesChanged = { payload = "", from = "Prices, after the auction house closed",
-		unheard = "nothing shows prices yet" },
+	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot", unheard = "nothing shows skipped loot yet" },
 }

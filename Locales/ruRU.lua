@@ -209,4 +209,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["Sells the junk as soon as a merchant's window opens."] = "Продаёт хлам, как только открывается окно торговца.",
 	["Swap click and Shift-click"] = "Поменять щелчок и Shift-щелчок",
 	["The sell-junk button then opens the sell window on a click, and only sells on Shift-click."] = "Тогда кнопка продажи хлама по щелчку открывает окно продажи, а по Shift-щелчку только продаёт.",
+
+	-- Modules/Junk/ItemGrid.lua
+	["Everything else"] = "Всё остальное",
+	["Drag an item here to mark it as junk."] = "Перетащите сюда предмет, чтобы пометить его как хлам.",
+	["Drag an item here to remove its mark."] = "Перетащите сюда предмет, чтобы снять с него пометку.",
+	["Auction price: %s"] = "Цена на аукционе: %s",
+	["Its bag is left out of junk selling."] = "Его сумка исключена из продажи хлама.",
+	["Drag it down to keep it."] = "Перетащите вниз, чтобы оставить.",
+	["Drag it up to mark it as junk."] = "Перетащите вверх, чтобы пометить как хлам.",
 })

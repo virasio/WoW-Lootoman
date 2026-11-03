@@ -27,6 +27,7 @@
     "DEFAULT_CHAT_FRAME",
     "GameTooltip_AddNormalLine",
     "GameTooltip_SetTitle",
+    "GameTooltip_ShowCompareItem",
     "LibStub",
     "LootFrame",
     "MenuConstants",
@@ -39,6 +40,7 @@
     "SlashCmdList",
     "StaticPopup_Hide",
     "StaticPopup_Show",
+    "TooltipUtil",
     "UISpecialFrames"
   ]
 }
