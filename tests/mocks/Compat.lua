@@ -379,21 +379,26 @@ function Test.SetCombat(inCombat)
 	Test.FireEvent(inCombat and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
 end
 
--- Runs the timers that are due after the given number of seconds.
+-- Moves time on by the given number of seconds, running the timers that come
+-- due on the way, in time order, at their time; timers they start run too if
+-- they come due within it.
 function Test.Advance(seconds)
-	state.time = state.time + seconds
-	local due, waiting = {}, {}
-	for _, timer in ipairs(state.timers) do
-		if timer.at <= state.time then
-			due[#due + 1] = timer
-		else
-			waiting[#waiting + 1] = timer
+	local target = state.time + seconds
+	while true do
+		local next
+		for index, timer in ipairs(state.timers) do
+			if timer.at <= target and (not next or timer.at < state.timers[next].at) then
+				next = index
+			end
 		end
-	end
-	state.timers = waiting
-	for _, timer in ipairs(due) do
+		if not next then
+			break
+		end
+		local timer = table.remove(state.timers, next)
+		state.time = math.max(state.time, timer.at)
 		timer.callback()
 	end
+	state.time = target
 end
 
 -- Fills the loot window, e.g. SetLoot({ { kind = "item", name = "Linen Cloth",

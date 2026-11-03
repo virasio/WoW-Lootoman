@@ -233,4 +233,18 @@ ns.Locales.AddTranslation("ruRU", {
 	["Junk tossing and selling is off. Turn it on in the options."] = "Выброс и продажа хлама выключены. Включите их в настройках.",
 	["/lootoman toss: open the toss window"] = "/lootoman toss: открыть окно выброса",
 	["Right-click: delete"] = "Правая кнопка: удалить",
+
+	-- Modules/Junk/SellQueue.lua
+	["the merchant's window closed"] = "окно торговца закрылось",
+	["the game asks about an item you can still trade"] = "игра спрашивает о предмете, который ещё можно передать",
+	["an item moved in the bags"] = "предмет переместился в сумках",
+	["the merchant did not take an item"] = "торговец не принял предмет",
+	["the server did not answer"] = "сервер не ответил",
+	["Sold %d items for %s."] = "Продано предметов: %d, за %s.",
+	["Only the last 12 sold items can be bought back."] = "Выкупить обратно можно только 12 последних проданных предметов.",
+	["Selling stopped: %s."] = "Продажа остановлена: %s.",
+	["Nothing was sold this session."] = "За этот сеанс ничего не продано.",
+	["%s ×%d: %s"] = "%s ×%d: %s",
+	["This session: %d items for %s."] = "За этот сеанс: предметов — %d, на %s.",
+	["/lootoman sales: list what was sold this session"] = "/lootoman sales: список проданного за этот сеанс",
 })

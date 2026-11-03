@@ -164,6 +164,20 @@ function Storage:GetGlobalSection(name)
 	return sections[name]
 end
 
+-- Data of the current character (the session's sales log): a table in
+-- LootomanCharDB.sections, created on first use.
+function Storage:GetCharacterSection(name)
+	assert(type(name) == "string", "a section name must be a string")
+	if type(self.charDB.sections) ~= "table" then
+		self.charDB.sections = {}
+	end
+	local sections = self.charDB.sections
+	if type(sections[name]) ~= "table" then
+		sections[name] = {}
+	end
+	return sections[name]
+end
+
 -- A slider value as it is stored: between min and max, on a step, and without
 -- floating point noise (0.3, not 0.30000000000000004).
 function Storage.OnStep(value, min, max, step)

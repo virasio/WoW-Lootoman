@@ -238,4 +238,18 @@ ns.Locales.AddEnglish({
 	"Junk tossing and selling is off. Turn it on in the options.",
 	"/lootoman toss: open the toss window",
 	"Right-click: delete",
+
+	-- Modules/Junk/SellQueue.lua
+	"the merchant's window closed",
+	"the game asks about an item you can still trade",
+	"an item moved in the bags",
+	"the merchant did not take an item",
+	"the server did not answer",
+	"Sold %d items for %s.",
+	"Only the last 12 sold items can be bought back.",
+	"Selling stopped: %s.",
+	"Nothing was sold this session.",
+	"%s ×%d: %s",
+	"This session: %d items for %s.",
+	"/lootoman sales: list what was sold this session",
 })
