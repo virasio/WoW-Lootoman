@@ -77,6 +77,7 @@ Modules\Junk\ItemGrid.lua
 Modules\Junk\TossButton.lua
 Modules\Junk\Toss.lua
 Modules\Junk\SellQueue.lua
+Modules\Junk\SellButton.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua

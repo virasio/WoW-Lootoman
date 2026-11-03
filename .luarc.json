@@ -33,6 +33,8 @@
     "MenuConstants",
     "MenuTemplates",
     "MenuVariants",
+    "MerchantFrame",
+    "MerchantSellAllJunkButton",
     "MinimalSliderWithSteppersMixin",
     "Settings",
     "SettingsPanel",

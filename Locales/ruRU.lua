@@ -247,4 +247,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["%s ×%d: %s"] = "%s ×%d: %s",
 	["This session: %d items for %s."] = "За этот сеанс: предметов — %d, на %s.",
 	["/lootoman sales: list what was sold this session"] = "/lootoman sales: список проданного за этот сеанс",
+
+	-- Modules/Junk/SellButton.lua
+	["Sell junk"] = "Продать хлам",
+	["Junk to sell: %d, for %s."] = "Хлама на продажу: %d, на %s.",
+	["No junk to sell."] = "Хлама на продажу нет.",
+	["Click: sell the junk and pick more to sell."] = "Щелчок: продать хлам и выбрать, что ещё продать.",
+	["Click: sell the junk."] = "Щелчок: продать хлам.",
+	["Shift-click: sell the junk."] = "Shift-щелчок: продать хлам.",
+	["Shift-click: sell the junk and pick more to sell."] = "Shift-щелчок: продать хлам и выбрать, что ещё продать.",
 })

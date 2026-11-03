@@ -252,4 +252,13 @@ ns.Locales.AddEnglish({
 	"%s ×%d: %s",
 	"This session: %d items for %s.",
 	"/lootoman sales: list what was sold this session",
+
+	-- Modules/Junk/SellButton.lua
+	"Sell junk",
+	"Junk to sell: %d, for %s.",
+	"No junk to sell.",
+	"Click: sell the junk and pick more to sell.",
+	"Click: sell the junk.",
+	"Shift-click: sell the junk.",
+	"Shift-click: sell the junk and pick more to sell.",
 })

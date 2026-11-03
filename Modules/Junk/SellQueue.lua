@@ -39,6 +39,8 @@ local REASONS = {
 }
 
 local state, reason = "idle", nil
+-- fn(state, reason) after every change of state.
+local watchers = {}
 local queue, current, sale, last
 -- Stacks sold to the merchant whose window is open, and whether the buyback
 -- warning was shown for this visit.
@@ -73,8 +75,10 @@ local function finish(newState, why)
 	if newState == "stopped" then
 		ns.Print(L["Selling stopped: %s."]:format(REASONS[why] or why))
 	end
-	if SellQueue.onChange then
-		SellQueue.onChange(state, reason)
+	for _, watch in ipairs(watchers) do
+		xpcall(function()
+			watch(state, reason)
+		end, Compat.ReportError)
 	end
 end
 
@@ -177,11 +181,18 @@ function SellQueue.Start(entries)
 	run = run + 1
 	sale = { count = 0, money = 0, items = {} }
 	state, reason = "selling", nil
-	if SellQueue.onChange then
-		SellQueue.onChange(state, reason)
+	for _, watch in ipairs(watchers) do
+		xpcall(function()
+			watch(state, reason)
+		end, Compat.ReportError)
 	end
 	step(run)
 	return true
+end
+
+-- Calls fn(state, reason) whenever the sale's state changes.
+function SellQueue.Watch(fn)
+	watchers[#watchers + 1] = fn
 end
 
 function SellQueue.State()

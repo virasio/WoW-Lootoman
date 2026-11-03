@@ -44,6 +44,9 @@ function methods:GetScript(name) return self.scripts[name] end
 function methods:ClearAllPoints() self.points = {} end
 function methods:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function methods:SetSize(width, height) self.width, self.height = width, height end
+function methods:SetAllPoints(target) self.allPoints = target or self.parent end
+function methods:SetDesaturated(desaturated) self.desaturated = desaturated end
+function methods:SetFrameLevel(level) self.level = level end
 function methods:SetWidth(width) self.width = width end
 function methods:SetHeight(height) self.height = height end
 function methods:EnableMouseWheel(enabled) self.wheel = enabled end
