@@ -83,6 +83,7 @@ Modules\Junk\SellWindow.lua
 Settings\Panel.lua
 Settings\Profiles.lua
 Settings\Share.lua
+Settings\JunkList.lua
 
 #@debug@
 Dev\LootDump.lua

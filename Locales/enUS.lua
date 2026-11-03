@@ -264,4 +264,16 @@ ns.Locales.AddEnglish({
 
 	-- Modules/Junk/SellWindow.lua
 	"Right-click: sell",
+
+	-- Settings/JunkList.lua
+	"Marked as junk",
+	"Not junk",
+	"Item %d",
+	"None",
+	"Remove",
+	"Junk list",
+	"Clear list",
+	"Remove every mark of this profile from the junk list?",
+	"Open the list",
+	"Every item you marked as junk or as not junk, to remove marks.",
 })

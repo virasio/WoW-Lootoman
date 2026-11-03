@@ -259,4 +259,16 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/Junk/SellWindow.lua
 	["Right-click: sell"] = "Правая кнопка: продать",
+
+	-- Settings/JunkList.lua
+	["Marked as junk"] = "Помечено как хлам",
+	["Not junk"] = "Не хлам",
+	["Item %d"] = "Предмет %d",
+	["None"] = "Нет",
+	["Remove"] = "Убрать",
+	["Junk list"] = "Список хлама",
+	["Clear list"] = "Очистить список",
+	["Remove every mark of this profile from the junk list?"] = "Убрать из списка хлама все пометки этого профиля?",
+	["Open the list"] = "Открыть список",
+	["Every item you marked as junk or as not junk, to remove marks."] = "Все предметы, помеченные как хлам или как не хлам, — чтобы снять пометки.",
 })
