@@ -218,4 +218,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Its bag is left out of junk selling."] = "Его сумка исключена из продажи хлама.",
 	["Drag it down to keep it."] = "Перетащите вниз, чтобы оставить.",
 	["Drag it up to mark it as junk."] = "Перетащите вверх, чтобы пометить как хлам.",
+
+	-- Modules/Junk/TossButton.lua
+	["Throw away junk"] = "Выбросить хлам",
+	["Opens your bags with the junk on top. Right-click an item to delete it."] = "Открывает сумки с хламом сверху. Щелчок правой кнопкой по предмету удаляет его.",
 })

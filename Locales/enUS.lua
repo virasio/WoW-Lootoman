@@ -223,4 +223,8 @@ ns.Locales.AddEnglish({
 	"Its bag is left out of junk selling.",
 	"Drag it down to keep it.",
 	"Drag it up to mark it as junk.",
+
+	-- Modules/Junk/TossButton.lua
+	"Throw away junk",
+	"Opens your bags with the junk on top. Right-click an item to delete it.",
 })

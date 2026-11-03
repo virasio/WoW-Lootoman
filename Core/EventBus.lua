@@ -31,7 +31,7 @@ Bus.MESSAGES = {
 	InventoryChanged = { payload = "", from = "Inventory, after the bags changed (BAG_UPDATE_DELAYED)" },
 	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
-		from = "AutoLoot", unheard = "nothing shows skipped loot yet" },
+		from = "AutoLoot" },
 }
 
 local messageListeners = {}

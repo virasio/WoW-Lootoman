@@ -11,13 +11,27 @@ local function noop() end
 
 local methods = {}
 
+-- A frame's OnShow or OnHide script and its hooks, as the client runs them.
+local function runScript(frame, name)
+	if frame.scripts[name] then
+		frame.scripts[name](frame)
+	end
+	for _, hook in ipairs(frame.hooks and frame.hooks[name] or {}) do
+		hook(frame)
+	end
+end
+
 -- A dropdown builds its menu when it is shown, as Blizzard's does
--- (DropdownSelectionTextMixin:OnShow calls GenerateMenu).
+-- (DropdownSelectionTextMixin:OnShow calls GenerateMenu). OnShow and OnHide run
+-- when the frame itself is shown or hidden (not when a parent is).
 function methods:SetShown(shown)
 	local was = self.shown
 	self.shown = shown and true or false
 	if self.dropdown and self.shown and not was then
 		self:GenerateMenu()
+	end
+	if self.shown ~= was then
+		runScript(self, self.shown and "OnShow" or "OnHide")
 	end
 end
 function methods:Show() self:SetShown(true) end
