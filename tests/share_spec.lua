@@ -123,6 +123,19 @@ describe("profile texts", function()
 		assert.equals(3, read.skipped)
 	end)
 
+	it("check every module's values against the settings it declares", function()
+		ns.Modules:Register({
+			name = "Bags",
+			defaults = { enabled = false, columns = 8, sort = "name" },
+			mainSettings = { { kind = "dropdown", key = "sort", choices = { { "name", "Name" }, { "price", "Price" } } } },
+			settings = function() return { { kind = "slider", key = "columns", min = 4, max = 16, step = 2 } } end,
+		})
+		local read = assert(Share.Read(text({ format = 1, sections = { ["module:Bags"] = { columns = 7, sort = "size" } } })))
+		assert.same({ {}, 2 }, { read.sections["module:Bags"], read.skipped })
+		read = assert(Share.Read(text({ format = 1, sections = { ["module:Bags"] = { columns = 12, sort = "price" } } })))
+		assert.same({ { columns = 12, sort = "price" }, 0 }, { read.sections["module:Bags"], read.skipped })
+	end)
+
 	it("leave out a layout from a newer version, and say so", function()
 		local read = assert(Share.Read(text({ format = 1, collections = { layouts = { Future = { schema = 99 }, Now = { base = "huge", extra = 1 } } } })))
 		assert.same({ { "Now" }, { "Future" } }, { read.collections.layouts.names, read.newer })

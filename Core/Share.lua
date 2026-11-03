@@ -21,8 +21,8 @@ local Bus, Compat, L, Modules, Profiles, Storage, Text = ns.Bus, ns.Compat, ns.L
 --
 -- Reading never trusts the text: it must be plain data (no deeper than
 -- MAX_DEPTH, no more than MAX_VALUES values); a module setting must be known,
--- of its default's type and, where the module checks it (module:Validate), a
--- value its controls can set; other parts and items go through their owner's
+-- of its default's type and a value its controls can set (module:Validate,
+-- from its declared settings); other parts and items go through their owner's
 -- clean function. What does not pass is left out and counted.
 local Share = {
 	PREFIX = "LTM",
@@ -225,8 +225,7 @@ local function cleanModule(module, data, result)
 		if type(key) == "string" and not owns[key] then
 			default = defaults[key]
 		end
-		if default ~= nil and type(value) == type(default)
-			and (not module.Validate or module:Validate(key, value)) then
+		if default ~= nil and type(value) == type(default) and module:Validate(key, value) then
 			values[key] = value
 		else
 			result.skipped = result.skipped + 1

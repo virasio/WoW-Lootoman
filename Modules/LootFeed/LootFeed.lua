@@ -1,40 +1,6 @@
 local _, ns = ...
-local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
+local Compat, L = ns.Compat, ns.L
 local Feed = ns.Feed
-
--- The loot feed: what you pick up shows next to the screen
--- centre and fades out. Sources reads the game's events, Model keeps the rows,
--- Frames draws them; this module connects them to the settings, the options
--- page and Edit Mode, where the feed is placed and where the same settings
--- appear in its dialog. Settings apply at once.
-local LootFeed = ns.Modules:Register({
-	name = "LootFeed",
-	title = L["Loot feed"],
-	switchLabel = L["Enable loot feed"],
-	description = L["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."],
-	defaults = {
-		enabled = true,
-		items = true,
-		currencies = true,
-		money = true,
-		reputation = true,
-		xp = false,
-		minQuality = 0,
-		maxRows = 8,
-		direction = "up",
-		duration = 6,
-		fade = 1,
-		size = 13,
-		backgroundOpacity = 50,
-		owned = true,
-		glow = true,
-		-- The named layout of the rows (Layouts.lua).
-		layout = "Default",
-	},
-})
-
--- Right of the screen centre.
-LootFeed.DEFAULT_POSITION = { point = "CENTER", x = 300, y = 0 }
 
 -- Item quality names come from the client, from Poor to Legendary.
 local function qualityChoices()
@@ -76,25 +42,40 @@ local function settings()
 	}
 end
 
--- Whether a value is one the controls can set; profile texts are read with it
--- (Share). The value already has the default's type. A slider value must also
--- lie on its step: 1.5 rows would break the feed.
-function LootFeed:Validate(key, value)
-	for _, setting in ipairs(settings()) do
-		if setting.key == key and setting.kind == "slider" then
-			return value >= setting.min and value <= setting.max
-				and Storage.OnStep(value, setting.min, setting.max, setting.step) == value
-		elseif setting.key == key and setting.kind == "dropdown" then
-			for _, choice in ipairs(setting.choices) do
-				if choice[1] == value then
-					return true
-				end
-			end
-			return false
-		end
-	end
-	return true
-end
+-- The loot feed: what you pick up shows next to the screen
+-- centre and fades out. Sources reads the game's events, Model keeps the rows,
+-- Frames draws them; this module connects them to the settings, the options
+-- page and Edit Mode, where the feed is placed and where the same settings
+-- appear in its dialog. Settings apply at once.
+local LootFeed = ns.Modules:Register({
+	name = "LootFeed",
+	title = L["Loot feed"],
+	switchLabel = L["Enable loot feed"],
+	description = L["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."],
+	defaults = {
+		enabled = true,
+		items = true,
+		currencies = true,
+		money = true,
+		reputation = true,
+		xp = false,
+		minQuality = 0,
+		maxRows = 8,
+		direction = "up",
+		duration = 6,
+		fade = 1,
+		size = 13,
+		backgroundOpacity = 50,
+		owned = true,
+		glow = true,
+		-- The named layout of the rows (Layouts.lua).
+		layout = "Default",
+	},
+	settings = settings,
+})
+
+-- Right of the screen centre.
+LootFeed.DEFAULT_POSITION = { point = "CENTER", x = 300, y = 0 }
 
 -- In profile texts (Share): the feed's position and the layout it uses under
 -- its settings, and the player's layouts.
@@ -177,7 +158,7 @@ function LootFeed:OnEnable()
 		self.feed = Feed.Frames.Create(self.model)
 		ns.EditMode.Register(self, self.feed.frame, {
 			default = self.DEFAULT_POSITION,
-			settings = settings(),
+			settings = self:Settings(),
 			onEditMode = function(active)
 				self.feed:SetPreview(active)
 			end,
@@ -219,7 +200,7 @@ end
 
 function LootFeed:BuildSettings(category, layout)
 	local Panel = ns.SettingsPanel
-	Panel.AddSettings(category, layout, self.name, settings())
+	Panel.AddSettings(category, layout, self.name, self:Settings())
 	Panel.AddButton(layout, L["Row design"], L["Open the designer"], function()
 		self.Designer.Open()
 	end, L["Change how the feed's rows look: move and resize their parts."])
