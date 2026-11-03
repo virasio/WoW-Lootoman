@@ -256,4 +256,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Click: sell the junk."] = "Щелчок: продать хлам.",
 	["Shift-click: sell the junk."] = "Shift-щелчок: продать хлам.",
 	["Shift-click: sell the junk and pick more to sell."] = "Shift-щелчок: продать хлам и выбрать, что ещё продать.",
+
+	-- Modules/Junk/SellWindow.lua
+	["Right-click: sell"] = "Правая кнопка: продать",
 })

@@ -261,4 +261,7 @@ ns.Locales.AddEnglish({
 	"Click: sell the junk.",
 	"Shift-click: sell the junk.",
 	"Shift-click: sell the junk and pick more to sell.",
+
+	-- Modules/Junk/SellWindow.lua
+	"Right-click: sell",
 })
