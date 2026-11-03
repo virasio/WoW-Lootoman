@@ -129,4 +129,12 @@ describe("toss button", function()
 		assert.is_nil(button())
 		assert.same({}, ns.Compat.Test.state.errors)
 	end)
+
+	it("sits at the top right of a loot window without a close button", function()
+		-- false, not nil: the UI fake answers an unset method name with a function.
+		LootFrame.ClosePanelButton = false
+		start()
+		assert.same({ { "TOPRIGHT", LootFrame, "TOPRIGHT", -24, -2 } }, button().points)
+		assert.same({}, ns.Compat.Test.state.errors)
+	end)
 end)

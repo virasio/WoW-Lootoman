@@ -73,6 +73,14 @@ describe("toss window", function()
 		assert.is_false(frame:IsShown())
 	end)
 
+	it("opens in the middle of the screen while fast autoloot keeps the loot window hidden", function()
+		LootFrame:Show()
+		LootFrame.parent = UI.NewFake(Loader.ui.UIParent)
+		LootFrame.parent:Hide()
+		Toss.Open()
+		assert.same({ { "CENTER" } }, Toss.Grid().frame.points)
+	end)
+
 	it("opens on the left of the loot window when there is no room on the right", function()
 		LootFrame.GetRight = function() return 1800 end
 		Loader.ui.UIParent.GetRight = function() return 1920 end

@@ -175,7 +175,8 @@ function Toss.Open()
 	if not active or not grid then
 		return
 	end
-	fromLoot = LootFrame ~= nil and LootFrame:IsShown()
+	-- Visible, not only shown: fast autoloot keeps a shown window in a hidden holder.
+	fromLoot = LootFrame ~= nil and LootFrame:IsVisible()
 	place(fromLoot)
 	grid:Open()
 end

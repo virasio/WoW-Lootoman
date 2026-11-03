@@ -47,7 +47,12 @@ local function place()
 	button.slot:SetShown(large)
 	if not large then
 		button:SetSize(TossButton.SMALL, TossButton.SMALL)
-		button:SetPoint("RIGHT", LootFrame.ClosePanelButton, "LEFT", -2, 0)
+		local close = LootFrame.ClosePanelButton
+		if close then
+			button:SetPoint("RIGHT", close, "LEFT", -2, 0)
+		else
+			button:SetPoint("TOPRIGHT", LootFrame, "TOPRIGHT", -24, -2)
+		end
 		return
 	end
 	local size, offset, gap = Junk:Get("tossSize"), Junk:Get("tossOffset"), TossButton.GAP
@@ -79,7 +84,7 @@ end
 
 local function create()
 	button = CreateFrame("Button", nil, LootFrame)
-	button:SetFrameLevel(LootFrame.ClosePanelButton:GetFrameLevel())
+	button:SetFrameLevel((LootFrame.ClosePanelButton or LootFrame):GetFrameLevel() + (LootFrame.ClosePanelButton and 0 or 5))
 	-- The large button looks like the merchant's sell-junk button: an empty slot
 	-- around the icon.
 	button.slot = button:CreateTexture(nil, "BACKGROUND")
