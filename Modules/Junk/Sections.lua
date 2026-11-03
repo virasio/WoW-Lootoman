@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, Inventory, Prices, Text = ns.Compat, ns.Inventory, ns.Prices, ns.Text
+local Compat, Inventory, Marks, Prices, SelfTest, Text = ns.Compat, ns.Inventory, ns.Marks, ns.Prices, ns.SelfTest, ns.Text
 local JunkRule = ns.Rules.Junk
 
 -- The two sections of the toss and sell windows, from the bags as they are:
@@ -73,3 +73,18 @@ function Sections.SaleList()
 	end
 	return list
 end
+
+-- For bug reports: the junk in the bags and the profile's marks.
+SelfTest.AddReport(function()
+	local sale, value = Sections.SaleList(), 0
+	for _, entry in ipairs(sale) do
+		value = value + entry.price
+	end
+	local kept = #Sections.Build("sell").junk.entries - #sale
+	local marks = { junk = 0, notJunk = 0 }
+	for _, mark in ipairs(Marks.List()) do
+		marks[mark.mark] = marks[mark.mark] + 1
+	end
+	return ("Junk: %d stacks to sell for %d copper (%d in bags kept from junk selling); marks: %d junk, %d not junk"):format(
+		#sale, value, kept, marks.junk, marks.notJunk)
+end)

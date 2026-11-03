@@ -20,6 +20,18 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 - **Row designer** (`/lootoman design`, or the buttons on the loot feed's options page and in its Edit Mode dialog): click a part of the sample rows — icon, name, amount or owned count — to choose it, and drag it to move it. For each part, choose whether it is shown, what it is anchored to and at which point, its offsets, the icon's size as a share of the row's height, and a text's size, maximum width and alignment; for the rows, their height, width and gap. The feed follows every change at once.
 - **Row layouts** have names and are shared by every profile; each profile uses one of them. New layouts start from the Large, Compact or Minimal template, and layouts can be copied, renamed, reset to their template and deleted. The layout Default always exists.
 
+### Junk
+
+- Junk is every gray item and every item you marked as junk, but not a gray item you marked "not junk" (to keep it for transmog, say).
+- **Toss button** on the loot window: always, only when your bags are full (something of the loot did not fit, or no general bag has a free slot), or never. Small, on the window's title bar next to its close button; or large, outside the window, with its size, side and offset. It follows the loot window wherever Edit Mode puts it.
+- **Toss window**: your bags like a bag window, in two sections: the junk on top, everything else below, each cheapest first, with each stack's price under it and each section's total. The price is what deleting loses: the better of the merchant's price and Auctionator's auction price after the auction house's cut. Quest items and items in equipment sets are never listed. It opens next to the loot window from the toss button, or anywhere with `/lootoman toss`.
+- **Marking by dragging**: drag an item into the junk section to mark it as junk, or out of it to take the mark away; a gray item dragged out is marked "not junk".
+- **Deleting**: right-click an item to delete its stack. A gray stack goes at once; anything else asks first, and rare and better items ask for the game's confirmation word, as the game does. One click deletes one stack, and nothing is deleted while the cursor holds something or when the item has moved.
+- **Sell-junk button** at merchants, with the look and place of the game's own: a click sells the junk; Shift-click sells it and opens the sell window to pick more (an option swaps the two). With *Sell junk at merchants* on, the junk is sold as soon as a merchant's window opens. Bags you set to "ignore for junk selling" in the game keep their junk.
+- **Sell window**, next to the merchant, laid out like the toss window with the merchant's prices: *Sell junk* sells the upper section, and a right click sells one stack. Refundable items and items no merchant buys are not listed. Selling goes one stack at a time and stops when the merchant's window closes. A chat line sums up each sale and warns when more was sold than the merchant can buy back (12 stacks); `/lootoman sales` lists this session's sales.
+- **Junk list** in the options: every item marked as junk or as not junk, with a Remove button for each and *Clear list*. Marks belong to the profile.
+- Auction prices come from [Auctionator](https://www.curseforge.com/wow/addons/auctionator) when it is installed; without it, the merchant's price.
+
 ### Options and profiles
 
 - One options page in the game's AddOns settings: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share), with a Reset button beside it; then a switch for each feature, with its main options under it and a button that opens its own page.
@@ -35,6 +47,8 @@ English and Russian.
 
 - `/lootoman` or `/ltm`: open the options.
 - `/lootoman design`: open the loot feed's row designer.
+- `/lootoman toss`: open the toss window.
+- `/lootoman sales`: list what was sold this session.
 - `/lootoman debug on` or `off`: turn debug messages on or off for all characters.
 - `/lootoman selftest`: check the addon against the game client. Its output helps with bug reports.
 

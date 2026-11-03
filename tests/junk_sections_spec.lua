@@ -103,4 +103,16 @@ describe("junk sections", function()
 		assert.same({ "0:2", "0:1", "0:8" }, list)
 		assert.is_true(Sections.Build("sell").junk.entries[2].kept)
 	end)
+
+	it("are summed up in the self-test", function()
+		ns.Marks.Set(3, "junk")
+		ns.Marks.Set(8, "notJunk")
+		Test.state.printed = {}
+		ns.SelfTest.Run()
+		local found
+		for _, line in ipairs(Test.state.printed) do
+			found = found or line:match("Junk: .*")
+		end
+		assert.equals("Junk: 3 stacks to sell for 284 copper (1 in bags kept from junk selling); marks: 1 junk, 1 not junk", found)
+	end)
 end)

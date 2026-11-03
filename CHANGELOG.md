@@ -1,5 +1,14 @@
 # Lootoman changelog
 
+## 0.2
+
+Getting rid of junk.
+
+- **Toss button and window**: a button on the loot window, shown when your bags are full (or always, or never), opens your bags with the junk on top and everything else below, cheapest first. Right-click an item to delete it; anything above gray asks first. Also `/lootoman toss`.
+- **Junk marks**: drag an item into the junk section to mark it as junk, or out of it to keep it; a gray item dragged out is kept from then on. The options list every mark, to remove some or all.
+- **Selling junk**: Lootoman's sell-junk button takes the place of the game's. A click sells the junk, Shift-click also opens a sell window to pick more, and the junk can be sold as soon as a merchant opens. Each sale is summed up in chat; `/lootoman sales` lists the session.
+- **Auctionator prices**: with Auctionator installed, the toss window weighs items by their auction price too.
+
 ## 0.1-alpha
 
 The first release. It is an alpha: features and options may still change.

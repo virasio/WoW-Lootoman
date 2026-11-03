@@ -53,6 +53,30 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Bad texts.** Import random text, a cut text and an empty field. *Expected:* a message, nothing imported.
 - [ ] **Closing the options and Escape.** Open the row designer and the Share and Import windows, and close each with Escape; then close the options with the *Close* button, with the X and with Escape, after visiting Lootoman's pages, using *Configure*, the profile menu, the search box and the Keybindings page; then press Escape in the world, also while casting. *Expected:* each window closes on Escape, the game menu opens as usual, and there is no `ADDON_ACTION_FORBIDDEN` (`SpellStopCasting`); if it comes back, keep the taint log.
 
+## Junk (0.2)
+
+Some gray items and some items above gray in the bags; Auctionator installed for the checks that name it.
+
+- [ ] **Self-test.** `/lootoman selftest`. *Expected:* an `Auctionator:` line (`working` with it enabled, `not installed` without it), a `Junk:` line with the junk to sell and the marks, and `Last sale: none this session` before any sale.
+- [ ] **Toss button, when the bags are full.** Default options. Loot with free general slots: no button. Fill the general bags (a free slot in a herb bag does not count) and loot: the button on the loot window's title bar, left of the close button, not over the title. With fast autoloot on, also when an item of the loot did not fit.
+- [ ] **Toss button, always and never.** *Show the toss button: Always*, then *Never*. *Expected:* with every loot window, then with none.
+- [ ] **Large button.** *Button style: Large*; change the size, each side and the offset. *Expected:* a square button with an empty-slot border outside the window, moving at once; it follows the loot window after moving the window in Edit Mode. In Edit Mode it shows where it will be and does nothing.
+- [ ] **Toss window.** Click the button. *Expected:* the window to the right of the loot window (to its left near the right screen edge); junk on top, the rest below, each cheapest first, each stack's price under it and each section's total; each section scrolls on its own. It closes with the loot, with its X and with Escape. `/lootoman toss` opens it in the middle of the screen, also without loot.
+- [ ] **Prices.** With and without Auctionator. *Expected:* without it, merchant prices; with it, an item with an auction price is weighed by it after the 5 % cut, and its tooltip shows *Auction price*.
+- [ ] **Tooltips.** Point at items. *Expected:* the game's own tooltip for the bag item (with the comparison while Shift is held, or always with *Always compare items*), then what the clicks and the drag do.
+- [ ] **Marking by dragging.** Drag an item from below into the junk section: it moves up. Drag it back: it moves down. Drag a gray item down: it stays below, also after `/reload`. Drag an item and let it go outside both sections: nothing changes. *Expected:* nothing goes onto the game's cursor during a drag.
+- [ ] **Deleting.** Right-click a gray stack: it is gone, with a chat line. Right-click a white or green item: a question, *Cancel* keeps it, *Delete* deletes it. Right-click a rare or epic item: the question asks for the game's word (DELETE, or the client's own word) and *Delete* stays off until it is typed; Enter in the field deletes. Pick up an item from the bags and right-click in the window while holding it: nothing is deleted, a chat line says why.
+- [ ] **Never listed.** A quest item and an item of an equipment set. *Expected:* in neither window.
+- [ ] **Junk list.** Options → Lootoman → Junk → Junk list (and its button on the Junk page). *Expected:* the marked items under *Marked as junk* and the kept gray ones under *Not junk*, by name; *Remove* takes one away (it moves in the toss window at once); *Clear list* asks, then empties both. Another profile has its own list.
+- [ ] **Sell-junk button.** Open a merchant with *Sell junk at merchants* off. *Expected:* Lootoman's button in the place of the game's, with the same look, grey without junk; its tooltip lists the junk's count and value. A click sells the junk without a question, one stack at a time; Shift-click sells and opens the sell window. With *Swap click and Shift-click*, the other way round. With a guild repair button, both buttons move together; on the buyback tab it hides.
+- [ ] **Selling on opening.** *Sell junk at merchants* on. *Expected:* the junk is sold as the window opens, with a chat line «Sold … items for …».
+- [ ] **Ignore for junk selling.** Tick the game's *Ignore for junk selling* on a bag (its bag menu) with junk in it. *Expected:* that junk stays, by the button, on opening and with the sell window's *Sell junk* (it shows darker there); a right click still sells it.
+- [ ] **Sell window.** *Expected:* to the right of the merchant's window, closing with it; refundable items and items without a sell price are not listed; *Sell junk* sells only the upper section; a right click sells one stack; more than 12 stacks of junk show the buyback warning, and selling them warns in chat.
+- [ ] **Stopping.** Close the merchant's window in the middle of a sale. *Expected:* selling stops with a chat line, and no item is used, equipped or opened afterwards. Sell an item you can still trade to your group: the game's question shows and selling stops.
+- [ ] **Sales log.** `/lootoman sales`. *Expected:* every stack sold this session with its price and the total; the same after `/reload`; empty after logging out and in.
+- [ ] **Turning the module off.** Untick *Enable junk tossing and selling*. *Expected:* no toss button, the game's own sell-junk button works again, nothing is sold at merchants; `/lootoman toss` says it is off.
+- [ ] **Taint.** After the rounds above, `/reload` and look at `Logs/taint.log`. *Expected:* no lines blaming Lootoman for the loot window, the merchant frame or the game menu.
+
 ## Russian client (0.1)
 
 - [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian.

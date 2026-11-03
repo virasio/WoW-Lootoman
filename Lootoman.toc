@@ -1,7 +1,7 @@
 ## Interface: 120105
 ## Title: Lootoman
-## Notes: Fast autoloot that picks up everything at once, and a loot feed you can design.
-## Notes-ruRU: Быстрый автолут, который подбирает всё сразу, и лента лута с настраиваемым видом.
+## Notes: Fast autoloot, a loot feed you can design, and junk thrown away or sold in a click.
+## Notes-ruRU: Быстрый автолут, лента лута с настраиваемым видом и хлам, который выбрасывается или продаётся в один щелчок.
 ## Author: Victor Surikov
 ## Version: @project-version@
 ## Category: Loot
