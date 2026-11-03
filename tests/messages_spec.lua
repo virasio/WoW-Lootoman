@@ -7,9 +7,14 @@ local Loader = require("tests.helpers.loader")
 -- the tests, which send messages of their own.
 local SKIP = { [".git"] = true, Libs = true, tests = true, [".luals"] = true, [".lua"] = true, [".luarocks"] = true, [".release"] = true }
 
--- Where a message name may come from a variable: the bus itself, and the
--- module mixin that hands its listeners to the bus.
-local FORWARDERS = { ["Core/EventBus.lua"] = true, ["Core/Modules.lua"] = true }
+-- Where a message name may come from a variable: the bus itself, the module
+-- mixin that hands its listeners to the bus, and modules that hand their parts'
+-- listeners on (Module.Listen).
+local FORWARDERS = { ["Core/EventBus.lua"] = true, ["Core/Modules.lua"] = true, ["Modules/Junk/Junk.lua"] = true }
+
+-- Calls that send or listen to a message.
+local SENDS = { Send = true }
+local LISTENS = { On = true, Off = true, Listen = true }
 
 local function files(dir, found)
 	found = found or {}
@@ -27,7 +32,8 @@ local function files(dir, found)
 end
 
 -- Each use as { name, where }: sends (Bus:Send), listens (Bus:On, a module's
--- self:On, Bus:Off) and calls whose name is not a string literal.
+-- self:On, Bus:Off, a module part's Module.Listen) and calls whose name is not
+-- a string literal.
 local function uses()
 	local found = { sends = {}, listens = {}, dynamic = {} }
 	for _, path in ipairs(files(".")) do
@@ -38,13 +44,13 @@ local function uses()
 			if not line:match("^%s*function") and not line:match("^%s*%-%-") then
 				-- The name is the first argument; the call's other arguments may go on
 				-- over the next lines.
-				for call, quote, name in line:gmatch('[%w_]+:(%u%a+)%(%s*("?)([%w_]*)') do
-					if call == "Send" or call == "On" or call == "Off" then
+				for call, quote, name in line:gmatch('[%w_]+[:.](%u%a+)%(%s*("?)([%w_]*)') do
+					if SENDS[call] or LISTENS[call] then
 						if quote == "" or name == "" then
 							if not FORWARDERS[path] then
 								found.dynamic[#found.dynamic + 1] = where
 							end
-						elseif call == "Send" then
+						elseif SENDS[call] then
 							found.sends[#found.sends + 1] = { name, where }
 						else
 							found.listens[#found.listens + 1] = { name, where }

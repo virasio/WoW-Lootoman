@@ -71,6 +71,9 @@ Modules\LootFeed\Frames.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\Designer.lua
 
+Modules\Junk\Junk.lua
+Modules\Junk\Sections.lua
+
 Settings\Panel.lua
 Settings\Profiles.lua
 Settings\Share.lua
