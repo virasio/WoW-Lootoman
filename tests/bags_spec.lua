@@ -140,13 +140,23 @@ describe("Bags provider", function()
 	end)
 
 	it("reads the bags on first use and again after they change", function()
-		assert.same({}, ns.Bus:GetEvents("Bags"))
+		assert.same({}, ns.Bus:GetEvents(ns.Inventory))
 		Test.SetBags({ [0] = { size = 16, items = filled(15) } })
 		assert.is_true(fits(6948))
-		assert.same({ "BAG_UPDATE_DELAYED" }, ns.Bus:GetEvents("Bags"))
+		assert.same({ "BAG_UPDATE_DELAYED" }, ns.Bus:GetEvents(ns.Inventory))
 		Test.SetBags({ [0] = { size = 16, items = filled(16) } })
 		assert.is_true(fits(6948))
 		Test.FireEvent("BAG_UPDATE_DELAYED")
 		assert.is_false(fits(6948))
+	end)
+
+	it("counts the free slots of the backpack and the general bags only", function()
+		Test.SetBags({
+			[0] = { size = 16, items = filled(14) },
+			[1] = { size = 20, items = filled(17) },
+			[2] = { size = 10, family = HERBS },
+			[5] = { size = 30 },
+		})
+		assert.equals(5, Bags.FreeGeneralSlots())
 	end)
 end)

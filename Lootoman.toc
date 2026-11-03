@@ -48,6 +48,7 @@ Core\Slash.lua
 Core\SelfTest.lua
 Core\Startup.lua
 
+Providers\Inventory.lua
 Providers\Bags.lua
 
 Modules\Shared\EditMode.lua

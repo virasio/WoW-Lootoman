@@ -196,13 +196,90 @@ function Compat.GetBagSize(bag)
 	return C_Container.GetContainerNumSlots(bag)
 end
 
--- The item in a bag slot as { itemID, count, link }, or nil for an empty slot.
+-- The item in a bag slot as { itemID, count, link, name, quality, icon, bound,
+-- noValue, locked }, or nil for an empty slot. quality can be nil; noValue: no
+-- merchant buys it; locked: it is moving, or being sold.
 function Compat.GetBagItem(bag, slot)
 	local info = C_Container.GetContainerItemInfo(bag, slot)
 	if not info then
 		return nil
 	end
-	return { itemID = info.itemID, count = info.stackCount, link = info.hyperlink }
+	return {
+		itemID = info.itemID,
+		count = info.stackCount,
+		link = info.hyperlink,
+		name = info.itemName,
+		quality = info.quality,
+		icon = info.iconFileID,
+		bound = info.isBound == true,
+		noValue = info.hasNoValue == true,
+		locked = info.isLocked == true,
+	}
+end
+
+-- What keeps the item in a bag slot from being tossed or sold, and who it is:
+-- { quest, equipmentSet, refundable, guid }. A quest item also covers an item
+-- that starts a quest; refundable: it can still be returned to its merchant.
+-- guid tells this item from another one that moved into the slot; nil for an
+-- empty slot.
+function Compat.GetBagItemFacts(bag, slot)
+	local quest = C_Container.GetContainerItemQuestInfo(bag, slot)
+	local inSet = C_Container.GetContainerItemEquipmentSetInfo(bag, slot)
+	local purchase = C_Container.GetContainerItemPurchaseInfo(bag, slot, false)
+	local location = ItemLocation:CreateFromBagAndSlot(bag, slot)
+	return {
+		quest = quest ~= nil and (quest.isQuestItem == true or quest.questID ~= nil),
+		equipmentSet = inSet == true,
+		refundable = purchase ~= nil and (purchase.refundSeconds or 0) > 0,
+		guid = C_Item.DoesItemExist(location) and C_Item.GetItemGUID(location) or nil,
+	}
+end
+
+-- Whether the player told the game to leave a bag out of junk selling (the
+-- bag's menu); Blizzard's bag menu reads the backpack's flag apart. False on a
+-- client without the flag.
+function Compat.IsBagKeptFromJunkSale(bag)
+	if bag == Enum.BagIndex.Backpack then
+		return Compat.Has("C_Container.GetBackpackSellJunkDisabled") and C_Container.GetBackpackSellJunkDisabled() == true
+	end
+	local flag = Enum.BagSlotFlags and Enum.BagSlotFlags.ExcludeJunkSell
+	return flag ~= nil and Compat.Has("C_Container.GetBagSlotFlag") and C_Container.GetBagSlotFlag(bag, flag) == true
+end
+
+-- Uses the item in a bag slot as a right-click does: at an open merchant, that
+-- sells it; anywhere else it uses the item (equips it, opens it), so callers
+-- check for the merchant right before.
+function Compat.UseBagItem(bag, slot)
+	C_Container.UseContainerItem(bag, slot)
+end
+
+-- The cursor. Deleting is a pick up and a delete in the same click (one item
+-- per hardware event; DeleteCursorItem deletes whatever the cursor holds,
+-- without asking).
+function Compat.IsCursorEmpty()
+	return GetCursorInfo() == nil
+end
+
+function Compat.PickupBagItem(bag, slot)
+	C_Container.PickupContainerItem(bag, slot)
+end
+
+-- The bag and slot of the item on the cursor, or nil when it holds no item from
+-- the bags.
+function Compat.GetCursorBagSlot()
+	local location = C_Cursor.GetCursorItem()
+	if location and location:IsBagAndSlot() then
+		return location:GetBagAndSlot()
+	end
+	return nil
+end
+
+function Compat.ClearCursor()
+	ClearCursor()
+end
+
+function Compat.DeleteCursorItem()
+	DeleteCursorItem()
 end
 
 -- The bag families an item fits (a bit field), 0 for general bags only.
@@ -210,14 +287,22 @@ function Compat.GetItemFamily(item)
 	return C_Item.GetItemFamily(item) or 0
 end
 
--- Item data by ID, link or name: name, link, quality, stackSize,
--- isCraftingReagent. Nil while the client has not loaded the item yet.
+-- Item data by ID, link or name: name, link, quality, stackSize, sellPrice (a
+-- merchant's price for one, in copper), isCraftingReagent. Nil while the
+-- client has not loaded the item yet.
 function Compat.GetItemInfo(item)
-	local name, link, quality, _, _, _, _, stackSize, _, _, _, _, _, _, _, _, isCraftingReagent = C_Item.GetItemInfo(item)
+	local name, link, quality, _, _, _, _, stackSize, _, _, sellPrice, _, _, _, _, _, isCraftingReagent = C_Item.GetItemInfo(item)
 	if not name then
 		return nil
 	end
-	return { name = name, link = link, quality = quality, stackSize = stackSize, isCraftingReagent = isCraftingReagent }
+	return {
+		name = name,
+		link = link,
+		quality = quality,
+		stackSize = stackSize,
+		sellPrice = sellPrice,
+		isCraftingReagent = isCraftingReagent,
+	}
 end
 
 -- How many of an item the character has in bags, bank and reagent bank.

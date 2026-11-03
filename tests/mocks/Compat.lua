@@ -28,9 +28,10 @@ local state = {
 	loot = { slots = {}, count = 0, fishing = false },
 	-- LootSlot and ConfirmLootSlot calls, in order: { "loot", 2 }, { "confirm", 2 }.
 	lootActions = {},
-	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link } } };
+	-- Bags by ID: { size, family, items = { [slot] = { itemID, count, link, name,
+	-- quality, icon, bound, noValue, locked } } };
 	-- a bag that is not listed is not equipped. Items the client has loaded, by
-	-- ID: { name, link, quality, stackSize, family, isCraftingReagent, owned }.
+	-- ID: { name, link, quality, stackSize, sellPrice, family, isCraftingReagent, owned }.
 	-- Feed sources: global strings (chat formats), money in copper, experience
 	-- and its level maximum, currencies by ID ({ name, icon, quality, quantity, discovered }).
 	globalStrings = {},
@@ -49,6 +50,10 @@ local state = {
 	-- tables encoded so far, a text "ENC<n>" for the n-th.
 	encoder = true,
 	encoded = {},
+	-- The cursor: nil, or { bag, slot } of the item it holds.
+	cursor = nil,
+	-- Bag item uses, pick ups, deletes and cursor clears, in order.
+	bagActions = {},
 }
 
 function Compat.Has(path)
@@ -180,7 +185,80 @@ end
 
 function Compat.GetBagItem(bag, slot)
 	local info = state.bags[bag]
-	return copy(info and info.items and info.items[slot])
+	local item = copy(info and info.items and info.items[slot])
+	if item then
+		item.bound, item.noValue, item.locked = item.bound == true, item.noValue == true, item.locked == true
+	end
+	return item
+end
+
+-- Bags: { protections = { [slot] = { quest = true } } }; an item's guid is
+-- its own guid field, or "<bag>:<slot>:<itemID>".
+function Compat.GetBagItemFacts(bag, slot)
+	local info = state.bags[bag]
+	local item = info and info.items and info.items[slot]
+	local facts = copy(info and info.protections and info.protections[slot]) or {}
+	return {
+		quest = facts.quest == true,
+		equipmentSet = facts.equipmentSet == true,
+		refundable = facts.refundable == true,
+		guid = item and (item.guid or ("%d:%d:%d"):format(bag, slot, item.itemID)) or nil,
+	}
+end
+
+-- Bags: { keptFromJunkSale = true }.
+function Compat.IsBagKeptFromJunkSale(bag)
+	local info = state.bags[bag]
+	return info ~= nil and info.keptFromJunkSale == true
+end
+
+-- Each use is recorded as { "use", bag, slot } in state.bagActions; at an open
+-- merchant the item is sold (it locks, as the server answers later: Test.FinishSale),
+-- elsewhere it stays.
+function Compat.UseBagItem(bag, slot)
+	state.bagActions[#state.bagActions + 1] = { "use", bag, slot, merchant = state.interacting.Merchant == true }
+	local item = state.bags[bag] and state.bags[bag].items and state.bags[bag].items[slot]
+	if item and state.interacting.Merchant then
+		item.locked = true
+	end
+end
+
+function Compat.IsCursorEmpty()
+	return state.cursor == nil
+end
+
+-- The cursor holds { bag, slot } after a pick up; picking up with an item on
+-- the cursor swaps them, as in the client.
+function Compat.PickupBagItem(bag, slot)
+	state.bagActions[#state.bagActions + 1] = { "pickup", bag, slot }
+	local item = state.bags[bag] and state.bags[bag].items and state.bags[bag].items[slot]
+	if state.cursor then
+		state.cursor = item and { bag = bag, slot = slot, swapped = true } or nil
+	elseif item and not item.locked then
+		state.cursor = { bag = bag, slot = slot }
+	end
+end
+
+function Compat.GetCursorBagSlot()
+	if state.cursor and not state.cursor.swapped then
+		return state.cursor.bag, state.cursor.slot
+	end
+	return nil
+end
+
+function Compat.ClearCursor()
+	state.bagActions[#state.bagActions + 1] = { "clear" }
+	state.cursor = nil
+end
+
+-- Removes the item the cursor holds from its slot.
+function Compat.DeleteCursorItem()
+	state.bagActions[#state.bagActions + 1] = { "delete" }
+	local cursor = state.cursor
+	if cursor and state.bags[cursor.bag] and state.bags[cursor.bag].items then
+		state.bags[cursor.bag].items[cursor.slot] = nil
+	end
+	state.cursor = nil
 end
 
 function Compat.GetItemFamily(item)
@@ -198,6 +276,7 @@ function Compat.GetItemInfo(item)
 		link = info.link,
 		quality = info.quality,
 		stackSize = info.stackSize,
+		sellPrice = info.sellPrice,
 		isCraftingReagent = info.isCraftingReagent,
 	}
 end
@@ -338,6 +417,30 @@ end
 -- BAG_UPDATE_DELAYED afterwards when the bags change while the addon runs.
 function Test.SetBags(bags)
 	state.bags = bags
+end
+
+-- What the server does after a sale (UseBagItem at a merchant): the slot
+-- empties, the money arrives and the bags update.
+function Test.FinishSale(bag, slot)
+	local items = state.bags[bag].items
+	local item = items[slot]
+	items[slot] = nil
+	local info = item and findItem(item.itemID)
+	state.money = state.money + (info and info.sellPrice or 0) * (item and item.count or 0)
+	Test.FireEvent("PLAYER_MONEY")
+	Test.FireEvent("BAG_UPDATE_DELAYED")
+end
+
+-- Opens or closes a window with an NPC, firing the events the client fires:
+-- SetInteracting("Merchant", true) fires MERCHANT_SHOW.
+local INTERACTION_EVENTS = { Merchant = { "MERCHANT_SHOW", "MERCHANT_CLOSED" } }
+
+function Test.SetInteracting(kind, open)
+	state.interacting[kind] = open or nil
+	local events = INTERACTION_EVENTS[kind]
+	if events then
+		Test.FireEvent(open and events[1] or events[2])
+	end
 end
 
 -- SetItems({ [2589] = { name = "Linen Cloth", stackSize = 200, isCraftingReagent = true } }).

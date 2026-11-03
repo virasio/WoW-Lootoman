@@ -27,6 +27,7 @@ Bus.MESSAGES = {
 	OpenShareDialog = { payload = "mode: \"profile\", or a collection's name to share only its items", from = "the row designer" },
 	OpenImportDialog = { payload = "mode: \"profile\", or a collection's name to import only its items", from = "the row designer" },
 	FeedLayoutChanged = { payload = "name: the layout that changed", from = "Layouts" },
+	InventoryChanged = { payload = "", from = "Inventory, after the bags changed (BAG_UPDATE_DELAYED)" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot", unheard = "nothing shows skipped loot yet" },
 }
