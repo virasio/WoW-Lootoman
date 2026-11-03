@@ -227,4 +227,15 @@ ns.Locales.AddEnglish({
 	-- Modules/Junk/TossButton.lua
 	"Throw away junk",
 	"Opens your bags with the junk on top. Right-click an item to delete it.",
+
+	-- Modules/Junk/Toss.lua
+	"%s ×%d",
+	"Put down what the cursor holds first; nothing was deleted.",
+	"This item is no longer where it was; nothing was deleted.",
+	"Deleted %s.",
+	"Delete %s? Type “%s” to confirm.",
+	"Delete %s?",
+	"Junk tossing and selling is off. Turn it on in the options.",
+	"/lootoman toss: open the toss window",
+	"Right-click: delete",
 })

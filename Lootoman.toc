@@ -75,6 +75,7 @@ Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua
 Modules\Junk\ItemGrid.lua
 Modules\Junk\TossButton.lua
+Modules\Junk\Toss.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua

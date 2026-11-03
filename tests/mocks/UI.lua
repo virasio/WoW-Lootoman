@@ -72,6 +72,7 @@ function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
+function methods:IsEnabled() return self.enabled ~= false end
 function methods:SetFontObject(font) self.fontObject = font end
 function methods:HookScript(name, fn)
 	self.hooks = self.hooks or {}

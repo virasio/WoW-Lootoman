@@ -222,4 +222,15 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Modules/Junk/TossButton.lua
 	["Throw away junk"] = "Выбросить хлам",
 	["Opens your bags with the junk on top. Right-click an item to delete it."] = "Открывает сумки с хламом сверху. Щелчок правой кнопкой по предмету удаляет его.",
+
+	-- Modules/Junk/Toss.lua
+	["%s ×%d"] = "%s ×%d",
+	["Put down what the cursor holds first; nothing was deleted."] = "Сначала положите то, что держит курсор; ничего не удалено.",
+	["This item is no longer where it was; nothing was deleted."] = "Этого предмета уже нет на прежнем месте; ничего не удалено.",
+	["Deleted %s."] = "Удалено: %s.",
+	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
+	["Delete %s?"] = "Удалить %s?",
+	["Junk tossing and selling is off. Turn it on in the options."] = "Выброс и продажа хлама выключены. Включите их в настройках.",
+	["/lootoman toss: open the toss window"] = "/lootoman toss: открыть окно выброса",
+	["Right-click: delete"] = "Правая кнопка: удалить",
 })
