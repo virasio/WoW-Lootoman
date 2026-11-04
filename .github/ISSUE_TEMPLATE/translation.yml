@@ -1,0 +1,37 @@
+name: Translation
+description: A wrong or missing translation, or a new language.
+title: "[Translation] "
+labels: [translation]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Russian
+        - Another language
+    validations:
+      required: true
+  - type: input
+    id: other
+    attributes:
+      label: Which other language?
+      description: Only if you chose "Another language", for example German or French.
+  - type: input
+    id: where
+    attributes:
+      label: Where it appears
+      description: The window, page or message, for example "loot feed options, Rows".
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+      description: The text as Lootoman shows it now, if there is one.
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested text
+    validations:
+      required: true

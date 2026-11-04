@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in Lootoman does not work as it should, or shows a Lua error.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. The more exactly you describe it, the faster it can be fixed.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What went wrong, in a few sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, where you were, and whether you were in combat or in a group.
+      placeholder: |
+        1. Loot a chest with full bags
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+  - type: textarea
+    id: selftest
+    attributes:
+      label: Output of /lootoman selftest
+      description: |
+        Type `/lootoman selftest` in the game and copy everything it prints. It tells the game client, Lootoman's version, the language and the modules.
+        It also contains your character's name and realm; you may remove them.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Lua error
+      description: If the game or BugSack showed an error, paste its full text here.
+      render: text
+  - type: dropdown
+    id: alone
+    attributes:
+      label: Does it happen with only Lootoman enabled?
+      options:
+        - I did not try
+        - "Yes"
+        - "No"
+      default: 0
+  - type: textarea
+    id: addons
+    attributes:
+      label: Other addons
+      description: Addons you use that might matter, such as other loot or bag addons.

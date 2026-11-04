@@ -26,6 +26,7 @@ describe("profile texts", function()
 		assert.same({
 			"module:AutoLoot=Fast autoloot settings", "module:LootFeed=Loot feed settings",
 			"module:LootFeed > positions:LootFeed=Position", "module:LootFeed > layout:LootFeed=Use layout “Raid”",
+			"module:Junk=Junk settings",
 		}, list)
 		assert.same({ "layouts", "Loot feed layouts" }, { Share.Collections()[1].name, Share.Collections()[1].label })
 		assert.same({ "layouts", "Raid" }, { Share.Needs("layout:LootFeed", { layout = "Raid" }) })
@@ -121,6 +122,19 @@ describe("profile texts", function()
 		})))
 		assert.same({ fade = 1.3, size = 12 }, read.sections["module:LootFeed"])
 		assert.equals(3, read.skipped)
+	end)
+
+	it("check every module's values against the settings it declares", function()
+		ns.Modules:Register({
+			name = "Bags",
+			defaults = { enabled = false, columns = 8, sort = "name" },
+			mainSettings = { { kind = "dropdown", key = "sort", choices = { { "name", "Name" }, { "price", "Price" } } } },
+			settings = function() return { { kind = "slider", key = "columns", min = 4, max = 16, step = 2 } } end,
+		})
+		local read = assert(Share.Read(text({ format = 1, sections = { ["module:Bags"] = { columns = 7, sort = "size" } } })))
+		assert.same({ {}, 2 }, { read.sections["module:Bags"], read.skipped })
+		read = assert(Share.Read(text({ format = 1, sections = { ["module:Bags"] = { columns = 12, sort = "price" } } })))
+		assert.same({ { columns = 12, sort = "price" }, 0 }, { read.sections["module:Bags"], read.skipped })
 	end)
 
 	it("leave out a layout from a newer version, and say so", function()

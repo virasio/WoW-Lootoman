@@ -1,8 +1,8 @@
 local _, ns = ...
-local Bus, Compat, SelfTest = ns.Bus, ns.Compat, ns.SelfTest
+local Bus, Compat, Inventory, SelfTest = ns.Bus, ns.Compat, ns.Inventory, ns.SelfTest
 
--- Free space in the player's bags: whether the stacks of a loot fit. The bags
--- are read on first use and read again after the next BAG_UPDATE_DELAYED.
+-- Free space in the player's bags: whether the stacks of a loot fit. Read
+-- from the inventory (Inventory.lua), again after each change.
 local Bags = {}
 ns.Bags = Bags
 
@@ -22,25 +22,14 @@ local function sharesFamily(a, b)
 end
 
 local function read()
-	local bags, reagentBag = Compat.GetPlayerBags()
 	local result = { bags = {}, stacks = {} }
-	local function add(bag, reagent)
-		local free, family = Compat.GetBagFreeSlots(bag)
-		result.bags[#result.bags + 1] = { free = free, family = family, reagent = reagent }
-		for slot = 1, Compat.GetBagSize(bag) do
-			local item = Compat.GetBagItem(bag, slot)
-			if item then
-				local stacks = result.stacks[item.itemID] or {}
-				stacks[#stacks + 1] = item.count
-				result.stacks[item.itemID] = stacks
-			end
-		end
+	for _, bag in ipairs(Inventory.Bags()) do
+		result.bags[#result.bags + 1] = { free = bag.free, family = bag.family, reagent = bag.reagent }
 	end
-	for _, bag in ipairs(bags) do
-		add(bag, false)
-	end
-	if reagentBag then
-		add(reagentBag, true)
+	for _, item in ipairs(Inventory.Items()) do
+		local stacks = result.stacks[item.itemID] or {}
+		stacks[#stacks + 1] = item.count
+		result.stacks[item.itemID] = stacks
 	end
 	return result
 end
@@ -48,12 +37,24 @@ end
 local function current()
 	if not listening then
 		listening = true
-		Bus:OnEvent("BAG_UPDATE_DELAYED", "Bags", function()
+		Bus:On("InventoryChanged", Bags, function()
 			cache = nil
 		end)
 	end
 	cache = cache or read()
 	return cache
+end
+
+-- Free slots in the backpack and the general bags. Profession bags and the
+-- reagent bag do not count: what does not fit there goes into a general bag.
+function Bags.FreeGeneralSlots()
+	local free = 0
+	for _, bag in ipairs(Inventory.Bags()) do
+		if not bag.reagent and bag.family == 0 then
+			free = free + bag.free
+		end
+	end
+	return free
 end
 
 -- The self-test lists every equipped bag with its family as the client gives

@@ -14,6 +14,22 @@ describe("startup", function()
 		assert.is_true(Test.IsRegistered("ADDON_LOADED"))
 	end)
 
+	it("starts the character's session data anew at a login, and keeps it over a reload", function()
+		local charDB = { schema = 1, session = { sales = { sales = { { count = 1 } } } } }
+		Loader.Start(ns, { LootomanCharDB = charDB })
+		Test.FireEvent("PLAYER_ENTERING_WORLD", false, true)
+		assert.same({ { count = 1 } }, ns.Storage:GetSessionSection("sales").sales)
+		-- Only the first PLAYER_ENTERING_WORLD counts; later ones come with zoning.
+		Test.FireEvent("PLAYER_ENTERING_WORLD", true, false)
+		assert.same({ { count = 1 } }, ns.Storage:GetSessionSection("sales").sales)
+
+		ns = Loader.LoadAddon()
+		Loader.Start(ns, { LootomanCharDB = charDB })
+		ns.Compat.Test.FireEvent("PLAYER_ENTERING_WORLD", true, false)
+		assert.same({}, ns.Storage:GetSessionSection("sales"))
+		assert.is_nil(ns.Compat.Test.state.saved.LootomanCharDB.session.sales.sales)
+	end)
+
 	it("creates and keeps the saved variables of a fresh install", function()
 		Loader.Start(ns)
 		assert.equals(1, Test.state.saved.LootomanDB.schema)

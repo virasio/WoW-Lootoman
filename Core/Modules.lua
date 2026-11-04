@@ -15,6 +15,8 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 --       switchLabel = <localized "Enable …">,     -- the switch on the options' main page
 --       defaults = { enabled = true, rows = 5 },
 --       mainSettings = { { kind = "checkbox", key = …, label = …, tooltip = … } },  -- under the switch
+--       settings = function() return { { kind = "slider", key = "rows", min = 1, max = 20, step = 1, … } } end,
+--                                                   -- its own page and Edit Mode dialog
 --       OnEnable = function(self) self:OnEvent("CHAT_MSG_LOOT", ...) end,
 --       OnDisable = function(self) hide frames (also after a failed OnEnable) end,
 --       BuildSettings = function(self, category, layout) end,   -- the module's own options page
@@ -45,6 +47,42 @@ end
 
 function ModuleMixin:IsActive()
 	return self.active
+end
+
+-- The settings of the module's own page and Edit Mode dialog, in groups.
+function ModuleMixin:Settings()
+	return self.settings and self.settings() or {}
+end
+
+local function allows(setting, value)
+	if setting.kind == "slider" then
+		return value >= setting.min and value <= setting.max
+			and Storage.OnStep(value, setting.min, setting.max, setting.step) == value
+	elseif setting.kind == "dropdown" then
+		for _, choice in ipairs(setting.choices) do
+			if choice[1] == value then
+				return true
+			end
+		end
+		return false
+	end
+	return true
+end
+
+-- Whether a value is one the module's controls can set, from its declared
+-- settings (mainSettings and Settings()): a slider's value lies in its range
+-- and on its step (1.5 rows would break the loot feed), a dropdown's is one of
+-- its choices. Profile texts read every module's values with it (Share). The
+-- value already has the default's type.
+function ModuleMixin:Validate(key, value)
+	for _, list in ipairs({ self.mainSettings or {}, self:Settings() }) do
+		for _, setting in ipairs(list) do
+			if setting.key == key then
+				return allows(setting, value)
+			end
+		end
+	end
+	return true
 end
 
 function Modules:Register(definition)
