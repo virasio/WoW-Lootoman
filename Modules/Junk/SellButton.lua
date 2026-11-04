@@ -9,8 +9,9 @@ local L = ns.L
 -- taint the merchant frame. Turning the module off hides it, and Blizzard's
 -- button works again.
 --
--- A click sells the junk (Sections.SaleList) at once; Shift-click sells it and
--- opens the sell window to pick more; a setting swaps the two. The icon is grey
+-- A click sells the junk (Sections.SaleList) at once; Shift-click opens the
+-- sell window to pick what to sell, and sells nothing by itself; a setting
+-- swaps the two. The icon is grey
 -- when there is no junk to sell. With "Sell junk at merchants" on, the junk is
 -- sold as soon as a merchant's window opens.
 local Junk = ns.Modules:Get("Junk")
@@ -41,11 +42,14 @@ local function sell()
 end
 
 -- What a click does: with Shift (or without it, when swapped), the sell
--- window opens after the junk was handed to the sale.
+-- window opens and nothing is sold; otherwise the junk is sold.
 function SellButton.Click(shift)
-	sell()
-	if shift ~= Junk:Get("swapClicks") and Junk.SellWindow then
-		Junk.SellWindow.Open()
+	if shift ~= Junk:Get("swapClicks") then
+		if Junk.SellWindow then
+			Junk.SellWindow.Open()
+		end
+	else
+		sell()
 	end
 end
 
@@ -63,8 +67,8 @@ local function showTooltip(self)
 		GameTooltip_AddNormalLine(GameTooltip, L["No junk to sell."])
 	end
 	local swapped = Junk:Get("swapClicks")
-	GameTooltip_AddNormalLine(GameTooltip, swapped and L["Click: sell the junk and pick more to sell."] or L["Click: sell the junk."])
-	GameTooltip_AddNormalLine(GameTooltip, swapped and L["Shift-click: sell the junk."] or L["Shift-click: sell the junk and pick more to sell."])
+	GameTooltip_AddNormalLine(GameTooltip, swapped and L["Click: pick what to sell."] or L["Click: sell the junk."])
+	GameTooltip_AddNormalLine(GameTooltip, swapped and L["Shift-click: sell the junk."] or L["Shift-click: pick what to sell."])
 	GameTooltip:Show()
 end
 

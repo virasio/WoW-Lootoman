@@ -56,26 +56,44 @@ describe("sell-junk button", function()
 		assert.same({}, Blizzard.scripts)
 	end)
 
-	it("sells the junk on a click, and opens the sell window too on Shift-click", function()
+	-- At an open merchant that sold nothing on opening.
+	local function atMerchant()
 		Junk:Set("sellOnOpen", false)
 		Test.SetInteracting("Merchant", true)
 		Test.Advance(1)
 		assert.equals(0, uses())
-		button().scripts.OnClick(button())
-		assert.same({ 1, 0 }, { uses(), opened })
-		Junk.SellQueue.Stop("closed")
+	end
+
+	it("sells the junk on a click, and only opens the sell window on Shift-click", function()
+		atMerchant()
 		shift = true
 		button().scripts.OnClick(button())
-		assert.equals(1, opened)
+		assert.same({ 0, 1 }, { uses(), opened })
+		shift = false
+		button().scripts.OnClick(button())
+		assert.same({ 1, 1 }, { uses(), opened })
 	end)
 
-	it("swaps click and Shift-click by the setting", function()
+	it("swaps click and Shift-click by the setting: a click then only opens the window", function()
+		atMerchant()
 		Junk:Set("swapClicks", true)
 		button().scripts.OnClick(button())
-		assert.equals(1, opened)
+		assert.same({ 0, 1 }, { uses(), opened })
 		shift = true
 		button().scripts.OnClick(button())
-		assert.equals(1, opened)
+		assert.same({ 1, 1 }, { uses(), opened })
+	end)
+
+	it("says in its tooltip what a click and Shift-click do", function()
+		local tooltipLines = {}
+		rawset(_G, "GameTooltip_AddNormalLine", function(_, text) tooltipLines[#tooltipLines + 1] = text end)
+		rawset(_G, "GameTooltip_SetTitle", function() end)
+		button().scripts.OnEnter(button())
+		assert.same({ "Junk to sell: 2, for 7 copper.", "Click: sell the junk.", "Shift-click: pick what to sell." }, tooltipLines)
+		tooltipLines = {}
+		Junk:Set("swapClicks", true)
+		button().scripts.OnEnter(button())
+		assert.same({ "Click: pick what to sell.", "Shift-click: sell the junk." }, { tooltipLines[2], tooltipLines[3] })
 	end)
 
 	it("sells the junk when a merchant's window opens, unless that is off", function()

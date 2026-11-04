@@ -213,7 +213,7 @@ ns.Locales.AddEnglish({
 	"Sell junk at merchants",
 	"Sells the junk as soon as a merchant's window opens.",
 	"Swap click and Shift-click",
-	"The sell-junk button then opens the sell window on a click, and only sells on Shift-click.",
+	"The sell-junk button then opens the sell window on a click, and sells the junk on Shift-click.",
 
 	-- Modules/Junk/ItemGrid.lua
 	"Everything else",
@@ -257,10 +257,10 @@ ns.Locales.AddEnglish({
 	"Sell junk",
 	"Junk to sell: %d, for %s.",
 	"No junk to sell.",
-	"Click: sell the junk and pick more to sell.",
+	"Click: pick what to sell.",
 	"Click: sell the junk.",
 	"Shift-click: sell the junk.",
-	"Shift-click: sell the junk and pick more to sell.",
+	"Shift-click: pick what to sell.",
 
 	-- Settings/JunkList.lua
 	"Marked as junk",

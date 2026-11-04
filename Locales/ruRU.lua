@@ -208,7 +208,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Sell junk at merchants"] = "Продавать хлам торговцам",
 	["Sells the junk as soon as a merchant's window opens."] = "Продаёт хлам, как только открывается окно торговца.",
 	["Swap click and Shift-click"] = "Поменять щелчок и Shift-щелчок",
-	["The sell-junk button then opens the sell window on a click, and only sells on Shift-click."] = "Тогда кнопка продажи хлама по щелчку открывает окно продажи, а по Shift-щелчку только продаёт.",
+	["The sell-junk button then opens the sell window on a click, and sells the junk on Shift-click."] = "Тогда кнопка продажи хлама по щелчку открывает окно продажи, а по Shift-щелчку продаёт хлам.",
 
 	-- Modules/Junk/ItemGrid.lua
 	["Everything else"] = "Всё остальное",
@@ -252,10 +252,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["Sell junk"] = "Продать хлам",
 	["Junk to sell: %d, for %s."] = "Хлама на продажу: %d, на %s.",
 	["No junk to sell."] = "Хлама на продажу нет.",
-	["Click: sell the junk and pick more to sell."] = "Щелчок: продать хлам и выбрать, что ещё продать.",
+	["Click: pick what to sell."] = "Щелчок: выбрать, что продать.",
 	["Click: sell the junk."] = "Щелчок: продать хлам.",
 	["Shift-click: sell the junk."] = "Shift-щелчок: продать хлам.",
-	["Shift-click: sell the junk and pick more to sell."] = "Shift-щелчок: продать хлам и выбрать, что ещё продать.",
+	["Shift-click: pick what to sell."] = "Shift-щелчок: выбрать, что продать.",
 
 	-- Settings/JunkList.lua
 	["Marked as junk"] = "Помечено как хлам",

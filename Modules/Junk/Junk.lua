@@ -20,7 +20,7 @@ local function settings()
 		{ kind = "checkbox", key = "sellOnOpen", label = L["Sell junk at merchants"],
 			tooltip = L["Sells the junk as soon as a merchant's window opens."] },
 		{ kind = "checkbox", key = "swapClicks", label = L["Swap click and Shift-click"],
-			tooltip = L["The sell-junk button then opens the sell window on a click, and only sells on Shift-click."] },
+			tooltip = L["The sell-junk button then opens the sell window on a click, and sells the junk on Shift-click."] },
 	}
 end
 
