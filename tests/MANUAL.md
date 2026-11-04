@@ -85,6 +85,31 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 - [ ] **Turning the module off.** Untick *Enable junk tossing and selling*. *Expected:* no toss button, the game's own sell-junk button works again, nothing is sold at merchants; `/lootoman toss` says it is off.
 - [ ] **Taint.** After the rounds above, `/reload` and look at `Logs/taint.log`. *Expected:* no lines blaming Lootoman for the loot window, the merchant frame or the game menu.
 
+## Loot feed warnings (0.3)
+
+- [ ] **General slots.** Default options. Fill the general bags down to 3 free slots: no warning; to 2: "Free bag slots: 2" at the feed's bottom edge (rows stacking up), the rows above it; to 0: "No free bag slots". *Expected:* the warning stays while it holds, also with no rows; it goes when slots are freed. With *New rows appear: At the bottom* it sits at the top edge.
+- [ ] **Reagent bag.** Turn on *Warn when few reagent bag slots are free*; fill the reagent bag. *Expected:* its own warning, under its own threshold; without a reagent bag, none.
+- [ ] **Thresholds.** Set each to 0 and to 5. *Expected:* the warnings follow at once.
+
+## Free-slot bar (0.3)
+
+- [ ] **Default.** *Expected:* left of the bag buttons, `free (reagent) / general` with free in green and reagent in gold; its tooltip lists all bags and each kind you have.
+- [ ] **Text.** Options → Free slots → *Edit the text*: type `{general|ff0000} / {general.total}`, then a text with a typo `{genral}` and a plain `|`. *Expected:* the bar follows at once; the typo and the `|` show as typed.
+- [ ] **Colour and size.** Change *Default colour* and *Text size*. *Expected:* the text between tokens and tokens without a colour take the new colour; the size follows.
+- [ ] **Edit Mode.** Move the bar; change its text size in its dialog. *Expected:* it keeps its place per Edit Mode layout and after `/reload`.
+- [ ] **Broker.** With a broker display (Titan Panel, ElvUI's data texts or another): add "Lootoman: free slots". *Expected:* the same coloured text, the same tooltip, a click opens the bags; turning *Also in broker panels* off empties it (it goes after `/reload`). `/lootoman selftest` shows `Broker: working` with a display and `Broker: no broker display loaded` without one.
+
+## Currency bars (0.3)
+
+- [ ] **Default.** Mark two currencies *Show on backpack* in the currency tab. *Expected:* one bar near the bottom centre with them, an icon and a count each.
+- [ ] **Editor.** `/lootoman bars`. *Expected:* on the left the bar's entries, on the right the other currencies by name. Move one across with each button; drag a row up and down; drop an item from the bags on the left list; type an item ID and *Add item by ID*. Take an item off: it waits on the right until logout. Each change shows on the bar at once.
+- [ ] **Caps.** A capped currency shows `quantity / cap` and turns red at its cap; a season-capped one (crests) shows its quantity, red once the season's cap is earned.
+- [ ] **Overflow.** Make a bar narrow. *Expected:* what does not fit hides behind `»`; its click lists the hidden entries with icons and counts.
+- [ ] **Reorder on the bar.** Outside Edit Mode, drag an entry along the bar. *Expected:* it moves there; nothing goes onto the cursor; the tooltip is the currency's or item's own.
+- [ ] **Edit Mode.** Open Edit Mode. *Expected:* each bar is listed as "Currency bar N"; move it; set width, gap and size in its dialog and the width with the grip on its right edge; *New bar* adds one (an empty bar shows a hint), *Remove this bar* removes it, *Edit bars* opens the editor. Positions are kept per Edit Mode layout and after `/reload`.
+- [ ] **Sets.** In the editor's set menu: new set, copy, rename, reset, delete; two profiles on two sets. *Expected:* each profile shows its set's bars; a deleted set's profiles go back to Default.
+- [ ] **Share.** Share the profile with its bar set, and a set alone from the editor's menu; import both on another character. *Expected:* the bars, their entries and positions come along; a taken name offers keep both, replace or keep mine.
+
 ## Russian client (0.1)
 
 - [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian.
