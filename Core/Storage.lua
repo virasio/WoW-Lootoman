@@ -164,6 +164,26 @@ function Storage:GetGlobalSection(name)
 	return sections[name]
 end
 
+-- Data of the current character for one session (the sales log): kept over
+-- /reload, emptied at each login (NewSession, from Startup). A table in
+-- LootomanCharDB.session, created on first use.
+function Storage:GetSessionSection(name)
+	assert(type(name) == "string", "a section name must be a string")
+	if type(self.charDB.session) ~= "table" then
+		self.charDB.session = {}
+	end
+	local session = self.charDB.session
+	if type(session[name]) ~= "table" then
+		session[name] = {}
+	end
+	return session[name]
+end
+
+-- A login, not a /reload: the session's data starts empty.
+function Storage:NewSession()
+	self.charDB.session = nil
+end
+
 -- A slider value as it is stored: between min and max, on a step, and without
 -- floating point noise (0.3, not 0.30000000000000004).
 function Storage.OnStep(value, min, max, step)

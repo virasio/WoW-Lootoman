@@ -52,6 +52,12 @@ function SettingsAPI.Install()
 		return category, layout
 	end
 
+	function Settings.RegisterCanvasLayoutSubcategory(parent, frame, name)
+		local category, layout = newCategory(name, parent)
+		category.frame = frame
+		return category, layout
+	end
+
 	-- The options panel's tooltip (SettingsTooltip): its lines.
 	local settingsTooltip = { lines = {} }
 	function settingsTooltip:SetOwner(owner)

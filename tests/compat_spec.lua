@@ -183,15 +183,91 @@ describe("Compat", function()
 					GetContainerNumFreeSlots = function(bag) return bag + 3, bag == 1 and 32 or nil end,
 					GetContainerItemInfo = function(_, slot)
 						if slot == 1 then
-							return { itemID = 2589, stackCount = 7, hyperlink = "link", isLocked = false }
+							return { itemID = 2589, stackCount = 7, hyperlink = "link", isLocked = false, itemName = "Linen Cloth",
+								quality = 1, iconFileID = 132889, isBound = false, hasNoValue = false }
 						end
 					end,
 				},
 			})
 			assert.same({ 3, 0 }, { Compat.GetBagFreeSlots(0) })
 			assert.same({ 4, 32 }, { Compat.GetBagFreeSlots(1) })
-			assert.same({ itemID = 2589, count = 7, link = "link" }, Compat.GetBagItem(0, 1))
+			assert.same({ itemID = 2589, count = 7, link = "link", name = "Linen Cloth", quality = 1, icon = 132889,
+				bound = false, noValue = false, locked = false }, Compat.GetBagItem(0, 1))
 			assert.is_nil(Compat.GetBagItem(0, 2))
+		end)
+
+		it("reads what protects an item in a bag slot, and its guid", function()
+			local exists = true
+			stub({
+				ItemLocation = { CreateFromBagAndSlot = function(_, bag, slot) return { bag = bag, slot = slot } end },
+				C_Item = {
+					DoesItemExist = function() return exists end,
+					GetItemGUID = function(location) return ("Item-%d-%d"):format(location.bag, location.slot) end,
+				},
+				C_Container = {
+					GetContainerItemQuestInfo = function(_, slot)
+						return { isQuestItem = slot == 1, questID = slot == 2 and 100 or nil, isActive = false }
+					end,
+					GetContainerItemEquipmentSetInfo = function(_, slot) return slot == 3, slot == 3 and "Tank" or "" end,
+					GetContainerItemPurchaseInfo = function(_, slot)
+						if slot == 4 then
+							return { money = 100, itemCount = 1, refundSeconds = 7000, currencyCount = 0, hasEnchants = false }
+						elseif slot == 5 then
+							return { money = 100, itemCount = 1, refundSeconds = 0, currencyCount = 0, hasEnchants = false }
+						end
+					end,
+				},
+			})
+			local function facts(slot)
+				local found = Compat.GetBagItemFacts(0, slot)
+				return { found.quest, found.equipmentSet, found.refundable }
+			end
+			assert.same({ true, false, false }, facts(1))
+			assert.same({ true, false, false }, facts(2))
+			assert.same({ false, true, false }, facts(3))
+			assert.same({ false, false, true }, facts(4))
+			assert.same({ false, false, false }, facts(5))
+			assert.equals("Item-0-6", Compat.GetBagItemFacts(0, 6).guid)
+			exists = false
+			assert.is_nil(Compat.GetBagItemFacts(0, 6).guid)
+		end)
+
+		it("reads the bags left out of junk selling, the backpack apart", function()
+			stub({
+				Enum = { BagIndex = { Backpack = 0 }, BagSlotFlags = { ExcludeJunkSell = 64 } },
+				C_Container = {
+					GetBackpackSellJunkDisabled = function() return true end,
+					GetBagSlotFlag = function(bag, flag) return bag == 2 and flag == 64 end,
+				},
+			})
+			assert.same({ true, false, true }, { Compat.IsBagKeptFromJunkSale(0), Compat.IsBagKeptFromJunkSale(1),
+				Compat.IsBagKeptFromJunkSale(2) })
+			stub({ Enum = { BagIndex = { Backpack = 0 } }, C_Container = {} })
+			assert.same({ false, false }, { Compat.IsBagKeptFromJunkSale(0), Compat.IsBagKeptFromJunkSale(2) })
+		end)
+
+		it("finds the bag slot of the item on the cursor", function()
+			local held
+			stub({
+				GetCursorInfo = function() return held and "item" or nil end,
+				C_Cursor = {
+					GetCursorItem = function()
+						if held then
+							return {
+								IsBagAndSlot = function() return held.bag ~= nil end,
+								GetBagAndSlot = function() return held.bag, held.slot end,
+							}
+						end
+					end,
+				},
+			})
+			assert.is_true(Compat.IsCursorEmpty())
+			assert.is_nil(Compat.GetCursorBagSlot())
+			held = { bag = 2, slot = 7 }
+			assert.is_false(Compat.IsCursorEmpty())
+			assert.same({ 2, 7 }, { Compat.GetCursorBagSlot() })
+			held = {}
+			assert.is_nil(Compat.GetCursorBagSlot())
 		end)
 
 		it("reads item data, or nothing while the client has not loaded the item", function()
@@ -205,7 +281,7 @@ describe("Compat", function()
 					end,
 				},
 			})
-			assert.same({ name = "Linen Cloth", link = "link", quality = 1, stackSize = 200, isCraftingReagent = true },
+			assert.same({ name = "Linen Cloth", link = "link", quality = 1, stackSize = 200, sellPrice = 13, isCraftingReagent = true },
 				Compat.GetItemInfo(2589))
 			assert.is_nil(Compat.GetItemInfo(999))
 			assert.equals(32, Compat.GetItemFamily(765))

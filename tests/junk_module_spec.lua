@@ -1,0 +1,73 @@
+local Loader = require("tests.helpers.loader")
+local SettingsAPI = require("tests.mocks.SettingsAPI")
+
+describe("Junk module", function()
+	local ns, Junk, log
+
+	-- A part that records its lifecycle and listens through the module.
+	local function part(name)
+		return {
+			Enable = function()
+				log[#log + 1] = "enable " .. name
+				Junk.ListenEvent("MERCHANT_SHOW", function(event) log[#log + 1] = name .. " " .. event end)
+				Junk.Listen("MarksChanged", function(message, itemID) log[#log + 1] = ("%s %s %s"):format(name, message, itemID) end)
+			end,
+			Disable = function()
+				log[#log + 1] = "disable " .. name
+			end,
+		}
+	end
+
+	before_each(function()
+		ns = Loader.LoadAddon()
+		Junk, log = ns.Modules:Get("Junk"), {}
+	end)
+
+	it("starts its parts in order and stops them in reverse", function()
+		Junk.AddPart(part("first"))
+		Junk.AddPart(part("second"))
+		Loader.Start(ns)
+		ns.Modules:SetEnabled("Junk", false)
+		assert.same({ "enable first", "enable second", "disable second", "disable first" }, log)
+	end)
+
+	it("hands events and messages to every part that listens, while it is on", function()
+		Junk.AddPart(part("first"))
+		Junk.AddPart(part("second"))
+		Loader.Start(ns)
+		log = {}
+		ns.Compat.Test.FireEvent("MERCHANT_SHOW")
+		ns.Marks.Set(42, "junk")
+		assert.same({ "first MERCHANT_SHOW", "second MERCHANT_SHOW", "first MarksChanged 42", "second MarksChanged 42" }, log)
+		ns.Modules:SetEnabled("Junk", false)
+		log = {}
+		ns.Compat.Test.FireEvent("MERCHANT_SHOW")
+		ns.Marks.Set(43, "junk")
+		assert.same({}, log)
+		assert.same({}, ns.Bus:GetEvents(Junk))
+	end)
+
+	it("stops the other parts when one fails to stop, and reports it", function()
+		Junk.AddPart(part("first"))
+		Junk.AddPart({ Enable = function() end, Disable = function() error("broken part") end })
+		Loader.Start(ns)
+		ns.Modules:SetEnabled("Junk", false)
+		assert.same("disable first", log[#log])
+		assert.matches("broken part", ns.Compat.Test.state.errors[1])
+	end)
+
+	it("has its switch and Sell junk at merchants on the main page, and its settings on its own page", function()
+		local api = SettingsAPI.Install()
+		ns = Loader.Start(Loader.LoadAddon({ skip = {} }))
+		local texts = {}
+		for _, entry in ipairs(ns.SettingsPanel.main.items) do
+			texts[#texts + 1] = entry.text
+		end
+		assert.is_true(table.concat(texts, "|"):find("Enable junk tossing and selling|Sell junk at merchants|Configure", 1, true) ~= nil)
+		assert.same({
+			"checkbox:Enabled", "header:Toss button", "dropdown:Show the toss button", "dropdown:Button style", "slider:Button size",
+			"dropdown:Side of the loot window", "slider:Offset along the side", "header:Selling", "checkbox:Sell junk at merchants",
+			"checkbox:Swap click and Shift-click",
+		}, { unpack(api.Kinds(api.FindCategory("Junk")), 1, 10) })
+	end)
+end)

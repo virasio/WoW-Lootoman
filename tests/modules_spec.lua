@@ -168,9 +168,47 @@ describe("modules", function()
 		assert.same({ "Bee", "A" }, { list[1].title, list[2].title })
 	end)
 
+	it("checks a value against the settings it declares, under the switch and on its page", function()
+		local module = register("Feed", true, {
+			mainSettings = { { kind = "dropdown", key = "side", choices = { { "left", "Left" }, { "right", "Right" } } } },
+			settings = function()
+				return {
+					{ kind = "header", label = "Rows" },
+					{ kind = "slider", key = "size", min = 1, max = 5, step = 0.5 },
+					{ kind = "checkbox", key = "glow" },
+				}
+			end,
+		})
+		assert.same({ true, false }, { module:Validate("side", "right"), module:Validate("side", "up") })
+		assert.same({ true, true, true }, { module:Validate("size", 1), module:Validate("size", 2.5), module:Validate("size", 5) })
+		assert.same({ false, false, false }, { module:Validate("size", 0.5), module:Validate("size", 5.5), module:Validate("size", 1.2) })
+		-- A checkbox, and a value no control sets, are checked by type only.
+		assert.same({ true, true }, { module:Validate("glow", false), module:Validate("hidden", 7) })
+		assert.same({ "header", "slider", "checkbox" }, { module:Settings()[1].kind, module:Settings()[2].kind, module:Settings()[3].kind })
+		assert.same({}, register("Plain", true):Settings())
+	end)
+
 	it("rejects duplicate names and modules without an enabled default", function()
 		register("Feed", true)
 		assert.has_error(function() register("Feed", true) end)
 		assert.has_error(function() Modules:Register({ name = "NoDefault", defaults = {} }) end)
+	end)
+end)
+
+describe("the addon's modules", function()
+	it("have a default for every setting they declare, and the default is one its control can set", function()
+		local ns = Loader.LoadAddon()
+		for _, module in ipairs(ns.Modules:List()) do
+			for _, list in ipairs({ module.mainSettings or {}, module:Settings() }) do
+				for _, setting in ipairs(list) do
+					if setting.key then
+						local default = module.defaults[setting.key]
+						local where = ("%s.%s"):format(module.name, setting.key)
+						assert.is_not_nil(default, where .. " has no default")
+						assert.is_true(module:Validate(setting.key, default), where .. "'s default is not one its control can set")
+					end
+				end
+			end
+		end
 	end)
 end)

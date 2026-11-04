@@ -23,3 +23,12 @@ Bus:OnEvent("PLAYER_LOGIN", "Startup", function()
 	end
 	Bus:Send("Ready")
 end)
+
+-- The first PLAYER_ENTERING_WORLD tells a login from a /reload. At a login the
+-- session's data starts anew, whether or not the module that keeps it is on.
+Bus:OnEvent("PLAYER_ENTERING_WORLD", "Startup", function(_, isInitialLogin)
+	Bus:OffEvent("PLAYER_ENTERING_WORLD", "Startup")
+	if isInitialLogin then
+		Storage:NewSession()
+	end
+end)

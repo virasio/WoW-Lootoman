@@ -11,13 +11,27 @@ local function noop() end
 
 local methods = {}
 
+-- A frame's OnShow or OnHide script and its hooks, as the client runs them.
+local function runScript(frame, name)
+	if frame.scripts[name] then
+		frame.scripts[name](frame)
+	end
+	for _, hook in ipairs(frame.hooks and frame.hooks[name] or {}) do
+		hook(frame)
+	end
+end
+
 -- A dropdown builds its menu when it is shown, as Blizzard's does
--- (DropdownSelectionTextMixin:OnShow calls GenerateMenu).
+-- (DropdownSelectionTextMixin:OnShow calls GenerateMenu). OnShow and OnHide run
+-- when the frame itself is shown or hidden (not when a parent is).
 function methods:SetShown(shown)
 	local was = self.shown
 	self.shown = shown and true or false
 	if self.dropdown and self.shown and not was then
 		self:GenerateMenu()
+	end
+	if self.shown ~= was then
+		runScript(self, self.shown and "OnShow" or "OnHide")
 	end
 end
 function methods:Show() self:SetShown(true) end
@@ -30,6 +44,9 @@ function methods:GetScript(name) return self.scripts[name] end
 function methods:ClearAllPoints() self.points = {} end
 function methods:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function methods:SetSize(width, height) self.width, self.height = width, height end
+function methods:SetAllPoints(target) self.allPoints = target or self.parent end
+function methods:SetDesaturated(desaturated) self.desaturated = desaturated end
+function methods:SetFrameLevel(level) self.level = level end
 function methods:SetWidth(width) self.width = width end
 function methods:SetHeight(height) self.height = height end
 function methods:EnableMouseWheel(enabled) self.wheel = enabled end
@@ -58,6 +75,7 @@ function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
+function methods:IsEnabled() return self.enabled ~= false end
 function methods:SetFontObject(font) self.fontObject = font end
 function methods:HookScript(name, fn)
 	self.hooks = self.hooks or {}
@@ -174,6 +192,9 @@ function UI.Install()
 		-- What a template's frame holds that the code reads.
 		if template == "InputScrollFrameTemplate" then
 			frame.EditBox, frame.CharCount = UI.NewFake(frame), UI.NewFake(frame)
+		elseif template == "ScrollFrameTemplate" then
+			-- ScrollFrame_OnLoad makes the bar.
+			frame.ScrollBar = UI.NewFake(frame)
 		elseif template and template:match("DropdownTemplate$") then
 			frame.dropdown = true
 		end
@@ -181,8 +202,10 @@ function UI.Install()
 		return frame
 	end)
 
-	local tooltip = { shown = false }
-	function tooltip:SetOwner(owner) self.owner = owner end
+	local tooltip = { shown = false, lines = {} }
+	function tooltip:SetOwner(owner) self.owner, self.lines, self.bagItem, self.compared = owner, {}, nil, false end
+	function tooltip:SetBagItem(bag, slot) self.bagItem = { bag, slot } end
+	function tooltip:AddLine(text) self.lines[#self.lines + 1] = text end
 	function tooltip:SetHyperlink(link) self.link = link end
 	function tooltip:SetCurrencyByID(id) self.currency = id end
 	function tooltip:Show() self.shown = true end
@@ -190,6 +213,10 @@ function UI.Install()
 	function tooltip:IsOwned(owner) return self.owner == owner end
 	api.tooltip = tooltip
 	rawset(_G, "GameTooltip", tooltip)
+	-- The comparison with what is equipped shows while the compare key is held
+	-- (TooltipUtil.lua); api.compare holds it.
+	rawset(_G, "TooltipUtil", { ShouldDoItemComparison = function() return api.compare == true end })
+	rawset(_G, "GameTooltip_ShowCompareItem", function(owner) owner.compared = true end)
 
 	rawset(_G, "GetMoneyString", function(copper) return copper .. " copper" end)
 	rawset(_G, "ColorManager", {

@@ -11,6 +11,29 @@ local Compat = ns.Compat
 local Bus = {}
 ns.Bus = Bus
 
+-- Every message on the bus: its payload and who sends it. A test reads the
+-- code against this table: every name sent or listened to is here, every
+-- message listened to is sent somewhere, and every message sent is listened to,
+-- unless `unheard` says why not. A misspelt name then fails a test instead of
+-- doing nothing.
+Bus.MESSAGES = {
+	Ready = { payload = "", from = "Startup, on PLAYER_LOGIN, once the settings are loaded" },
+	ProfileChanged = { payload = "new, old: profile names (equal when a profile was reset)", from = "Profiles, Share" },
+	SettingChanged = { payload = "module, key, value", from = "Storage; Layouts for the loot feed's layout" },
+	GlobalSettingChanged = { payload = "key, value", from = "Storage",
+		unheard = "account-wide settings are read where they are used" },
+	ModuleToggled = { payload = "module, active", from = "Modules" },
+	OpenSettings = { payload = "", from = "Slash: /lootoman" },
+	OpenShareDialog = { payload = "mode: \"profile\", or a collection's name to share only its items", from = "the row designer" },
+	OpenImportDialog = { payload = "mode: \"profile\", or a collection's name to import only its items", from = "the row designer" },
+	FeedLayoutChanged = { payload = "name: the layout that changed", from = "Layouts" },
+	MarksChanged = { payload = "itemID, mark: the new mark, nil when removed; nil, nil when all were cleared", from = "Marks" },
+	InventoryChanged = { payload = "", from = "Inventory, after the bags changed (BAG_UPDATE_DELAYED)" },
+	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
+	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
+		from = "AutoLoot" },
+}
+
 local messageListeners = {}
 local eventListeners = {}
 
