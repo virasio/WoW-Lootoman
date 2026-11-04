@@ -8,7 +8,9 @@ local Compat, Inventory, L, SelfTest, Storage = ns.Compat, ns.Inventory, ns.L, n
 -- waits until the server has taken the last: its slot no longer holds it).
 -- C_Container.UseContainerItem sells only at an open merchant and uses the item
 -- anywhere else, so right before every sale the merchant must be open, and the
--- slot must still hold the listed item, not locked.
+-- slot must still hold the listed item, not locked. A stack that stopped being
+-- junk for sale meanwhile (moved out of the junk, its bag left out of junk
+-- selling, put into an equipment set) is skipped.
 --
 -- States: "idle" (nothing sold yet), "selling", "waiting" (for the server to
 -- take the last stack), "stopped" (with a reason) and "done". Reasons:
@@ -145,15 +147,20 @@ step = function(myRun)
 		finish("stopped", "closed")
 		return
 	end
-	local entry = table.remove(queue, 1)
+	-- A stack that is no longer junk, or is protected now, is left out; a stack
+	-- that moved or changed stops the sale.
+	local entry
+	repeat
+		entry = table.remove(queue, 1)
+		if entry and not Inventory.StillThere(entry.item) then
+			run = run + 1
+			finish("stopped", "changed")
+			return
+		end
+	until not entry or Junk.Sections.StillForSale(entry.item)
 	if not entry then
 		run = run + 1
 		finish("done")
-		return
-	end
-	if not Inventory.StillThere(entry.item) then
-		run = run + 1
-		finish("stopped", "changed")
 		return
 	end
 	current = entry

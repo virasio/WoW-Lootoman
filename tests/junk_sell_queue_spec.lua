@@ -126,6 +126,27 @@ describe("sale queue", function()
 		assert.same({ "0:1" }, uses())
 	end)
 
+	it("skips a stack that stopped being junk for sale while the sale went on", function()
+		start()
+		-- The player moves the second stack out of the junk, protects the third.
+		ns.Marks.Set(2, "notJunk")
+		Test.state.bags[0].protections = { [3] = { equipmentSet = true } }
+		Test.state.bags[0].items[4] = gray(4, 2)
+		Test.FireEvent("BAG_UPDATE_DELAYED")
+		serve()
+		Test.Advance(1)
+		assert.same({ "0:1" }, uses())
+		assert.equals("done", SellQueue.State())
+	end)
+
+	it("skips junk whose bag was left out of junk selling during the sale", function()
+		start()
+		Test.state.bags[0].keptFromJunkSale = true
+		serve()
+		Test.Advance(1)
+		assert.same({ { "0:1" }, "done" }, { uses(), SellQueue.State() })
+	end)
+
 	it("stops when the merchant does not take a stack, or the server does not answer", function()
 		start()
 		Test.state.bags[0].items[1].locked = false

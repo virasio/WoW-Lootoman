@@ -62,6 +62,16 @@ function Sections.Build(kind)
 	return result
 end
 
+-- Whether a listed item may still be sold as junk, asked again right before
+-- its sale: still junk (the player may have moved it out of the junk, or
+-- switched profiles), its bag not left out of junk selling, and nothing that
+-- protects it now. Read from the client, not from the list.
+function Sections.StillForSale(item)
+	local facts = Compat.GetBagItemFacts(item.bag, item.slot)
+	return JunkRule.Decide(item).junk and not Compat.IsBagKeptFromJunkSale(item.bag)
+		and not facts.quest and not facts.equipmentSet and not facts.refundable
+end
+
 -- The junk the sell-junk button and a merchant's opening sell: junk the
 -- merchant buys, outside the bags left out of junk selling.
 function Sections.SaleList()
