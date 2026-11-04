@@ -164,18 +164,24 @@ function Storage:GetGlobalSection(name)
 	return sections[name]
 end
 
--- Data of the current character (the session's sales log): a table in
--- LootomanCharDB.sections, created on first use.
-function Storage:GetCharacterSection(name)
+-- Data of the current character for one session (the sales log): kept over
+-- /reload, emptied at each login (NewSession, from Startup). A table in
+-- LootomanCharDB.session, created on first use.
+function Storage:GetSessionSection(name)
 	assert(type(name) == "string", "a section name must be a string")
-	if type(self.charDB.sections) ~= "table" then
-		self.charDB.sections = {}
+	if type(self.charDB.session) ~= "table" then
+		self.charDB.session = {}
 	end
-	local sections = self.charDB.sections
-	if type(sections[name]) ~= "table" then
-		sections[name] = {}
+	local session = self.charDB.session
+	if type(session[name]) ~= "table" then
+		session[name] = {}
 	end
-	return sections[name]
+	return session[name]
+end
+
+-- A login, not a /reload: the session's data starts empty.
+function Storage:NewSession()
+	self.charDB.session = nil
 end
 
 -- A slider value as it is stored: between min and max, on a step, and without

@@ -19,8 +19,9 @@ local Compat, Inventory, L, SelfTest, Storage = ns.Compat, ns.Inventory, ns.L, n
 -- slot no longer holds its item), "refused" (the merchant did not take one),
 -- "noAnswer" (the server did not answer in time).
 --
--- Each sale goes into the session's log (the character's section "sales",
--- cleared at login and kept over /reload) and a chat line. A merchant can buy
+-- Each sale goes into the session's log (the character's session data,
+-- Storage:GetSessionSection: kept over /reload, emptied at login) and a chat
+-- line. A merchant can buy
 -- back only the last BUYBACK stacks sold to it, so past that in one visit the
 -- chat line says so.
 local Junk = ns.Modules:Get("Junk")
@@ -51,7 +52,7 @@ local visit, warned = 0, false
 local run = 0
 
 local function log()
-	return Storage:GetCharacterSection("sales")
+	return Storage:GetSessionSection("sales")
 end
 
 local function record()
@@ -241,11 +242,6 @@ end)
 
 Junk.AddPart({
 	Enable = function()
-		Junk.ListenEvent("PLAYER_ENTERING_WORLD", function(_, isInitialLogin)
-			if isInitialLogin then
-				log().sales = {}
-			end
-		end)
 		Junk.ListenEvent("MERCHANT_SHOW", function()
 			visit, warned = 0, false
 		end)
