@@ -50,6 +50,13 @@ function Toss.DeleteNow(entry)
 		ns.Print(L["This item has moved or changed; nothing was deleted."])
 		return false
 	end
+	-- Read again: a question may have been open while the item went into an
+	-- equipment set.
+	local facts = Compat.GetBagItemFacts(item.bag, item.slot)
+	if facts.quest or facts.equipmentSet then
+		ns.Print(L["This item is now a quest item or in an equipment set; nothing was deleted."])
+		return false
+	end
 	Compat.PickupBagItem(item.bag, item.slot)
 	local bag, slot = Compat.GetCursorBagSlot()
 	if bag ~= item.bag or slot ~= item.slot then

@@ -232,6 +232,7 @@ ns.Locales.AddEnglish({
 	"%s ×%d",
 	"Put down what the cursor holds first; nothing was deleted.",
 	"This item has moved or changed; nothing was deleted.",
+	"This item is now a quest item or in an equipment set; nothing was deleted.",
 	"Deleted %s.",
 	"Delete %s? Type “%s” to confirm.",
 	"Delete %s?",

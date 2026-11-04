@@ -227,6 +227,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["%s ×%d"] = "%s ×%d",
 	["Put down what the cursor holds first; nothing was deleted."] = "Сначала положите то, что держит курсор; ничего не удалено.",
 	["This item has moved or changed; nothing was deleted."] = "Этот предмет переместился или изменился; ничего не удалено.",
+	["This item is now a quest item or in an equipment set; nothing was deleted."] = "Этот предмет теперь предмет задания или входит в комплект экипировки; ничего не удалено.",
 	["Deleted %s."] = "Удалено: %s.",
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",

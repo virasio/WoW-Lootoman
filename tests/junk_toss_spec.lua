@@ -177,6 +177,15 @@ describe("toss window", function()
 			assert.matches("moved or changed", Test.state.printed[#Test.state.printed])
 		end)
 
+		it("deletes nothing that went into an equipment set while the question was open", function()
+			dragOut(0, 2)
+			Test.state.bags[0].protections = { [2] = { equipmentSet = true } }
+			confirm().delete.scripts.OnClick(confirm().delete)
+			assert.is_not_nil(bagItem(0, 2))
+			assert.same({}, Test.state.bagActions)
+			assert.matches("equipment set", Test.state.printed[#Test.state.printed])
+		end)
+
 		it("deletes nothing while the cursor holds something", function()
 			Test.state.cursor = { bag = 2, slot = 5 }
 			dragOut(0, 1)
