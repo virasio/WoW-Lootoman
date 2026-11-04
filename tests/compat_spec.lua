@@ -289,6 +289,69 @@ describe("Compat", function()
 		end)
 	end)
 
+	describe("currencies", function()
+		it("read a currency with its cap, a seasonal cap counting what was earned", function()
+			stub({ C_CurrencyInfo = { GetCurrencyInfo = function(id)
+				return { name = "Crest", iconFileID = 5, quality = 4, quantity = 30, discovered = true, maxQuantity = 90,
+					totalEarned = 70, useTotalEarnedForMaxQty = id == 2 }
+			end } })
+			assert.same({ name = "Crest", icon = 5, quality = 4, quantity = 30, discovered = true, max = 90, totalEarned = 70,
+				capsTotalEarned = false }, Compat.GetCurrencyInfo(1))
+			assert.is_true(Compat.GetCurrencyInfo(2).capsTotalEarned)
+		end)
+
+		it("list every currency, opening collapsed headers for the read and closing them again", function()
+			-- A list of two headers: "Season" (collapsed) with a currency, "Old" (open) with one.
+			local list = {
+				{ isHeader = true, isHeaderExpanded = false, name = "Season", children = { { currencyID = 3008 } } },
+				{ isHeader = true, isHeaderExpanded = true, name = "Old", children = { { currencyID = 1792 } } },
+			}
+			local calls = {}
+			local function rows()
+				local shown = {}
+				for _, header in ipairs(list) do
+					shown[#shown + 1] = header
+					if header.isHeaderExpanded then
+						for _, child in ipairs(header.children) do
+							shown[#shown + 1] = child
+						end
+					end
+				end
+				return shown
+			end
+			stub({ C_CurrencyInfo = {
+				GetCurrencyListSize = function() return #rows() end,
+				GetCurrencyListInfo = function(index) return rows()[index] end,
+				ExpandCurrencyList = function(index, expand)
+					calls[#calls + 1] = ("%s %s"):format(rows()[index].name, tostring(expand))
+					rows()[index].isHeaderExpanded = expand
+				end,
+			} })
+			assert.same({ 3008, 1792 }, Compat.GetCurrencyIDs())
+			assert.same({ "Season true", "Season false" }, calls)
+			assert.same({ false, true }, { list[1].isHeaderExpanded, list[2].isHeaderExpanded })
+		end)
+
+		it("list the backpack's currencies in order", function()
+			local backpack = { { currencyTypesID = 3008 }, { currencyTypesID = 1792 } }
+			stub({ C_CurrencyInfo = { GetBackpackCurrencyInfo = function(index) return backpack[index] end } })
+			assert.same({ 3008, 1792 }, Compat.GetBackpackCurrencyIDs())
+		end)
+	end)
+
+	it("counts an item in the bags only, and reads the item on the cursor", function()
+		local asked
+		stub({
+			C_Item = { GetItemCount = function(...) asked = { ... } return 7 end },
+			GetCursorInfo = function() return "item", 2589, "link" end,
+		})
+		assert.equals(7, Compat.GetBagItemCount(2589))
+		assert.same({ 2589, false, false, false, false }, asked)
+		assert.equals(2589, Compat.GetCursorItemID())
+		stub({ GetCursorInfo = function() return "money", 100 end })
+		assert.is_nil(Compat.GetCursorItemID())
+	end)
+
 	it("registers slash commands the way the game expects", function()
 		local handler = function() end
 		stub({ SlashCmdList = {} })

@@ -322,7 +322,10 @@ function Compat.GetItemLook(item)
 	return C_Item.GetItemIconByID(item), C_Item.GetItemQualityByID(item)
 end
 
--- A currency as { name, icon, quality, quantity, discovered }, or nil.
+-- A currency as { name, icon, quality, quantity, discovered, max, totalEarned,
+-- capsTotalEarned }, or nil. max is 0 without a cap; with capsTotalEarned (a
+-- seasonal cap) the cap counts everything earned this season, not what is
+-- held.
 function Compat.GetCurrencyInfo(currencyID)
 	local info = C_CurrencyInfo.GetCurrencyInfo(currencyID)
 	if not info then
@@ -334,7 +337,69 @@ function Compat.GetCurrencyInfo(currencyID)
 		quality = info.quality,
 		quantity = info.quantity,
 		discovered = info.discovered,
+		max = info.maxQuantity or 0,
+		totalEarned = info.totalEarned or 0,
+		capsTotalEarned = info.useTotalEarnedForMaxQty == true,
 	}
+end
+
+-- The IDs of every currency in the character's currency list, as the
+-- currency tab shows them. Headers the player collapsed are opened for the
+-- read and closed again, in reverse order, so the tab stays as it was.
+function Compat.GetCurrencyIDs()
+	if not Compat.Has("C_CurrencyInfo.GetCurrencyListSize") then
+		return {}
+	end
+	local ids, opened = {}, {}
+	local index = 1
+	while index <= C_CurrencyInfo.GetCurrencyListSize() do
+		local info = C_CurrencyInfo.GetCurrencyListInfo(index)
+		if info and info.isHeader then
+			if not info.isHeaderExpanded then
+				C_CurrencyInfo.ExpandCurrencyList(index, true)
+				opened[#opened + 1] = index
+			end
+		elseif info and info.currencyID then
+			ids[#ids + 1] = info.currencyID
+		end
+		index = index + 1
+	end
+	for position = #opened, 1, -1 do
+		C_CurrencyInfo.ExpandCurrencyList(opened[position], false)
+	end
+	return ids
+end
+
+-- The IDs of the currencies the player shows on the backpack (the currency
+-- tab's "Show on backpack"), in their order.
+function Compat.GetBackpackCurrencyIDs()
+	local ids = {}
+	if not Compat.Has("C_CurrencyInfo.GetBackpackCurrencyInfo") then
+		return ids
+	end
+	local index = 1
+	while true do
+		local info = C_CurrencyInfo.GetBackpackCurrencyInfo(index)
+		if not info then
+			return ids
+		end
+		ids[#ids + 1] = info.currencyTypesID
+		index = index + 1
+	end
+end
+
+-- How many of an item the bags and the reagent bag hold (not the bank).
+function Compat.GetBagItemCount(item)
+	return C_Item.GetItemCount(item, false, false, false, false)
+end
+
+-- The item on the cursor, as an item ID, while the cursor holds one.
+function Compat.GetCursorItemID()
+	local kind, itemID = GetCursorInfo()
+	if kind == "item" and type(itemID) == "number" then
+		return itemID
+	end
+	return nil
 end
 
 -- Copper.

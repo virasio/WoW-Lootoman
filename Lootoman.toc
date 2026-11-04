@@ -54,6 +54,7 @@ Rules\Junk.lua
 Providers\Inventory.lua
 Providers\Bags.lua
 Providers\Prices.lua
+Providers\Currencies.lua
 
 Integrations\Auctionator.lua
 Integrations\Broker.lua
