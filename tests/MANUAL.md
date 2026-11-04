@@ -4,9 +4,17 @@ What the unit tests cannot cover: checks in the game, run before every release. 
 
 **Setup for every round:** the branch under test checked out into `Interface/AddOns/Lootoman`; BugSack and BugGrabber on; the taint log on (`/console taintLog 1`, then `/reload`). After each section, open BugSack: no Lootoman errors. At the end, `/reload` or log out, so the SavedVariables, BugGrabber's errors and `Logs/taint.log` are written; the game overwrites the log at the next start. Turn the taint log off with `/console taintLog 0` when done.
 
+## Clients (0.3)
+
+The PTR and WoW Forever load the same `sources/` through their own `Interface/AddOns/Lootoman` link.
+
+- [ ] **Loads everywhere.** Start retail, the PTR and Forever in turn. *Expected:* Lootoman is in the AddOns list of each, not marked out of date, and loads without errors.
+- [ ] **Self-test on each client.** `/lootoman selftest`. *Expected:* the client's version and interface (`120105`, `120107` or `16001`); on retail and the PTR `Game Standard, family Mainline, project 1; data set: Mainline`. On Forever, note the game, family, project and data set it shows, and every check that is not `OK`: they decide the Forever data and capability fixes.
+- [ ] **Smoke test on the PTR and Forever.** Loot with fast autoloot, watch the feed, open the toss window, sell junk at a merchant.
+
 ## Start (0.1)
 
-- [ ] **Self-test.** `/lootoman selftest`. *Expected:* every check `OK` (`Encode` included); `Game Standard, family Mainline; data set: Mainline`; a `Bags:` line with every equipped bag (a profession bag shows its family); `Loot feed chat formats: 20 of 20`; every module `on`; `All checks passed.`, then `After: OK`.
+- [ ] **Self-test.** `/lootoman selftest`. *Expected:* every check `OK` (`Encode` included); `Game Standard, family Mainline, project 1; data set: Mainline`; a `Bags:` line with every equipped bag (a profession bag shows its family); `Loot feed chat formats: 20 of 20`; every module `on`; `All checks passed.`, then `After: OK`.
 - [ ] **Commands.** `/ltm` opens the options; `/lootoman help` lists the commands; `/lootoman debug` shows the state, `on` and `off` change it.
 
 ## Fast autoloot (0.1)

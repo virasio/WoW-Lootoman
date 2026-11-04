@@ -16,6 +16,8 @@ local state = {
 	time = 0,
 	timers = {},
 	build = { "12.1.5", "70575", "Oct 23 2026", 120105 },
+	-- WOW_PROJECT_ID: 1 on retail.
+	projectID = 1,
 	saved = {},
 	slashCommands = {},
 	printed = {},
@@ -99,6 +101,10 @@ end
 
 function Compat.GetBuildInfo()
 	return unpack(state.build)
+end
+
+function Compat.GetProjectID()
+	return state.projectID
 end
 
 function Compat.GetNumLootItems()

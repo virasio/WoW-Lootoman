@@ -89,6 +89,12 @@ function Compat.GetBuildInfo()
 	return version, build, date, interface
 end
 
+-- The game's project (WOW_PROJECT_ID: 1 for retail, other numbers for other
+-- games on the same client), or nil when the client does not say.
+function Compat.GetProjectID()
+	return type(WOW_PROJECT_ID) == "number" and WOW_PROJECT_ID or nil
+end
+
 -- Loot window. The global loot functions are not in the generated API docs;
 -- Blizzard's LootFrame.lua uses them this way. Values may be secret in combat
 -- (to verify in game with the Dev loot dump).

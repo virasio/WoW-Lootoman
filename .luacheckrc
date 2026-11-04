@@ -57,6 +57,7 @@ files["Compat/"] = {
 		"UnitFullName",
 		"UnitXP",
 		"UnitXPMax",
+		"WOW_PROJECT_ID",
 		"geterrorhandler",
 		"issecretvalue",
 	},

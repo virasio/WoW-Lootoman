@@ -1,4 +1,4 @@
-## Interface: 120105
+## Interface: 120105, 120107, 16001
 ## Title: Lootoman
 ## Notes: Fast autoloot, a loot feed you can design, and junk thrown away or sold in a click.
 ## Notes-ruRU: Быстрый автолут, лента лута с настраиваемым видом и хлам, который выбрасывается или продаётся в один щелчок.

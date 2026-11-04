@@ -106,11 +106,13 @@ function SelfTest.Run()
 			Storage.readOnly and ", read-only (saved by a newer version)" or "")
 	end)
 	-- The client fills in [Game] and [Family] of these TOC fields: they show
-	-- what a new client (WoW Forever) calls itself in TOC conditions.
+	-- what a new client (WoW Forever) calls itself in TOC conditions, as its
+	-- project number does in code.
 	report(function()
-		return ("Game %s, family %s; data set: %s; locale: %s"):format(
+		return ("Game %s, family %s, project %s; data set: %s; locale: %s"):format(
 			tostring(Compat.GetAddOnMetadata(addonName, "X-Game")),
 			tostring(Compat.GetAddOnMetadata(addonName, "X-Family")),
+			tostring(Compat.GetProjectID()),
 			ns.Data and ns.Data.set or "none", ns.Locales.current)
 	end)
 	for _, build in ipairs(reports) do

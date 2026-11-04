@@ -43,6 +43,7 @@
     "StaticPopup_Hide",
     "StaticPopup_Show",
     "TooltipUtil",
-    "UISpecialFrames"
+    "UISpecialFrames",
+    "WOW_PROJECT_ID"
   ]
 }
