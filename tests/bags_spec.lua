@@ -5,11 +5,12 @@ local HERBS, ORE = 32, 512
 describe("Bags provider", function()
 	local ns, Bags, Test
 
-	-- A slot table with the given number of filled slots, all with one item.
+	-- A slot table with the given number of filled slots, all with one item the
+	-- client has loaded.
 	local function filled(count, itemID)
 		local items = {}
 		for slot = 1, count do
-			items[slot] = { itemID = itemID or 1, count = 1 }
+			items[slot] = { itemID = itemID or 1, count = 1, name = "Filler", quality = 1 }
 		end
 		return items
 	end

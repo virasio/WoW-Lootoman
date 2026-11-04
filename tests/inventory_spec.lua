@@ -91,4 +91,23 @@ describe("Inventory provider", function()
 		Test.state.bags[0].items[3] = nil
 		assert.is_false(Inventory.StillThere(cloth))
 	end)
+
+	it("reads the bags again when the data of an item still loading arrives", function()
+		local changed = 0
+		ns.Bus:On("InventoryChanged", "test", function() changed = changed + 1 end)
+		Test.SetBags({ [0] = { size = 2, items = { [1] = { itemID = 50, count = 1, link = "item:50" } } } })
+		Test.FireEvent("BAG_UPDATE_DELAYED")
+		changed = 0
+		assert.is_nil(Inventory.Items()[1].quality)
+		assert.same({ "BAG_UPDATE_DELAYED", "GET_ITEM_INFO_RECEIVED" }, ns.Bus:GetEvents(Inventory))
+		-- Another item's data, or a failed load, changes nothing.
+		Test.FireEvent("GET_ITEM_INFO_RECEIVED", 51, true)
+		Test.FireEvent("GET_ITEM_INFO_RECEIVED", 50, false)
+		assert.equals(0, changed)
+		Test.state.bags[0].items[1].quality, Test.state.bags[0].items[1].name = 0, "Broken Tooth"
+		Test.FireEvent("GET_ITEM_INFO_RECEIVED", 50, true)
+		assert.equals(1, changed)
+		assert.equals(0, Inventory.Items()[1].quality)
+		assert.same({ "BAG_UPDATE_DELAYED" }, ns.Bus:GetEvents(Inventory))
+	end)
 end)

@@ -3,17 +3,28 @@ local Bus, Compat = ns.Bus, ns.Compat
 
 -- The player's bags and what is in them, read once per change: on first use,
 -- and again on first use after a BAG_UPDATE_DELAYED, which also sends
--- InventoryChanged. What keeps an item from being tossed or sold (a quest, an
--- equipment set, a refund) is read only for the items that are asked about.
+-- InventoryChanged. An item the client has not loaded yet comes without its
+-- quality or name; while the scan holds such items, their GET_ITEM_INFO_RECEIVED
+-- makes it stale too, so a gray item does not stay unknown. What keeps an item
+-- from being tossed or sold (a quest, an equipment set, a refund) is read only
+-- for the items that are asked about.
 local Inventory = {}
 ns.Inventory = Inventory
 
 local scan
 local listening = false
+-- Item IDs of the scan's items that came without their quality or name.
+local loading = {}
+
+local function changed()
+	scan = nil
+	Bus:Send("InventoryChanged")
+end
 
 local function read()
 	local bags, reagentBag = Compat.GetPlayerBags()
 	local result = { bags = {}, items = {} }
+	loading = {}
 	local function add(bag, reagent)
 		local size = Compat.GetBagSize(bag)
 		local free, family = Compat.GetBagFreeSlots(bag)
@@ -23,6 +34,9 @@ local function read()
 			if item then
 				item.bag, item.slot = bag, slot
 				result.items[#result.items + 1] = item
+				if item.quality == nil or item.name == nil then
+					loading[item.itemID] = true
+				end
 			end
 		end
 	end
@@ -38,12 +52,20 @@ end
 local function current()
 	if not listening then
 		listening = true
-		Bus:OnEvent("BAG_UPDATE_DELAYED", Inventory, function()
-			scan = nil
-			Bus:Send("InventoryChanged")
-		end)
+		Bus:OnEvent("BAG_UPDATE_DELAYED", Inventory, changed)
 	end
-	scan = scan or read()
+	if not scan then
+		scan = read()
+		if next(loading) then
+			Bus:OnEvent("GET_ITEM_INFO_RECEIVED", Inventory, function(_, itemID, success)
+				if success and loading[itemID] and scan then
+					changed()
+				end
+			end)
+		else
+			Bus:OffEvent("GET_ITEM_INFO_RECEIVED", Inventory)
+		end
+	end
 	return scan
 end
 
