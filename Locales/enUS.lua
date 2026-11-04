@@ -307,4 +307,13 @@ ns.Locales.AddEnglish({
 	"The free-slot bar's text. Tokens: %s",
 	"Text",
 	"Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s",
+
+	-- Modules/Bars/Bars.lua
+	"Currency bars",
+	"Enable currency bars",
+	"Bars of currencies and of items in your bags, anywhere on the screen.",
+
+	-- Modules/Bars/Sets.lua
+	"Use bar set “%s”",
+	"Bar sets",
 })

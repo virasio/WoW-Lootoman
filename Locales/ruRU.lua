@@ -302,4 +302,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["The free-slot bar's text. Tokens: %s"] = "Текст полосы свободных ячеек. Метки: %s",
 	["Text"] = "Текст",
 	["Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s"] = "Метки в фигурных скобках показывают свободные ячейки, при желании каждая своим цветом: {free||33ff33}. Метки: %s",
+
+	-- Modules/Bars/Bars.lua
+	["Currency bars"] = "Полосы валют",
+	["Enable currency bars"] = "Включить полосы валют",
+	["Bars of currencies and of items in your bags, anywhere on the screen."] = "Полосы с валютами и предметами из сумок в любом месте экрана.",
+
+	-- Modules/Bars/Sets.lua
+	["Use bar set “%s”"] = "Использовать набор полос «%s»",
+	["Bar sets"] = "Наборы полос",
 })

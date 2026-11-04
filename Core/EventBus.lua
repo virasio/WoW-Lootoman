@@ -32,6 +32,8 @@ Bus.MESSAGES = {
 	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
 	CurrenciesChanged = { payload = "currencyID: the currency that changed, or nil", from = "Currencies, on CURRENCY_DISPLAY_UPDATE",
 		unheard = "nothing shows currencies yet" },
+	BarSetChanged = { payload = "name: the bar set that changed", from = "Sets (the currency bars)",
+		unheard = "nothing shows bars yet" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot" },
 }
