@@ -128,8 +128,15 @@ local function build(category, layout)
 	page.clear:SetSize(120, 22)
 	page.clear:SetPoint("TOPRIGHT", -20, -20)
 	page.clear:SetText(L["Clear list"])
+	-- The question names the profile, and clears nothing if the profile changed
+	-- while it was open.
 	page.clear:SetScript("OnClick", function()
-		ns.NameMenu.Confirm(L["Remove every mark of this profile from the junk list?"], nil, L["Clear list"], Marks.Clear)
+		local profile = ns.Profiles.GetCurrent()
+		ns.NameMenu.Confirm(L["Remove every mark of profile “%s” from the junk list?"], profile, L["Clear list"], function()
+			if ns.Profiles.GetCurrent() == profile then
+				Marks.Clear()
+			end
+		end)
 	end)
 	local scroll = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 20, JunkList.TOP)

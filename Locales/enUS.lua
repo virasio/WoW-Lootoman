@@ -271,7 +271,7 @@ ns.Locales.AddEnglish({
 	"Remove",
 	"Junk list",
 	"Clear list",
-	"Remove every mark of this profile from the junk list?",
+	"Remove every mark of profile “%s” from the junk list?",
 	"Open the list",
 	"Every item you marked as junk or as not junk, to remove marks.",
 })
