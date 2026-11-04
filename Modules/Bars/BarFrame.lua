@@ -12,7 +12,8 @@ local Compat, L = ns.Compat, ns.L
 -- it follows the mouse and a line marks where it will go (nothing goes onto the
 -- game's cursor); dropped off the bar, it is taken off the bar after a
 -- question. An item dragged from the bags onto the bar is added where it is
--- dropped. In Edit Mode the bar is placed and its width, gap, size, direction,
+-- dropped. While the question is on screen, no bar changes in any way (see
+-- BarFrame.Asking). In Edit Mode the bar is placed and its width, gap, size, direction,
 -- background and border are set in its dialog, or the width with the grip on
 -- its far edge; the dialog also adds a bar, removes this one and opens the
 -- editor. Positions and settings live in the bar itself, in its set (Sets.lua).
@@ -38,6 +39,21 @@ BarFrame.BORDER_WIDTH, BarFrame.BORDER_HEIGHT = 8, 17
 
 local SlotMixin = {}
 SlotMixin.__index = SlotMixin
+
+-- The question about taking an entry off, while it may be on screen: a
+-- function that tells whether it still is (NameMenu.Confirm).
+local question
+
+-- Whether a bar is waiting for the answer to that question. Until it is
+-- answered, no bar changes in any way (on screen, in Edit Mode or in the bar
+-- editor), so the answer takes off the entry asked about and nothing else.
+function BarFrame.Asking()
+	if question and question() then
+		return true
+	end
+	question = nil
+	return false
+end
 
 local function fontSize(bar)
 	return math.max(8, math.floor(bar.size * 0.6 + 0.5))
@@ -72,7 +88,7 @@ end
 -- An item held on the game's cursor and let go over the bar: added there.
 function SlotMixin:ReceiveItem()
 	local itemID = Compat.GetCursorItemID()
-	if not itemID or not self.bar then
+	if not itemID or not self.bar or BarFrame.Asking() then
 		return
 	end
 	Compat.ClearCursor()
@@ -282,7 +298,7 @@ function SlotMixin:MarkerDistance(index)
 end
 
 function SlotMixin:StartDrag(button)
-	if ns.EditMode.IsActive() or not button.entry then
+	if ns.EditMode.IsActive() or not button.entry or BarFrame.Asking() then
 		return
 	end
 	self.dragged = button
@@ -324,18 +340,27 @@ function SlotMixin:StopDrag()
 		return
 	end
 	dragged:SetAlpha(1)
-	local bar, index = self.bar, dragged.index
+	local bar, entry = self.bar, dragged.entry
 	if not self.frame:IsMouseOver() then
-		local look = Bars.Describe(dragged.entry)
-		ns.NameMenu.Confirm(L["Take “%s” off the bar?"], look and look.name or "", L["Take off"], function()
-			if Bars.Editor then
-				Bars.Editor.Remove(bar, index)
-			end
+		local look = Bars.Describe(entry)
+		question = ns.NameMenu.Confirm(L["Take “%s” off the bar?"], look and look.name or "", L["Take off"], function()
+			-- The dialog is still on screen while it calls this.
+			question = nil
+			BarFrame.TakeOff(bar, entry)
 		end)
 		return
 	end
-	BarFrame.Move(bar, index, self:DropIndex(self:CursorDistance()))
+	BarFrame.Move(bar, dragged.index, self:DropIndex(self:CursorDistance()))
 	setChanged()
+end
+
+-- Takes an entry off a bar, wherever it stands on the bar now.
+function BarFrame.TakeOff(bar, entry)
+	for index, existing in ipairs(Bars.Entries(bar)) do
+		if existing.kind == entry.kind and existing.id == entry.id then
+			return Bars.Editor and Bars.Editor.Remove(bar, index)
+		end
+	end
 end
 
 -- Moves an entry of a bar from one place to another; to is a place before
@@ -377,6 +402,9 @@ end
 
 -- The grip on the far edge sets the width while Edit Mode is open.
 function SlotMixin:StartResize()
+	if BarFrame.Asking() then
+		return
+	end
 	self.resizeFrom = { GetCursorPosition() / self.frame:GetEffectiveScale(), self.bar.width }
 end
 
@@ -432,7 +460,10 @@ local function slotSettings(slot)
 	end
 	local function store(key)
 		return function(new)
-			if slot.bar then
+			if BarFrame.Asking() then
+				-- Back to what the bar has.
+				ns.EditMode.Refresh(slot.frame)
+			elseif slot.bar then
 				slot.bar[key] = new
 				setChanged()
 			end
@@ -543,10 +574,12 @@ function BarFrame.Create(module, index)
 				end
 			end },
 			{ text = L["New bar"], click = function()
-				Sets.AddBar(Sets.Current())
+				if not BarFrame.Asking() then
+					Sets.AddBar(Sets.Current())
+				end
 			end },
 			{ text = L["Remove this bar"], click = function()
-				if slot.bar then
+				if slot.bar and not BarFrame.Asking() then
 					Sets.RemoveBar(Sets.Current(), slot.bar.id)
 				end
 			end },

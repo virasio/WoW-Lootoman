@@ -138,6 +138,68 @@ describe("currency bars", function()
 		assert.same({ { kind = "currency", id = 2815 } }, Sets.Get("Default").bars[1].entries)
 	end)
 
+	-- Drags an entry of the first bar off it, which asks.
+	local function dragOff(position)
+		local button = slot(1).buttons[position]
+		button.scripts.OnDragStart(button)
+		slot(1).frame.mouseOver = false
+		button.scripts.OnDragStop(button)
+	end
+
+	it("change no bar in any way while that question is open", function()
+		local api = SettingsAPI.Install()
+		Bars.Editor.Open()
+		dragOff(1)
+		-- Not a second question, not a move, not a drop from the bags.
+		dragOff(2)
+		local second = slot(1).buttons[2]
+		slot(1).frame.mouseOver = true
+		second.scripts.OnDragStart(second)
+		assert.is_false(Bars.BarFrame.Ghost().shown)
+		Loader.ui.cursor = { 0, 0 }
+		second.scripts.OnDragStop(second)
+		Test.state.cursorItem = 2589
+		slot(1).frame.scripts.OnReceiveDrag(slot(1).frame)
+		assert.same({ 1, 2589 }, { #api.popups, Test.state.cursorItem })
+		-- Not in the bar editor either.
+		assert.is_false(Bars.Editor.Add(Bars.Editor.Bar(), { kind = "currency", id = 3110 }))
+		Bars.Editor.Window().add.scripts.OnClick(Bars.Editor.Window().add)
+		-- Not in Edit Mode: the width, the grip, the dialog's buttons.
+		lib.Fire("enter")
+		lib.settings[slot(1).frame][1].set("Modern", 600)
+		local grip = slot(1).frame.Grip
+		Loader.ui.cursor = { 100, 0 }
+		grip.scripts.OnMouseDown(grip)
+		Loader.ui.cursor = { 160, 0 }
+		grip.scripts.OnUpdate(grip)
+		grip.scripts.OnMouseUp(grip)
+		lib.buttons[slot(1).frame][2].click()
+		lib.Fire("exit")
+		local set = Sets.Get("Default")
+		assert.same({ 1, 300, { "500 / 2000", "4000" } }, { #set.bars, set.bars[1].width, shown(1) })
+		-- The answer takes off the entry asked about, and nothing else.
+		api.AcceptPopup()
+		assert.same({ { kind = "currency", id = 2815 } }, set.bars[1].entries)
+		-- Answered, the bar changes again.
+		Loader.ui.cursor = { 0, 0 }
+		slot(1).frame.scripts.OnReceiveDrag(slot(1).frame)
+		assert.same({ "7", "4000" }, shown(1))
+	end)
+
+	it("take off the entry asked about, wherever it stands by the answer, and nothing after a cancel", function()
+		local api = SettingsAPI.Install()
+		dragOff(2)
+		-- The backpack's order changes under the question.
+		Test.SetCurrency(3008, { name = "Valorstones", icon = 1, quantity = 500, max = 2000, backpack = 3 })
+		api.AcceptPopup()
+		assert.same({ { kind = "currency", id = 3008 } }, Sets.Get("Default").bars[1].entries)
+		dragOff(1)
+		api.CancelPopup()
+		assert.same({ "500 / 2000" }, shown(1))
+		dragOff(1)
+		assert.equals(3, #api.popups)
+	end)
+
 	it("add an item dropped from the bags on the bar where it is dropped, also outside Edit Mode", function()
 		Test.state.cursorItem = 2589
 		-- Before the middle of the first entry.

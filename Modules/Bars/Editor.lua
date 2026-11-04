@@ -13,6 +13,9 @@ local Bus, Compat, Currencies, L, NameMenu, Text = ns.Bus, ns.Compat, ns.Currenc
 -- wrong click is undone quickly (they are not kept after that). The buttons between the lists
 -- move the chosen row across: up to the bar, or off it.
 --
+-- While a bar asks whether to take an entry off, nothing here changes a bar
+-- (BarFrame.Asking).
+--
 -- The window is the player's own, built the first time it opens, never in
 -- combat; Escape and its close button hide it.
 local Bars = ns.Modules:Get("Bars")
@@ -100,6 +103,9 @@ end
 
 -- Puts an entry at the end of a bar, unless it is on it already.
 function Editor.Add(bar, entry)
+	if BarFrame.Asking() then
+		return false
+	end
 	local entries = Bars.OwnEntries(bar)
 	for _, existing in ipairs(entries) do
 		if keyOf(existing) == keyOf(entry) then
@@ -114,6 +120,9 @@ end
 
 -- Takes an entry off a bar; a bag item stays in the right list this session.
 function Editor.Remove(bar, index)
+	if BarFrame.Asking() then
+		return nil
+	end
 	local entries = Bars.OwnEntries(bar)
 	local entry = table.remove(entries, index)
 	if entry and entry.kind == "item" then
@@ -134,6 +143,9 @@ function Editor.AddItem(bar, itemID)
 end
 
 function Editor.Move(bar, from, to)
+	if BarFrame.Asking() then
+		return
+	end
 	BarFrame.Move(bar, from, to)
 	changed()
 end
@@ -355,7 +367,7 @@ end
 local function receiveItem()
 	local itemID = Compat.GetCursorItemID()
 	local bar = Editor.Bar()
-	if itemID and bar then
+	if itemID and bar and not BarFrame.Asking() then
 		Compat.ClearCursor()
 		Editor.AddItem(bar, itemID)
 	end
@@ -403,6 +415,9 @@ local function build()
 	frame.add:SetPoint("LEFT", frame.barMenu, "RIGHT", 8, 0)
 	frame.add:SetText(L["New bar"])
 	frame.add:SetScript("OnClick", function()
+		if BarFrame.Asking() then
+			return
+		end
 		local id = report(Sets.AddBar(currentSet()))
 		if id then
 			barID = id
@@ -415,7 +430,7 @@ local function build()
 	frame.remove:SetText(L["Remove bar"])
 	frame.remove:SetScript("OnClick", function()
 		local bar = Editor.Bar()
-		if bar then
+		if bar and not BarFrame.Asking() then
 			barID = nil
 			report(Sets.RemoveBar(currentSet(), bar.id))
 		end
@@ -435,8 +450,7 @@ local function build()
 	frame.toBar:SetText("<")
 	frame.toBar:SetScript("OnClick", function()
 		local item = chosenItem(frame.right)
-		if item then
-			Editor.Add(Editor.Bar(), item.entry)
+		if item and Editor.Add(Editor.Bar(), item.entry) then
 			frame.left.chosen, frame.right.chosen = keyOf(item.entry), nil
 		end
 	end)
@@ -446,8 +460,7 @@ local function build()
 	frame.offBar:SetText(">")
 	frame.offBar:SetScript("OnClick", function()
 		local item = chosenItem(frame.left)
-		if item then
-			Editor.Remove(Editor.Bar(), item.index)
+		if item and Editor.Remove(Editor.Bar(), item.index) then
 			frame.right.chosen, frame.left.chosen = keyOf(item.entry), nil
 		end
 	end)
