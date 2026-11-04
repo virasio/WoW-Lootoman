@@ -37,12 +37,18 @@ function Bars.OwnEntries(bar)
 	return bar.entries
 end
 
+-- The money entry's icon in the editor's lists; on a bar, money is its coins.
+Bars.MONEY_ICON = [[Interface\Icons\INV_Misc_Coin_01]]
+
 -- What an entry shows: { icon, name, text, red }, or nil for a currency the
 -- character does not have. A capped currency shows "quantity / cap" (with a
 -- seasonal cap, only the quantity, as the cap counts what was earned), red at
--- its cap.
+-- its cap. Money shows in gold, silver and copper coins, as in the bags, and
+-- has no icon on the bar.
 function Bars.Describe(entry)
-	if entry.kind == "currency" then
+	if entry.kind == "money" then
+		return { name = L["Money"], text = GetMoneyString(Compat.GetMoney(), true), red = false, listIcon = Bars.MONEY_ICON }
+	elseif entry.kind == "currency" then
 		local info = Currencies.Info(entry.id)
 		if not info or not info.name or info.name == "" then
 			return nil
@@ -119,6 +125,9 @@ function Bars:OnEnable()
 		self:RefreshCounts()
 	end)
 	self:On("InventoryChanged", function()
+		self:RefreshCounts()
+	end)
+	self:OnEvent("PLAYER_MONEY", function()
 		self:RefreshCounts()
 	end)
 	self:OnEvent("PLAYER_REGEN_ENABLED", function()

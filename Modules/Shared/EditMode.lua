@@ -214,10 +214,14 @@ local function toLibSetting(module, setting)
 			store(name, setting.key, value)
 		end
 	end
+	local default = setting.default
+	if default == nil then
+		default = Storage:GetDefault(name, setting.key)
+	end
 	local object = {
 		name = setting.label,
 		desc = setting.tooltip,
-		default = setting.default or Storage:GetDefault(name, setting.key),
+		default = default,
 		get = function()
 			if setting.get then
 				return setting.get()

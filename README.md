@@ -41,9 +41,10 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 
 ### Currency bars
 
-- Bars of currencies and of items in your bags, as many as you want, anywhere on the screen. Each entry shows its icon and count, from the bar's left edge a gap apart; a capped currency shows its cap and turns red at it. What does not fit hides behind a double arrow on the right: click it for the rest.
-- In Edit Mode, place each bar, set its width (also with the grip on its right edge), gap and size in its dialog, and add or remove bars. Outside Edit Mode, drag an entry along the bar to move it.
-- **Bar editor** (`/lootoman bars`, the bar's Edit Mode dialog, or the options): on the left what is on the chosen bar, in its order (drag rows up and down, drop an item from your bags, or add one by its ID); on the right the currencies not on it, by name. The buttons between the lists move the chosen one across. A bag item you take off a bar stays on the right until you log out, so a wrong click is easy to undo.
+- Bars of currencies, of items in your bags and of your money, as many as you want, anywhere on the screen. Each entry shows its icon and count (money in gold, silver and copper coins, as in the bags), a gap apart, filling from the left edge or from the right; a capped currency shows its cap and turns red at it. What does not fit hides behind a double arrow at the other edge: click it for the rest.
+- In Edit Mode, place each bar, and in its dialog set its width (also with the grip on its far edge), gap, size, which edge it fills from, a background with its opacity, and the bags' coin-box border; add or remove bars there too.
+- Outside Edit Mode, drag an entry along the bar to move it: a copy follows the mouse and a line shows where it will go. Drag it off the bar to take it off (Lootoman asks first). Drop an item from your bags on a bar to add it there.
+- **Bar editor** (`/lootoman bars`, the bar's Edit Mode dialog, or the options): on the left what is on the chosen bar, in its order (drag rows up and down, drop an item from your bags, or add one by its ID); on the right money and the currencies not on it, by name. The buttons between the lists move the chosen one across. A bag item you take off a bar stays on the right until you log out, so a wrong click is easy to undo.
 - Bars come in **named sets** shared by every profile, like row layouts: each profile uses one, and sets can be copied, renamed, reset, deleted, shared and imported. The set Default starts with one bar of the currencies you show on the backpack.
 
 ### Options and profiles

@@ -6,7 +6,9 @@ local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
 --
 --   set = { schema = 1, bars = {
 --       { id = 1, width = 300, gap = 6, size = 22,
---         entries = { { kind = "currency" | "item", id = 3008 }, … },   -- nil: the backpack's currencies
+--         direction = "right" | "left",            -- fills from the left edge, or from the right
+--         background = false, opacity = 50, border = false,
+--         entries = { { kind = "currency" | "item" | "money", id = 3008 }, … },   -- nil: the backpack's currencies
 --         positions = { [Edit Mode layout] = { point, x, y } } },
 --   } }
 --
@@ -30,7 +32,10 @@ local Sets = {
 	WIDTH = { 300, 60, 1200 },
 	GAP = { 6, 0, 40 },
 	SIZE = { 22, 12, 48 },
-	KINDS = { currency = true, item = true },
+	OPACITY = { 50, 0, 100 },
+	-- Money is one entry; its id is always 0.
+	KINDS = { currency = true, item = true, money = true },
+	DIRECTIONS = { right = true, left = true },
 }
 Bars.Sets = Sets
 
@@ -47,7 +52,8 @@ end
 
 -- A new bar: the backpack's currencies until its entries are set.
 function Sets.NewBar(id)
-	return { id = id, width = Sets.WIDTH[1], gap = Sets.GAP[1], size = Sets.SIZE[1], positions = {} }
+	return { id = id, width = Sets.WIDTH[1], gap = Sets.GAP[1], size = Sets.SIZE[1], direction = "right",
+		background = false, opacity = Sets.OPACITY[1], border = false, positions = {} }
 end
 
 local function newSet()
@@ -308,6 +314,9 @@ function Sets.Clean(data)
 			ids[bar.id] = true
 			local clean = Sets.NewBar(bar.id)
 			clean.width, clean.gap, clean.size = number(bar.width, Sets.WIDTH), number(bar.gap, Sets.GAP), number(bar.size, Sets.SIZE)
+			clean.direction = Sets.DIRECTIONS[bar.direction] and bar.direction or "right"
+			clean.background, clean.border = bar.background == true, bar.border == true
+			clean.opacity = number(bar.opacity, Sets.OPACITY)
 			if type(bar.entries) == "table" then
 				clean.entries = {}
 				for _, entry in ipairs(bar.entries) do

@@ -321,9 +321,7 @@ ns.Locales.AddEnglish({
 	"%d / %d",
 
 	-- Modules/Bars/BarFrame.lua
-	"Drag it along the bar to move it.",
 	"Gap",
-	"An empty bar: fill it in the bar editor.",
 	"Currency bar %d",
 	"Edit bars",
 	"New bar",
@@ -359,4 +357,15 @@ ns.Locales.AddEnglish({
 	"Bars",
 	"Open the bar editor",
 	"Choose what each bar shows, add and remove bars, and switch, copy or share sets of bars.",
+
+	-- Modules/Bars/BarFrame.lua
+	"Drag it along the bar to move it, or off the bar to take it off.",
+	"Take “%s” off the bar?",
+	"Take off",
+	"Fill from",
+	"The left edge",
+	"The right edge",
+	"Background",
+	"Border",
+	"An empty bar: fill it in the bar editor, or drop items from your bags on it.",
 })

@@ -46,6 +46,7 @@ function methods:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function methods:SetSize(width, height) self.width, self.height = width, height end
 function methods:SetAllPoints(target) self.allPoints = target or self.parent end
 function methods:SetDesaturated(desaturated) self.desaturated = desaturated end
+function methods:SetColorTexture(r, g, b, a) self.colorTexture = { r, g, b, a } end
 function methods:SetFrameLevel(level) self.level = level end
 function methods:SetWidth(width) self.width = width end
 function methods:SetHeight(height) self.height = height end

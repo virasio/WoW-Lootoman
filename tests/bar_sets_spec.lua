@@ -64,7 +64,7 @@ describe("bar sets", function()
 		local clean = Sets.Clean({
 			schema = 1,
 			bars = {
-				{ id = 1, width = 5000, gap = -3, size = 30.4,
+				{ id = 1, width = 5000, gap = -3, size = 30.4, direction = "left", background = true, opacity = 150, border = "yes",
 					entries = { { kind = "currency", id = 3008 }, { kind = "spell", id = 1 }, { kind = "item", id = "x" }, "junk" },
 					positions = { Modern = { point = "TOP", x = 1, y = 2 }, Bad = { point = "UP", x = 1, y = 2 } } },
 				{ id = 1 },
@@ -74,9 +74,10 @@ describe("bar sets", function()
 			},
 		})
 		assert.same({ schema = 1, bars = {
-			{ id = 1, width = 1200, gap = 0, size = 30, entries = { { kind = "currency", id = 3008 } },
-				positions = { Modern = { point = "TOP", x = 1, y = 2 } } },
-			{ id = 2, width = 300, gap = 6, size = 22, positions = {} },
+			{ id = 1, width = 1200, gap = 0, size = 30, direction = "left", background = true, opacity = 100, border = false,
+				entries = { { kind = "currency", id = 3008 } }, positions = { Modern = { point = "TOP", x = 1, y = 2 } } },
+			{ id = 2, width = 300, gap = 6, size = 22, direction = "right", background = false, opacity = 50, border = false,
+				positions = {} },
 		} }, clean)
 		assert.same({ nil, "newer" }, { Sets.Clean({ schema = 99 }) })
 	end)

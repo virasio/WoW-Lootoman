@@ -1,4 +1,5 @@
 local Loader = require("tests.helpers.loader")
+local SettingsAPI = require("tests.mocks.SettingsAPI")
 
 -- Currency bars on screen.
 describe("currency bars", function()
@@ -99,12 +100,19 @@ describe("currency bars", function()
 		assert.same({ "|T3:0|t Resonance Crystals  4000", "|T4:0|t Linen Cloth  7" }, { menu.entries[1].text, menu.entries[2].text })
 	end)
 
-	it("move an entry dragged along the bar, outside Edit Mode", function()
+	it("move an entry dragged along the bar, outside Edit Mode, showing what moves and where it goes", function()
 		local bar = Sets.Get("Default").bars[1]
 		local first = slot(1).buttons[1]
+		slot(1).frame.mouseOver = true
 		first.scripts.OnDragStart(first)
 		Loader.ui.cursor = { 150, 0 }
+		-- A dimmed entry, a copy at the mouse, a line in the gap after the second entry.
+		slot(1):FollowDrag()
+		local ghost = Bars.BarFrame.Ghost()
+		assert.same({ 0.35, true, "500 / 2000" }, { first.alpha, ghost.shown, ghost.Text.text })
+		assert.same({ true, { "LEFT", slot(1).frame, "LEFT", 101 + 53 + 3 - 1, 0 } }, { slot(1).frame.Marker.shown, slot(1).frame.Marker.points[1] })
 		first.scripts.OnDragStop(first)
+		assert.same({ false, false }, { ghost.shown, slot(1).frame.Marker.shown })
 		assert.same({ { kind = "currency", id = 2815 }, { kind = "currency", id = 3008 } }, bar.entries)
 		assert.same({ "4000", "500 / 2000" }, shown(1))
 		lib.Fire("enter")
@@ -113,6 +121,63 @@ describe("currency bars", function()
 		Loader.ui.cursor = { 500, 0 }
 		first.scripts.OnDragStop(first)
 		assert.same({ { kind = "currency", id = 2815 }, { kind = "currency", id = 3008 } }, bar.entries)
+	end)
+
+	it("take an entry dragged off the bar off it, after a question", function()
+		local api = SettingsAPI.Install()
+		local first = slot(1).buttons[1]
+		first.scripts.OnDragStart(first)
+		slot(1).frame.mouseOver = false
+		slot(1):FollowDrag()
+		assert.same({ 1, 0.13, 0.13 }, Bars.BarFrame.Ghost().Text.color)
+		first.scripts.OnDragStop(first)
+		assert.equals(1, #api.popups)
+		assert.same({ "500 / 2000", "4000" }, shown(1))
+		api.AcceptPopup()
+		assert.same({ "4000" }, shown(1))
+		assert.same({ { kind = "currency", id = 2815 } }, Sets.Get("Default").bars[1].entries)
+	end)
+
+	it("add an item dropped from the bags on the bar where it is dropped, also outside Edit Mode", function()
+		Test.state.cursorItem = 2589
+		-- Before the middle of the first entry.
+		Loader.ui.cursor = { 20, 0 }
+		slot(1).frame.scripts.OnReceiveDrag(slot(1).frame)
+		assert.same({ "7", "500 / 2000", "4000" }, shown(1))
+		assert.same({ "clear" }, Test.state.bagActions[#Test.state.bagActions])
+	end)
+
+	it("show money in coins, without an icon, and follow it", function()
+		rawset(_G, "GetMoneyString", function(copper) return copper .. "c" end)
+		Sets.Get("Default").bars[1].entries = { { kind = "money", id = 0 } }
+		Test.SetMoney(12345)
+		Sets.Changed("Default")
+		local button = slot(1).buttons[1]
+		assert.same({ "12345c", false }, { button.Count.text, button.Icon.shown })
+		Test.SetMoney(20000)
+		assert.equals("20000c", button.Count.text)
+	end)
+
+	it("show a background of its opacity and the bags' coin-box border when asked", function()
+		local bar = Sets.Get("Default").bars[1]
+		local frame = slot(1).frame
+		assert.same({ false, false }, { frame.Background.shown, frame.Border.Middle.shown })
+		bar.background, bar.opacity, bar.border = true, 30, true
+		Sets.Changed("Default")
+		assert.same({ true, 0.3, true, "_common-coinbox-center" },
+			{ frame.Background.shown, frame.Background.colorTexture[4], frame.Border.Middle.shown, frame.Border.Middle.atlas })
+	end)
+
+	it("fill from the right edge when asked, with the arrow on the left pointing left", function()
+		local bar = Sets.Get("Default").bars[1]
+		bar.entries = { { kind = "currency", id = 3008 }, { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } }
+		bar.direction = "left"
+		bar.width = 160
+		Sets.Changed("Default")
+		local buttons = slot(1).buttons
+		assert.same({ "RIGHT", slot(1).frame, "RIGHT", 0, 0 }, buttons[1].points[1])
+		local more = slot(1).frame.More
+		assert.same({ true, "«", "LEFT" }, { more.shown, more.Text.text, more.points[1][1] })
 	end)
 
 	it("keep their positions per Edit Mode layout in their set, and follow layouts that are copied or renamed", function()
@@ -138,7 +203,7 @@ describe("currency bars", function()
 		for _, setting in ipairs(lib.settings[frame]) do
 			names[#names + 1] = setting.name
 		end
-		assert.same({ "Width", "Gap", "Size" }, names)
+		assert.same({ "Width", "Gap", "Size", "Fill from", "Background", "Background opacity", "Border" }, names)
 		lib.settings[frame][1].set("Modern", 455)
 		assert.equals(460, Sets.Get("Default").bars[1].width)
 		local buttons = lib.buttons[frame]

@@ -316,9 +316,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["%d / %d"] = "%d / %d",
 
 	-- Modules/Bars/BarFrame.lua
-	["Drag it along the bar to move it."] = "Перетащите вдоль полосы, чтобы переставить.",
 	["Gap"] = "Промежуток",
-	["An empty bar: fill it in the bar editor."] = "Пустая полоса: заполните её в редакторе полос.",
 	["Currency bar %d"] = "Полоса валют %d",
 	["Edit bars"] = "Редактировать полосы",
 	["New bar"] = "Новая полоса",
@@ -354,4 +352,15 @@ ns.Locales.AddTranslation("ruRU", {
 	["Bars"] = "Полосы",
 	["Open the bar editor"] = "Открыть редактор полос",
 	["Choose what each bar shows, add and remove bars, and switch, copy or share sets of bars."] = "Выберите, что показывает каждая полоса, добавляйте и убирайте полосы, переключайте, копируйте и передавайте наборы полос.",
+
+	-- Modules/Bars/BarFrame.lua
+	["Drag it along the bar to move it, or off the bar to take it off."] = "Перетащите вдоль полосы, чтобы переставить, или за её пределы, чтобы убрать.",
+	["Take “%s” off the bar?"] = "Убрать «%s» с полосы?",
+	["Take off"] = "Убрать",
+	["Fill from"] = "Заполнять от",
+	["The left edge"] = "Левого края",
+	["The right edge"] = "Правого края",
+	["Background"] = "Фон",
+	["Border"] = "Рамка",
+	["An empty bar: fill it in the bar editor, or drop items from your bags on it."] = "Пустая полоса: заполните её в редакторе полос или бросьте на неё предметы из сумок.",
 })

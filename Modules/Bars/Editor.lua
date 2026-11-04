@@ -8,9 +8,9 @@ local Bus, Compat, Currencies, L, NameMenu, Text = ns.Bus, ns.Compat, ns.Currenc
 -- delete button; + New set; Import and Share), and the set's bars to choose
 -- from, with New bar and Remove bar. Below, two lists: on the left what is on
 -- the chosen bar, in its order (drag a row up or down; drop an item from the
--- bags on the list, or type its ID); on the right the currencies not on it,
--- by name, and the bag items taken off a bar this session, so a wrong click is
--- undone quickly (they are not kept after that). The buttons between the lists
+-- bags on the list, or type its ID); on the right the currencies and money
+-- not on it, by name, and the bag items taken off a bar this session, so a
+-- wrong click is undone quickly (they are not kept after that). The buttons between the lists
 -- move the chosen row across: up to the bar, or off it.
 --
 -- The window is the player's own, built the first time it opens, never in
@@ -71,6 +71,10 @@ function Editor.Lists(bar)
 		left[#left + 1] = { entry = entry, index = index, look = Bars.Describe(entry) or { name = keyOf(entry), text = "" } }
 	end
 	local right = {}
+	local money = { kind = "money", id = 0 }
+	if not on[keyOf(money)] then
+		right[#right + 1] = { entry = money, look = Bars.Describe(money) }
+	end
 	for _, currencyID in ipairs(Currencies.IDs()) do
 		local entry = { kind = "currency", id = currencyID }
 		local look = not on[keyOf(entry)] and Bars.Describe(entry)
@@ -281,7 +285,7 @@ local function fill(list, items)
 	for index, item in ipairs(items) do
 		local row = list.rows[index] or createRow(list, index)
 		row.item = item
-		row.Icon:SetTexture(item.look.icon)
+		row.Icon:SetTexture(item.look.icon or item.look.listIcon)
 		row.Name:SetText(item.look.name)
 		row.Selected:SetShown(list.chosen == keyOf(item.entry))
 		row:Show()
