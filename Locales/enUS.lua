@@ -292,4 +292,19 @@ ns.Locales.AddEnglish({
 	"Free slots",
 	"Enable the free-slot bar",
 	"Shows the free slots of your bags as text, in your own format and colours.",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	"Look",
+	"Default colour",
+	"For the text between the tokens, and for tokens without a colour of their own.",
+	"Also in broker panels",
+	"Offers the text to broker displays such as Titan Panel or ElvUI's data texts.",
+	"All bags: %d free of %d",
+	"General bags: %d free of %d",
+	"Reagent bag: %d free of %d",
+	"Profession bags: %d free of %d",
+	"Edit the text",
+	"The free-slot bar's text. Tokens: %s",
+	"Text",
+	"Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s",
 })

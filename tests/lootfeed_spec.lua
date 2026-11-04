@@ -10,7 +10,10 @@ local function newLibEditMode()
 	local lib = { frames = {}, settings = {}, callbacks = {}, SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2, Divider = "divider" } }
 	function lib:AddFrame(frame, _, default, name) self.frames[frame] = { default = default, name = name } end
 	function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
-	function lib:AddFrameSettingsButtons(_, buttons) self.buttons = buttons end
+	function lib:AddFrameSettingsButtons(frame, buttons)
+		self.buttons = self.buttons or {}
+		self.buttons[frame] = buttons
+	end
 	function lib:RegisterCallback(event, callback)
 		self.callbacks[event] = self.callbacks[event] or {}
 		table.insert(self.callbacks[event], callback)

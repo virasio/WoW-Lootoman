@@ -39,8 +39,10 @@ local function color(text)
 end
 
 -- The template's parts in order: { text = … } for text as typed, { token =
--- name, color = AARRGGBB or nil } for a known token.
+-- name, color = AARRGGBB or nil } for a known token. A doubled "|", as an edit
+-- box gives it back, counts as one.
 function Template.Parse(text)
+	text = text:gsub("||", "|")
 	local parts, position = {}, 1
 	local function addText(piece)
 		if piece ~= "" then
