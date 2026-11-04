@@ -220,6 +220,19 @@ describe("currency bars", function()
 		assert.equals("20000c", button.Count.text)
 	end)
 
+	it("count money's coin icons in its width", function()
+		-- As the client writes it: a number, then its coin, 2 pixels after it.
+		local coin = "|TInterface\\MoneyFrame\\UI-%sIcon:0:0:2:0|t"
+		rawset(_G, "GetMoneyString", function()
+			return "1" .. coin:format("Gold") .. " 23" .. coin:format("Silver") .. " 45" .. coin:format("Copper")
+		end)
+		Sets.Get("Default").bars[1].entries = { { kind = "money", id = 0 }, { kind = "currency", id = 3008 } }
+		Sets.Changed("Default")
+		-- "1 23 45" at 7 pixels a letter, three coins 13 high (the font at size
+		-- 22) with 2 pixels each, then the gap.
+		assert.equals(49 + 3 * 15 + 6, slot(1).buttons[2].x)
+	end)
+
 	it("show a background of its opacity and the bags' coin-box border when asked", function()
 		local bar = Sets.Get("Default").bars[1]
 		local frame = slot(1).frame

@@ -36,6 +36,9 @@ BarFrame.WHITE = { 1, 1, 1 }
 -- 17 pixels, its middle stretches.
 BarFrame.BORDER_ATLAS = { left = "common-coinbox-left", middle = "_common-coinbox-center", right = "common-coinbox-right" }
 BarFrame.BORDER_WIDTH, BarFrame.BORDER_HEIGHT = 8, 17
+-- Money's coins are icons inside its text (|T…:0:0:2:0|t): as high as the
+-- text, 2 pixels after their number.
+BarFrame.COIN_OFFSET = 2
 
 local SlotMixin = {}
 SlotMixin.__index = SlotMixin
@@ -57,6 +60,15 @@ end
 
 local function fontSize(bar)
 	return math.max(8, math.floor(bar.size * 0.6 + 0.5))
+end
+
+-- How wide a text is at a font size. The client measures icons inside a text
+-- short (in game, money came out about one coin too narrow), so they are
+-- counted here: each as wide as the text is high, after its offset.
+local function textWidth(measure, text, size)
+	local plain, icons = text:gsub("|T.-|t", "")
+	measure:SetText(plain)
+	return measure:GetUnboundedStringWidth() + icons * (size + BarFrame.COIN_OFFSET)
 end
 
 local function setChanged()
@@ -138,9 +150,8 @@ function SlotMixin:Measure()
 	for index, entry in ipairs(Bars.Entries(bar)) do
 		local look = Bars.Describe(entry)
 		if look then
-			measure:SetText(look.text)
 			local iconWidth = look.icon and (bar.size + BarFrame.SPACE) or 0
-			list[#list + 1] = { entry = entry, index = index, look = look, width = iconWidth + measure:GetUnboundedStringWidth() }
+			list[#list + 1] = { entry = entry, index = index, look = look, width = iconWidth + textWidth(measure, look.text, fontSize(bar)) }
 		end
 	end
 	local total = 0
