@@ -71,6 +71,9 @@ Modules\LootFeed\Frames.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\Designer.lua
 
+Modules\FreeSlots\FreeSlots.lua
+Modules\FreeSlots\Template.lua
+
 Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua
 Modules\Junk\ItemGrid.lua

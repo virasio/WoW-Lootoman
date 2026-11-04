@@ -287,4 +287,9 @@ ns.Locales.AddEnglish({
 	"Free bag slots: %d",
 	"No free reagent bag slots",
 	"Free reagent bag slots: %d",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	"Free slots",
+	"Enable the free-slot bar",
+	"Shows the free slots of your bags as text, in your own format and colours.",
 })

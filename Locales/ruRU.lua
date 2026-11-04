@@ -282,4 +282,9 @@ ns.Locales.AddTranslation("ruRU", {
 	["Free bag slots: %d"] = "Свободных ячеек в сумках: %d",
 	["No free reagent bag slots"] = "Нет свободных ячеек в сумке для реагентов",
 	["Free reagent bag slots: %d"] = "Свободных ячеек в сумке для реагентов: %d",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	["Free slots"] = "Свободные ячейки",
+	["Enable the free-slot bar"] = "Включить полосу свободных ячеек",
+	["Shows the free slots of your bags as text, in your own format and colours."] = "Показывает свободные ячейки сумок текстом в вашем формате и цветах.",
 })
