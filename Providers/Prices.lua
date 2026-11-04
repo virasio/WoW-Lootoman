@@ -43,8 +43,12 @@ function Prices.Vendor(item)
 	return each * item.count
 end
 
--- The stack's auction price before the auction house's cut, or nil.
+-- The stack's auction price before the auction house's cut, or nil. A bound
+-- item cannot be sold there, whatever the auction house asks for another copy.
 function Prices.Auction(item)
+	if item.bound then
+		return nil
+	end
 	listen()
 	for _, source in ipairs(sources) do
 		local each = source.Price(item.link)

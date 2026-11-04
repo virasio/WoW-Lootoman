@@ -81,6 +81,13 @@ describe("prices", function()
 			assert.equals("Auctionator: working", report())
 		end)
 
+		it("working give a bound item no auction price, as it cannot be sold there", function()
+			installAuctionator({ ["item:1000"] = 900000 })
+			local bound = { itemID = 1000, link = "item:1000", count = 1, bound = true }
+			assert.same({ nil, 5000 }, { Prices.Auction(bound), Prices.Worth(bound) })
+			assert.same({}, calls)
+		end)
+
 		it("raising an error come from merchants until the next login, and the self-test says why", function()
 			installAuctionator({})
 			rawget(_G, "Auctionator").API.v1.GetAuctionPriceByItemLink = function()
