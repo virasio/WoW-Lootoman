@@ -9,9 +9,10 @@ local Bus, Compat, Currencies, L, NameMenu, Text = ns.Bus, ns.Compat, ns.Currenc
 -- from, with New bar and Remove bar. Below, two lists: on the left what is on
 -- the chosen bar, in its order (drag a row up or down; drop an item from the
 -- bags on the list, or type its ID); on the right the currencies and money
--- not on it, by name, and the bag items taken off a bar this session, so a
--- wrong click is undone quickly (they are not kept after that). The buttons between the lists
--- move the chosen row across: up to the bar, or off it.
+-- not on it, by name, and the bag items taken off a bar while the window is
+-- open, so a wrong click is undone quickly (closing the window forgets them).
+-- The buttons between the lists move the chosen row across: up to the bar, or
+-- off it.
 --
 -- While a bar asks whether to take an entry off, nothing here changes a bar
 -- (BarFrame.Asking).
@@ -32,8 +33,14 @@ Editor.LIST_WIDTH = 270
 
 local window
 local barID
--- Bag items taken off a bar this session, by item ID.
+-- Bag items taken off a bar while the window is open, by item ID.
 local removed = {}
+
+local function forgetRemoved()
+	for itemID in pairs(removed) do
+		removed[itemID] = nil
+	end
+end
 
 local ERRORS = {
 	empty = L["Enter a set name."],
@@ -65,8 +72,8 @@ local function keyOf(entry)
 end
 
 -- The two lists of a bar: { left = { { entry, look } … } in the bar's order,
--- right = the same, by name: the currencies not on the bar and the items taken
--- off this session }.
+-- right = the same, by name: money and the currencies not on the bar, and the
+-- items taken off while the window is open }.
 function Editor.Lists(bar)
 	local left, on = {}, {}
 	for index, entry in ipairs(Bars.Entries(bar)) do
@@ -118,14 +125,15 @@ function Editor.Add(bar, entry)
 	return true
 end
 
--- Takes an entry off a bar; a bag item stays in the right list this session.
+-- Takes an entry off a bar; a bag item stays in the right list while the
+-- window is open.
 function Editor.Remove(bar, index)
 	if BarFrame.Asking() then
 		return nil
 	end
 	local entries = Bars.OwnEntries(bar)
 	local entry = table.remove(entries, index)
-	if entry and entry.kind == "item" then
+	if entry and entry.kind == "item" and window and window:IsShown() then
 		removed[entry.id] = true
 	end
 	changed()
@@ -150,7 +158,7 @@ function Editor.Move(bar, from, to)
 	changed()
 end
 
--- The items taken off this session (for tests).
+-- The items taken off while the window is open (for tests).
 function Editor.Removed()
 	return removed
 end
@@ -490,6 +498,7 @@ local function build()
 	hint:SetText(L["Drag rows up and down, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."])
 
 	frame:SetScript("OnShow", Editor.Refresh)
+	frame:SetScript("OnHide", forgetRemoved)
 	Bus:On("BarSetChanged", Editor, Editor.Refresh)
 	Bus:On("ProfileChanged", Editor, Editor.Refresh)
 	Bus:On("CurrenciesChanged", Editor, Editor.Refresh)

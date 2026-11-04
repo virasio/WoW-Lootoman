@@ -82,7 +82,7 @@ describe("bar editor", function()
 		assert.equals(3, #Sets.Get("Default").bars[1].entries)
 	end)
 
-	it("keeps a bag item taken off the bar in the right list for this session only", function()
+	it("keeps a bag item taken off the bar in the right list only while the window is open", function()
 		Editor.AddItem(Editor.Bar(), 2589)
 		choose(window().left, "Linen Cloth")
 		click(window().offBar)
@@ -91,8 +91,20 @@ describe("bar editor", function()
 		click(window().toBar)
 		assert.same({ "Valorstones", "Linen Cloth" }, names(window().left))
 		assert.same({}, Editor.Removed())
-		-- Saved data never holds the session's list.
+		-- Saved data never holds that list.
 		assert.is_nil(Sets.Get("Default").removed)
+		-- Closing the window forgets it.
+		choose(window().left, "Linen Cloth")
+		click(window().offBar)
+		window():Hide()
+		Editor.Open()
+		assert.same({ "Gilded Crest", "Money", "Resonance Crystals" }, names(window().right))
+		-- An item taken off while the window is closed is not kept either.
+		Editor.AddItem(Editor.Bar(), 765)
+		window():Hide()
+		Editor.Remove(Editor.Bar(), 2)
+		Editor.Open()
+		assert.same({ "Gilded Crest", "Money", "Resonance Crystals" }, names(window().right))
 	end)
 
 	it("reorders the bar's entries", function()
