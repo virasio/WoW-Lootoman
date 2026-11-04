@@ -7,7 +7,8 @@ local Compat, L = ns.Compat, ns.L
 -- click), to the right of the merchant's window, and closes with it.
 --
 -- Sell junk, at the bottom, sells the upper section, less the junk in bags the
--- game keeps out of junk selling (shown darker); a right click moves an item
+-- game keeps out of junk selling (shown darker), and closes the window; the
+-- sale goes on with the window closed. A right click moves an item
 -- between the sections (ItemGrid.lua). The bottom also says so when there is
 -- more junk than the merchant can buy back.
 local Junk = ns.Modules:Get("Junk")
@@ -46,8 +47,10 @@ local function footer(owner, frame)
 	owner.sellButton:SetSize(120, 22)
 	owner.sellButton:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
 	owner.sellButton:SetText(L["Sell junk"])
+	-- The sale goes on without the window, which is done once the junk is picked.
 	owner.sellButton:SetScript("OnClick", function()
 		Junk.SellQueue.Start(saleOf(owner.built))
+		owner:Close()
 	end)
 	owner.warning = frame:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
 	owner.warning:SetPoint("LEFT", frame, "LEFT", 0, 0)

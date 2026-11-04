@@ -58,8 +58,9 @@ describe("sell window", function()
 		assert.is_false(grid().frame:IsShown())
 	end)
 
-	it("sells the upper section with Sell junk, less the bags kept from junk selling", function()
+	it("sells the upper section with Sell junk, less the bags kept from junk selling, and closes", function()
 		grid().sellButton.scripts.OnClick(grid().sellButton)
+		assert.is_false(grid().frame:IsShown())
 		assert.is_false(grid().sellButton:IsEnabled())
 		for _ = 1, 2 do
 			local last = Test.state.bagActions[#Test.state.bagActions]
@@ -68,6 +69,8 @@ describe("sell window", function()
 		end
 		assert.same({ "0:1", "0:2" }, used())
 		assert.equals("done", Junk.SellQueue.State())
+		-- Opened again: nothing left to sell.
+		SellWindow.Open()
 		assert.is_false(grid().sellButton:IsEnabled())
 	end)
 
