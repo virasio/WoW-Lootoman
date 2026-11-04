@@ -17,7 +17,9 @@ end
 -- The free-slot bar: the bags' free space as one line of text, in the
 -- player's own format and colours (Template.lua), placed with Edit Mode. Its
 -- tooltip lists the free and total slots of every kind of bag. The text
--- follows the bags, the settings and the profile.
+-- follows the bags, the settings and the profile. The same text goes to broker
+-- displays when one is loaded (Integrations/Broker.lua), with the tooltip and
+-- a click that opens the bags.
 local FreeSlots = ns.Modules:Register({
 	name = "FreeSlots",
 	title = L["Free slots"],
@@ -38,6 +40,8 @@ FreeSlots.DEFAULT_POSITION = { point = "BOTTOMRIGHT", x = -260, y = 52 }
 FreeSlots.MAX_TEMPLATE = 200
 -- Room around the text, so it is easy to point at.
 FreeSlots.PADDING = 4
+FreeSlots.BROKER_NAME = "Lootoman: free slots"
+FreeSlots.ICON = [[Interface\Icons\INV_Misc_Bag_08]]
 
 -- The bar's text now.
 function FreeSlots:Text()
@@ -73,8 +77,30 @@ function FreeSlots:Refresh()
 	label:SetText(text)
 	local padding = FreeSlots.PADDING
 	self.frame:SetSize(math.max(label:GetUnboundedStringWidth(), 20) + 2 * padding, self:Get("size") + 2 * padding)
-	if self.OnText then
-		self.OnText(text)
+	self:UpdateBroker(text)
+end
+
+-- The broker object, made the first time the switch is on and a display is
+-- there; turned off, its text is empty (LibDataBroker cannot remove it).
+function FreeSlots:UpdateBroker(text)
+	if not self.broker and self:Get("broker") then
+		self.broker = ns.Integrations.Broker.Object(FreeSlots.BROKER_NAME, {
+			type = "data source",
+			label = L["Free slots"],
+			icon = FreeSlots.ICON,
+			OnTooltipShow = function(tooltip)
+				tooltip:AddLine(L["Free slots"])
+				for _, line in ipairs(FreeSlots.TooltipLines()) do
+					tooltip:AddLine(line, 1, 1, 1)
+				end
+			end,
+			OnClick = function()
+				ToggleAllBags()
+			end,
+		})
+	end
+	if self.broker then
+		self.broker.text = self:Get("broker") and text or ""
 	end
 end
 
@@ -153,6 +179,9 @@ end
 function FreeSlots:OnDisable()
 	if self.frame then
 		self.frame:Hide()
+	end
+	if self.broker then
+		self.broker.text = ""
 	end
 end
 

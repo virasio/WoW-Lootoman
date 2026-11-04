@@ -68,6 +68,10 @@ files["Integrations/Auctionator.lua"] = {
 	read_globals = { "Auctionator" },
 }
 
+files["Integrations/Broker.lua"] = {
+	read_globals = { "LibStub" },
+}
+
 files["Modules/"] = {
 	read_globals = {
 		"CANCEL",
@@ -96,6 +100,7 @@ files["Modules/"] = {
 		"UISpecialFrames",
 		"StaticPopup_Hide",
 		"StaticPopup_Show",
+		"ToggleAllBags",
 		"TooltipUtil",
 		"UIParent",
 	},
