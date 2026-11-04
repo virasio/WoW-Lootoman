@@ -269,4 +269,17 @@ ns.Locales.AddTranslation("ruRU", {
 	["Remove every mark of profile “%s” from the junk list?"] = "Убрать из списка хлама все пометки профиля «%s»?",
 	["Open the list"] = "Открыть список",
 	["Every item you marked as junk or as not junk, to remove marks."] = "Все предметы, помеченные как хлам или как не хлам, — чтобы снять пометки.",
+
+	-- Modules/LootFeed/LootFeed.lua
+	["Low-space warnings"] = "Предупреждения о месте",
+	["Warn when few bag slots are free"] = "Предупреждать, когда мало свободных ячеек в сумках",
+	["Shows a warning at the feed's edge while no more general bag slots are free than the number below."] = "Показывает предупреждение у края ленты, пока свободных ячеек в обычных сумках не больше, чем указано ниже.",
+	["Bag slots"] = "Ячейки в сумках",
+	["Warn when few reagent bag slots are free"] = "Предупреждать, когда мало свободных ячеек в сумке для реагентов",
+	["Shows a warning at the feed's edge while no more reagent bag slots are free than the number below."] = "Показывает предупреждение у края ленты, пока свободных ячеек в сумке для реагентов не больше, чем указано ниже.",
+	["Reagent bag slots"] = "Ячейки в сумке для реагентов",
+	["No free bag slots"] = "Нет свободных ячеек в сумках",
+	["Free bag slots: %d"] = "Свободных ячеек в сумках: %d",
+	["No free reagent bag slots"] = "Нет свободных ячеек в сумке для реагентов",
+	["Free reagent bag slots: %d"] = "Свободных ячеек в сумке для реагентов: %d",
 })

@@ -274,4 +274,17 @@ ns.Locales.AddEnglish({
 	"Remove every mark of profile “%s” from the junk list?",
 	"Open the list",
 	"Every item you marked as junk or as not junk, to remove marks.",
+
+	-- Modules/LootFeed/LootFeed.lua
+	"Low-space warnings",
+	"Warn when few bag slots are free",
+	"Shows a warning at the feed's edge while no more general bag slots are free than the number below.",
+	"Bag slots",
+	"Warn when few reagent bag slots are free",
+	"Shows a warning at the feed's edge while no more reagent bag slots are free than the number below.",
+	"Reagent bag slots",
+	"No free bag slots",
+	"Free bag slots: %d",
+	"No free reagent bag slots",
+	"Free reagent bag slots: %d",
 })

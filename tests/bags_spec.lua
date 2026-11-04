@@ -21,7 +21,8 @@ describe("Bags provider", function()
 	end
 
 	before_each(function()
-		ns = Loader.LoadAddon()
+		-- The provider alone: modules read the bags as they start.
+		ns = Loader.LoadAddon({ skip = { "Settings/", "Modules/" } })
 		Loader.Start(ns)
 		Bags, Test = ns.Bags, ns.Compat.Test
 		Test.SetItems({
@@ -145,7 +146,8 @@ describe("Bags provider", function()
 		Test.SetBags({ [0] = { size = 16, items = filled(15) } })
 		assert.is_true(fits(6948))
 		assert.same({ "BAG_UPDATE_DELAYED" }, ns.Bus:GetEvents(ns.Inventory))
-		Test.SetBags({ [0] = { size = 16, items = filled(16) } })
+		-- The bags change, and the client has not said so yet.
+		Test.state.bags = { [0] = { size = 16, items = filled(16) } }
 		assert.is_true(fits(6948))
 		Test.FireEvent("BAG_UPDATE_DELAYED")
 		assert.is_false(fits(6948))

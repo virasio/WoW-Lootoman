@@ -424,10 +424,12 @@ function Test.ClearLootSlot(slot)
 end
 
 -- SetBags({ [0] = { size = 16, items = { [1] = { itemID = 2589, count = 5 } } },
--- [1] = { size = 20, family = 32 }, [5] = { size = 36 } }). Fire
--- BAG_UPDATE_DELAYED afterwards when the bags change while the addon runs.
+-- [1] = { size = 20, family = 32 }, [5] = { size = 36 } }), and
+-- BAG_UPDATE_DELAYED, as the client fires it after every change in the bags.
+-- A test that changes state.bags in place fires it itself.
 function Test.SetBags(bags)
 	state.bags = bags
+	Test.FireEvent("BAG_UPDATE_DELAYED")
 end
 
 -- What the server does after a sale (UseBagItem at a merchant): the slot
