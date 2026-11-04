@@ -221,12 +221,12 @@ ns.Locales.AddEnglish({
 	"Drag an item here to remove its mark.",
 	"Auction price: %s",
 	"Its bag is left out of junk selling.",
-	"Drag it down to keep it.",
-	"Drag it up to mark it as junk.",
+	"Right-click, or drag it down, to take it out of the junk.",
+	"Right-click, or drag it up, to mark it as junk.",
 
 	-- Modules/Junk/TossButton.lua
 	"Throw away junk",
-	"Opens your bags with the junk on top. Right-click an item to delete it.",
+	"Opens your bags with the junk on top. Drag an item out of the window to delete it.",
 
 	-- Modules/Junk/Toss.lua
 	"%s ×%d",
@@ -237,7 +237,7 @@ ns.Locales.AddEnglish({
 	"Delete %s?",
 	"Junk tossing and selling is off. Turn it on in the options.",
 	"/lootoman toss: open the toss window",
-	"Right-click: delete",
+	"Drag it out of the window to delete it.",
 
 	-- Modules/Junk/SellQueue.lua
 	"the merchant's window closed",
@@ -261,9 +261,6 @@ ns.Locales.AddEnglish({
 	"Click: sell the junk.",
 	"Shift-click: sell the junk.",
 	"Shift-click: sell the junk and pick more to sell.",
-
-	-- Modules/Junk/SellWindow.lua
-	"Right-click: sell",
 
 	-- Settings/JunkList.lua
 	"Marked as junk",

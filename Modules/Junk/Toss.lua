@@ -6,14 +6,17 @@ local Compat, Inventory, L, Text = ns.Compat, ns.Inventory, ns.L, ns.Text
 -- (right of it, or left when there is no room) and closes with the loot; or
 -- with /lootoman toss, in the middle of the screen.
 --
--- A right click deletes the item's stack: a gray one at once; any other after
--- a confirmation in Lootoman's own dialog, which for rare and better items
--- also asks for the game's confirmation word, as the game does. (The game's own
--- question comes only from dropping an item onto the world, and showing
--- Blizzard's dialogs from addon code would taint them.)
+-- Dragging an item out of the window deletes its stack: a gray one at once;
+-- any other after a confirmation in Lootoman's own dialog, which for rare and
+-- better items also asks for the game's confirmation word, as the game does.
+-- (The game's own question comes only from dropping an item onto the world,
+-- and showing Blizzard's dialogs from addon code would taint them.) A right
+-- click moves an item between the sections (ItemGrid.lua).
 --
--- Deleting is a pick up and a delete in the same click, one item per click, as
--- the game requires; DeleteCursorItem deletes whatever the cursor holds. So
+-- Deleting is a pick up and a delete in the same mouse action (the release of
+-- the drag, or the click on Delete), one item per action, as the game requires
+-- (Blizzard's own action bar code deletes in OnDragStop too); DeleteCursorItem
+-- deletes whatever the cursor holds. So
 -- the cursor must be empty first, the slot must still hold the listed item,
 -- and after the pick up the cursor must hold exactly that slot; otherwise the
 -- cursor is cleared and nothing is deleted.
@@ -145,7 +148,7 @@ function Toss.Confirm(entry)
 	end
 end
 
--- A right click in the window.
+-- An item dropped outside the window.
 function Toss.Delete(entry)
 	if (entry.item.quality or 0) > ns.Rules.Junk.POOR then
 		Toss.Confirm(entry)
@@ -207,8 +210,8 @@ Junk.AddPart({
 			name = Toss.NAME,
 			title = L["Throw away junk"],
 			kind = "toss",
-			rightClick = L["Right-click: delete"],
-			onRightClick = Toss.Delete,
+			dropOutside = L["Drag it out of the window to delete it."],
+			onDropOutside = Toss.Delete,
 			onHide = function()
 				if confirm then
 					confirm:Hide()

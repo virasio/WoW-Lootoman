@@ -71,10 +71,20 @@ describe("sell window", function()
 		assert.is_false(grid().sellButton:IsEnabled())
 	end)
 
-	it("sells one stack with a right click, junk or not", function()
+	it("moves an item between the sections with a right click, and sells nothing that way", function()
 		local rest = grid().sections.rest.buttons[1]
 		rest.scripts.OnClick(rest, "RightButton")
-		assert.same({ "0:3" }, used())
+		assert.equals("junk", ns.Marks.Get(3))
+		assert.same({}, used())
+	end)
+
+	it("does nothing with an item dropped outside it", function()
+		local junk = grid().sections.junk.buttons[1]
+		junk.scripts.OnDragStart(junk)
+		grid().frame.mouseOver = false
+		junk.scripts.OnDragStop(junk)
+		assert.same({ {}, {} }, { used(), ns.Marks.List() })
+		assert.is_not_nil(Test.state.bags[0].items[1])
 	end)
 
 	it("warns when there is more junk than the merchant can buy back", function()

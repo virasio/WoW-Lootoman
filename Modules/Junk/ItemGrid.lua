@@ -9,15 +9,16 @@ local JunkRule = ns.Rules.Junk
 -- to what is equipped, and the auction price. Each section scrolls on its own,
 -- so both are in sight while an item is dragged between them.
 --
--- The drag is the window's own: the item stays in its bag slot and nothing goes
--- onto the game's cursor; a copy of its icon follows the mouse, and dropping it
--- on the other section marks it (Rules.Junk.MarkJunk, MarkNotJunk). A right
--- click is the owner's: deleting, or selling.
+-- A right click moves an item to the other section, and so does dragging it
+-- there: it is marked (Rules.Junk.MarkJunk, MarkNotJunk). The drag is the
+-- window's own: the item stays in its bag slot and nothing goes onto the
+-- game's cursor; a copy of its icon follows the mouse. Dropping it outside the
+-- window is the owner's: the toss window deletes it.
 --
 --   local grid = ItemGrid.Create({
 --       name = "LootomanTossWindow",          -- global name, for UISpecialFrames
 --       title = <text>, kind = "toss" | "sell",
---       rightClick = <tooltip line>, onRightClick = function(entry) end,
+--       dropOutside = <tooltip line>, onDropOutside = function(entry) end,  -- optional
 --       footer = function(grid, footer) end,  -- adds the owner's buttons
 --   })
 --   grid:Attach()      -- in the part's Enable: refresh on changes while shown
@@ -74,6 +75,11 @@ function ItemGrid.Drop(entry, target)
 	end
 end
 
+-- A right click: the entry goes to the other section.
+function ItemGrid.Move(entry)
+	ItemGrid.Drop(entry, entry.decision.junk and "rest" or "junk")
+end
+
 local GridMixin = {}
 GridMixin.__index = GridMixin
 
@@ -98,8 +104,11 @@ function GridMixin:ShowTooltip(button)
 	if entry.kept then
 		GameTooltip:AddLine(L["Its bag is left out of junk selling."], 1, 0.82, 0)
 	end
-	GameTooltip:AddLine(self.options.rightClick, 0, 1, 0)
-	GameTooltip:AddLine(entry.decision.junk and L["Drag it down to keep it."] or L["Drag it up to mark it as junk."], 0, 1, 0)
+	GameTooltip:AddLine(entry.decision.junk and L["Right-click, or drag it down, to take it out of the junk."]
+		or L["Right-click, or drag it up, to mark it as junk."], 0, 1, 0)
+	if self.options.dropOutside then
+		GameTooltip:AddLine(self.options.dropOutside, 0, 1, 0)
+	end
 	GameTooltip:Show()
 end
 
@@ -123,13 +132,20 @@ function GridMixin:Target()
 	return nil
 end
 
+-- On a section, the drop marks; outside the window, it is the owner's; on the
+-- rest of the window (its title, its bottom), nothing.
 function GridMixin:StopDrag()
 	local entry = self.dragged
 	self.dragged = nil
 	self.ghost:Hide()
-	local target = entry and self:Target()
+	if not entry then
+		return
+	end
+	local target = self:Target()
 	if target then
 		ItemGrid.Drop(entry, target)
+	elseif not self.frame:IsMouseOver() and self.options.onDropOutside then
+		self.options.onDropOutside(entry)
 	end
 end
 
@@ -151,7 +167,7 @@ local function createButton(grid, parent)
 	end)
 	button:SetScript("OnClick", function(self, mouseButton)
 		if mouseButton == "RightButton" and self.entry then
-			grid.options.onRightClick(self.entry)
+			ItemGrid.Move(self.entry)
 		end
 	end)
 	button:SetScript("OnDragStart", function(self)

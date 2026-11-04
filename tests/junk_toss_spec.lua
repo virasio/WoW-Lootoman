@@ -23,11 +23,18 @@ describe("toss window", function()
 		return Test.state.bags[bag].items[slot]
 	end
 
-	local function rightClick(bag, slot)
-		for _, section in pairs(Toss.Grid().sections) do
+	-- Drags an item's button out of the window and lets it go there.
+	local function dragOut(bag, slot)
+		local grid = Toss.Grid()
+		for _, section in pairs(grid.sections) do
 			for _, button in ipairs(section.buttons) do
 				if button:IsShown() and button.entry.item.bag == bag and button.entry.item.slot == slot then
-					button.scripts.OnClick(button, "RightButton")
+					button.scripts.OnDragStart(button)
+					for _, other in pairs(grid.sections) do
+						other.frame.mouseOver = false
+					end
+					grid.frame.mouseOver = false
+					button.scripts.OnDragStop(button)
 					return
 				end
 			end
@@ -107,8 +114,8 @@ describe("toss window", function()
 			Toss.Open()
 		end)
 
-		it("deletes a gray stack at once with a right click: a pick up and a delete", function()
-			rightClick(0, 1)
+		it("deletes a gray stack dragged out of the window at once: a pick up and a delete", function()
+			dragOut(0, 1)
 			assert.is_nil(bagItem(0, 1))
 			assert.same({ { "pickup", 0, 1 }, { "delete" } }, Test.state.bagActions)
 			assert.matches("Deleted %[Broken Tooth%] ×3", Test.state.printed[#Test.state.printed])
@@ -116,7 +123,7 @@ describe("toss window", function()
 		end)
 
 		it("asks before deleting an item above gray, and deletes it on Delete", function()
-			rightClick(0, 2)
+			dragOut(0, 2)
 			assert.is_true(confirm():IsShown())
 			assert.equals("Delete [Linen Cloth] ×20?", confirm().text.text)
 			assert.is_false(confirm().word:IsShown())
@@ -127,9 +134,9 @@ describe("toss window", function()
 		end)
 
 		it("deletes nothing when the question is cancelled or closed", function()
-			rightClick(0, 2)
+			dragOut(0, 2)
 			confirm().cancel.scripts.OnClick(confirm().cancel)
-			rightClick(0, 2)
+			dragOut(0, 2)
 			assert.is_true(Loader.ui.PressEscape())
 			assert.is_false(confirm():IsShown())
 			assert.is_not_nil(bagItem(0, 2))
@@ -137,7 +144,7 @@ describe("toss window", function()
 		end)
 
 		it("asks for the game's word for rare and better items, in any letter case", function()
-			rightClick(0, 3)
+			dragOut(0, 3)
 			assert.equals("Delete [Ring]? Type “DELETE” to confirm.", confirm().text.text)
 			assert.is_true(confirm().word:IsShown())
 			assert.is_false(confirm().delete:IsEnabled())
@@ -152,7 +159,7 @@ describe("toss window", function()
 
 		it("deletes nothing while the cursor holds something", function()
 			Test.state.cursor = { bag = 2, slot = 5 }
-			rightClick(0, 1)
+			dragOut(0, 1)
 			assert.is_not_nil(bagItem(0, 1))
 			assert.same({}, Test.state.bagActions)
 			assert.matches("Put down", Test.state.printed[#Test.state.printed])

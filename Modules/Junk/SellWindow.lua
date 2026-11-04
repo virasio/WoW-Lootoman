@@ -7,9 +7,9 @@ local Compat, L = ns.Compat, ns.L
 -- click), to the right of the merchant's window, and closes with it.
 --
 -- Sell junk, at the bottom, sells the upper section, less the junk in bags the
--- game keeps out of junk selling (shown darker); a right click sells one stack,
--- as in the bags. The bottom also shows the junk's value, and when there is
--- more of it than the merchant can buy back, says so.
+-- game keeps out of junk selling (shown darker); a right click moves an item
+-- between the sections (ItemGrid.lua). The bottom also says so when there is
+-- more junk than the merchant can buy back.
 local Junk = ns.Modules:Get("Junk")
 local SellWindow = {}
 Junk.SellWindow = SellWindow
@@ -79,10 +79,6 @@ Junk.AddPart({
 				name = SellWindow.NAME,
 				title = L["Sell junk"],
 				kind = "sell",
-				rightClick = L["Right-click: sell"],
-				onRightClick = function(entry)
-					Junk.SellQueue.Start({ entry })
-				end,
 				onRefresh = updateFooter,
 				footer = footer,
 			})

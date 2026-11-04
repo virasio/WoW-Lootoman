@@ -216,12 +216,12 @@ ns.Locales.AddTranslation("ruRU", {
 	["Drag an item here to remove its mark."] = "Перетащите сюда предмет, чтобы снять с него пометку.",
 	["Auction price: %s"] = "Цена на аукционе: %s",
 	["Its bag is left out of junk selling."] = "Его сумка исключена из продажи хлама.",
-	["Drag it down to keep it."] = "Перетащите вниз, чтобы оставить.",
-	["Drag it up to mark it as junk."] = "Перетащите вверх, чтобы пометить как хлам.",
+	["Right-click, or drag it down, to take it out of the junk."] = "Щелчок правой кнопкой или перетаскивание вниз убирает из хлама.",
+	["Right-click, or drag it up, to mark it as junk."] = "Щелчок правой кнопкой или перетаскивание вверх помечает как хлам.",
 
 	-- Modules/Junk/TossButton.lua
 	["Throw away junk"] = "Выбросить хлам",
-	["Opens your bags with the junk on top. Right-click an item to delete it."] = "Открывает сумки с хламом сверху. Щелчок правой кнопкой по предмету удаляет его.",
+	["Opens your bags with the junk on top. Drag an item out of the window to delete it."] = "Открывает сумки с хламом сверху. Чтобы удалить предмет, перетащите его за пределы окна.",
 
 	-- Modules/Junk/Toss.lua
 	["%s ×%d"] = "%s ×%d",
@@ -232,7 +232,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete %s?"] = "Удалить %s?",
 	["Junk tossing and selling is off. Turn it on in the options."] = "Выброс и продажа хлама выключены. Включите их в настройках.",
 	["/lootoman toss: open the toss window"] = "/lootoman toss: открыть окно выброса",
-	["Right-click: delete"] = "Правая кнопка: удалить",
+	["Drag it out of the window to delete it."] = "Перетащите за пределы окна, чтобы удалить.",
 
 	-- Modules/Junk/SellQueue.lua
 	["the merchant's window closed"] = "окно торговца закрылось",
@@ -256,9 +256,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Click: sell the junk."] = "Щелчок: продать хлам.",
 	["Shift-click: sell the junk."] = "Shift-щелчок: продать хлам.",
 	["Shift-click: sell the junk and pick more to sell."] = "Shift-щелчок: продать хлам и выбрать, что ещё продать.",
-
-	-- Modules/Junk/SellWindow.lua
-	["Right-click: sell"] = "Правая кнопка: продать",
 
 	-- Settings/JunkList.lua
 	["Marked as junk"] = "Помечено как хлам",

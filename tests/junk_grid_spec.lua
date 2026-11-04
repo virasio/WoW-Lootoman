@@ -2,7 +2,7 @@ local Loader = require("tests.helpers.loader")
 
 -- The bag-like window of the toss and sell windows.
 describe("item grid", function()
-	local ns, ItemGrid, Test, grid, clicked
+	local ns, ItemGrid, Test, grid, dropped
 
 	local function item(itemID, name, quality, count)
 		return { itemID = itemID, link = "item:" .. itemID, name = name, quality = quality, count = count or 1, icon = 100 + itemID }
@@ -23,12 +23,14 @@ describe("item grid", function()
 		return grid.sections[key].buttons[index]
 	end
 
-	-- Drags a button and lets it go over a section (or over nothing).
+	-- Drags a button and lets it go over a section, over the rest of the window
+	-- (nil) or outside it ("outside").
 	local function drag(from, over)
 		from.scripts.OnDragStart(from)
 		for key, section in pairs(grid.sections) do
 			section.frame.mouseOver = key == over
 		end
+		grid.frame.mouseOver = over ~= "outside"
 		from.scripts.OnDragStop(from)
 	end
 
@@ -46,13 +48,13 @@ describe("item grid", function()
 			[2] = item(2, "Linen Cloth", 1, 20),
 			[3] = item(3, "Sword", 2, 1),
 		} } })
-		clicked = {}
+		dropped = {}
 		grid = ItemGrid.Create({
 			name = "LootomanTestGrid",
 			title = "Test",
 			kind = "toss",
-			rightClick = "Right-click: test",
-			onRightClick = function(entry) clicked[#clicked + 1] = entry.item.name end,
+			dropOutside = "Drag out: test",
+			onDropOutside = function(entry) dropped[#dropped + 1] = entry.item.name end,
 		})
 		grid:Attach()
 	end)
@@ -78,12 +80,25 @@ describe("item grid", function()
 		assert.equals("12|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t", ItemGrid.ShortPrice(125000))
 	end)
 
-	it("hands a right click to its owner and ignores a left one", function()
+	it("moves an item to the other section with a right click, and ignores a left one", function()
 		grid:Open()
 		local sword = button("rest", 2)
 		sword.scripts.OnClick(sword, "LeftButton")
+		assert.same({}, ns.Marks.List())
 		sword.scripts.OnClick(sword, "RightButton")
-		assert.same({ "Sword" }, clicked)
+		assert.equals("junk", ns.Marks.Get(3))
+		assert.same({ "Broken Tooth 21c", "Sword 1g" }, shown("junk"))
+		local tooth = button("junk", 1)
+		tooth.scripts.OnClick(tooth, "RightButton")
+		assert.equals("notJunk", ns.Marks.Get(1))
+		assert.same({ "Broken Tooth 21c", "Linen Cloth 2s" }, shown("rest"))
+	end)
+
+	it("hands an item dropped outside the window to its owner", function()
+		grid:Open()
+		drag(button("junk", 1), "outside")
+		assert.same({ "Broken Tooth" }, dropped)
+		assert.same({}, ns.Marks.List())
 	end)
 
 	it("marks an item dragged into the other section, and follows the mark", function()
@@ -98,11 +113,11 @@ describe("item grid", function()
 		assert.is_false(grid.ghost:IsShown())
 	end)
 
-	it("does nothing for a drag that ends where it began or outside", function()
+	it("does nothing for a drag that ends where it began or on the rest of the window", function()
 		grid:Open()
 		drag(button("rest", 1), "rest")
 		drag(button("rest", 2), nil)
-		assert.same({}, ns.Marks.List())
+		assert.same({ {}, {} }, { ns.Marks.List(), dropped })
 	end)
 
 	it("follows the bags while it is shown", function()
@@ -123,7 +138,7 @@ describe("item grid", function()
 		local tooltip = Loader.ui.tooltip
 		assert.same({ 0, 3 }, tooltip.bagItem)
 		assert.is_true(tooltip.compared)
-		assert.same({ "Auction price: 500 copper", "Right-click: test", "Drag it up to mark it as junk." }, tooltip.lines)
+		assert.same({ "Auction price: 500 copper", "Right-click, or drag it up, to mark it as junk.", "Drag out: test" }, tooltip.lines)
 		assert.is_true(tooltip.shown)
 	end)
 
