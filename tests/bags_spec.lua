@@ -151,6 +151,20 @@ describe("Bags provider", function()
 		assert.is_false(fits(6948))
 	end)
 
+	it("counts free and total slots of all bags and of each kind", function()
+		Test.SetBags({
+			[0] = { size = 16, items = filled(14) },
+			[1] = { size = 20, items = filled(17) },
+			[2] = { size = 10, family = HERBS, items = filled(4, 765) },
+			[3] = { size = 8, family = ORE },
+			[5] = { size = 30, items = filled(10, 2589) },
+		})
+		assert.same({
+			free = 39, total = 84, used = 45, general = 5, generalTotal = 36,
+			reagent = 20, reagentTotal = 30, profession = 14, professionTotal = 18,
+		}, Bags.FreeSlots())
+	end)
+
 	it("counts the free slots of the backpack and the general bags only", function()
 		Test.SetBags({
 			[0] = { size = 16, items = filled(14) },
