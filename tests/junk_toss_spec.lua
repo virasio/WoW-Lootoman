@@ -70,7 +70,7 @@ describe("toss window", function()
 		rawset(_G, "LootFrame", nil)
 	end)
 
-	it("opens next to the loot window and closes with the loot", function()
+	it("opens from the toss button next to the loot window and closes with the loot", function()
 		LootFrame:Show()
 		Toss.Toggle()
 		local frame = Toss.Grid().frame
@@ -84,7 +84,7 @@ describe("toss window", function()
 		LootFrame:Show()
 		LootFrame.parent = UI.NewFake(Loader.ui.UIParent)
 		LootFrame.parent:Hide()
-		Toss.Open()
+		Toss.Toggle()
 		assert.same({ { "CENTER" } }, Toss.Grid().frame.points)
 	end)
 
@@ -92,11 +92,12 @@ describe("toss window", function()
 		LootFrame.GetRight = function() return 1800 end
 		Loader.ui.UIParent.GetRight = function() return 1920 end
 		LootFrame:Show()
-		Toss.Open()
+		Toss.Toggle()
 		assert.same({ { "TOPRIGHT", LootFrame, "TOPLEFT", -4, 0 } }, Toss.Grid().frame.points)
 	end)
 
-	it("opens in the middle of the screen with /lootoman toss, and stays open when a loot closes", function()
+	it("opens in the middle of the screen with /lootoman toss, even by a loot window, and stays open when a loot closes", function()
+		LootFrame:Show()
 		Test.RunSlashCommand("LOOTOMAN", "toss")
 		local frame = Toss.Grid().frame
 		assert.same({ { true, { "CENTER" } } }, { { frame:IsShown(), frame.points[1] } })

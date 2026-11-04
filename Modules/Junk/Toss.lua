@@ -174,23 +174,24 @@ local function place(nextToLoot)
 	end
 end
 
--- Opens the window: next to the loot window when it is shown, else in the
--- middle of the screen.
-function Toss.Open()
+-- Opens the window: with nextToLoot, next to the loot window when it is
+-- visible (and it then closes with the loot); else in the middle of the screen.
+function Toss.Open(nextToLoot)
 	if not active or not grid then
 		return
 	end
 	-- Visible, not only shown: fast autoloot keeps a shown window in a hidden holder.
-	fromLoot = LootFrame ~= nil and LootFrame:IsVisible()
+	fromLoot = nextToLoot == true and LootFrame ~= nil and LootFrame:IsVisible()
 	place(fromLoot)
 	grid:Open()
 end
 
+-- The toss button: the window opens next to the loot window, or closes.
 function Toss.Toggle()
 	if grid and grid:IsShown() then
 		grid:Close()
 	else
-		Toss.Open()
+		Toss.Open(true)
 	end
 end
 
@@ -200,7 +201,7 @@ end
 
 ns.Slash.Register("toss", function()
 	if active then
-		Toss.Open()
+		Toss.Open(false)
 	else
 		ns.Print(L["Junk tossing and selling is off. Turn it on in the options."])
 	end
