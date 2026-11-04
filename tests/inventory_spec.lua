@@ -81,6 +81,11 @@ describe("Inventory provider", function()
 		Test.state.bags[0].items[3].guid = "another"
 		assert.is_false(Inventory.StillThere(cloth))
 		Test.state.bags[0].items[3].guid = nil
+		-- The stack grew: same item, same guid.
+		Test.state.bags[0].items[3].count = 25
+		assert.is_false(Inventory.StillThere(cloth))
+		Test.state.bags[0].items[3].count = 20
+		assert.is_true(Inventory.StillThere(cloth))
 		Test.state.bags[0].items[3].locked = true
 		assert.is_false(Inventory.StillThere(cloth))
 		Test.state.bags[0].items[3] = nil

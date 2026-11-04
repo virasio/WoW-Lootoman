@@ -226,7 +226,7 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Modules/Junk/Toss.lua
 	["%s ×%d"] = "%s ×%d",
 	["Put down what the cursor holds first; nothing was deleted."] = "Сначала положите то, что держит курсор; ничего не удалено.",
-	["This item is no longer where it was; nothing was deleted."] = "Этого предмета уже нет на прежнем месте; ничего не удалено.",
+	["This item has moved or changed; nothing was deleted."] = "Этот предмет переместился или изменился; ничего не удалено.",
 	["Deleted %s."] = "Удалено: %s.",
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",

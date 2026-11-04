@@ -157,6 +157,25 @@ describe("toss window", function()
 			assert.is_nil(bagItem(0, 3))
 		end)
 
+		it("asks, with the game's word, before deleting an item whose quality is not known yet", function()
+			Test.state.bags[0].items[4] = { itemID = 4, link = "[Unknown]", name = "Unknown", count = 1 }
+			Test.FireEvent("BAG_UPDATE_DELAYED")
+			dragOut(0, 4)
+			assert.is_not_nil(bagItem(0, 4))
+			assert.is_true(confirm():IsShown())
+			assert.is_true(confirm().word:IsShown())
+			assert.same({}, Test.state.bagActions)
+		end)
+
+		it("deletes nothing when the stack grew while the question was open", function()
+			dragOut(0, 2)
+			bagItem(0, 2).count = 25
+			confirm().delete.scripts.OnClick(confirm().delete)
+			assert.equals(25, bagItem(0, 2).count)
+			assert.same({}, Test.state.bagActions)
+			assert.matches("moved or changed", Test.state.printed[#Test.state.printed])
+		end)
+
 		it("deletes nothing while the cursor holds something", function()
 			Test.state.cursor = { bag = 2, slot = 5 }
 			dragOut(0, 1)

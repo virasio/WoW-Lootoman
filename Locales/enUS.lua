@@ -231,7 +231,7 @@ ns.Locales.AddEnglish({
 	-- Modules/Junk/Toss.lua
 	"%s ×%d",
 	"Put down what the cursor holds first; nothing was deleted.",
-	"This item is no longer where it was; nothing was deleted.",
+	"This item has moved or changed; nothing was deleted.",
 	"Deleted %s.",
 	"Delete %s? Type “%s” to confirm.",
 	"Delete %s?",

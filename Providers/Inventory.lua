@@ -67,10 +67,11 @@ function Inventory.Facts(item)
 	return item.facts
 end
 
--- Whether a bag slot still holds the item a list showed: the same guid, and not
--- locked by a move or a sale. Read from the client, not from the last scan.
+-- Whether a bag slot still holds the item a list showed: the same guid, the
+-- same count (a stack can grow and keep its guid), and not locked by a move or
+-- a sale. Read from the client, not from the last scan.
 function Inventory.StillThere(item)
 	local now = Compat.GetBagItem(item.bag, item.slot)
-	return now ~= nil and not now.locked and now.itemID == item.itemID
+	return now ~= nil and not now.locked and now.itemID == item.itemID and now.count == item.count
 		and Compat.GetBagItemFacts(item.bag, item.slot).guid == Inventory.Facts(item).guid
 end

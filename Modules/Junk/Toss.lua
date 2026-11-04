@@ -9,6 +9,7 @@ local Compat, Inventory, L, Text = ns.Compat, ns.Inventory, ns.L, ns.Text
 -- Dragging an item out of the window deletes its stack: a gray one at once;
 -- any other after a confirmation in Lootoman's own dialog, which for rare and
 -- better items also asks for the game's confirmation word, as the game does.
+-- An item whose quality the client has not loaded yet counts as rare.
 -- (The game's own question comes only from dropping an item onto the world,
 -- and showing Blizzard's dialogs from addon code would taint them.) A right
 -- click moves an item between the sections (ItemGrid.lua).
@@ -46,14 +47,14 @@ function Toss.DeleteNow(entry)
 		return false
 	end
 	if not Inventory.StillThere(item) then
-		ns.Print(L["This item is no longer where it was; nothing was deleted."])
+		ns.Print(L["This item has moved or changed; nothing was deleted."])
 		return false
 	end
 	Compat.PickupBagItem(item.bag, item.slot)
 	local bag, slot = Compat.GetCursorBagSlot()
 	if bag ~= item.bag or slot ~= item.slot then
 		Compat.ClearCursor()
-		ns.Print(L["This item is no longer where it was; nothing was deleted."])
+		ns.Print(L["This item has moved or changed; nothing was deleted."])
 		return false
 	end
 	Compat.DeleteCursorItem()
@@ -61,9 +62,10 @@ function Toss.DeleteNow(entry)
 	return true
 end
 
--- Whether deleting the item asks for the typed word.
+-- Whether deleting the item asks for the typed word: rare and better, and an
+-- item of unknown quality.
 function Toss.NeedsWord(item)
-	return (item.quality or 0) >= Toss.RARE and item.quality ~= Toss.HEIRLOOM
+	return item.quality == nil or (item.quality >= Toss.RARE and item.quality ~= Toss.HEIRLOOM)
 end
 
 local function confirmWord()
@@ -148,12 +150,12 @@ function Toss.Confirm(entry)
 	end
 end
 
--- An item dropped outside the window.
+-- An item dropped outside the window: only a gray one goes without a question.
 function Toss.Delete(entry)
-	if (entry.item.quality or 0) > ns.Rules.Junk.POOR then
-		Toss.Confirm(entry)
-	else
+	if entry.item.quality == ns.Rules.Junk.POOR then
 		Toss.DeleteNow(entry)
+	else
+		Toss.Confirm(entry)
 	end
 end
 
