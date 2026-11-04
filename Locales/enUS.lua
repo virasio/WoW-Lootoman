@@ -316,4 +316,16 @@ ns.Locales.AddEnglish({
 	-- Modules/Bars/Sets.lua
 	"Use bar set “%s”",
 	"Bar sets",
+
+	-- Modules/Bars/Bars.lua
+	"%d / %d",
+
+	-- Modules/Bars/BarFrame.lua
+	"Drag it along the bar to move it.",
+	"Gap",
+	"An empty bar: fill it in the bar editor.",
+	"Currency bar %d",
+	"Edit bars",
+	"New bar",
+	"Remove this bar",
 })

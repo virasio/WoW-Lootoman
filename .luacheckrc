@@ -92,6 +92,7 @@ files["Modules/"] = {
 		"LootFrame",
 		"MenuConstants",
 		"MenuTemplates",
+		"MenuUtil",
 		"MenuVariants",
 		"MerchantFrame",
 		"MerchantSellAllJunkButton",

@@ -78,6 +78,7 @@ Modules\FreeSlots\Template.lua
 
 Modules\Bars\Bars.lua
 Modules\Bars\Sets.lua
+Modules\Bars\BarFrame.lua
 
 Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua

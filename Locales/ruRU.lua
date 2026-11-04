@@ -311,4 +311,16 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Modules/Bars/Sets.lua
 	["Use bar set “%s”"] = "Использовать набор полос «%s»",
 	["Bar sets"] = "Наборы полос",
+
+	-- Modules/Bars/Bars.lua
+	["%d / %d"] = "%d / %d",
+
+	-- Modules/Bars/BarFrame.lua
+	["Drag it along the bar to move it."] = "Перетащите вдоль полосы, чтобы переставить.",
+	["Gap"] = "Промежуток",
+	["An empty bar: fill it in the bar editor."] = "Пустая полоса: заполните её в редакторе полос.",
+	["Currency bar %d"] = "Полоса валют %d",
+	["Edit bars"] = "Редактировать полосы",
+	["New bar"] = "Новая полоса",
+	["Remove this bar"] = "Убрать эту полосу",
 })

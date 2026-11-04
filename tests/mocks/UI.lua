@@ -208,6 +208,7 @@ function UI.Install()
 	function tooltip:AddLine(text) self.lines[#self.lines + 1] = text end
 	function tooltip:SetHyperlink(link) self.link = link end
 	function tooltip:SetCurrencyByID(id) self.currency = id end
+	function tooltip:SetItemByID(id) self.item = id end
 	function tooltip:Show() self.shown = true end
 	function tooltip:Hide() self.shown = false end
 	function tooltip:IsOwned(owner) return self.owner == owner end
@@ -253,6 +254,13 @@ function UI.Install()
 	rawset(_G, "GameTooltip_SetTitle", function(lines, text) lines[#lines + 1] = text end)
 	rawset(_G, "GameTooltip_AddNormalLine", function(lines, text) lines[#lines + 1] = text end)
 	api.OpenMenu = UI.OpenMenu
+	-- MenuUtil.CreateContextMenu: the last menu opened, as built.
+	rawset(_G, "MenuUtil", { CreateContextMenu = function(owner, generator)
+		local root = newDescription("root")
+		generator(owner, root)
+		api.contextMenu = root
+		return root
+	end })
 	api.cursor = { 0, 0 }
 	rawset(_G, "GetCursorPosition", function() return api.cursor[1], api.cursor[2] end)
 	-- Escape: Blizzard hides the frames named in UISpecialFrames
