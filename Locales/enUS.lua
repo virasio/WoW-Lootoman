@@ -352,7 +352,7 @@ ns.Locales.AddEnglish({
 	"On the bar",
 	"Not on the bar",
 	"Add item by ID",
-	"Drag rows up and down, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode.",
+	"Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode.",
 	"/lootoman bars: open the currency bar editor",
 	"Bars",
 	"Open the bar editor",

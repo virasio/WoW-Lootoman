@@ -7,12 +7,16 @@ local Bus, Compat, Currencies, L, NameMenu, Text = ns.Bus, ns.Compat, ns.Currenc
 -- layout menu (every set, with Copy, Rename and Reset under its gear and a
 -- delete button; + New set; Import and Share), and the set's bars to choose
 -- from, with New bar and Remove bar. Below, two lists: on the left what is on
--- the chosen bar, in its order (drag a row up or down; drop an item from the
--- bags on the list, or type its ID); on the right the currencies and money
+-- the chosen bar, in its order (drop an item from the bags on the list, or
+-- type its ID); on the right the currencies and money
 -- not on it, by name, and the bag items taken off a bar while the window is
 -- open, so a wrong click is undone quickly (closing the window forgets them).
 -- The buttons between the lists move the chosen row across: up to the bar, or
--- off it.
+-- off it. Rows are also dragged, as entries are on a bar: the row dims, a copy
+-- follows the mouse, a line marks where it will go in the bar's list, and the
+-- other list lights up when the row would leave the bar. Dropped in the bar's
+-- list, a row goes there (from either list); dropped on the other list, it
+-- leaves the bar; anywhere else, nothing happens.
 --
 -- While a bar asks whether to take an entry off, nothing here changes a bar
 -- (BarFrame.Asking).
@@ -253,8 +257,129 @@ local function buildBarMenu(_, root)
 	end
 end
 
--- A list's row: an icon and the name, chosen with a click; rows of the bar's
--- list are dragged up and down.
+-- A row on the move: { list, row, item }; and the copy that follows the mouse.
+local dragging, ghost
+
+local function getGhost()
+	if not ghost then
+		ghost = CreateFrame("Frame", nil, UIParent)
+		ghost:SetFrameStrata("TOOLTIP")
+		ghost:SetSize(Editor.LIST_WIDTH - 24, Editor.ROW_HEIGHT)
+		ghost.Background = ghost:CreateTexture(nil, "BACKGROUND")
+		ghost.Background:SetAllPoints()
+		ghost.Background:SetColorTexture(0, 0, 0, 0.6)
+		ghost.Icon = ghost:CreateTexture(nil, "ARTWORK")
+		ghost.Icon:SetSize(Editor.ROW_HEIGHT - 4, Editor.ROW_HEIGHT - 4)
+		ghost.Icon:SetPoint("LEFT", 2, 0)
+		ghost.Name = ghost:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		ghost.Name:SetPoint("LEFT", ghost.Icon, "RIGHT", 6, 0)
+		ghost:SetAlpha(0.9)
+		ghost:SetScript("OnUpdate", function()
+			Editor.FollowDrag()
+		end)
+		ghost:Hide()
+	end
+	return ghost
+end
+
+-- The copy of a dragged row (for tests).
+function Editor.Ghost()
+	return getGhost()
+end
+
+-- Where a drag would end now: "left" and the place in the bar's entries
+-- before which the row goes, "right" for off the bar, or nil for nowhere.
+local function dropTarget()
+	local left = window.left
+	if left.box:IsMouseOver() then
+		local _, y = GetCursorPosition()
+		local top = left.content:GetTop() or 0
+		local count = #Bars.Entries(Editor.Bar())
+		local gap = math.floor((top - y / left.content:GetEffectiveScale()) / Editor.ROW_HEIGHT + 0.5)
+		return "left", math.min(math.max(gap, 0), count) + 1
+	elseif dragging.list == left and window.right.box:IsMouseOver() then
+		return "right"
+	end
+end
+
+-- While a row is dragged: the copy follows the mouse, the line shows where it
+-- goes in the bar's list, the other list lights up when it would leave the bar.
+function Editor.FollowDrag()
+	if not dragging or not window then
+		return
+	end
+	local copy = getGhost()
+	local x, y = GetCursorPosition()
+	local scale = UIParent:GetEffectiveScale()
+	copy:ClearAllPoints()
+	copy:SetPoint("LEFT", UIParent, "BOTTOMLEFT", x / scale + 12, y / scale)
+	local target, place = dropTarget()
+	local marker = window.left.Marker
+	marker:SetShown(target == "left")
+	if target == "left" then
+		local offset = -(place - 1) * Editor.ROW_HEIGHT + 1
+		marker:ClearAllPoints()
+		marker:SetPoint("TOPLEFT", window.left.content, "TOPLEFT", 0, offset)
+		marker:SetPoint("TOPRIGHT", window.left.content, "TOPRIGHT", 0, offset)
+	end
+	window.right.box.Target:SetShown(target == "right")
+end
+
+local function startDrag(list, row)
+	if not row.item or BarFrame.Asking() then
+		return
+	end
+	dragging = { list = list, row = row, item = row.item }
+	row:SetAlpha(0.35)
+	local copy = getGhost()
+	copy.Icon:SetTexture(row.item.look.icon or row.item.look.listIcon)
+	copy.Name:SetText(row.item.look.name)
+	copy:Show()
+	Editor.FollowDrag()
+end
+
+-- Ends a drag without doing anything; returns what was dragged.
+local function endDrag()
+	local drag = dragging
+	dragging = nil
+	if ghost then
+		ghost:Hide()
+	end
+	if window then
+		window.left.Marker:Hide()
+		window.right.box.Target:Hide()
+	end
+	if drag then
+		drag.row:SetAlpha(1)
+	end
+	return drag
+end
+
+local function stopDrag()
+	if not dragging then
+		return
+	end
+	local target, place = dropTarget()
+	local drag = endDrag()
+	local bar = Editor.Bar()
+	local item = drag.item
+	if not bar or not target then
+		return
+	end
+	if target == "right" then
+		if Editor.Remove(bar, item.index) then
+			window.right.chosen, window.left.chosen = keyOf(item.entry), nil
+		end
+	elseif drag.list == window.left then
+		Editor.Move(bar, item.index, place)
+	elseif Editor.Add(bar, item.entry) then
+		window.left.chosen, window.right.chosen = keyOf(item.entry), nil
+		Editor.Move(bar, #Bars.Entries(bar), place)
+	end
+	Editor.Refresh()
+end
+
+-- A list's row: an icon and the name, chosen with a click, and dragged.
 local function createRow(list, index)
 	local row = CreateFrame("Button", nil, list.content)
 	row:SetSize(Editor.LIST_WIDTH - 24, Editor.ROW_HEIGHT)
@@ -278,24 +403,11 @@ local function createRow(list, index)
 		list.chosen = self.item and keyOf(self.item.entry)
 		Editor.Refresh()
 	end)
-	if list.ordered then
-		row:RegisterForDrag("LeftButton")
-		row:SetScript("OnDragStart", function(self)
-			list.dragged = self.item
-		end)
-		row:SetScript("OnDragStop", function()
-			local item = list.dragged
-			list.dragged = nil
-			if item then
-				local _, y = GetCursorPosition()
-				local top = list.content:GetTop() or 0
-				local place = math.floor((top - y / list.content:GetEffectiveScale()) / Editor.ROW_HEIGHT) + 1
-				local bar = Editor.Bar()
-				local count = #Bars.Entries(bar)
-				Editor.Move(bar, item.index, math.min(math.max(place, 1), count) + (place > item.index and 1 or 0))
-			end
-		end)
-	end
+	row:RegisterForDrag("LeftButton")
+	row:SetScript("OnDragStart", function(self)
+		startDrag(list, self)
+	end)
+	row:SetScript("OnDragStop", stopDrag)
 	list.rows[index] = row
 	return row
 end
@@ -347,8 +459,8 @@ function Editor.Refresh()
 	window.offBar:SetEnabled(chosenItem(window.left) ~= nil)
 end
 
-local function createList(parent, title, x, ordered)
-	local list = { rows = {}, ordered = ordered }
+local function createList(parent, title, x)
+	local list = { rows = {} }
 	local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	label:SetPoint("TOPLEFT", x, -96)
 	label:SetText(title)
@@ -358,6 +470,11 @@ local function createList(parent, title, x, ordered)
 	box.Background = box:CreateTexture(nil, "BACKGROUND")
 	box.Background:SetAllPoints()
 	box.Background:SetColorTexture(0, 0, 0, 0.3)
+	-- Lit while a row dragged from the bar's list would leave the bar here.
+	box.Target = box:CreateTexture(nil, "BORDER")
+	box.Target:SetAllPoints()
+	box.Target:SetColorTexture(1, 0.82, 0, 0.15)
+	box.Target:Hide()
 	local scroll = CreateFrame("ScrollFrame", nil, box, "ScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 2, -2)
 	scroll:SetPoint("BOTTOMRIGHT", -20, 2)
@@ -367,6 +484,11 @@ local function createList(parent, title, x, ordered)
 	list.content = CreateFrame("Frame", nil, scroll)
 	list.content:SetSize(Editor.LIST_WIDTH - 24, Editor.ROW_HEIGHT)
 	scroll:SetScrollChild(list.content)
+	-- Where a dragged row goes in the bar's list.
+	list.Marker = list.content:CreateTexture(nil, "OVERLAY")
+	list.Marker:SetHeight(2)
+	list.Marker:SetColorTexture(1, 0.82, 0, 1)
+	list.Marker:Hide()
 	list.box = box
 	return list
 end
@@ -444,8 +566,8 @@ local function build()
 		end
 	end)
 
-	frame.left = createList(frame, L["On the bar"], 20, true)
-	frame.right = createList(frame, L["Not on the bar"], Editor.WIDTH - 20 - Editor.LIST_WIDTH, false)
+	frame.left = createList(frame, L["On the bar"], 20)
+	frame.right = createList(frame, L["Not on the bar"], Editor.WIDTH - 20 - Editor.LIST_WIDTH)
 	frame.left.box:EnableMouse(true)
 	frame.left.box:SetScript("OnReceiveDrag", receiveItem)
 	frame.left.box:SetScript("OnMouseUp", receiveItem)
@@ -460,6 +582,7 @@ local function build()
 		local item = chosenItem(frame.right)
 		if item and Editor.Add(Editor.Bar(), item.entry) then
 			frame.left.chosen, frame.right.chosen = keyOf(item.entry), nil
+			Editor.Refresh()
 		end
 	end)
 	frame.offBar = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
@@ -470,6 +593,7 @@ local function build()
 		local item = chosenItem(frame.left)
 		if item and Editor.Remove(Editor.Bar(), item.index) then
 			frame.right.chosen, frame.left.chosen = keyOf(item.entry), nil
+			Editor.Refresh()
 		end
 	end)
 
@@ -495,10 +619,13 @@ local function build()
 	hint:SetPoint("BOTTOMLEFT", 20, 14)
 	hint:SetPoint("BOTTOMRIGHT", -20, 14)
 	hint:SetJustifyH("LEFT")
-	hint:SetText(L["Drag rows up and down, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."])
+	hint:SetText(L["Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."])
 
 	frame:SetScript("OnShow", Editor.Refresh)
-	frame:SetScript("OnHide", forgetRemoved)
+	frame:SetScript("OnHide", function()
+		endDrag()
+		forgetRemoved()
+	end)
 	Bus:On("BarSetChanged", Editor, Editor.Refresh)
 	Bus:On("ProfileChanged", Editor, Editor.Refresh)
 	Bus:On("CurrenciesChanged", Editor, Editor.Refresh)

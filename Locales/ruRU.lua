@@ -347,7 +347,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["On the bar"] = "На полосе",
 	["Not on the bar"] = "Не на полосе",
 	["Add item by ID"] = "Добавить предмет по ID",
-	["Drag rows up and down, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."] = "Перетаскивайте строки вверх и вниз или бросьте предмет из сумки на левый список. Ширина, промежуток и размер — в режиме редактирования.",
+	["Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."] = "Перетаскивайте строки вверх и вниз или из одного списка в другой, или бросьте предмет из сумки на левый список. Ширина, промежуток и размер — в режиме редактирования.",
 	["/lootoman bars: open the currency bar editor"] = "/lootoman bars: открыть редактор полос валют",
 	["Bars"] = "Полосы",
 	["Open the bar editor"] = "Открыть редактор полос",

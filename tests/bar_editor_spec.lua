@@ -116,6 +116,67 @@ describe("bar editor", function()
 		assert.same({ "Valorstones", "Linen Cloth", "Silverleaf" }, names(window().left))
 	end)
 
+	local function rowOf(list, name)
+		for _, row in ipairs(list.rows) do
+			if row.shown and row.item and row.Name.text == name then
+				return row
+			end
+		end
+		error("no row " .. name)
+	end
+
+	-- Where the mouse is: over the bar's list, the other list, or neither, and
+	-- how far below the top of the bar's list.
+	local function point(over, below)
+		window().left.box.mouseOver = over == "left"
+		window().right.box.mouseOver = over == "right"
+		Loader.ui.cursor = { 0, -(below or 0) }
+		Editor.FollowDrag()
+	end
+
+	it("drags a row along the bar's list, showing what moves and where it goes", function()
+		Editor.AddItem(Editor.Bar(), 2589)
+		Editor.AddItem(Editor.Bar(), 765)
+		local row = rowOf(window().left, "Silverleaf")
+		row.scripts.OnDragStart(row)
+		-- In the gap after the first row.
+		point("left", 20)
+		local marker = window().left.Marker
+		assert.same({ 0.35, true, "Silverleaf" }, { row.alpha, Editor.Ghost().shown, Editor.Ghost().Name.text })
+		assert.same({ true, { "TOPLEFT", window().left.content, "TOPLEFT", 0, -21 } }, { marker.shown, marker.points[1] })
+		row.scripts.OnDragStop(row)
+		assert.same({ "Valorstones", "Silverleaf", "Linen Cloth" }, names(window().left))
+		assert.same({ 1, false, false }, { row.alpha, Editor.Ghost().shown, marker.shown })
+	end)
+
+	it("drags a row from one list to the other, and does nothing dropped elsewhere", function()
+		local row = rowOf(window().right, "Resonance Crystals")
+		row.scripts.OnDragStart(row)
+		-- Over its own list: nowhere to go.
+		point("right", 0)
+		assert.same({ false, false }, { window().left.Marker.shown, window().right.box.Target.shown })
+		point("left", 2)
+		row.scripts.OnDragStop(row)
+		assert.same({ "Resonance Crystals", "Valorstones" }, names(window().left))
+		assert.same({ "Gilded Crest", "Money" }, names(window().right))
+		row = rowOf(window().left, "Valorstones")
+		row.scripts.OnDragStart(row)
+		point("right", 0)
+		assert.is_true(window().right.box.Target.shown)
+		row.scripts.OnDragStop(row)
+		assert.same({ "Resonance Crystals" }, names(window().left))
+		assert.same({ "Gilded Crest", "Money", "Valorstones" }, names(window().right))
+		row = rowOf(window().left, "Resonance Crystals")
+		row.scripts.OnDragStart(row)
+		point(nil)
+		row.scripts.OnDragStop(row)
+		assert.same({ "Resonance Crystals" }, names(window().left))
+		-- Closing the window ends a drag.
+		row.scripts.OnDragStart(row)
+		window():Hide()
+		assert.same({ false, 1 }, { Editor.Ghost().shown, row.alpha })
+	end)
+
 	it("adds and removes bars of the set, and shows the chosen one", function()
 		click(window().add)
 		assert.same({ 2, {} }, { #Sets.Get("Default").bars, names(window().left) })
