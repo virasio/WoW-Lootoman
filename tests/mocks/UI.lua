@@ -140,6 +140,11 @@ local function newDescription(kind, text)
 		radio.isSelected, radio.setSelected, radio.data = isSelected, setSelected, data
 		return radio
 	end
+	function description:CreateCheckbox(checkboxText, isSelected, setSelected, data)
+		local checkbox = add(newDescription("checkbox", checkboxText))
+		checkbox.isSelected, checkbox.setSelected, checkbox.data = isSelected, setSelected, data
+		return checkbox
+	end
 	function description:CreateButton(buttonText, callback)
 		local button = add(newDescription("button", buttonText))
 		button.callback = callback

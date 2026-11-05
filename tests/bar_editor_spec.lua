@@ -212,8 +212,86 @@ describe("bar editor", function()
 		Sets.Get("Default").bars[1].entries = { { kind = "stack", showEmpty = false,
 			members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 2815 } } } }
 		Sets.Changed("Default")
-		assert.same({ "Stack: Gilded Crest" }, names(window().left))
+		assert.same({ "Stack: Gilded Crest", "Gilded Crest", "Resonance Crystals" }, names(window().left))
 		assert.same({ "Money", "Valorstones" }, names(window().right))
+	end)
+
+	-- The bar's entries, a stack as the list of its members' IDs.
+	local function barEntries()
+		local list = {}
+		for index, entry in ipairs(Sets.Get("Default").bars[1].entries) do
+			if entry.kind == "stack" then
+				local ids = {}
+				for position, member in ipairs(entry.members) do
+					ids[position] = member.id
+				end
+				list[index] = ids
+			else
+				list[index] = entry.id
+			end
+		end
+		return list
+	end
+
+	local function drag(list, name, over, below)
+		local row = rowOf(list, name)
+		row.scripts.OnDragStart(row)
+		point(over, below)
+		row.scripts.OnDragStop(row)
+	end
+
+	it("stacks a row dropped on another, puts one in a stack's gap, and takes a member out", function()
+		Editor.Add(Editor.Bar(), { kind = "currency", id = 3110 })
+		Editor.Add(Editor.Bar(), { kind = "currency", id = 2815 })
+		-- Onto the middle of the first row: it lights up, and no line shows.
+		local row = rowOf(window().left, "Gilded Crest")
+		row.scripts.OnDragStart(row)
+		point("left", 11)
+		assert.same({ true, false }, { window().left.rows[1].Target.shown, window().left.Marker.shown })
+		row.scripts.OnDragStop(row)
+		assert.same({ { 3008, 3110 }, 2815 }, barEntries())
+		assert.same({ "Stack: Valorstones", "Valorstones", "Gilded Crest", "Resonance Crystals" }, names(window().left))
+		-- Into the gap above the stack's first member: the line is indented.
+		row = rowOf(window().left, "Resonance Crystals")
+		row.scripts.OnDragStart(row)
+		point("left", 22)
+		assert.same({ "TOPLEFT", window().left.content, "TOPLEFT", Editor.INDENT, -21 }, window().left.Marker.points[1])
+		row.scripts.OnDragStop(row)
+		assert.same({ { 2815, 3008, 3110 } }, barEntries())
+		-- Money stacks with nothing; at the end it is an entry.
+		drag(window().right, "Money", "left", 11)
+		assert.same({ { 2815, 3008, 3110 } }, barEntries())
+		drag(window().right, "Money", "left", 88)
+		assert.same({ { 2815, 3008, 3110 }, 0 }, barEntries())
+		-- The gap after a stack's last member is the top level.
+		drag(window().left, "Gilded Crest", "left", 88)
+		assert.same({ { 2815, 3008 }, 3110, 0 }, barEntries())
+		-- A member off the bar: a stack of one is its member again.
+		drag(window().left, "Valorstones", "right")
+		assert.same({ 2815, 3110, 0 }, barEntries())
+		assert.same({ "Resonance Crystals", "Gilded Crest", "Money" }, names(window().left))
+	end)
+
+	it("stacks a row from the other list, shows a stack when empty and breaks it up from its menu", function()
+		drag(window().right, "Resonance Crystals", "left", 11)
+		assert.same({ { 3008, 2815 } }, barEntries())
+		local row = rowOf(window().left, "Stack: Valorstones")
+		row.scripts.OnClick(row, "RightButton")
+		local menu = Loader.ui.contextMenu
+		assert.same({ "checkbox", "Show when empty", false, "Break up the stack" },
+			{ menu.entries[1].kind, menu.entries[1].text, menu.entries[1].isSelected(), menu.entries[2].text })
+		menu.entries[1].setSelected()
+		assert.is_true(Sets.Get("Default").bars[1].entries[1].showEmpty)
+		menu.entries[2].callback()
+		assert.same({ 3008, 2815 }, barEntries())
+		-- The button between the lists takes a chosen member off too.
+		Editor.Drop(Editor.Bar(), { row = 2 }, { on = 1 })
+		choose(window().left, "Resonance Crystals")
+		click(window().offBar)
+		assert.same({ 3008 }, barEntries())
+		-- Dropped on itself or next to itself, nothing changes.
+		assert.is_false(Editor.Drop(Editor.Bar(), { row = 1 }, { on = 1 }))
+		assert.is_false(Editor.Drop(Editor.Bar(), { row = 1 }, { gap = 1 }))
 	end)
 
 	it("adds nothing while the set has no bar", function()
