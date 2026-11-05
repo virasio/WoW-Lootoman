@@ -49,3 +49,42 @@ describe("saved data of version 0.1", function()
 		holds(saved, fixture(), "saved")
 	end)
 end)
+
+describe("saved data of version 0.3", function()
+	local fixture = dofile("tests/fixtures/saved_0_3.lua")
+	local ns
+
+	before_each(function()
+		ns = Loader.Start(Loader.LoadAddon(), fixture())
+	end)
+
+	it("keeps the bar set the profile uses, its bars and the 0.3 settings", function()
+		local Sets = ns.Modules:Get("Bars").Sets
+		assert.same({ "Raid", "{free|33ff33} / {general}", 4 },
+			{ Sets.Current(), ns.Storage:Get("FreeSlots", "template"), ns.Storage:Get("LootFeed", "warnGeneralAt") })
+		local raid = Sets.Get("Raid")
+		assert.same(fixture().LootomanDB.sections.barSets.Raid.bars, raid.bars)
+		assert.is_nil(Sets.Get("Default").bars[1].entries)
+	end)
+
+	it("brings the bar sets to schema 2 and saves them again with nothing else lost or changed", function()
+		local Sets = ns.Modules:Get("Bars").Sets
+		assert.same({ 2, 2 }, { Sets.Get("Default").schema, Sets.Get("Raid").schema })
+		local expected = fixture()
+		for _, set in pairs(expected.LootomanDB.sections.barSets) do
+			set.schema = 2
+		end
+		local function holds(actual, wanted, path)
+			for key, value in pairs(wanted) do
+				local where = path .. "." .. tostring(key)
+				if type(value) == "table" then
+					assert.equals("table", type(actual[key]), where)
+					holds(actual[key], value, where)
+				else
+					assert.equals(value, actual[key], where)
+				end
+			end
+		end
+		holds(ns.Compat.Test.state.saved, expected, "saved")
+	end)
+end)
