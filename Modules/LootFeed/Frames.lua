@@ -14,9 +14,13 @@ local Compat, L = ns.Compat, ns.L
 -- leaves, the others slide to their new places. Rows pushed out when the feed
 -- is full slide past the anchor edge as they fade.
 --
+-- Warnings (few free bag slots) take the first places at the anchor edge, one
+-- row's height each, and the rows stack after them; while there is a warning
+-- the feed stays shown.
+--
 -- Rows show tooltips but let clicks through to the game world, and the mouse
 -- wheel keeps zooming the camera. Hovering pauses the model's timers. The
--- frame is hidden, and costs nothing, while there are no rows.
+-- frame is hidden, and costs nothing, while there are no rows and no warnings.
 --
 --   local feed = Frames.Create(model)        -- out of combat, when the module starts
 --   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design, size),
@@ -24,6 +28,7 @@ local Compat, L = ns.Compat, ns.L
 --   feed:Wake()                              -- after model:Add
 --   feed:RefreshOwned()                      -- after the bags change
 --   feed:SetPreview(true)                    -- in Edit Mode
+--   feed:SetWarnings({ "Free bag slots: 2" }) -- or {} for none
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
@@ -245,6 +250,15 @@ function Frames.PreviewRows()
 	}
 end
 
+-- The warnings' text colour: the default UI's red for errors.
+Frames.WARNING_COLOR = { 1, 0.25, 0.25 }
+Frames.WARNING_ICON = [[Interface\Icons\INV_Misc_Bag_08]]
+
+-- How far the rows start from the anchor edge: past the warnings.
+local function base(feed)
+	return #feed.warnings * feed.step
+end
+
 -- Puts a row at a distance from the anchor edge.
 local function place(feed, rowFrame, offset)
 	rowFrame.offset = offset
@@ -267,7 +281,7 @@ end
 -- The shared background spans the rows on screen, from the anchor edge to the
 -- farthest row, with the gap as a margin; it fades out to the right.
 local function placeBackground(feed)
-	local far = 0
+	local far = #feed.warnings > 0 and (base(feed) - feed.options.layout.gap) or 0
 	for _, rowFrame in pairs(feed.frameOf) do
 		far = math.max(far, rowFrame.offset + feed.options.layout.height)
 	end
@@ -306,6 +320,8 @@ function Frames.Create(model)
 		frameOf = {},
 		seen = setmetatable({}, { __mode = "k" }),
 		version = 0,
+		warnings = {},
+		warningLines = {},
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
 		feed.rows[index] = Frames.CreateRow(frame)
@@ -319,11 +335,54 @@ function Frames.Create(model)
 	return feed
 end
 
+-- The warning lines, at the anchor edge in the order given.
+local function placeWarnings(feed)
+	local layout = feed.options.layout
+	local font = getFonts().text
+	for index, text in ipairs(feed.warnings) do
+		local line = feed.warningLines[index]
+		if not line then
+			line = CreateFrame("Frame", nil, feed.frame)
+			line.Icon = line:CreateTexture(nil, "ARTWORK")
+			line.Icon:SetTexture(Frames.WARNING_ICON)
+			line.Text = line:CreateFontString(nil, "OVERLAY")
+			line.Text:SetWordWrap(false)
+			line.Text:SetJustifyH("LEFT")
+			feed.warningLines[index] = line
+		end
+		line:SetSize(layout.width, layout.height)
+		line.Icon:SetSize(layout.height * 0.6, layout.height * 0.6)
+		line.Icon:ClearAllPoints()
+		line.Icon:SetPoint("LEFT", line, "LEFT", 0, 0)
+		line.Text:SetFont(font[1], layout.parts.name.fontSize, font[3])
+		line.Text:SetTextColor(unpack(Frames.WARNING_COLOR))
+		line.Text:ClearAllPoints()
+		line.Text:SetPoint("LEFT", line.Icon, "RIGHT", 6, 0)
+		line.Text:SetText(text)
+		place(feed, line, (index - 1) * feed.step)
+		line:Show()
+	end
+	for index = #feed.warnings + 1, #feed.warningLines do
+		feed.warningLines[index]:Hide()
+	end
+end
+
+-- Shows these warning texts at the anchor edge; the rows move past them.
+function FeedMixin:SetWarnings(texts)
+	self.warnings = texts
+	placeWarnings(self)
+	self.version = self.version + 1
+	if #texts > 0 then
+		self.frame:Show()
+	end
+end
+
 function FeedMixin:SetOptions(options)
 	self.options = options
 	local layout = options.layout
 	self.step = layout.height + layout.gap
 	self.frame:SetSize(layout.width, options.maxRows * self.step - layout.gap)
+	placeWarnings(self)
 	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, 0))
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
@@ -347,7 +406,7 @@ end
 function FeedMixin:SetPreview(active)
 	self.preview = active and Frames.PreviewRows() or nil
 	self.frame.PreviewBackground:SetShown(active)
-	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0)
+	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or #self.warnings > 0)
 end
 
 function FeedMixin:Draw(now)
@@ -381,7 +440,7 @@ function FeedMixin:Draw(now)
 	local slide = self.step / Frames.SLIDE_TIME * elapsed
 	for index, view in ipairs(views) do
 		local row = view.row
-		local target = (live - index) * self.step
+		local target = base(self) + (live - index) * self.step
 		local rowFrame = self.frameOf[row]
 		if not rowFrame and #self.free > 0 then
 			rowFrame = table.remove(self.free)
@@ -406,7 +465,7 @@ function FeedMixin:Draw(now)
 	end
 	placeBackground(self)
 
-	if #views == 0 and not hovered then
+	if #views == 0 and not hovered and #self.warnings == 0 then
 		self.frame:Hide()
 	end
 end

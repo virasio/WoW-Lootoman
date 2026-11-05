@@ -274,4 +274,98 @@ ns.Locales.AddEnglish({
 	"Remove every mark of profile “%s” from the junk list?",
 	"Open the list",
 	"Every item you marked as junk or as not junk, to remove marks.",
+
+	-- Modules/LootFeed/LootFeed.lua
+	"Low-space warnings",
+	"Warn when few bag slots are free",
+	"Shows a warning at the feed's edge while no more general bag slots are free than the number below.",
+	"Bag slots",
+	"Warn when few reagent bag slots are free",
+	"Shows a warning at the feed's edge while no more reagent bag slots are free than the number below.",
+	"Reagent bag slots",
+	"No free bag slots",
+	"Free bag slots: %d",
+	"No free reagent bag slots",
+	"Free reagent bag slots: %d",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	"Free slots",
+	"Enable the free-slot bar",
+	"Shows the free slots of your bags as text, in your own format and colours.",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	"Look",
+	"Default colour",
+	"For the text between the tokens, and for tokens without a colour of their own.",
+	"Also in broker panels",
+	"Offers the text to broker displays such as Titan Panel or ElvUI's data texts.",
+	"All bags: %d free of %d",
+	"General bags: %d free of %d",
+	"Reagent bag: %d free of %d",
+	"Profession bags: %d free of %d",
+	"Edit the text",
+	"The free-slot bar's text. Tokens: %s",
+	"Text",
+	"Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s",
+
+	-- Modules/Bars/Bars.lua
+	"Currency bars",
+	"Enable currency bars",
+	"Bars of currencies and of items in your bags, anywhere on the screen.",
+
+	-- Modules/Bars/Sets.lua
+	"Use bar set “%s”",
+	"Bar sets",
+
+	-- Modules/Bars/Bars.lua
+	"%d / %d",
+
+	-- Modules/Bars/BarFrame.lua
+	"Gap",
+	"Currency bar %d",
+	"Edit bars",
+	"New bar",
+	"Remove this bar",
+
+	-- Modules/Bars/Editor.lua
+	"Enter a set name.",
+	"The set name is too long.",
+	"A set with this name already exists.",
+	"This set no longer exists.",
+	"This set holds as many bars as it can.",
+	"Type an item's number (its ID), such as 2589.",
+	"Creates a copy of this set, and this profile uses it.",
+	"Renames this set in every profile that uses it.",
+	"Leaves this set one bar with the backpack's currencies.",
+	"Reset bar set “%s”?",
+	"Delete set",
+	"Delete bar set “%s”? Profiles that use it switch to the Default set.",
+	"New set",
+	"Starts a set with one bar, and this profile uses it.",
+	"Name of the new set:",
+	"Makes a text of your bar sets to copy and give to another character or player.",
+	"Bar %d",
+	"No bars",
+	"Set:",
+	"Bar:",
+	"Remove bar",
+	"On the bar",
+	"Not on the bar",
+	"Add item by ID",
+	"Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode.",
+	"/lootoman bars: open the currency bar editor",
+	"Bars",
+	"Open the bar editor",
+	"Choose what each bar shows, add and remove bars, and switch, copy or share sets of bars.",
+
+	-- Modules/Bars/BarFrame.lua
+	"Drag it along the bar to move it, or off the bar to take it off.",
+	"Take “%s” off the bar?",
+	"Take off",
+	"Fill from",
+	"The left edge",
+	"The right edge",
+	"Background",
+	"Border",
+	"An empty bar: fill it in the bar editor, or drop items from your bags on it.",
 })

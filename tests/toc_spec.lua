@@ -51,6 +51,8 @@ describe("Lootoman.toc", function()
 		assert.equals("Lootoman", toc.metadata.Title)
 		assert.equals("@project-version@", toc.metadata.Version)
 		assert.matches("^%d+[%d, ]*$", toc.metadata.Interface)
+		-- Retail 12.1.5, the 12.1.7 test realm, and WoW Forever.
+		assert.equals("120105, 120107, 16001", toc.metadata.Interface)
 		assert.equals("LootomanDB", toc.metadata.SavedVariables)
 		assert.equals("LootomanCharDB", toc.metadata.SavedVariablesPerCharacter)
 		assert.matches("^%d+$", toc.metadata["X-Curse-Project-ID"])

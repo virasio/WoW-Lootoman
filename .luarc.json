@@ -32,6 +32,7 @@
     "LootFrame",
     "MenuConstants",
     "MenuTemplates",
+    "MenuUtil",
     "MenuVariants",
     "MerchantFrame",
     "MerchantSellAllJunkButton",
@@ -42,7 +43,9 @@
     "SlashCmdList",
     "StaticPopup_Hide",
     "StaticPopup_Show",
+    "ToggleAllBags",
     "TooltipUtil",
-    "UISpecialFrames"
+    "UISpecialFrames",
+    "WOW_PROJECT_ID"
   ]
 }

@@ -10,7 +10,10 @@ local function newLibEditMode()
 	local lib = { frames = {}, settings = {}, callbacks = {}, SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2, Divider = "divider" } }
 	function lib:AddFrame(frame, _, default, name) self.frames[frame] = { default = default, name = name } end
 	function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
-	function lib:AddFrameSettingsButtons(_, buttons) self.buttons = buttons end
+	function lib:AddFrameSettingsButtons(frame, buttons)
+		self.buttons = self.buttons or {}
+		self.buttons[frame] = buttons
+	end
 	function lib:RegisterCallback(event, callback)
 		self.callbacks[event] = self.callbacks[event] or {}
 		table.insert(self.callbacks[event], callback)
@@ -55,8 +58,58 @@ describe("loot feed module", function()
 			"checkbox:Experience", "dropdown:Minimum quality",
 			"header:Rows and timing", "slider:Rows", "dropdown:New rows appear", "slider:Time on screen", "slider:Fade-out time",
 			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Owned count", "checkbox:Glow for rare items",
+			"header:Low-space warnings", "checkbox:Warn when few bag slots are free", "slider:Bag slots",
+			"checkbox:Warn when few reagent bag slots are free", "slider:Reagent bag slots",
 			"button:Row design",
 		}, api.Kinds(api.FindCategory("Loot feed")))
+	end)
+
+	describe("low-space warnings", function()
+		-- General bags with this many free slots, and a reagent bag with that many.
+		local function bags(general, reagent)
+			local items = {}
+			for slot = 1, 10 - general do
+				items[slot] = { itemID = 2589, count = 1 }
+			end
+			local reagentItems = {}
+			for slot = 1, 5 - (reagent or 5) do
+				reagentItems[slot] = { itemID = 2589, count = 1 }
+			end
+			Test.SetBags({ [0] = { size = 10, items = items }, [5] = reagent and { size = 5, items = reagentItems } or nil })
+		end
+
+		local function shown()
+			return module.feed.warnings
+		end
+
+		it("warn when no more general slots are free than the threshold, 2 by default", function()
+			bags(3)
+			assert.same({}, shown())
+			bags(2)
+			assert.same({ "Free bag slots: 2" }, shown())
+			bags(0)
+			assert.same({ "No free bag slots" }, shown())
+			module:Set("warnGeneralAt", 0)
+			bags(1)
+			assert.same({}, shown())
+			module:Set("warnGeneral", false)
+			bags(0)
+			assert.same({}, shown())
+		end)
+
+		it("warn about the reagent bag when turned on and the player has one", function()
+			module:Set("warnReagent", true)
+			bags(5, 1)
+			assert.same({ "Free reagent bag slots: 1" }, shown())
+			bags(1, 0)
+			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
+			bags(5)
+			assert.same({}, shown())
+		end)
+
+		it("say nothing before the client has told the bags", function()
+			assert.same({}, shown())
+		end)
 	end)
 
 	it("offers the client's item quality names", function()
@@ -83,8 +136,8 @@ describe("loot feed module", function()
 				names[#names + 1] = setting.name
 			end
 		end
-		assert.same({ "What the feed shows", "Rows and timing", "Appearance" }, names)
-		assert.equals(17, #lib.settings[frame])
+		assert.same({ "What the feed shows", "Rows and timing", "Appearance", "Low-space warnings" }, names)
+		assert.equals(22, #lib.settings[frame])
 		assert.same({ "divider", "Items" }, { lib.settings[frame][1].kind, lib.settings[frame][2].name })
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
@@ -150,7 +203,8 @@ describe("loot feed module", function()
 		Test.SetMoney(150)
 		ns.Modules:SetEnabled("LootFeed", false)
 		assert.is_false(Test.IsRegistered("CHAT_MSG_LOOT"))
-		assert.is_false(Test.IsRegistered("PLAYER_MONEY"))
+		-- Other modules may still listen to money; the feed does not.
+		assert.same({}, ns.Bus:GetEvents(module))
 		assert.is_false(module.feed.frame.shown)
 		ns.Modules:SetEnabled("LootFeed", true)
 		assert.is_true(Test.IsRegistered("CHAT_MSG_LOOT"))

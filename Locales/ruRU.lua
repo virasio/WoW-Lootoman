@@ -269,4 +269,98 @@ ns.Locales.AddTranslation("ruRU", {
 	["Remove every mark of profile “%s” from the junk list?"] = "Убрать из списка хлама все пометки профиля «%s»?",
 	["Open the list"] = "Открыть список",
 	["Every item you marked as junk or as not junk, to remove marks."] = "Все предметы, помеченные как хлам или как не хлам, — чтобы снять пометки.",
+
+	-- Modules/LootFeed/LootFeed.lua
+	["Low-space warnings"] = "Предупреждения о месте",
+	["Warn when few bag slots are free"] = "Предупреждать, когда мало свободных ячеек в сумках",
+	["Shows a warning at the feed's edge while no more general bag slots are free than the number below."] = "Показывает предупреждение у края ленты, пока свободных ячеек в обычных сумках не больше, чем указано ниже.",
+	["Bag slots"] = "Ячейки в сумках",
+	["Warn when few reagent bag slots are free"] = "Предупреждать, когда мало свободных ячеек в сумке для реагентов",
+	["Shows a warning at the feed's edge while no more reagent bag slots are free than the number below."] = "Показывает предупреждение у края ленты, пока свободных ячеек в сумке для реагентов не больше, чем указано ниже.",
+	["Reagent bag slots"] = "Ячейки в сумке для реагентов",
+	["No free bag slots"] = "Нет свободных ячеек в сумках",
+	["Free bag slots: %d"] = "Свободных ячеек в сумках: %d",
+	["No free reagent bag slots"] = "Нет свободных ячеек в сумке для реагентов",
+	["Free reagent bag slots: %d"] = "Свободных ячеек в сумке для реагентов: %d",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	["Free slots"] = "Свободные ячейки",
+	["Enable the free-slot bar"] = "Включить полосу свободных ячеек",
+	["Shows the free slots of your bags as text, in your own format and colours."] = "Показывает свободные ячейки сумок текстом в вашем формате и цветах.",
+
+	-- Modules/FreeSlots/FreeSlots.lua
+	["Look"] = "Вид",
+	["Default colour"] = "Цвет по умолчанию",
+	["For the text between the tokens, and for tokens without a colour of their own."] = "Для текста между метками и для меток без своего цвета.",
+	["Also in broker panels"] = "Также на панелях брокеров",
+	["Offers the text to broker displays such as Titan Panel or ElvUI's data texts."] = "Передаёт текст панелям вроде Titan Panel или текстам данных ElvUI.",
+	["All bags: %d free of %d"] = "Все сумки: свободно %d из %d",
+	["General bags: %d free of %d"] = "Обычные сумки: свободно %d из %d",
+	["Reagent bag: %d free of %d"] = "Сумка для реагентов: свободно %d из %d",
+	["Profession bags: %d free of %d"] = "Сумки для профессий: свободно %d из %d",
+	["Edit the text"] = "Изменить текст",
+	["The free-slot bar's text. Tokens: %s"] = "Текст полосы свободных ячеек. Метки: %s",
+	["Text"] = "Текст",
+	["Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s"] = "Метки в фигурных скобках показывают свободные ячейки, при желании каждая своим цветом: {free||33ff33}. Метки: %s",
+
+	-- Modules/Bars/Bars.lua
+	["Currency bars"] = "Полосы валют",
+	["Enable currency bars"] = "Включить полосы валют",
+	["Bars of currencies and of items in your bags, anywhere on the screen."] = "Полосы с валютами и предметами из сумок в любом месте экрана.",
+
+	-- Modules/Bars/Sets.lua
+	["Use bar set “%s”"] = "Использовать набор полос «%s»",
+	["Bar sets"] = "Наборы полос",
+
+	-- Modules/Bars/Bars.lua
+	["%d / %d"] = "%d / %d",
+
+	-- Modules/Bars/BarFrame.lua
+	["Gap"] = "Промежуток",
+	["Currency bar %d"] = "Полоса валют %d",
+	["Edit bars"] = "Редактировать полосы",
+	["New bar"] = "Новая полоса",
+	["Remove this bar"] = "Убрать эту полосу",
+
+	-- Modules/Bars/Editor.lua
+	["Enter a set name."] = "Введите название набора.",
+	["The set name is too long."] = "Название набора слишком длинное.",
+	["A set with this name already exists."] = "Набор с таким названием уже есть.",
+	["This set no longer exists."] = "Этого набора больше нет.",
+	["This set holds as many bars as it can."] = "В этом наборе уже столько полос, сколько он вмещает.",
+	["Type an item's number (its ID), such as 2589."] = "Введите номер предмета (его ID), например 2589.",
+	["Creates a copy of this set, and this profile uses it."] = "Создаёт копию этого набора, и этот профиль начинает её использовать.",
+	["Renames this set in every profile that uses it."] = "Переименовывает этот набор во всех профилях, которые его используют.",
+	["Leaves this set one bar with the backpack's currencies."] = "Оставляет в этом наборе одну полосу с валютами рюкзака.",
+	["Reset bar set “%s”?"] = "Сбросить набор полос «%s»?",
+	["Delete set"] = "Удалить набор",
+	["Delete bar set “%s”? Profiles that use it switch to the Default set."] = "Удалить набор полос «%s»? Профили, которые его используют, перейдут на набор «По умолчанию».",
+	["New set"] = "Новый набор",
+	["Starts a set with one bar, and this profile uses it."] = "Создаёт набор с одной полосой, и этот профиль начинает его использовать.",
+	["Name of the new set:"] = "Название нового набора:",
+	["Makes a text of your bar sets to copy and give to another character or player."] = "Создаёт текст ваших наборов полос, чтобы скопировать и передать другому персонажу или игроку.",
+	["Bar %d"] = "Полоса %d",
+	["No bars"] = "Нет полос",
+	["Set:"] = "Набор:",
+	["Bar:"] = "Полоса:",
+	["Remove bar"] = "Убрать полосу",
+	["On the bar"] = "На полосе",
+	["Not on the bar"] = "Не на полосе",
+	["Add item by ID"] = "Добавить предмет по ID",
+	["Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."] = "Перетаскивайте строки вверх и вниз или из одного списка в другой, или бросьте предмет из сумки на левый список. Ширина, промежуток и размер — в режиме редактирования.",
+	["/lootoman bars: open the currency bar editor"] = "/lootoman bars: открыть редактор полос валют",
+	["Bars"] = "Полосы",
+	["Open the bar editor"] = "Открыть редактор полос",
+	["Choose what each bar shows, add and remove bars, and switch, copy or share sets of bars."] = "Выберите, что показывает каждая полоса, добавляйте и убирайте полосы, переключайте, копируйте и передавайте наборы полос.",
+
+	-- Modules/Bars/BarFrame.lua
+	["Drag it along the bar to move it, or off the bar to take it off."] = "Перетащите вдоль полосы, чтобы переставить, или за её пределы, чтобы убрать.",
+	["Take “%s” off the bar?"] = "Убрать «%s» с полосы?",
+	["Take off"] = "Убрать",
+	["Fill from"] = "Заполнять от",
+	["The left edge"] = "Левого края",
+	["The right edge"] = "Правого края",
+	["Background"] = "Фон",
+	["Border"] = "Рамка",
+	["An empty bar: fill it in the bar editor, or drop items from your bags on it."] = "Пустая полоса: заполните её в редакторе полос или бросьте на неё предметы из сумок.",
 })

@@ -4,7 +4,8 @@ describe("Inventory provider", function()
 	local ns, Inventory, Test, reads, factReads
 
 	before_each(function()
-		ns = Loader.Start(Loader.LoadAddon())
+		-- The provider alone: modules read the bags as they start.
+		ns = Loader.Start(Loader.LoadAddon({ skip = { "Settings/", "Modules/" } }))
 		Inventory, Test = ns.Inventory, ns.Compat.Test
 		Test.SetBags({
 			[0] = { size = 4, items = {
@@ -59,7 +60,6 @@ describe("Inventory provider", function()
 		Inventory.Bags()
 		assert.same({ 9, 9, 0 }, { once, reads, changed })
 		Test.SetBags({ [0] = { size = 4, items = { [2] = { itemID = 6948, count = 1 } } } })
-		Test.FireEvent("BAG_UPDATE_DELAYED")
 		assert.same({ 1, 9 }, { changed, reads })
 		assert.same({ "0:2 6948 x1" }, places(Inventory.Items()))
 	end)

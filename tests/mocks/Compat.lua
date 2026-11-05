@@ -16,6 +16,8 @@ local state = {
 	time = 0,
 	timers = {},
 	build = { "12.1.5", "70575", "Oct 23 2026", 120105 },
+	-- WOW_PROJECT_ID: 1 on retail.
+	projectID = 1,
 	saved = {},
 	slashCommands = {},
 	printed = {},
@@ -99,6 +101,10 @@ end
 
 function Compat.GetBuildInfo()
 	return unpack(state.build)
+end
+
+function Compat.GetProjectID()
+	return state.projectID
 end
 
 function Compat.GetNumLootItems()
@@ -294,8 +300,59 @@ function Compat.GetItemLook(item)
 	return info.icon, info.quality
 end
 
+-- Currencies: { name, icon, quantity, max, totalEarned, capsTotalEarned,
+-- backpack = order on the backpack }; every currency is in the list.
 function Compat.GetCurrencyInfo(currencyID)
-	return copy(state.currencies[currencyID])
+	local info = copy(state.currencies[currencyID])
+	if info then
+		info.max, info.totalEarned = info.max or 0, info.totalEarned or 0
+		info.capsTotalEarned, info.backpack = info.capsTotalEarned == true, nil
+	end
+	return info
+end
+
+function Compat.GetCurrencyIDs()
+	local ids = {}
+	for currencyID in pairs(state.currencies) do
+		ids[#ids + 1] = currencyID
+	end
+	table.sort(ids)
+	return ids
+end
+
+function Compat.GetBackpackCurrencyIDs()
+	local ids = {}
+	for currencyID, info in pairs(state.currencies) do
+		if info.backpack then
+			ids[#ids + 1] = currencyID
+		end
+	end
+	table.sort(ids, function(a, b) return state.currencies[a].backpack < state.currencies[b].backpack end)
+	return ids
+end
+
+-- Counts the items in state.bags.
+function Compat.GetBagItemCount(item)
+	local id = type(item) == "string" and tonumber(item:match("item:(%d+)")) or item
+	local count = 0
+	for _, bag in pairs(state.bags) do
+		for _, slotItem in pairs(bag.items or {}) do
+			if slotItem.itemID == id then
+				count = count + (slotItem.count or 1)
+			end
+		end
+	end
+	return count
+end
+
+-- The cursor holds an item from outside the bags: state.cursorItem = itemID.
+function Compat.GetCursorItemID()
+	if state.cursorItem then
+		return state.cursorItem
+	end
+	local cursor = state.cursor
+	local item = cursor and state.bags[cursor.bag] and state.bags[cursor.bag].items and state.bags[cursor.bag].items[cursor.slot]
+	return item and item.itemID or nil
 end
 
 function Compat.GetMoney()
@@ -418,10 +475,12 @@ function Test.ClearLootSlot(slot)
 end
 
 -- SetBags({ [0] = { size = 16, items = { [1] = { itemID = 2589, count = 5 } } },
--- [1] = { size = 20, family = 32 }, [5] = { size = 36 } }). Fire
--- BAG_UPDATE_DELAYED afterwards when the bags change while the addon runs.
+-- [1] = { size = 20, family = 32 }, [5] = { size = 36 } }), and
+-- BAG_UPDATE_DELAYED, as the client fires it after every change in the bags.
+-- A test that changes state.bags in place fires it itself.
 function Test.SetBags(bags)
 	state.bags = bags
+	Test.FireEvent("BAG_UPDATE_DELAYED")
 end
 
 -- What the server does after a sale (UseBagItem at a merchant): the slot
