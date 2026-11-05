@@ -357,6 +357,17 @@ function Compat.GetBagItemCount(item)
 	return count
 end
 
+function Compat.HasWarbandBank()
+	return Compat.Has("Enum.BankType.Account")
+end
+
+-- The banks hold info.bank and info.warband of an item (state.items).
+function Compat.GetItemCounts(item)
+	local info = findItem(item)
+	return { bags = Compat.GetBagItemCount(item), bank = info and info.bank or 0,
+		warband = Compat.HasWarbandBank() and info and info.warband or 0 }
+end
+
 -- The cursor holds an item from outside the bags: state.cursorItem = itemID.
 function Compat.GetCursorItemID()
 	if state.cursorItem then

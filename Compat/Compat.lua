@@ -406,6 +406,23 @@ function Compat.GetBagItemCount(item)
 	return C_Item.GetItemCount(item, false, false, false, false)
 end
 
+-- Whether the client has a warband bank (Forever may not).
+function Compat.HasWarbandBank()
+	return Compat.Has("Enum.BankType.Account")
+end
+
+-- How many of an item the character has in the bags (with the reagent bag),
+-- in the bank (whose tabs hold reagents too) and in the warband bank. The
+-- client gives totals, so each bank is its total less the bags.
+function Compat.GetItemCounts(item)
+	local bags = C_Item.GetItemCount(item, false, false, false, false)
+	local counts = { bags = bags, bank = C_Item.GetItemCount(item, true, false, true, false) - bags, warband = 0 }
+	if Compat.HasWarbandBank() then
+		counts.warband = C_Item.GetItemCount(item, false, false, false, true) - bags
+	end
+	return counts
+end
+
 -- The item on the cursor, as an item ID, while the cursor holds one.
 function Compat.GetCursorItemID()
 	local kind, itemID = GetCursorInfo()
