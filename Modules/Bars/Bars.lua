@@ -37,6 +37,11 @@ function Bars.OwnEntries(bar)
 	return bar.entries
 end
 
+-- What an item entry counts (entry.count): the bags (the default, as nil), the
+-- banks or both. The same item can stand on a bar once for each.
+Bars.COUNTS = { "bags", "banks", "all" }
+Bars.COUNT_NAMES = { banks = L["%s, in the banks"], all = L["%s, everywhere"] }
+
 -- The money entry's icon in the editor's lists; on a bar, money is its coins.
 Bars.MONEY_ICON = [[Interface\Icons\INV_Misc_Coin_01]]
 
@@ -65,11 +70,15 @@ function Bars.Describe(entry)
 		-- Asking for it makes the client load it (GET_ITEM_INFO_RECEIVED).
 		Bars.loading[entry.id] = true
 	end
+	local name = info and info.name or L["Item %d"]:format(entry.id)
+	local count = entry.count or "bags"
 	return {
 		icon = icon,
-		name = info and info.name or L["Item %d"]:format(entry.id),
-		text = tostring(Currencies.ItemCount(entry.id)),
+		-- Two entries of one item that count different places tell apart.
+		name = Bars.COUNT_NAMES[count] and Bars.COUNT_NAMES[count]:format(name) or name,
+		text = tostring(Currencies.ItemCount(entry.id, count)),
 		red = false,
+		count = count,
 	}
 end
 
@@ -138,6 +147,12 @@ function Bars:OnEnable()
 	self:OnEvent("PLAYER_MONEY", function()
 		self:RefreshCounts()
 	end)
+	-- The bank's contents change apart from the bags.
+	for _, event in ipairs({ "PLAYERBANKSLOTS_CHANGED", "BANKFRAME_CLOSED" }) do
+		self:OnEvent(event, function()
+			self:RefreshCounts()
+		end)
+	end
 	self:OnEvent("GET_ITEM_INFO_RECEIVED", function(_, itemID, success)
 		if success and Bars.loading[itemID] then
 			Bars.loading[itemID] = nil

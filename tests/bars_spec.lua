@@ -86,6 +86,28 @@ describe("currency bars", function()
 		assert.equals("0", buttons[2].Count.text)
 	end)
 
+	it("count an item in the bags, the banks or both, side by side in their colours, and list where it is", function()
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 4, bank = 30, warband = 100 } })
+		Test.state.capabilities["Enum.BankType.Account"] = true
+		Sets.Get("Default").bars[1].entries = { { kind = "item", id = 2589 }, { kind = "item", id = 2589, count = "banks" },
+			{ kind = "item", id = 2589, count = "all" } }
+		Sets.Changed("Default")
+		assert.same({ "7", "130", "137" }, shown(1))
+		local buttons, colors = slot(1).buttons, Bars.BarFrame.COUNT_COLORS
+		assert.same({ { 1, 1, 1 }, colors.banks, colors.all }, { buttons[1].Count.color, buttons[2].Count.color, buttons[3].Count.color })
+		buttons[2].scripts.OnEnter(buttons[2])
+		assert.same({ 2589, "Bags | 7", "Bank | 30", "Warband bank | 100" },
+			{ Loader.ui.tooltip.item, Loader.ui.tooltip.lines[1], Loader.ui.tooltip.lines[2], Loader.ui.tooltip.lines[3] })
+		-- The bank changes apart from the bags.
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 4, bank = 40, warband = 100 } })
+		Test.FireEvent("PLAYERBANKSLOTS_CHANGED", 1)
+		assert.same({ "7", "140", "147" }, shown(1))
+		-- No warband bank on this client: no such line.
+		Test.state.capabilities["Enum.BankType.Account"] = nil
+		buttons[1].scripts.OnEnter(buttons[1])
+		assert.same({ "Bags | 7", "Bank | 40", "Drag it along the bar to move it, or off the bar to take it off." }, Loader.ui.tooltip.lines)
+	end)
+
 	it("lay entries out from the left edge a gap apart, and hide what does not fit behind the arrow", function()
 		local bar = Sets.Get("Default").bars[1]
 		bar.entries = { { kind = "currency", id = 3008 }, { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } }

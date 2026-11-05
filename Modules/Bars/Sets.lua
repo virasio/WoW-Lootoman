@@ -9,6 +9,7 @@ local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
 --         direction = "right" | "left",            -- fills from the left edge, or from the right
 --         background = false, opacity = 50, border = false,
 --         entries = { { kind = "currency" | "item" | "money", id = 3008 }, … },   -- nil: the backpack's currencies
+--             -- an item also has count = "banks" or "all" when it does not count the bags only
 --         positions = { [Edit Mode layout] = { point, x, y } } },
 --   } }
 --
@@ -321,7 +322,11 @@ function Sets.Clean(data)
 				clean.entries = {}
 				for _, entry in ipairs(bar.entries) do
 					if type(entry) == "table" and Sets.KINDS[entry.kind] and type(entry.id) == "number" then
-						clean.entries[#clean.entries + 1] = { kind = entry.kind, id = entry.id }
+						local kept = { kind = entry.kind, id = entry.id }
+						if entry.kind == "item" and (entry.count == "banks" or entry.count == "all") then
+							kept.count = entry.count
+						end
+						clean.entries[#clean.entries + 1] = kept
 					end
 				end
 			end

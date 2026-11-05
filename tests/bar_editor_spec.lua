@@ -177,6 +177,37 @@ describe("bar editor", function()
 		assert.same({ false, 1 }, { Editor.Ghost().shown, row.alpha })
 	end)
 
+	it("sets what an item counts from its right-click menu, and shows it again counting what is not shown yet", function()
+		Editor.AddItem(Editor.Bar(), 2589)
+		local row = rowOf(window().left, "Linen Cloth")
+		row.scripts.OnClick(row, "RightButton")
+		local menu = Loader.ui.contextMenu
+		assert.same({ "Count the bags", "Count the banks", "Count everything", "Show it again" },
+			{ menu.entries[1].text, menu.entries[2].text, menu.entries[3].text, menu.entries[5].text })
+		menu.entries[2].setSelected()
+		assert.same({ "Valorstones", "Linen Cloth, in the banks" }, names(window().left))
+		-- Counting the banks, it is another entry than the item in the bags.
+		assert.is_true(Editor.AddItem(Editor.Bar(), 2589))
+		assert.same({ "Valorstones", "Linen Cloth, in the banks", "Linen Cloth" }, names(window().left))
+		row = rowOf(window().left, "Linen Cloth, in the banks")
+		row.scripts.OnClick(row, "RightButton")
+		Loader.ui.contextMenu.entries[5].callback()
+		assert.same({ "Valorstones", "Linen Cloth, in the banks", "Linen Cloth, everywhere", "Linen Cloth" }, names(window().left))
+		-- All three are on the bar: no fourth, and no count another entry has.
+		row = rowOf(window().left, "Linen Cloth")
+		row.scripts.OnClick(row, "RightButton")
+		menu = Loader.ui.contextMenu
+		assert.same({ true, false, false, false }, { menu.entries[1].enabled, menu.entries[2].enabled, menu.entries[3].enabled, menu.entries[5].enabled })
+		assert.is_false(Editor.SetCount(Editor.Bar(), 4, "banks"))
+		assert.same({ { kind = "currency", id = 3008 }, { kind = "item", id = 2589, count = "banks" }, { kind = "item", id = 2589, count = "all" },
+			{ kind = "item", id = 2589 } }, Sets.Get("Default").bars[1].entries)
+		-- A currency has no such menu.
+		Loader.ui.contextMenu = nil
+		row = rowOf(window().left, "Valorstones")
+		row.scripts.OnClick(row, "RightButton")
+		assert.is_nil(Loader.ui.contextMenu)
+	end)
+
 	it("adds nothing while the set has no bar", function()
 		click(window().remove)
 		assert.same({ 0, false }, { #Sets.Get("Default").bars, window().addItem.enabled })

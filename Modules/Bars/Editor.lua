@@ -71,7 +71,11 @@ local function changed()
 	Sets.Changed(currentSet())
 end
 
+-- An entry's key: an item counting more than the bags is another entry.
 local function keyOf(entry)
+	if entry.count and entry.count ~= "bags" then
+		return entry.kind .. ":" .. entry.id .. ":" .. entry.count
+	end
 	return entry.kind .. ":" .. entry.id
 end
 
@@ -160,6 +164,80 @@ function Editor.Move(bar, from, to)
 	end
 	BarFrame.Move(bar, from, to)
 	changed()
+end
+
+-- Whether an item stands on a bar counting this (Bars.COUNTS).
+local function counted(bar, itemID, count)
+	for _, entry in ipairs(Bars.Entries(bar)) do
+		if entry.kind == "item" and entry.id == itemID and (entry.count or "bags") == count then
+			return true
+		end
+	end
+	return false
+end
+
+-- What an item entry counts; not what another entry of the same item on the
+-- bar counts already.
+function Editor.SetCount(bar, index, count)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local entry = Bars.OwnEntries(bar)[index]
+	if not entry or entry.kind ~= "item" or counted(bar, entry.id, count) then
+		return false
+	end
+	entry.count = count ~= "bags" and count or nil
+	changed()
+	return true
+end
+
+-- The first count of an item that the bar does not show yet, or nil.
+function Editor.FreeCount(bar, itemID)
+	for _, count in ipairs(Bars.COUNTS) do
+		if not counted(bar, itemID, count) then
+			return count
+		end
+	end
+end
+
+-- The same item again, right after it, counting what the bar does not show
+-- yet: bags and banks side by side.
+function Editor.ShowAgain(bar, index)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local entries = Bars.OwnEntries(bar)
+	local entry = entries[index]
+	local count = entry and entry.kind == "item" and Editor.FreeCount(bar, entry.id)
+	if not count then
+		return false
+	end
+	table.insert(entries, index + 1, { kind = "item", id = entry.id, count = count ~= "bags" and count or nil })
+	changed()
+	return true
+end
+
+local COUNT_LABELS = { bags = L["Count the bags"], banks = L["Count the banks"], all = L["Count everything"] }
+
+-- The right-click menu of an item on the bar: what it counts, and the same
+-- item again.
+local function itemMenu(row)
+	local item, bar = row.item, Editor.Bar()
+	MenuUtil.CreateContextMenu(row, function(_, root)
+		local current = item.entry.count or "bags"
+		for _, count in ipairs(Bars.COUNTS) do
+			local radio = root:CreateRadio(COUNT_LABELS[count], function()
+				return current == count
+			end, function()
+				Editor.SetCount(bar, item.index, count)
+			end)
+			radio:SetEnabled(count == current or not counted(bar, item.entry.id, count))
+		end
+		root:CreateDivider()
+		root:CreateButton(L["Show it again"], function()
+			Editor.ShowAgain(bar, item.index)
+		end):SetEnabled(Editor.FreeCount(bar, item.entry.id) ~= nil)
+	end)
 end
 
 -- The items taken off while the window is open (for tests).
@@ -409,7 +487,14 @@ local function createRow(list, index)
 	row.Name:SetPoint("RIGHT", -4, 0)
 	row.Name:SetJustifyH("LEFT")
 	row.Name:SetWordWrap(false)
-	row:SetScript("OnClick", function(self)
+	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	row:SetScript("OnClick", function(self, button)
+		if button == "RightButton" then
+			if window and list == window.left and self.item and self.item.entry.kind == "item" then
+				itemMenu(self)
+			end
+			return
+		end
 		list.chosen = self.item and keyOf(self.item.entry)
 		Editor.Refresh()
 	end)
@@ -630,7 +715,7 @@ local function build()
 	hint:SetPoint("BOTTOMLEFT", 20, 14)
 	hint:SetPoint("BOTTOMRIGHT", -20, 14)
 	hint:SetJustifyH("LEFT")
-	hint:SetText(L["Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."])
+	hint:SetText(L["Drag rows up and down or from one list to the other, or drop an item from your bags on the left list; right-click an item for what it counts. Width, gap and size: in Edit Mode."])
 
 	frame:SetScript("OnShow", Editor.Refresh)
 	frame:SetScript("OnHide", function()

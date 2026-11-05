@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Compat, Currencies, L = ns.Compat, ns.Currencies, ns.L
 
 -- One currency bar on screen: its entries from one edge (the left, or the
 -- right for a bar that fills from the right), an icon and a count each, a gap
@@ -32,6 +32,9 @@ BarFrame.GRIP = 8
 BarFrame.MARKER = 2
 BarFrame.RED = { 1, 0.13, 0.13 }
 BarFrame.WHITE = { 1, 1, 1 }
+-- An item's count in its colour when it counts more than the bags, so two
+-- entries of one item tell apart: the banks in light blue, both in light green.
+BarFrame.COUNT_COLORS = { banks = { 0.55, 0.78, 1 }, all = { 0.6, 1, 0.6 } }
 -- The bags' coin box (ContainerFrameCurrencyBorderTemplate): its ends are 8 by
 -- 17 pixels, its middle stretches.
 BarFrame.BORDER_ATLAS = { left = "common-coinbox-left", middle = "_common-coinbox-center", right = "common-coinbox-right" }
@@ -87,6 +90,12 @@ function SlotMixin:ShowTooltip(button)
 		GameTooltip:SetCurrencyByID(entry.id)
 	elseif entry.kind == "item" then
 		GameTooltip:SetItemByID(entry.id)
+		local counts = Currencies.ItemCounts(entry.id)
+		GameTooltip:AddDoubleLine(L["Bags"], counts.bags, 1, 0.82, 0, 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Bank"], counts.bank, 1, 0.82, 0, 1, 1, 1)
+		if Compat.HasWarbandBank() then
+			GameTooltip:AddDoubleLine(L["Warband bank"], counts.warband, 1, 0.82, 0, 1, 1, 1)
+		end
 	else
 		GameTooltip_SetTitle(GameTooltip, L["Money"])
 		GameTooltip:AddLine(GetMoneyString(Compat.GetMoney(), true), 1, 1, 1)
@@ -208,7 +217,7 @@ local function layoutButton(slot, button, item)
 	end
 	button.Count:SetFont(font[1], fontSize(bar), font[3])
 	button.Count:SetText(item.look.text)
-	button.Count:SetTextColor(unpack(item.look.red and BarFrame.RED or BarFrame.WHITE))
+	button.Count:SetTextColor(unpack(item.look.red and BarFrame.RED or BarFrame.COUNT_COLORS[item.look.count] or BarFrame.WHITE))
 	button:SetAlpha(1)
 	button:Show()
 end

@@ -65,7 +65,10 @@ describe("bar sets", function()
 			schema = 1,
 			bars = {
 				{ id = 1, width = 5000, gap = -3, size = 30.4, direction = "left", background = true, opacity = 150, border = "yes",
-					entries = { { kind = "currency", id = 3008 }, { kind = "spell", id = 1 }, { kind = "item", id = "x" }, "junk" },
+					entries = { { kind = "currency", id = 3008 }, { kind = "spell", id = 1 }, { kind = "item", id = "x" }, "junk",
+						-- What an item counts: the bags as nil, the banks or both; nothing else.
+						{ kind = "item", id = 2589, count = "banks" }, { kind = "item", id = 2589, count = "bags" },
+						{ kind = "item", id = 765, count = "attic" }, { kind = "currency", id = 2815, count = "all" } },
 					positions = { Modern = { point = "TOP", x = 1, y = 2 }, Bad = { point = "UP", x = 1, y = 2 } } },
 				{ id = 1 },
 				"junk",
@@ -75,7 +78,8 @@ describe("bar sets", function()
 		})
 		assert.same({ schema = 1, bars = {
 			{ id = 1, width = 1200, gap = 0, size = 30, direction = "left", background = true, opacity = 100, border = false,
-				entries = { { kind = "currency", id = 3008 } }, positions = { Modern = { point = "TOP", x = 1, y = 2 } } },
+				entries = { { kind = "currency", id = 3008 }, { kind = "item", id = 2589, count = "banks" }, { kind = "item", id = 2589 },
+					{ kind = "item", id = 765 }, { kind = "currency", id = 2815 } }, positions = { Modern = { point = "TOP", x = 1, y = 2 } } },
 			{ id = 2, width = 300, gap = 6, size = 22, direction = "right", background = false, opacity = 50, border = false,
 				positions = {} },
 		} }, clean)

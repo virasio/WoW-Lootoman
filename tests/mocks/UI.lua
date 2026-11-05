@@ -207,6 +207,7 @@ function UI.Install()
 	function tooltip:SetOwner(owner) self.owner, self.lines, self.bagItem, self.compared = owner, {}, nil, false end
 	function tooltip:SetBagItem(bag, slot) self.bagItem = { bag, slot } end
 	function tooltip:AddLine(text) self.lines[#self.lines + 1] = text end
+	function tooltip:AddDoubleLine(left, right) self.lines[#self.lines + 1] = tostring(left) .. " | " .. tostring(right) end
 	function tooltip:SetHyperlink(link) self.link = link end
 	function tooltip:SetCurrencyByID(id) self.currency = id end
 	function tooltip:SetItemByID(id) self.item = id end
