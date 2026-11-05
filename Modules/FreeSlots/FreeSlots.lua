@@ -1,5 +1,5 @@
 local _, ns = ...
-local L = ns.L
+local L, Text = ns.L, ns.Text
 
 -- The settings of the module's page; the Edit Mode dialog shows the ones it
 -- can (not the colour).
@@ -149,10 +149,11 @@ function FreeSlots.TokenList()
 	return table.concat(names, " ")
 end
 
--- The template is free text, but not longer than the dialog takes.
+-- The template is free text, but not longer than the dialog takes (which
+-- counts characters, not bytes: Cyrillic letters take two).
 function FreeSlots:Validate(key, value)
 	if key == "template" then
-		return #value <= FreeSlots.MAX_TEMPLATE
+		return Text.Length(value) <= FreeSlots.MAX_TEMPLATE
 	end
 	return ns.Modules.Mixin.Validate(self, key, value)
 end

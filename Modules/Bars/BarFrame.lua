@@ -104,10 +104,13 @@ function SlotMixin:ReceiveItem()
 		return
 	end
 	Compat.ClearCursor()
+	-- Where it goes, read before adding it: once added, the bar is laid out
+	-- again and may hide entries behind its arrow.
+	local place = self:DropIndex(self:CursorDistance())
 	local editor = Bars.Editor
 	if editor and editor.Add(self.bar, { kind = "item", id = itemID }) then
 		local entries = Bars.OwnEntries(self.bar)
-		BarFrame.Move(self.bar, #entries, self:DropIndex(self:CursorDistance()))
+		BarFrame.Move(self.bar, #entries, place)
 		setChanged()
 	end
 end
@@ -472,8 +475,10 @@ local function slotSettings(slot)
 	local function store(key)
 		return function(new)
 			if BarFrame.Asking() then
-				-- Back to what the bar has.
-				ns.EditMode.Refresh(slot.frame)
+				-- Back to what the bar has, once the dialog is done storing.
+				Compat.After(0, function()
+					ns.EditMode.Refresh(slot.frame)
+				end)
 			elseif slot.bar then
 				slot.bar[key] = new
 				setChanged()
@@ -570,7 +575,10 @@ function BarFrame.Create(module, index)
 				return slot.bar and slot.bar.positions and slot.bar.positions[layout]
 			end,
 			set = function(layout, position)
-				if slot.bar then
+				if BarFrame.Asking() then
+					-- LibEditMode has moved the frame already: back to its place.
+					ns.EditMode.Refresh(slot.frame)
+				elseif slot.bar then
 					slot.bar.positions = slot.bar.positions or {}
 					slot.bar.positions[layout] = position
 					setChanged()

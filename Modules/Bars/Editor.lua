@@ -114,7 +114,7 @@ end
 
 -- Puts an entry at the end of a bar, unless it is on it already.
 function Editor.Add(bar, entry)
-	if BarFrame.Asking() then
+	if not bar or BarFrame.Asking() then
 		return false
 	end
 	local entries = Bars.OwnEntries(bar)
@@ -132,7 +132,7 @@ end
 -- Takes an entry off a bar; a bag item stays in the right list while the
 -- window is open.
 function Editor.Remove(bar, index)
-	if BarFrame.Asking() then
+	if not bar or BarFrame.Asking() then
 		return nil
 	end
 	local entries = Bars.OwnEntries(bar)
@@ -155,7 +155,7 @@ function Editor.AddItem(bar, itemID)
 end
 
 function Editor.Move(bar, from, to)
-	if BarFrame.Asking() then
+	if not bar or BarFrame.Asking() then
 		return
 	end
 	BarFrame.Move(bar, from, to)
@@ -175,6 +175,16 @@ local function report(result, err)
 	return result
 end
 
+-- A set action, and an answer to its question later: nothing while a bar
+-- asks whether to take an entry off.
+local function unlessAsking(action)
+	return function(...)
+		if not BarFrame.Asking() then
+			return action(...)
+		end
+	end
+end
+
 local function askName(text, textArg, callback)
 	NameMenu.AskName(text, textArg, nil, Sets.MAX_NAME_LENGTH, callback)
 end
@@ -182,45 +192,45 @@ end
 local function addSet(root, name)
 	local isDefault = name == Sets.DEFAULT
 	local actions = {
-		{ text = L["Copy"], tooltip = L["Creates a copy of this set, and this profile uses it."], run = function()
-			askName(L["Name of the copy of “%s”:"], Sets.DisplayName(name), function(newName)
+		{ text = L["Copy"], tooltip = L["Creates a copy of this set, and this profile uses it."], run = unlessAsking(function()
+			askName(L["Name of the copy of “%s”:"], Sets.DisplayName(name), unlessAsking(function(newName)
 				local copied = report(Sets.Copy(name, newName))
 				if copied then
 					report(Sets.Use(copied))
 				end
-			end)
-		end },
+			end))
+		end) },
 	}
 	if not isDefault then
-		actions[#actions + 1] = { text = L["Rename"], tooltip = L["Renames this set in every profile that uses it."], run = function()
-			NameMenu.AskName(L["New name of “%s”:"], name, name, Sets.MAX_NAME_LENGTH, function(newName)
+		actions[#actions + 1] = { text = L["Rename"], tooltip = L["Renames this set in every profile that uses it."], run = unlessAsking(function()
+			NameMenu.AskName(L["New name of “%s”:"], name, name, Sets.MAX_NAME_LENGTH, unlessAsking(function(newName)
 				report(Sets.Rename(name, newName))
-			end)
-		end }
+			end))
+		end) }
 	end
-	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Leaves this set one bar with the backpack's currencies."], run = function()
-		NameMenu.Confirm(L["Reset bar set “%s”?"], Sets.DisplayName(name), L["Reset"], function()
+	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Leaves this set one bar with the backpack's currencies."], run = unlessAsking(function()
+		NameMenu.Confirm(L["Reset bar set “%s”?"], Sets.DisplayName(name), L["Reset"], unlessAsking(function()
 			report(Sets.Reset(name))
-		end)
-	end }
+		end))
+	end) }
 	NameMenu.AddName(root, {
 		text = Sets.DisplayName(name),
 		data = name,
 		isSelected = function()
 			return currentSet() == name
 		end,
-		select = function()
+		select = unlessAsking(function()
 			barID = nil
 			report(Sets.Use(name))
-		end,
+		end),
 		actions = actions,
 		gearTooltip = isDefault and L["Copy or reset"] or L["Copy, rename or reset"],
 		deleteTooltip = L["Delete set"],
-		delete = not isDefault and function()
-			NameMenu.Confirm(L["Delete bar set “%s”? Profiles that use it switch to the Default set."], name, L["Delete"], function()
+		delete = not isDefault and unlessAsking(function()
+			NameMenu.Confirm(L["Delete bar set “%s”? Profiles that use it switch to the Default set."], name, L["Delete"], unlessAsking(function()
 				report(Sets.Delete(name))
-			end)
-		end or nil,
+			end))
+		end) or nil,
 	})
 end
 
@@ -230,18 +240,18 @@ local function buildSetMenu(_, root)
 		addSet(root, name)
 	end
 	root:CreateDivider()
-	NameMenu.AddNew(root, L["New set"], L["Starts a set with one bar, and this profile uses it."], function()
-		askName(L["Name of the new set:"], nil, function(name)
+	NameMenu.AddNew(root, L["New set"], L["Starts a set with one bar, and this profile uses it."], unlessAsking(function()
+		askName(L["Name of the new set:"], nil, unlessAsking(function(name)
 			local created = report(Sets.Create(name))
 			if created then
 				barID = nil
 				report(Sets.Use(created))
 			end
-		end)
-	end)
-	NameMenu.AddShareEntries(root, function()
+		end))
+	end))
+	NameMenu.AddShareEntries(root, unlessAsking(function()
 		Bus:Send("OpenImportDialog", "barSets")
-	end, function()
+	end), function()
 		Bus:Send("OpenShareDialog", "barSets")
 	end, L["Makes a text of your bar sets to copy and give to another character or player."])
 end
@@ -447,6 +457,7 @@ function Editor.Refresh()
 	window.barMenu:GenerateMenu()
 	window.barMenu:SetDefaultText(bar and L["Bar %d"]:format(select(2, Sets.Bar(currentSet(), bar.id))) or L["No bars"])
 	window.remove:SetEnabled(bar ~= nil)
+	window.addItem:SetEnabled(bar ~= nil)
 	if not bar then
 		fill(window.left, {})
 		fill(window.right, {})

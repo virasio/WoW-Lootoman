@@ -61,6 +61,10 @@ function Bars.Describe(entry)
 	end
 	local icon = Compat.GetItemLook(entry.id)
 	local info = Compat.GetItemInfo(entry.id)
+	if not info then
+		-- Asking for it makes the client load it (GET_ITEM_INFO_RECEIVED).
+		Bars.loading[entry.id] = true
+	end
 	return {
 		icon = icon,
 		name = info and info.name or L["Item %d"]:format(entry.id),
@@ -71,6 +75,10 @@ end
 
 -- The bar frames, one per bar of the set in use, by place in the set.
 Bars.slots = {}
+
+-- Items described before the client had loaded them, by item ID: their names
+-- (in the editor, the overflow list, the questions) follow once they arrive.
+Bars.loading = {}
 
 -- While the module is on (set in OnEnable, where IsActive is not true yet).
 Bars.on = false
@@ -130,6 +138,15 @@ function Bars:OnEnable()
 	self:OnEvent("PLAYER_MONEY", function()
 		self:RefreshCounts()
 	end)
+	self:OnEvent("GET_ITEM_INFO_RECEIVED", function(_, itemID, success)
+		if success and Bars.loading[itemID] then
+			Bars.loading[itemID] = nil
+			self:RefreshCounts()
+			if self.Editor then
+				self.Editor.Refresh()
+			end
+		end
+	end)
 	self:OnEvent("PLAYER_REGEN_ENABLED", function()
 		if self.waiting then
 			self:Refresh()
@@ -140,6 +157,8 @@ end
 function Bars:OnDisable()
 	self.on = false
 	for _, slot in ipairs(self.slots) do
+		-- Edit Mode does not end the preview of a module that is off.
+		slot:SetPreview(false)
 		slot:SetBar(nil)
 	end
 end

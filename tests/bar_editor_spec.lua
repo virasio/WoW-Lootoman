@@ -177,6 +177,39 @@ describe("bar editor", function()
 		assert.same({ false, 1 }, { Editor.Ghost().shown, row.alpha })
 	end)
 
+	it("adds nothing while the set has no bar", function()
+		click(window().remove)
+		assert.same({ 0, false }, { #Sets.Get("Default").bars, window().addItem.enabled })
+		window().itemID:SetText("2589")
+		click(window().addItem)
+		assert.is_false(Editor.Add(Editor.Bar(), { kind = "item", id = 2589 }))
+	end)
+
+	it("changes no set while a bar asks whether to take an entry off", function()
+		Sets.Create("Raid")
+		local barSlot = Bars.slots[1]
+		local button = barSlot.buttons[1]
+		button.scripts.OnDragStart(button)
+		barSlot.frame.mouseOver = false
+		button.scripts.OnDragStop(button)
+		-- Raid, the second name, chosen; Default's Reset, under its gear.
+		local menu = api.OpenMenu(window().setMenu)
+		menu.entries[2].setSelected()
+		menu.entries[1].entries[2].callback()
+		assert.same({ "Default", 1 }, { Sets.Current(), #api.popups })
+		api.AcceptPopup()
+		menu.entries[2].setSelected()
+		assert.equals("Raid", Sets.Current())
+	end)
+
+	it("shows an item's name once the client has loaded it", function()
+		Editor.AddItem(Editor.Bar(), 12345)
+		assert.same({ "Valorstones", "Item 12345" }, names(window().left))
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 4 }, [765] = { name = "Silverleaf", icon = 5 }, [12345] = { name = "Dream Silk", icon = 6 } })
+		Test.FireEvent("GET_ITEM_INFO_RECEIVED", 12345, true)
+		assert.same({ "Valorstones", "Dream Silk" }, names(window().left))
+	end)
+
 	it("adds and removes bars of the set, and shows the chosen one", function()
 		click(window().add)
 		assert.same({ 2, {} }, { #Sets.Get("Default").bars, names(window().left) })

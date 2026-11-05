@@ -18,7 +18,8 @@ describe("currency bars", function()
 			table.insert(self.callbacks[event], callback)
 		end
 		function fake:IsInEditMode() return self.editing == true end
-		function fake:RefreshFrameSettings() end
+		-- How often the dialog was rebuilt.
+		function fake:RefreshFrameSettings() self.refreshed = (self.refreshed or 0) + 1 end
 		function fake.Fire(event, ...)
 			fake.editing = event == "enter" or (event ~= "exit" and fake.editing)
 			for _, callback in ipairs(fake.callbacks[event] or {}) do
@@ -166,7 +167,16 @@ describe("currency bars", function()
 		Bars.Editor.Window().add.scripts.OnClick(Bars.Editor.Window().add)
 		-- Not in Edit Mode: the width, the grip, the dialog's buttons.
 		lib.Fire("enter")
+		lib.refreshed = 0
 		lib.settings[slot(1).frame][1].set("Modern", 600)
+		-- The dialog shows the bar's own width again once it is done storing.
+		assert.equals(0, lib.refreshed)
+		Test.Advance(0.1)
+		assert.equals(1, lib.refreshed)
+		-- Moved in Edit Mode: back to its place, nothing kept.
+		local frame = slot(1).frame
+		lib.frames[frame].onMoved(frame, "Modern", "TOP", 10, -20)
+		assert.same({ nil, { "BOTTOM", 0, 160 } }, { Sets.Get("Default").bars[1].positions.Modern, frame.points[1] })
 		local grip = slot(1).frame.Grip
 		Loader.ui.cursor = { 100, 0 }
 		grip.scripts.OnMouseDown(grip)
@@ -207,6 +217,17 @@ describe("currency bars", function()
 		slot(1).frame.scripts.OnReceiveDrag(slot(1).frame)
 		assert.same({ "7", "500 / 2000", "4000" }, shown(1))
 		assert.same({ "clear" }, Test.state.bagActions[#Test.state.bagActions])
+	end)
+
+	it("put an item dropped from the bags where it was dropped, also when it makes the bar overflow", function()
+		local bar = Sets.Get("Default").bars[1]
+		bar.width = 160
+		Sets.Changed("Default")
+		Test.state.cursorItem = 2589
+		-- After the second entry; both fit until the item comes.
+		Loader.ui.cursor = { 150, 0 }
+		slot(1).frame.scripts.OnReceiveDrag(slot(1).frame)
+		assert.same({ { kind = "currency", id = 3008 }, { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } }, bar.entries)
 	end)
 
 	it("show money in coins, without an icon, and follow it", function()
@@ -289,6 +310,25 @@ describe("currency bars", function()
 		assert.same({ true, true }, { slot(2).frame.shown, slot(2).frame.Empty.shown })
 		lib.buttons[slot(2).frame][3].click()
 		assert.same({ 1, false }, { #Sets.Get("Default").bars, slot(2).frame.shown })
+	end)
+
+	it("do not rebuild the Edit Mode dialog for a change made in it, only for one from elsewhere", function()
+		lib.Fire("enter")
+		lib.refreshed = 0
+		lib.settings[slot(1).frame][1].set("Modern", 455)
+		assert.same({ 460, 0 }, { Sets.Get("Default").bars[1].width, lib.refreshed })
+		Sets.Changed("Default")
+		assert.equals(1, lib.refreshed)
+	end)
+
+	it("end the Edit Mode preview of the module turned off in Edit Mode", function()
+		lib.Fire("enter")
+		assert.is_true(slot(1).frame.Grip.shown)
+		ns.Modules:SetEnabled("Bars", false)
+		lib.Fire("exit")
+		ns.Modules:SetEnabled("Bars", true)
+		local frame = slot(1).frame
+		assert.same({ false, false, false, false }, { slot(1).preview, frame.Grip.shown, frame.Background.shown, frame.Empty.shown })
 	end)
 
 	it("set the width with the grip in Edit Mode", function()

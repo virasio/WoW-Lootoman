@@ -184,14 +184,19 @@ local function setup()
 	end)
 end
 
--- Stores a value set in the Edit Mode dialog, marked as coming from it.
-local function store(name, key, value)
+-- Runs what stores a value set in the Edit Mode dialog, marked as coming from
+-- it: its own set() or the module's settings.
+local function fromTheDialog(action, ...)
 	fromDialog = true
-	local ok, problem = pcall(Storage.Set, Storage, name, key, value)
+	local ok, problem = pcall(action, ...)
 	fromDialog = false
 	if not ok then
 		error(problem, 0)
 	end
+end
+
+local function store(name, key, value)
+	fromTheDialog(Storage.Set, Storage, name, key, value)
 end
 
 -- Kinds of module settings that only the options page shows.
@@ -209,7 +214,7 @@ local function toLibSetting(module, setting)
 	end
 	local function save(value)
 		if setting.set then
-			setting.set(value)
+			fromTheDialog(setting.set, value)
 		else
 			store(name, setting.key, value)
 		end
@@ -314,12 +319,14 @@ function EditMode.AddLayoutHandler(handler)
 end
 
 -- Puts a registered frame where its position store says, and shows its
--- settings again in an open Edit Mode dialog (after its bar changed).
+-- settings again in an open Edit Mode dialog (after its bar changed), unless
+-- the change comes from that dialog: rebuilding it would hide and recreate
+-- the slider being dragged.
 function EditMode.Refresh(frame)
 	for _, entry in ipairs(entries) do
 		if entry.frame == frame then
 			apply(entry)
-			if lib and lib:IsInEditMode() and entry.settings then
+			if lib and lib:IsInEditMode() and entry.settings and not fromDialog then
 				lib:RefreshFrameSettings(frame)
 			end
 		end

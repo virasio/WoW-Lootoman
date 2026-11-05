@@ -89,6 +89,8 @@ describe("free-slot bar", function()
 	it("takes from a profile text only a colour as AARRGGBB and a text the dialog can hold", function()
 		assert.same({ true, false, false }, { module:Validate("color", "ff112233"), module:Validate("color", "112233"),
 			module:Validate("template", ("x"):rep(201)) })
+		-- Characters, as the dialog counts them: Cyrillic letters take two bytes.
+		assert.same({ true, false }, { module:Validate("template", ("ж"):rep(200)), module:Validate("template", ("ж"):rep(201)) })
 		assert.same({ true, false }, { module:Validate("size", 14), module:Validate("size", 40) })
 	end)
 
