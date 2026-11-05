@@ -127,6 +127,25 @@ describe("loot feed frames", function()
 			assert.equals(119, feed.frame.height)
 		end)
 
+		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()
+			feed:SetWarnings({ "Free bag slots: 2" })
+			assert.is_true(feed.frame.shown)
+			local warning = feed.warningLines[1]
+			assert.same({ "Free bag slots: 2", { "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 } }, { warning.Text.text, warning.points[1] })
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			assert.same({ "100 copper@42" }, layout())
+			feed:SetOptions(options({ direction = "down" }))
+			assert.same({ "TOPLEFT", feed.frame, "TOPLEFT", 0, 0 }, warning.points[1])
+			-- With the rows gone, the warning keeps the feed shown.
+			feed:Draw(100)
+			assert.same({ {}, true }, { layout(), feed.frame.shown })
+			feed:SetWarnings({})
+			assert.is_false(warning.shown)
+			feed:Draw(101)
+			assert.is_false(feed.frame.shown)
+		end)
+
 		it("slides the rows to their new places when the oldest one leaves", function()
 			-- 100 pixels a second, and draws 1/8 s apart, so every step is exact.
 			Frames.SLIDE_TIME = 0.42

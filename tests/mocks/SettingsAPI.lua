@@ -110,6 +110,10 @@ function SettingsAPI.Install()
 		return addInitializer(category, { kind = "dropdown", setting = setting, options = options, tooltip = tooltip })
 	end
 
+	function Settings.CreateColorSwatch(category, setting, tooltip)
+		return addInitializer(category, { kind = "color", setting = setting, tooltip = tooltip })
+	end
+
 	function Settings.CreateControlTextContainer()
 		local container = { data = {} }
 		function container:Add(value, label, tooltip)
@@ -196,9 +200,13 @@ function SettingsAPI.Install()
 			return self.text
 		end
 		function editBox:HighlightText() end
-		local dialog = { which = which, data = data, editBox = editBox }
+		-- Blizzard's GENERIC_* dialogs may stand several at once, one per data.
+		local dialog = { which = which, data = data, editBox = editBox, shown = true }
 		function dialog:GetEditBox()
 			return self.editBox
+		end
+		function dialog:IsShown()
+			return self.shown
 		end
 		api.popups[#api.popups + 1] = dialog
 		return dialog
@@ -241,7 +249,8 @@ function SettingsAPI.Install()
 		_G.EventRegistry:TriggerEvent("Settings.CategoryChanged", category)
 	end
 
-	-- Accepts the last dialog, typing text into it if it has an edit box.
+	-- Accepts the last dialog, typing text into it if it has an edit box. As in
+	-- the game, the dialog is still shown while its callback runs, then hides.
 	function api.AcceptPopup(text)
 		local dialog = assert(api.popups[#api.popups], "no dialog is shown")
 		if dialog.which == "GENERIC_INPUT_BOX" then
@@ -249,6 +258,16 @@ function SettingsAPI.Install()
 		else
 			dialog.data.callback()
 		end
+		dialog.shown = false
+	end
+
+	-- Cancels the last dialog (its Cancel button, or Escape).
+	function api.CancelPopup()
+		local dialog = assert(api.popups[#api.popups], "no dialog is shown")
+		if dialog.data and dialog.data.cancelCallback then
+			dialog.data.cancelCallback()
+		end
+		dialog.shown = false
 	end
 
 	return api

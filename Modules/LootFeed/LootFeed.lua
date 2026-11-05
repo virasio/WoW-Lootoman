@@ -39,6 +39,13 @@ local function settings()
 		{ kind = "checkbox", key = "owned", label = L["Owned count"],
 			tooltip = L["Shows on the icon how many of the item you have in your bags and bank, and the total of a currency."] },
 		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
+		{ kind = "header", label = L["Low-space warnings"] },
+		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when few bag slots are free"],
+			tooltip = L["Shows a warning at the feed's edge while no more general bag slots are free than the number below."] },
+		{ kind = "slider", key = "warnGeneralAt", label = L["Bag slots"], min = 0, max = 20, step = 1, format = "%d" },
+		{ kind = "checkbox", key = "warnReagent", label = L["Warn when few reagent bag slots are free"],
+			tooltip = L["Shows a warning at the feed's edge while no more reagent bag slots are free than the number below."] },
+		{ kind = "slider", key = "warnReagentAt", label = L["Reagent bag slots"], min = 0, max = 20, step = 1, format = "%d" },
 	}
 end
 
@@ -70,6 +77,11 @@ local LootFeed = ns.Modules:Register({
 		glow = true,
 		-- The named layout of the rows (Layouts.lua).
 		layout = "Default",
+		-- Low-space warnings at the feed's anchor edge.
+		warnGeneral = true,
+		warnGeneralAt = 2,
+		warnReagent = false,
+		warnReagentAt = 2,
 	},
 	settings = settings,
 })
@@ -140,6 +152,21 @@ function LootFeed:DesignSection()
 	return Layouts.CurrentDesign()
 end
 
+-- The low-space warnings that hold now: few free general slots, few free
+-- reagent bag slots (only with a reagent bag), each by its own threshold.
+-- Nothing before the client has told the bags (no slots at all).
+function LootFeed:Warnings()
+	local slots, warnings = ns.Bags.FreeSlots(), {}
+	if self:Get("warnGeneral") and slots.generalTotal > 0 and slots.general <= self:Get("warnGeneralAt") then
+		warnings[#warnings + 1] = slots.general == 0 and L["No free bag slots"] or L["Free bag slots: %d"]:format(slots.general)
+	end
+	if self:Get("warnReagent") and slots.reagentTotal > 0 and slots.reagent <= self:Get("warnReagentAt") then
+		warnings[#warnings + 1] = slots.reagent == 0 and L["No free reagent bag slots"]
+			or L["Free reagent bag slots: %d"]:format(slots.reagent)
+	end
+	return warnings
+end
+
 function LootFeed:Apply()
 	self.model:SetOptions(self:ModelOptions(), Compat.GetTime())
 	self.feed:SetOptions({
@@ -150,6 +177,7 @@ function LootFeed:Apply()
 		showOwned = self:Get("owned"),
 		showGlow = self:Get("glow"),
 	})
+	self.feed:SetWarnings(self:Warnings())
 end
 
 function LootFeed:OnEnable()
@@ -189,11 +217,15 @@ function LootFeed:OnEnable()
 	self:OnEvent("BAG_UPDATE_DELAYED", function()
 		self.feed:RefreshOwned()
 	end)
+	self:On("InventoryChanged", function()
+		self.feed:SetWarnings(self:Warnings())
+	end)
 end
 
 function LootFeed:OnDisable()
 	if self.feed then
 		self.feed:SetPreview(false)
+		self.feed:SetWarnings({})
 		self.feed.frame:Hide()
 	end
 end

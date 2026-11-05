@@ -57,6 +57,7 @@ files["Compat/"] = {
 		"UnitFullName",
 		"UnitXP",
 		"UnitXPMax",
+		"WOW_PROJECT_ID",
 		"geterrorhandler",
 		"issecretvalue",
 	},
@@ -65,6 +66,10 @@ files["Compat/"] = {
 -- Third-party addons' APIs, each read only by its integration.
 files["Integrations/Auctionator.lua"] = {
 	read_globals = { "Auctionator" },
+}
+
+files["Integrations/Broker.lua"] = {
+	read_globals = { "LibStub" },
 }
 
 files["Modules/"] = {
@@ -87,6 +92,7 @@ files["Modules/"] = {
 		"LootFrame",
 		"MenuConstants",
 		"MenuTemplates",
+		"MenuUtil",
 		"MenuVariants",
 		"MerchantFrame",
 		"MerchantSellAllJunkButton",
@@ -95,6 +101,7 @@ files["Modules/"] = {
 		"UISpecialFrames",
 		"StaticPopup_Hide",
 		"StaticPopup_Show",
+		"ToggleAllBags",
 		"TooltipUtil",
 		"UIParent",
 	},

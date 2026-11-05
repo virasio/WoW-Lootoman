@@ -19,6 +19,7 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 - The feed is placed with the game's Edit Mode, with its own position in every Edit Mode layout. Its options are also in its Edit Mode dialog.
 - **Row designer** (`/lootoman design`, or the buttons on the loot feed's options page and in its Edit Mode dialog): click a part of the sample rows — icon, name, amount or owned count — to choose it, and drag it to move it. For each part, choose whether it is shown, what it is anchored to and at which point, its offsets, the icon's size as a share of the row's height, and a text's size, maximum width and alignment; for the rows, their height, width and gap. The feed follows every change at once.
 - **Row layouts** have names and are shared by every profile; each profile uses one of them. New layouts start from the Large, Compact or Minimal template, and layouts can be copied, renamed, reset to their template and deleted. The layout Default always exists.
+- **Low-space warnings**: while few general bag slots are free (2 or fewer by default), and if you want while few reagent bag slots are, a warning sits at the feed's edge where its oldest row is, and the rows stack after it. Each kind has its own threshold.
 
 ### Junk
 
@@ -32,16 +33,30 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 - **Junk list** in the options: every item marked as junk or as not junk, with a Remove button for each and *Clear list*. Marks belong to the profile.
 - Auction prices come from [Auctionator](https://www.curseforge.com/wow/addons/auctionator) when it is installed; without it, the merchant's price.
 
+### Free-slot bar
+
+- One line of text with your bags' free slots, placed with Edit Mode, in your own format: tokens in braces with an optional colour, and any text between them, such as `{free|33ff33} ({reagent|ffd100}) / {general}`. Tokens: `{free}`, `{total}`, `{used}` for all bags, and `{general}`, `{reagent}`, `{profession}` with their `.total`, such as `{reagent.total}`. A default colour applies to the text between tokens and to tokens without a colour; the text size is set too.
+- Its tooltip lists the free and total slots of each kind of bag you have.
+- The same text shows in broker displays (Titan Panel, ElvUI's data texts and others) when one is installed; a click there opens the bags.
+
+### Currency bars
+
+- Bars of currencies, of items in your bags and of your money, as many as you want, anywhere on the screen. Each entry shows its icon and count (money in gold, silver and copper coins, as in the bags), a gap apart, filling from the left edge or from the right; a capped currency shows its cap and turns red at it. What does not fit hides behind a double arrow at the other edge: click it for the rest.
+- In Edit Mode, place each bar, and in its dialog set its width (also with the grip on its far edge), gap, size, which edge it fills from, a background with its opacity, and the bags' coin-box border; add or remove bars there too.
+- Outside Edit Mode, drag an entry along the bar to move it: a copy follows the mouse and a line shows where it will go. Drag it off the bar to take it off (Lootoman asks first). Drop an item from your bags on a bar to add it there.
+- **Bar editor** (`/lootoman bars`, the bar's Edit Mode dialog, or the options): on the left what is on the chosen bar, in its order (drag rows up and down, drop an item from your bags, or add one by its ID); on the right money and the currencies not on it, by name. Drag a row from one list to the other, or use the buttons between them for the chosen one; while you drag, a copy follows the mouse and a line shows where the row will go. A bag item you take off a bar stays on the right while the editor is open, so a wrong click is easy to undo.
+- Bars come in **named sets** shared by every profile, like row layouts: each profile uses one, and sets can be copied, renamed, reset, deleted, shared and imported. The set Default starts with one bar of the currencies you show on the backpack.
+
 ### Options and profiles
 
 - One options page in the game's AddOns settings: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share), with a Reset button beside it; then a switch for each feature, with its main options under it and a button that opens its own page.
 - Every character can use its own profile; new characters use the Default profile.
-- **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's settings, the loot feed's position and the layout it uses, and any of your row layouts. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one. When an imported layout's name is taken, choose for each one: keep both, replace yours, or keep yours. Row layouts can also be shared and imported on their own, from the designer.
+- **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's settings, the loot feed's position and the layout it uses, the bar set it uses, and any of your row layouts and bar sets. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one. When an imported layout's name is taken, choose for each one: keep both, replace yours, or keep yours. Row layouts can also be shared and imported on their own, from the designer.
 - Changes apply at once, without `/reload`.
 
-### Languages
+### Languages and clients
 
-English and Russian.
+English and Russian. For World of Warcraft (retail) and WoW Forever.
 
 ### Commands
 
@@ -49,6 +64,7 @@ English and Russian.
 - `/lootoman design`: open the loot feed's row designer.
 - `/lootoman toss`: open the toss window.
 - `/lootoman sales`: list what was sold this session.
+- `/lootoman bars`: open the currency bar editor.
 - `/lootoman debug on` or `off`: turn debug messages on or off for all characters.
 - `/lootoman selftest`: check the addon against the game client. Its output helps with bug reports.
 

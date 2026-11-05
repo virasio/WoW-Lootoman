@@ -91,12 +91,20 @@ function NameMenu.AskName(text, textArg, initial, maxLetters, callback)
 	end
 end
 
+-- Asks before something is done; accepting calls callback. Returns a function
+-- that tells whether this question is still on screen: this kind of dialog can
+-- stand several times at once, each with its own data, and a hidden one is
+-- used again for another question.
 function NameMenu.Confirm(text, textArg, acceptText, callback)
-	StaticPopup_Show("GENERIC_CONFIRMATION", nil, nil, {
+	local data = {
 		text = text,
 		text_arg1 = textArg,
 		acceptText = acceptText,
 		cancelText = CANCEL,
 		callback = callback,
-	})
+	}
+	local dialog = StaticPopup_Show("GENERIC_CONFIRMATION", nil, nil, data)
+	return function()
+		return dialog ~= nil and dialog:IsShown() and dialog.data == data
+	end
 end

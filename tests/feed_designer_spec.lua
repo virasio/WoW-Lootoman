@@ -346,7 +346,8 @@ describe("loot feed designer, opened from", function()
 		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 } }
 		function lib:AddFrame() end
 		function lib:AddFrameSettings() end
-		function lib:AddFrameSettingsButtons(_, buttons) self.buttons = buttons end
+		lib.buttons = {}
+		function lib:AddFrameSettingsButtons(frame, buttons) self.buttons[frame] = buttons end
 		function lib:RegisterCallback() end
 		function lib:IsInEditMode() return false end
 		rawset(_G, "LibStub", function(name) return name == "LibEditMode" and lib or nil end)
@@ -354,13 +355,14 @@ describe("loot feed designer, opened from", function()
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
 		local Designer = ns.Modules:Get("LootFeed").Designer
+		local feedButtons = lib.buttons[ns.Modules:Get("LootFeed").feed.frame]
 
 		local button = api.FindButton(api.FindCategory("Loot feed"), "Row design")
 		button.onClick()
 		assert.is_true(Designer.window.shown)
 		Designer.window:Hide()
-		assert.equals("Design rows", lib.buttons[1].text)
-		lib.buttons[1].click()
+		assert.equals("Design rows", feedButtons[1].text)
+		feedButtons[1].click()
 		assert.is_true(Designer.window.shown)
 	end)
 end)

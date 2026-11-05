@@ -1,5 +1,15 @@
 # Lootoman changelog
 
+## 0.3
+
+Bars of currencies and free slots.
+
+- **Currency bars**: bars of currencies, of items in your bags and of your money (in coins), anywhere on the screen, as many as you want. Place them and set their width, background, border and the edge they fill from in Edit Mode; drag entries along a bar to reorder them, off it to take them off, and drop items from your bags on it. What does not fit hides behind a double arrow. Capped currencies show their cap and turn red at it.
+- **Bar editor** (`/lootoman bars`): choose what each bar shows from the list of your currencies, drop items from your bags, or add them by ID. Bars come in named sets shared by your profiles, and sets can be shared as text.
+- **Free-slot bar**: your bags' free slots in your own format and colours, such as `{free|33ff33} ({reagent|ffd100}) / {general}`, also in broker displays such as Titan Panel.
+- **Low-space warnings** in the loot feed when few bag or reagent bag slots are left.
+- Lootoman now also runs on WoW Forever and the 12.1.7 test realm.
+
 ## 0.2
 
 Getting rid of junk.

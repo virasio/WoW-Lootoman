@@ -28,7 +28,8 @@ local Share = {
 	PREFIX = "LTM",
 	FORMAT = 1,
 	MAX_LENGTH = 100000,
-	MAX_DEPTH = 7,
+	-- A bar set's entries and positions sit eight levels down.
+	MAX_DEPTH = 10,
 	MAX_VALUES = 5000,
 }
 ns.Share = Share

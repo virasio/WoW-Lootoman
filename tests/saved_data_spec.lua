@@ -30,8 +30,22 @@ describe("saved data of version 0.1", function()
 		assert.same({ 80, 14 }, { design.parts.icon.size, design.parts.name.fontSize })
 	end)
 
-	it("is saved again as it was", function()
+	-- Whether every value of expected is in actual, the same; actual may hold
+	-- more (sections a later version adds).
+	local function holds(actual, expected, path)
+		for key, value in pairs(expected) do
+			local where = path .. "." .. tostring(key)
+			if type(value) == "table" then
+				assert.equals("table", type(actual[key]), where)
+				holds(actual[key], value, where)
+			else
+				assert.equals(value, actual[key], where)
+			end
+		end
+	end
+
+	it("is saved again with nothing lost or changed", function()
 		local saved = ns.Compat.Test.state.saved
-		assert.same(fixture(), { LootomanDB = saved.LootomanDB, LootomanCharDB = saved.LootomanCharDB })
+		holds(saved, fixture(), "saved")
 	end)
 end)

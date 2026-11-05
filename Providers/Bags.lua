@@ -48,13 +48,24 @@ end
 -- Free slots in the backpack and the general bags. Profession bags and the
 -- reagent bag do not count: what does not fit there goes into a general bag.
 function Bags.FreeGeneralSlots()
-	local free = 0
+	return Bags.FreeSlots().general
+end
+
+-- Free and total slots of all bags and of each kind: general (the backpack
+-- and general bags), reagent (the reagent bag) and profession (the profession
+-- bags together). { free, total, used, general, generalTotal, reagent,
+-- reagentTotal, profession, professionTotal }.
+function Bags.FreeSlots()
+	local slots = { general = 0, generalTotal = 0, reagent = 0, reagentTotal = 0, profession = 0, professionTotal = 0 }
 	for _, bag in ipairs(Inventory.Bags()) do
-		if not bag.reagent and bag.family == 0 then
-			free = free + bag.free
-		end
+		local kind = bag.reagent and "reagent" or (bag.family ~= 0 and "profession" or "general")
+		slots[kind] = slots[kind] + bag.free
+		slots[kind .. "Total"] = slots[kind .. "Total"] + bag.size
 	end
-	return free
+	slots.free = slots.general + slots.reagent + slots.profession
+	slots.total = slots.generalTotal + slots.reagentTotal + slots.professionTotal
+	slots.used = slots.total - slots.free
+	return slots
 end
 
 -- The self-test lists every equipped bag with its family as the client gives

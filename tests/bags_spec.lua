@@ -21,7 +21,8 @@ describe("Bags provider", function()
 	end
 
 	before_each(function()
-		ns = Loader.LoadAddon()
+		-- The provider alone: modules read the bags as they start.
+		ns = Loader.LoadAddon({ skip = { "Settings/", "Modules/" } })
 		Loader.Start(ns)
 		Bags, Test = ns.Bags, ns.Compat.Test
 		Test.SetItems({
@@ -145,10 +146,25 @@ describe("Bags provider", function()
 		Test.SetBags({ [0] = { size = 16, items = filled(15) } })
 		assert.is_true(fits(6948))
 		assert.same({ "BAG_UPDATE_DELAYED" }, ns.Bus:GetEvents(ns.Inventory))
-		Test.SetBags({ [0] = { size = 16, items = filled(16) } })
+		-- The bags change, and the client has not said so yet.
+		Test.state.bags = { [0] = { size = 16, items = filled(16) } }
 		assert.is_true(fits(6948))
 		Test.FireEvent("BAG_UPDATE_DELAYED")
 		assert.is_false(fits(6948))
+	end)
+
+	it("counts free and total slots of all bags and of each kind", function()
+		Test.SetBags({
+			[0] = { size = 16, items = filled(14) },
+			[1] = { size = 20, items = filled(17) },
+			[2] = { size = 10, family = HERBS, items = filled(4, 765) },
+			[3] = { size = 8, family = ORE },
+			[5] = { size = 30, items = filled(10, 2589) },
+		})
+		assert.same({
+			free = 39, total = 84, used = 45, general = 5, generalTotal = 36,
+			reagent = 20, reagentTotal = 30, profession = 14, professionTotal = 18,
+		}, Bags.FreeSlots())
 	end)
 
 	it("counts the free slots of the backpack and the general bags only", function()
