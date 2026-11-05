@@ -51,6 +51,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Items"] = "Предметы",
 	["Currencies"] = "Валюта",
 	["Money"] = "Деньги",
+	["Stack: %s"] = "Стопка: %s",
 	["%s, in the banks"] = "%s, в банках",
 	["%s, everywhere"] = "%s, везде",
 	["Count the bags"] = "Считать в сумках",

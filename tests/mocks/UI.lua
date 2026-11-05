@@ -253,7 +253,11 @@ function UI.Install()
 		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
 	})
 	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
-	rawset(_G, "GameTooltip_SetTitle", function(lines, text) lines[#lines + 1] = text end)
+	-- A tooltip's title goes first among its lines (a menu's tooltip gives a plain list).
+	rawset(_G, "GameTooltip_SetTitle", function(owner, text)
+		local lines = owner.lines or owner
+		lines[#lines + 1] = text
+	end)
 	rawset(_G, "GameTooltip_AddNormalLine", function(lines, text) lines[#lines + 1] = text end)
 	api.OpenMenu = UI.OpenMenu
 	-- MenuUtil.CreateContextMenu: the last menu opened, as built.

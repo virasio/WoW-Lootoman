@@ -55,6 +55,7 @@ ns.Locales.AddEnglish({
 	"Items",
 	"Currencies",
 	"Money",
+	"Stack: %s",
 	"%s, in the banks",
 	"%s, everywhere",
 	"Count the bags",

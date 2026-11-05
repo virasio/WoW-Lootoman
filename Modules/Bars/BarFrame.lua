@@ -83,10 +83,27 @@ local function fromRight(bar)
 	return bar.direction == "left"
 end
 
+-- A stack's members, most important first: icon and name, and the count on
+-- the right; the shown one in gold, a count at its cap in red.
+local function stackTooltip(look)
+	GameTooltip_SetTitle(GameTooltip, look.memberName)
+	for index, member in ipairs(look.members) do
+		local icon = member.icon and ("|T%s:0|t "):format(tostring(member.icon)) or ""
+		local name = index == look.shown and { 1, 0.82, 0 } or BarFrame.WHITE
+		local count = member.red and BarFrame.RED or BarFrame.WHITE
+		GameTooltip:AddDoubleLine(icon .. member.name, member.text, name[1], name[2], name[3], count[1], count[2], count[3])
+	end
+end
+
 function SlotMixin:ShowTooltip(button)
 	local entry = button.entry
 	GameTooltip:SetOwner(button, "ANCHOR_TOP")
-	if entry.kind == "currency" then
+	if entry.kind == "stack" then
+		local look = Bars.Describe(entry)
+		if look then
+			stackTooltip(look)
+		end
+	elseif entry.kind == "currency" then
 		GameTooltip:SetCurrencyByID(entry.id)
 	elseif entry.kind == "item" then
 		GameTooltip:SetItemByID(entry.id)
@@ -161,7 +178,8 @@ function SlotMixin:Measure()
 	measure:SetFont(font[1], fontSize(bar), font[3])
 	for index, entry in ipairs(Bars.Entries(bar)) do
 		local look = Bars.Describe(entry)
-		if look then
+		-- A stack with nothing to show takes no room.
+		if look and not look.hidden then
 			local iconWidth = look.icon and (bar.size + BarFrame.SPACE) or 0
 			list[#list + 1] = { entry = entry, index = index, look = look, width = iconWidth + textWidth(measure, look.text, fontSize(bar)) }
 		end

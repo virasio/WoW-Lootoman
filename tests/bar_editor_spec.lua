@@ -208,6 +208,14 @@ describe("bar editor", function()
 		assert.is_nil(Loader.ui.contextMenu)
 	end)
 
+	it("lists a stack on the bar by its shown member, and its members not again on the right", function()
+		Sets.Get("Default").bars[1].entries = { { kind = "stack", showEmpty = false,
+			members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 2815 } } } }
+		Sets.Changed("Default")
+		assert.same({ "Stack: Gilded Crest" }, names(window().left))
+		assert.same({ "Money", "Valorstones" }, names(window().right))
+	end)
+
 	it("adds nothing while the set has no bar", function()
 		click(window().remove)
 		assert.same({ 0, false }, { #Sets.Get("Default").bars, window().addItem.enabled })

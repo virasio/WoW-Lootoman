@@ -108,6 +108,33 @@ describe("currency bars", function()
 		assert.same({ "Bags | 7", "Bank | 40", "Drag it along the bar to move it, or off the bar to take it off." }, Loader.ui.tooltip.lines)
 	end)
 
+	it("show a stack's most important member with a count above zero, and list them all on hover", function()
+		local bar = Sets.Get("Default").bars[1]
+		-- Most important first: the crest, then Valorstones.
+		bar.entries = { { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } },
+			{ kind = "currency", id = 2815 } }
+		Test.SetCurrency(3110, { name = "Gilded Crest", icon = 2, quantity = 0, max = 90, totalEarned = 0, capsTotalEarned = true })
+		Sets.Changed("Default")
+		assert.same({ "500 / 2000", "4000" }, shown(1))
+		local first = slot(1).buttons[1]
+		first.scripts.OnEnter(first)
+		assert.same({ "Valorstones", "|T2:0|t Gilded Crest | 0", "|T1:0|t Valorstones | 500 / 2000" },
+			{ Loader.ui.tooltip.lines[1], Loader.ui.tooltip.lines[2], Loader.ui.tooltip.lines[3] })
+		Test.ChangeCurrency(3110, 5)
+		assert.same({ "5", "4000" }, shown(1))
+		-- Every member at zero: the stack takes no room, or shows its least important member with Show when empty.
+		Test.ChangeCurrency(3110, -5)
+		Test.SetCurrency(3008, { name = "Valorstones", icon = 1, quantity = 0, max = 2000, backpack = 1 })
+		Test.ChangeCurrency(3008, 0)
+		assert.same({ "4000" }, shown(1))
+		assert.equals(0, slot(1).buttons[1].x)
+		bar.entries[1].showEmpty = true
+		Sets.Changed("Default")
+		assert.same({ "0 / 2000", "4000" }, shown(1))
+		-- Its name in the overflow list and in the question: the shown member's.
+		assert.equals("Stack: Valorstones", Bars.Describe(bar.entries[1]).name)
+	end)
+
 	it("lay entries out from the left edge a gap apart, and hide what does not fit behind the arrow", function()
 		local bar = Sets.Get("Default").bars[1]
 		bar.entries = { { kind = "currency", id = 3008 }, { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } }

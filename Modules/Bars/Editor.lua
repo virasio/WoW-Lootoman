@@ -71,8 +71,16 @@ local function changed()
 	Sets.Changed(currentSet())
 end
 
--- An entry's key: an item counting more than the bags is another entry.
+-- An entry's key: an item counting more than the bags is another entry; a
+-- stack is known by its members.
 local function keyOf(entry)
+	if entry.kind == "stack" then
+		local keys = {}
+		for index, member in ipairs(entry.members or {}) do
+			keys[index] = keyOf(member)
+		end
+		return "stack:" .. table.concat(keys, ",")
+	end
 	if entry.count and entry.count ~= "bags" then
 		return entry.kind .. ":" .. entry.id .. ":" .. entry.count
 	end
@@ -86,6 +94,10 @@ function Editor.Lists(bar)
 	local left, on = {}, {}
 	for index, entry in ipairs(Bars.Entries(bar)) do
 		on[keyOf(entry)] = true
+		-- A stack's members are on the bar too.
+		for _, member in ipairs(entry.kind == "stack" and entry.members or {}) do
+			on[keyOf(member)] = true
+		end
 		left[#left + 1] = { entry = entry, index = index, look = Bars.Describe(entry) or { name = keyOf(entry), text = "" } }
 	end
 	local right = {}
