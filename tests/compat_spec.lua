@@ -287,6 +287,22 @@ describe("Compat", function()
 			assert.equals(32, Compat.GetItemFamily(765))
 			assert.equals(0, Compat.GetItemFamily(2589))
 		end)
+
+		it("reads an item's kind from the client's own data, with its family as the client gives it", function()
+			stub({
+				C_Item = {
+					GetItemFamily = function(item) return item == 22250 and 32 or nil end,
+					GetItemInfoInstant = function(item)
+						if item == 22250 or item == 2589 then
+							return item, "Container", item == 22250 and "Herb Bag" or "Cloth", "INVTYPE_BAG", 133652, 1, 2
+						end
+					end,
+				},
+			})
+			assert.same({ type = "Container", subType = "Herb Bag", classID = 1, subClassID = 2, family = 32 }, Compat.GetItemKind(22250))
+			assert.is_nil(Compat.GetItemKind(2589).family)
+			assert.is_nil(Compat.GetItemKind(999))
+		end)
 	end)
 
 	describe("currencies", function()

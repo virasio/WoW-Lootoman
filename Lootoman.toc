@@ -97,4 +97,5 @@ Settings\JunkList.lua
 
 #@debug@
 Dev\LootDump.lua
+Dev\BagFamilies.lua
 #@end-debug@
