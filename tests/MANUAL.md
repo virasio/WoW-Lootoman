@@ -117,6 +117,20 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 - [ ] **Sets.** In the editor's set menu: new set, copy, rename, reset, delete; two profiles on two sets. *Expected:* each profile shows its set's bars; a deleted set's profiles go back to Default.
 - [ ] **Share.** Share the profile with its bar set, and a set alone from the editor's menu; import both on another character. *Expected:* the bars, their entries and positions come along; a taken name offers keep both, replace or keep mine.
 
+## Currency bars (0.3.5)
+
+- [ ] **Stack of crests.** In the editor, drop one crest on another, then the others between the stack's rows, most important first. *Expected:* the row you drop on lights up; inside a stack the line is indented; the stack shows its members under it. On the bar: the most important crest the character has; hovering lists every member with its count (the shown one in gold, a capped one in red).
+- [ ] **Empty stack.** A stack of currencies the character has none of. *Expected:* it takes no room on the bar; right-click it in the editor, *Show when empty*: it shows its last (least important) member at 0.
+- [ ] **Taking a stack apart.** Drag a member to the gap after the stack's last row, then one to the other list, then *Break up the stack*. *Expected:* the first becomes an entry after the stack; the second leaves the bar; a stack left with one member is that member again; breaking up puts the members in its place, in order. Money cannot join a stack.
+- [ ] **Stacks kept.** `/reload`, and share the set as text and import it on another character. *Expected:* stacks, their order and *Show when empty* come along.
+- [ ] **Bags and banks.** An item with some in the bags, the bank and the warband bank: add it, right-click it in the editor, *Count the banks*, then *Show it again* twice. *Expected:* three entries, "…, in the banks", "…, everywhere" and the plain one, with their counts (the banks in light blue, both in light green); hovering one lists bags, bank and warband bank. Right after login, before opening a bank, the bank counts are already right (if not, say so: the tooltip then needs a "not opened this session" line). Deposit and take out at the bank: the counts follow.
+- [ ] **Forever and the PTR.** On WoW Forever and the 12.1.7 PTR: a stack, an item counting the banks. *Expected:* they work; without a warband bank, its tooltip line is not there.
+
+## Free-slot bar (0.3.5)
+
+- [ ] **Bag families.** In a debug build (the addon linked from the repository), `/lootoman families`, then `/reload`. *Expected:* a line per kind of bag; "as expected" for each family the client knows; the lines are kept in the character's session data for Claude to read. Add the IDs of any profession bags you have that are not listed, after the command.
+- [ ] **Family tokens.** Once the checked families are in the addon's data: put `{herb} / {herb.total}` (and others you have bags for) in the template. *Expected:* the free and total slots of those bags; the tooltip lists each family you have by its bag's kind ("Herb Bag").
+
 ## Russian client (0.1)
 
 - [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian.
