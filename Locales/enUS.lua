@@ -303,6 +303,7 @@ ns.Locales.AddEnglish({
 	"General bags: %d free of %d",
 	"Reagent bag: %d free of %d",
 	"Profession bags: %d free of %d",
+	"%s: %d free of %d",
 	"Edit the text",
 	"The free-slot bar's text. Tokens: %s",
 	"Text",

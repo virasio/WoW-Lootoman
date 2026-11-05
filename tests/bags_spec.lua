@@ -167,6 +167,22 @@ describe("Bags provider", function()
 		}, Bags.FreeSlots())
 	end)
 
+	it("counts the free and total slots of each bag family that has a token, a bag of two for both", function()
+		ns.Data.BagFamilies = { { token = "herb", bit = HERBS }, { token = "gem", bit = ORE } }
+		Test.SetBags({
+			[0] = { size = 16, items = filled(14) },
+			[1] = { size = 10, family = HERBS, items = filled(4, 765) },
+			[2] = { size = 8, family = HERBS + ORE },
+			-- Enchanting: a family without a token counts only as a profession bag.
+			[3] = { size = 12, family = 64, items = filled(2) },
+		})
+		local slots = Bags.FreeSlots()
+		assert.same({ 14, 18, 8, 8, 24, 30 }, { slots.herb, slots.herbTotal, slots.gem, slots.gemTotal, slots.profession, slots.professionTotal })
+		Test.SetBags({ [0] = { size = 16 } })
+		slots = Bags.FreeSlots()
+		assert.same({ 0, 0 }, { slots.herb, slots.herbTotal })
+	end)
+
 	it("counts the free slots of the backpack and the general bags only", function()
 		Test.SetBags({
 			[0] = { size = 16, items = filled(14) },

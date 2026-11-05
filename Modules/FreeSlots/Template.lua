@@ -10,8 +10,8 @@ local Template = {}
 FreeSlots.Template = Template
 
 -- Token names and the Bags.FreeSlots() value each one shows, in the order the
--- options list them.
-Template.TOKENS = {
+-- options list them; Template.Tokens() adds the bag families'.
+local TOKENS = {
 	{ "free", "free" },
 	{ "total", "total" },
 	{ "used", "used" },
@@ -23,9 +23,27 @@ Template.TOKENS = {
 	{ "profession.total", "professionTotal" },
 }
 
-local valueOf = {}
-for _, token in ipairs(Template.TOKENS) do
-	valueOf[token[1]] = token[2]
+-- Every token: those above, then a free and a total one for each bag family
+-- whose bit is known (Data.BagFamilies), such as "herb" and "herb.total".
+function Template.Tokens()
+	local tokens = {}
+	for index, token in ipairs(TOKENS) do
+		tokens[index] = token
+	end
+	for _, family in ipairs(ns.Data.BagFamilies or {}) do
+		tokens[#tokens + 1] = { family.token, family.token }
+		tokens[#tokens + 1] = { family.token .. ".total", family.token .. "Total" }
+	end
+	return tokens
+end
+
+-- The Bags.FreeSlots() value a token shows, or nil for an unknown token.
+local function valueOf(name)
+	for _, token in ipairs(Template.Tokens()) do
+		if token[1] == name then
+			return token[2]
+		end
+	end
 end
 
 -- The colour as AARRGGBB, or nil when it is not one.
@@ -64,7 +82,7 @@ function Template.Parse(text)
 		local name, code = inside:match("^%s*([%w%.]+)%s*|%s*(%x+)%s*$")
 		name = name or inside:match("^%s*([%w%.]+)%s*$")
 		local tokenColor = code and color(code)
-		if name and valueOf[name:lower()] and (code == nil or tokenColor) then
+		if name and valueOf(name:lower()) and (code == nil or tokenColor) then
 			parts[#parts + 1] = { token = name:lower(), color = tokenColor }
 		else
 			addText(text:sub(start, finish))
@@ -85,7 +103,7 @@ function Template.Render(text, values, defaultColor)
 	local pieces = {}
 	for _, part in ipairs(Template.Parse(text)) do
 		if part.token then
-			local value = values[valueOf[part.token]]
+			local value = values[valueOf(part.token)]
 			pieces[#pieces + 1] = ("|c%s%s|r"):format(part.color or defaultColor, tostring(value or 0))
 		else
 			pieces[#pieces + 1] = ("|c%s%s|r"):format(defaultColor, escape(part.text))

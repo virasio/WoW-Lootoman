@@ -298,6 +298,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["General bags: %d free of %d"] = "Обычные сумки: свободно %d из %d",
 	["Reagent bag: %d free of %d"] = "Сумка для реагентов: свободно %d из %d",
 	["Profession bags: %d free of %d"] = "Сумки для профессий: свободно %d из %d",
+	["%s: %d free of %d"] = "%s: свободно %d из %d",
 	["Edit the text"] = "Изменить текст",
 	["The free-slot bar's text. Tokens: %s"] = "Текст полосы свободных ячеек. Метки: %s",
 	["Text"] = "Текст",

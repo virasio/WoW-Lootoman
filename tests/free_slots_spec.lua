@@ -62,6 +62,14 @@ describe("free-slot bar", function()
 		assert.same({ "All bags: 12 free of 30", "General bags: 7 free of 20", "Reagent bag: 5 free of 10" }, module.TooltipLines())
 	end)
 
+	it("lists each bag family the player has, named by its bag's kind as the client gives it", function()
+		ns.Data.BagFamilies = { { token = "herb", bit = 32, bag = 22250 }, { token = "mining", bit = 1024, bag = 38347 } }
+		Test.SetItems({ [22250] = { name = "Herb Pouch", kind = { type = "Container", subType = "Herb Bag", classID = 1, subClassID = 2 } } })
+		Test.SetBags({ [0] = { size = 20 }, [1] = { size = 12, family = 32, items = { [1] = { itemID = 2, count = 1, name = "Herb", quality = 1 } } } })
+		assert.same({ "All bags: 31 free of 32", "General bags: 20 free of 20", "Profession bags: 11 free of 12", "Herb Bag: 11 free of 12" },
+			module.TooltipLines())
+	end)
+
 	it("is placed with Edit Mode left of the bag buttons, with its settings in the dialog but the colour", function()
 		local frame = module.frame
 		assert.same({ "Free slots", { point = "BOTTOMRIGHT", x = -260, y = 52 } }, { lib.frames[frame].name, lib.frames[frame].default })

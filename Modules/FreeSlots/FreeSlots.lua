@@ -1,5 +1,5 @@
 local _, ns = ...
-local L, Text = ns.L, ns.Text
+local Compat, L, Text = ns.Compat, ns.L, ns.Text
 
 -- The settings of the module's page; the Edit Mode dialog shows the ones it
 -- can (not the colour).
@@ -49,7 +49,8 @@ function FreeSlots:Text()
 end
 
 -- The tooltip's lines: free and total slots of all bags and of each kind the
--- player has.
+-- player has, then of each bag family with a token, named by the kind of its
+-- sample bag as the client gives it ("Herb Bag").
 function FreeSlots.TooltipLines()
 	local slots = ns.Bags.FreeSlots()
 	local lines = { L["All bags: %d free of %d"]:format(slots.free, slots.total) }
@@ -61,6 +62,13 @@ function FreeSlots.TooltipLines()
 	for _, kind in ipairs(kinds) do
 		if slots[kind[1] .. "Total"] > 0 then
 			lines[#lines + 1] = kind[2]:format(slots[kind[1]], slots[kind[1] .. "Total"])
+		end
+	end
+	for _, family in ipairs(ns.Data.BagFamilies or {}) do
+		local total = slots[family.token .. "Total"] or 0
+		if total > 0 then
+			local kind = family.bag and Compat.GetItemKind(family.bag)
+			lines[#lines + 1] = L["%s: %d free of %d"]:format(kind and kind.subType or family.token, slots[family.token], total)
 		end
 	end
 	return lines
@@ -143,7 +151,7 @@ end
 -- The tokens as the player types them, for the help texts.
 function FreeSlots.TokenList()
 	local names = {}
-	for index, token in ipairs(FreeSlots.Template.TOKENS) do
+	for index, token in ipairs(FreeSlots.Template.Tokens()) do
 		names[index] = "{" .. token[1] .. "}"
 	end
 	return table.concat(names, " ")
