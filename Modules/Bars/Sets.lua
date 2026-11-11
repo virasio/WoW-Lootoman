@@ -1,14 +1,17 @@
 local _, ns = ...
-local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
+local Bus, L, Migrations, Storage, Text = ns.Bus, ns.L, ns.Migrations, ns.Storage, ns.Text
 
 -- Named sets of currency bars, shared by every profile like the loot feed's
 -- row layouts. The account-wide section "barSets" holds { [name] = set }:
 --
---   set = { schema = 1, bars = {
+--   set = { schema = 2, bars = {
 --       { id = 1, width = 300, gap = 6, size = 22,
 --         direction = "right" | "left",            -- fills from the left edge, or from the right
 --         background = false, opacity = 50, border = false,
 --         entries = { { kind = "currency" | "item" | "money", id = 3008 }, … },   -- nil: the backpack's currencies
+--             -- an item also has count = "banks" or "all" when it does not count the bags only;
+--             -- or a stack: { kind = "stack", members = { { kind = "currency" | "item", id[, count] }, … },
+--             --     showEmpty = false }, its members most important first, 2 to MAX_MEMBERS
 --         positions = { [Edit Mode layout] = { point, x, y } } },
 --   } }
 --
@@ -19,13 +22,19 @@ local Bus, L, Storage, Text = ns.Bus, ns.L, ns.Storage, ns.Text
 -- uses it. Renaming a set renames it in every profile; deleting one moves its
 -- profiles to Default. Every change sends BarSetChanged(name).
 --
+-- Schema 2 (0.3.5) adds stacks and an item's count to schema 1 (0.3), whose
+-- sets keep their shape: a version that reads schema 1 refuses a newer text
+-- instead of dropping its stacks.
+--
 -- Functions that can fail return nil and an error code, as Profiles do:
 -- "empty", "too_long", "exists", "missing" or "default".
 local Bars = ns.Modules:Get("Bars")
 local Sets = {
 	DEFAULT = "Default",
 	MAX_NAME_LENGTH = 48,
-	SCHEMA = 1,
+	SCHEMA = 2,
+	-- The most members a stack holds.
+	MAX_MEMBERS = 10,
 	-- The most bars a set holds.
 	MAX_BARS = 20,
 	-- A bar's width, gap and size: their defaults and ranges.
@@ -60,8 +69,26 @@ local function newSet()
 	return { schema = Sets.SCHEMA, bars = { Sets.NewBar(1) } }
 end
 
+-- Schema steps of one set (Migrations.Run): step n brings schema n - 1 to n.
+Sets.STEPS = {
+	-- 1: the sets of 0.3.
+	function() end,
+	-- 2: stacks and an item's count, which schema 1 has none of.
+	function() end,
+}
+
+local migrated = false
+
 local function all()
 	local sets = Storage:GetGlobalSection("barSets")
+	if not migrated then
+		migrated = true
+		for _, set in pairs(sets) do
+			if type(set) == "table" then
+				Migrations.Run(Sets.STEPS, set)
+			end
+		end
+	end
 	if type(sets[Sets.DEFAULT]) ~= "table" then
 		sets[Sets.DEFAULT] = newSet()
 	end
@@ -294,6 +321,41 @@ local POINTS = {
 	RIGHT = true, BOTTOMLEFT = true, BOTTOM = true, BOTTOMRIGHT = true,
 }
 
+-- An entry kept from a profile text: a known kind and a number, and for an
+-- item what it counts if it is not the bags.
+local function cleanEntry(entry, kinds)
+	if type(entry) ~= "table" or not kinds[entry.kind] or type(entry.id) ~= "number" then
+		return nil
+	end
+	local kept = { kind = entry.kind, id = entry.id }
+	if entry.kind == "item" and (entry.count == "banks" or entry.count == "all") then
+		kept.count = entry.count
+	end
+	return kept
+end
+
+local MEMBER_KINDS = { currency = true, item = true }
+
+-- A stack's well-formed members, each once, up to MAX_MEMBERS: nil without
+-- any, the member itself when one is left.
+local function cleanStack(entry)
+	local members, seen = {}, {}
+	for _, member in ipairs(type(entry.members) == "table" and entry.members or {}) do
+		local kept = cleanEntry(member, MEMBER_KINDS)
+		if kept then
+			local key = kept.kind .. ":" .. kept.id .. ":" .. (kept.count or "bags")
+			if not seen[key] and #members < Sets.MAX_MEMBERS then
+				seen[key] = true
+				members[#members + 1] = kept
+			end
+		end
+	end
+	if #members <= 1 then
+		return members[1]
+	end
+	return { kind = "stack", members = members, showEmpty = entry.showEmpty == true }
+end
+
 local function number(value, range)
 	if type(value) ~= "number" or value ~= value then
 		return range[1]
@@ -320,9 +382,13 @@ function Sets.Clean(data)
 			if type(bar.entries) == "table" then
 				clean.entries = {}
 				for _, entry in ipairs(bar.entries) do
-					if type(entry) == "table" and Sets.KINDS[entry.kind] and type(entry.id) == "number" then
-						clean.entries[#clean.entries + 1] = { kind = entry.kind, id = entry.id }
+					local kept
+					if type(entry) == "table" and entry.kind == "stack" then
+						kept = cleanStack(entry)
+					else
+						kept = cleanEntry(entry, Sets.KINDS)
 					end
+					clean.entries[#clean.entries + 1] = kept
 				end
 			end
 			for layout, position in pairs(type(bar.positions) == "table" and bar.positions or {}) do

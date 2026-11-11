@@ -65,7 +65,10 @@ describe("bar sets", function()
 			schema = 1,
 			bars = {
 				{ id = 1, width = 5000, gap = -3, size = 30.4, direction = "left", background = true, opacity = 150, border = "yes",
-					entries = { { kind = "currency", id = 3008 }, { kind = "spell", id = 1 }, { kind = "item", id = "x" }, "junk" },
+					entries = { { kind = "currency", id = 3008 }, { kind = "spell", id = 1 }, { kind = "item", id = "x" }, "junk",
+						-- What an item counts: the bags as nil, the banks or both; nothing else.
+						{ kind = "item", id = 2589, count = "banks" }, { kind = "item", id = 2589, count = "bags" },
+						{ kind = "item", id = 765, count = "attic" }, { kind = "currency", id = 2815, count = "all" } },
 					positions = { Modern = { point = "TOP", x = 1, y = 2 }, Bad = { point = "UP", x = 1, y = 2 } } },
 				{ id = 1 },
 				"junk",
@@ -73,13 +76,46 @@ describe("bar sets", function()
 				{ id = 2 },
 			},
 		})
-		assert.same({ schema = 1, bars = {
+		-- A schema 1 text (0.3) reads as schema 2.
+		assert.same({ schema = 2, bars = {
 			{ id = 1, width = 1200, gap = 0, size = 30, direction = "left", background = true, opacity = 100, border = false,
-				entries = { { kind = "currency", id = 3008 } }, positions = { Modern = { point = "TOP", x = 1, y = 2 } } },
+				entries = { { kind = "currency", id = 3008 }, { kind = "item", id = 2589, count = "banks" }, { kind = "item", id = 2589 },
+					{ kind = "item", id = 765 }, { kind = "currency", id = 2815 } }, positions = { Modern = { point = "TOP", x = 1, y = 2 } } },
 			{ id = 2, width = 300, gap = 6, size = 22, direction = "right", background = false, opacity = 50, border = false,
 				positions = {} },
 		} }, clean)
 		assert.same({ nil, "newer" }, { Sets.Clean({ schema = 99 }) })
+	end)
+
+	it("from a profile text keep stacks of well-formed members, each once, up to ten, and a stack of one as its member", function()
+		local members = {}
+		for id = 1, 12 do
+			members[id] = { kind = "currency", id = 3000 + id }
+		end
+		local clean = Sets.Clean({ schema = 2, bars = { { id = 1, entries = {
+			{ kind = "stack", showEmpty = true, members = { { kind = "currency", id = 3110 }, { kind = "item", id = 2589, count = "all" },
+				{ kind = "currency", id = 3110 }, { kind = "money", id = 0 }, { kind = "stack", members = {} }, "junk" } },
+			{ kind = "stack", members = members },
+			{ kind = "stack", members = { { kind = "item", id = 765 }, { kind = "spell", id = 1 } } },
+			{ kind = "stack", members = "none" },
+		} } } })
+		local entries = clean.bars[1].entries
+		assert.same({ kind = "stack", showEmpty = true, members = { { kind = "currency", id = 3110 }, { kind = "item", id = 2589, count = "all" } } },
+			entries[1])
+		assert.same({ 10, false, 3010 }, { #entries[2].members, entries[2].showEmpty, entries[2].members[10].id })
+		assert.same({ kind = "item", id = 765 }, entries[3])
+		assert.equals(3, #entries)
+		assert.equals(2, clean.schema)
+	end)
+
+	it("share a stack in a profile text and take it back whole", function()
+		local Share = ns.Share
+		Sets.Create("Crests")
+		Sets.Bar("Crests", 1).entries = { { kind = "stack", showEmpty = false,
+			members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } } }
+		local read = assert(Share.Read(Share.Export({ parts = {}, collections = { barSets = { "Crests" } } })))
+		Share.Import(read, { parts = {}, collections = { barSets = { Crests = "both" } } })
+		assert.same(Sets.Bar("Crests", 1).entries, Sets.Bar("Crests 2", 1).entries)
 	end)
 
 	it("are shared and imported with profile texts, a taken name kept as both", function()

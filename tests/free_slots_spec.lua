@@ -11,8 +11,19 @@ describe("free-slot bar", function()
 		function fake:AddFrame(frame, _, default, name) self.frames[frame] = { default = default, name = name } end
 		function fake:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 		function fake:AddFrameSettingsButtons(frame, buttons) self.buttons[frame] = buttons end
-		function fake:RegisterCallback() end
-		function fake:IsInEditMode() return false end
+		fake.callbacks = {}
+		function fake:RegisterCallback(event, callback)
+			self.callbacks[event] = self.callbacks[event] or {}
+			table.insert(self.callbacks[event], callback)
+		end
+		function fake:IsInEditMode() return self.editing == true end
+		function fake:RefreshFrameSettings() end
+		function fake.Fire(event, ...)
+			fake.editing = event == "enter" or (event ~= "exit" and fake.editing)
+			for _, callback in ipairs(fake.callbacks[event] or {}) do
+				callback(...)
+			end
+		end
 		return fake
 	end
 
@@ -58,8 +69,63 @@ describe("free-slot bar", function()
 		assert.same({ 20, 28 }, { module.frame.Label.font[2], module.frame.height })
 	end)
 
+	it("sits above the bags, lets clicks through to what is under it, and still shows its tooltip", function()
+		local frame = module.frame
+		assert.same({ "HIGH", false, true }, { frame.strata, frame.mouseClicks, frame.mouseMotion })
+		frame.scripts.OnEnter(frame)
+		assert.same({ true, "Free slots" }, { Loader.ui.tooltip.shown, Loader.ui.tooltip.lines[1] })
+	end)
+
+	it("shows a background of its opacity when asked", function()
+		local frame = module.frame
+		assert.is_false(frame.Background.shown)
+		module:Set("background", true)
+		module:Set("opacity", 30)
+		assert.same({ true, 0.3 }, { frame.Background.shown, frame.Background.colorTexture[4] })
+		module:Set("background", false)
+		assert.is_false(frame.Background.shown)
+	end)
+
+	it("is as any other frame in Edit Mode, so Edit Mode's selection gets the clicks that move it", function()
+		local frame = module.frame
+		local function state()
+			return { frame.strata, frame.mouseClicks, frame.mouseMotion }
+		end
+		lib.Fire("enter")
+		assert.same({ "MEDIUM", true, true }, state())
+		lib.Fire("exit")
+		assert.same({ "HIGH", false, true }, state())
+		-- Turned off in Edit Mode, and on again after it.
+		lib.Fire("enter")
+		ns.Modules:SetEnabled("FreeSlots", false)
+		lib.Fire("exit")
+		ns.Modules:SetEnabled("FreeSlots", true)
+		assert.same({ "HIGH", false, true }, state())
+		-- Turned off and on during Edit Mode.
+		lib.Fire("enter")
+		ns.Modules:SetEnabled("FreeSlots", false)
+		ns.Modules:SetEnabled("FreeSlots", true)
+		assert.same({ "MEDIUM", true, true }, state())
+		lib.Fire("exit")
+		assert.same({ "HIGH", false, true }, state())
+	end)
+
 	it("lists the free and total slots of each kind of bag the player has in its tooltip", function()
 		assert.same({ "All bags: 12 free of 30", "General bags: 7 free of 20", "Reagent bag: 5 free of 10" }, module.TooltipLines())
+	end)
+
+	it("lists each bag family the player has, named by its bag's kind as the client gives it", function()
+		ns.Data.BagFamilies = { { token = "herb", bit = 32, bag = 22250 }, { token = "mining", bit = 1024, bag = 38347 } }
+		Test.SetItems({ [22250] = { name = "Herb Pouch", kind = { type = "Container", subType = "Herb Bag", classID = 1, subClassID = 2 } } })
+		Test.SetBags({ [0] = { size = 20 }, [1] = { size = 12, family = 32, items = { [1] = { itemID = 2, count = 1, name = "Herb", quality = 1 } } } })
+		assert.same({ "All bags: 31 free of 32", "General bags: 20 free of 20", "Profession bags: 11 free of 12", "Herb Bag: 11 free of 12" },
+			module.TooltipLines())
+		-- A herb bag in the reagent bag's slot (WoW Forever): its family's line, no reagent bag line.
+		Test.SetBags({ [0] = { size = 20 }, [5] = { size = 4, family = 32 } })
+		assert.same({ "All bags: 24 free of 24", "General bags: 20 free of 20", "Herb Bag: 4 free of 4" }, module.TooltipLines())
+		-- A reagent bag still has its line.
+		Test.SetBags({ [0] = { size = 20 }, [5] = { size = 30 } })
+		assert.same({ "All bags: 50 free of 50", "General bags: 20 free of 20", "Reagent bag: 30 free of 30" }, module.TooltipLines())
 	end)
 
 	it("is placed with Edit Mode left of the bag buttons, with its settings in the dialog but the colour", function()
@@ -69,13 +135,13 @@ describe("free-slot bar", function()
 		for _, setting in ipairs(lib.settings[frame]) do
 			names[#names + 1] = setting.name
 		end
-		assert.same({ "Look", "Text size", "Also in broker panels" }, names)
+		assert.same({ "Look", "Text size", "Background", "Background opacity", "Also in broker panels" }, names)
 		assert.equals("Edit the text", lib.buttons[frame][1].text)
 	end)
 
-	it("has a page with the text button, the colour swatch, the size and the broker switch", function()
+	it("has a page with the text button, the colour swatch, the size, the background and the broker switch", function()
 		assert.same({ "checkbox:Enabled", "button:Text", "header:Look", "color:Default colour", "slider:Text size",
-			"checkbox:Also in broker panels" }, api.Kinds(api.FindCategory("Free slots")))
+			"checkbox:Background", "slider:Background opacity", "checkbox:Also in broker panels" }, api.Kinds(api.FindCategory("Free slots")))
 	end)
 
 	it("edits the text in a dialog, which gives a typed | back doubled", function()

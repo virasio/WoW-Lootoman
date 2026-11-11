@@ -293,6 +293,19 @@ function Compat.GetItemFamily(item)
 	return C_Item.GetItemFamily(item) or 0
 end
 
+-- What kind of item an ID is, from the client's own data (no server request):
+-- { type, subType (in the client language, such as "Herb Bag"), classID,
+-- subClassID, family (the bag families it fits; nil when the client does not
+-- say) }, or nil when the client has no such item.
+function Compat.GetItemKind(item)
+	local itemID, itemType, itemSubType, _, _, classID, subClassID = C_Item.GetItemInfoInstant(item)
+	if not itemID then
+		return nil
+	end
+	return { type = itemType, subType = itemSubType, classID = classID, subClassID = subClassID,
+		family = C_Item.GetItemFamily(item) }
+end
+
 -- Item data by ID, link or name: name, link, quality, stackSize, sellPrice (a
 -- merchant's price for one, in copper), isCraftingReagent. Nil while the
 -- client has not loaded the item yet.
@@ -391,6 +404,23 @@ end
 -- How many of an item the bags and the reagent bag hold (not the bank).
 function Compat.GetBagItemCount(item)
 	return C_Item.GetItemCount(item, false, false, false, false)
+end
+
+-- Whether the client has a warband bank (Forever may not).
+function Compat.HasWarbandBank()
+	return Compat.Has("Enum.BankType.Account")
+end
+
+-- How many of an item the character has in the bags (with the reagent bag),
+-- in the bank (whose tabs hold reagents too) and in the warband bank. The
+-- client gives totals, so each bank is its total less the bags.
+function Compat.GetItemCounts(item)
+	local bags = C_Item.GetItemCount(item, false, false, false, false)
+	local counts = { bags = bags, bank = C_Item.GetItemCount(item, true, false, true, false) - bags, warband = 0 }
+	if Compat.HasWarbandBank() then
+		counts.warband = C_Item.GetItemCount(item, false, false, false, true) - bags
+	end
+	return counts
 end
 
 -- The item on the cursor, as an item ID, while the cursor holds one.

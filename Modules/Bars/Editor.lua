@@ -34,15 +34,18 @@ Editor.HEIGHT = 480
 Editor.ROW_HEIGHT = 22
 Editor.ROWS = 13
 Editor.LIST_WIDTH = 270
+-- How far a stack's members sit in from its row.
+Editor.INDENT = 18
 
 local window
 local barID
--- Bag items taken off a bar while the window is open, by item ID.
+-- Bag items taken off a bar while the window is open, whole (an item counting
+-- the banks stays one), by their key.
 local removed = {}
 
 local function forgetRemoved()
-	for itemID in pairs(removed) do
-		removed[itemID] = nil
+	for key in pairs(removed) do
+		removed[key] = nil
 	end
 end
 
@@ -71,18 +74,86 @@ local function changed()
 	Sets.Changed(currentSet())
 end
 
+-- An entry's key: an item counting more than the bags is another entry; a
+-- stack is known by its members.
 local function keyOf(entry)
+	if entry.kind == "stack" then
+		local keys = {}
+		for index, member in ipairs(entry.members or {}) do
+			keys[index] = keyOf(member)
+		end
+		return "stack:" .. table.concat(keys, ",")
+	end
+	if entry.count and entry.count ~= "bags" then
+		return entry.kind .. ":" .. entry.id .. ":" .. entry.count
+	end
 	return entry.kind .. ":" .. entry.id
+end
+
+-- What a stack holds.
+local MEMBER_KINDS = { currency = true, item = true }
+
+-- A bar's entries as the rows of its list, a stack's members under it: each
+-- { entry, index (its place on the bar, or its stack's), stack (a stack's own
+-- row), member (its place in its stack), parent (its stack) }.
+local function flatten(entries)
+	local rows = {}
+	for index, entry in ipairs(entries) do
+		if entry.kind == "stack" then
+			rows[#rows + 1] = { entry = entry, index = index, stack = true }
+			for position, member in ipairs(entry.members or {}) do
+				rows[#rows + 1] = { entry = member, index = index, member = position, parent = entry }
+			end
+		else
+			rows[#rows + 1] = { entry = entry, index = index }
+		end
+	end
+	return rows
+end
+
+-- Whether an entry with this key is on the bar, alone or in a stack.
+local function onBar(entries, key)
+	for _, row in ipairs(flatten(entries)) do
+		if not row.stack and keyOf(row.entry) == key then
+			return true
+		end
+	end
+	return false
+end
+
+local function indexOf(list, value)
+	for index, item in ipairs(list) do
+		if item == value then
+			return index
+		end
+	end
+end
+
+-- A stack left with one member becomes that member; an empty one goes.
+local function normalize(entries)
+	for index = #entries, 1, -1 do
+		local entry = entries[index]
+		if entry.kind == "stack" then
+			if #entry.members == 0 then
+				table.remove(entries, index)
+			elseif #entry.members == 1 then
+				entries[index] = entry.members[1]
+			end
+		end
+	end
 end
 
 -- The two lists of a bar: { left = { { entry, look } … } in the bar's order,
 -- right = the same, by name: money and the currencies not on the bar, and the
--- items taken off while the window is open }.
+-- items taken off while the window is open }. The left list's rows are those
+-- of flatten, with their row number and look.
 function Editor.Lists(bar)
 	local left, on = {}, {}
-	for index, entry in ipairs(Bars.Entries(bar)) do
-		on[keyOf(entry)] = true
-		left[#left + 1] = { entry = entry, index = index, look = Bars.Describe(entry) or { name = keyOf(entry), text = "" } }
+	for number, row in ipairs(flatten(Bars.Entries(bar))) do
+		on[keyOf(row.entry)] = true
+		row.row = number
+		row.look = Bars.Describe(row.entry) or { name = keyOf(row.entry), text = "" }
+		left[#left + 1] = row
 	end
 	local right = {}
 	local money = { kind = "money", id = 0 }
@@ -96,8 +167,7 @@ function Editor.Lists(bar)
 			right[#right + 1] = { entry = entry, look = look }
 		end
 	end
-	for itemID in pairs(removed) do
-		local entry = { kind = "item", id = itemID }
+	for _, entry in pairs(removed) do
 		if not on[keyOf(entry)] then
 			right[#right + 1] = { entry = entry, look = Bars.Describe(entry) }
 		end
@@ -118,13 +188,11 @@ function Editor.Add(bar, entry)
 		return false
 	end
 	local entries = Bars.OwnEntries(bar)
-	for _, existing in ipairs(entries) do
-		if keyOf(existing) == keyOf(entry) then
-			return false
-		end
+	if onBar(entries, keyOf(entry)) then
+		return false
 	end
-	entries[#entries + 1] = { kind = entry.kind, id = entry.id }
-	removed[entry.kind == "item" and entry.id or 0] = nil
+	entries[#entries + 1] = { kind = entry.kind, id = entry.id, count = entry.count }
+	removed[keyOf(entry)] = nil
 	changed()
 	return true
 end
@@ -137,11 +205,132 @@ function Editor.Remove(bar, index)
 	end
 	local entries = Bars.OwnEntries(bar)
 	local entry = table.remove(entries, index)
-	if entry and entry.kind == "item" and window and window:IsShown() then
-		removed[entry.id] = true
+	if window and window:IsShown() and entry then
+		for _, taken in ipairs(entry.kind == "stack" and entry.members or { entry }) do
+			if taken.kind == "item" then
+				removed[keyOf(taken)] = { kind = "item", id = taken.id, count = taken.count }
+			end
+		end
 	end
 	changed()
 	return entry
+end
+
+-- Takes a member out of a stack, and off the bar.
+function Editor.RemoveMember(bar, index, member)
+	if not bar or BarFrame.Asking() then
+		return nil
+	end
+	local entries = Bars.OwnEntries(bar)
+	local stack = entries[index]
+	local entry = stack and stack.kind == "stack" and table.remove(stack.members, member)
+	if not entry then
+		return nil
+	end
+	normalize(entries)
+	if entry.kind == "item" and window and window:IsShown() then
+		removed[keyOf(entry)] = { kind = "item", id = entry.id, count = entry.count }
+	end
+	changed()
+	return entry
+end
+
+-- A row dropped in the bar's list (from = { row = its number in the list } or
+-- { entry = one from the other list }): target { on = a row's number }
+-- stacks it with that row (on a stack or its member, as the stack's least
+-- important member); target { gap = n } puts it before row n (after the last
+-- row for one more), inside a stack when row n is one of its members.
+function Editor.Drop(bar, from, target)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local entries = Bars.OwnEntries(bar)
+	local rows = flatten(entries)
+	local source, dragged = nil, nil
+	if from.row then
+		source = rows[from.row]
+		dragged = source and source.entry
+	elseif from.entry and not onBar(entries, keyOf(from.entry)) then
+		dragged = { kind = from.entry.kind, id = from.entry.id, count = from.entry.count }
+	end
+	if not dragged then
+		return false
+	end
+	-- Where it goes, known by the entries there before it moves.
+	local stack, before, beside, atEnd
+	if target.on then
+		local row = rows[target.on]
+		if not row or row.entry == dragged then
+			return false
+		end
+		stack = row.parent or (row.stack and row.entry)
+		beside = not stack and row.entry or nil
+		atEnd = true
+	else
+		local row = rows[target.gap]
+		if row and row.entry == dragged then
+			return false
+		end
+		if row and row.member then
+			stack, before = row.parent, row.entry
+		else
+			before = row and entries[row.index]
+		end
+	end
+	if (stack or beside) and not (MEMBER_KINDS[dragged.kind] and MEMBER_KINDS[(beside or dragged).kind]) then
+		return false
+	end
+	if stack and stack ~= (source and source.parent) and #stack.members >= Sets.MAX_MEMBERS then
+		return false
+	end
+	-- Out of its place, then into the new one.
+	if source then
+		table.remove(source.parent and source.parent.members or entries, indexOf(source.parent and source.parent.members or entries, dragged))
+	end
+	if beside then
+		entries[indexOf(entries, beside)] = { kind = "stack", members = { beside, dragged }, showEmpty = false }
+	elseif stack then
+		local members = stack.members
+		table.insert(members, (not atEnd and before and indexOf(members, before)) or #members + 1, dragged)
+	else
+		table.insert(entries, before and indexOf(entries, before) or #entries + 1, dragged)
+	end
+	normalize(entries)
+	removed[keyOf(dragged)] = nil
+	changed()
+	return true
+end
+
+-- A stack's members become entries in its place.
+function Editor.BreakUp(bar, index)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local entries = Bars.OwnEntries(bar)
+	local stack = entries[index]
+	if not stack or stack.kind ~= "stack" then
+		return false
+	end
+	table.remove(entries, index)
+	for position, member in ipairs(stack.members) do
+		table.insert(entries, index + position - 1, member)
+	end
+	changed()
+	return true
+end
+
+-- Whether a stack whose members are all at zero still shows.
+function Editor.SetShowEmpty(bar, index, showEmpty)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local stack = Bars.OwnEntries(bar)[index]
+	if not stack or stack.kind ~= "stack" then
+		return false
+	end
+	stack.showEmpty = showEmpty == true
+	changed()
+	return true
 end
 
 -- An item by its ID, typed or dropped from the bags.
@@ -160,6 +349,113 @@ function Editor.Move(bar, from, to)
 	end
 	BarFrame.Move(bar, from, to)
 	changed()
+end
+
+-- Whether an item stands on a bar counting this (Bars.COUNTS).
+local function counted(bar, itemID, count)
+	for _, row in ipairs(flatten(Bars.Entries(bar))) do
+		local entry = row.entry
+		if entry.kind == "item" and entry.id == itemID and (entry.count or "bags") == count then
+			return true
+		end
+	end
+	return false
+end
+
+-- An entry on a bar, or a member of a stack there.
+local function entryAt(entries, index, member)
+	local entry = entries[index]
+	if member then
+		return entry and entry.kind == "stack" and entry.members[member] or nil
+	end
+	return entry
+end
+
+-- What an item entry counts; not what another entry of the same item on the
+-- bar counts already.
+function Editor.SetCount(bar, index, count, member)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local entry = entryAt(Bars.OwnEntries(bar), index, member)
+	if not entry or entry.kind ~= "item" or counted(bar, entry.id, count) then
+		return false
+	end
+	entry.count = count ~= "bags" and count or nil
+	changed()
+	return true
+end
+
+-- The first count of an item that the bar does not show yet, or nil.
+function Editor.FreeCount(bar, itemID)
+	for _, count in ipairs(Bars.COUNTS) do
+		if not counted(bar, itemID, count) then
+			return count
+		end
+	end
+end
+
+-- The same item again, right after it, counting what the bar does not show
+-- yet: bags and banks side by side.
+function Editor.ShowAgain(bar, index, member)
+	if not bar or BarFrame.Asking() then
+		return false
+	end
+	local entries = Bars.OwnEntries(bar)
+	local entry = entryAt(entries, index, member)
+	if not entry or entry.kind ~= "item" then
+		return false
+	end
+	local count = Editor.FreeCount(bar, entry.id)
+	local list, place = entries, index + 1
+	if member then
+		list, place = entries[index].members, member + 1
+	end
+	if not count or (member and #list >= Sets.MAX_MEMBERS) then
+		return false
+	end
+	table.insert(list, place, { kind = "item", id = entry.id, count = count ~= "bags" and count or nil })
+	changed()
+	return true
+end
+
+local COUNT_LABELS = { bags = L["Count the bags"], banks = L["Count the banks"], all = L["Count everything"] }
+
+-- The right-click menu of an item on the bar: what it counts, and the same
+-- item again.
+local function itemMenu(row)
+	local item, bar = row.item, Editor.Bar()
+	MenuUtil.CreateContextMenu(row, function(_, root)
+		local current = item.entry.count or "bags"
+		for _, count in ipairs(Bars.COUNTS) do
+			local radio = root:CreateRadio(COUNT_LABELS[count], function()
+				return current == count
+			end, function()
+				Editor.SetCount(bar, item.index, count, item.member)
+			end)
+			radio:SetEnabled(count == current or not counted(bar, item.entry.id, count))
+		end
+		root:CreateDivider()
+		root:CreateButton(L["Show it again"], function()
+			Editor.ShowAgain(bar, item.index, item.member)
+		end):SetEnabled(Editor.FreeCount(bar, item.entry.id) ~= nil)
+	end)
+end
+
+-- The right-click menu of a stack: whether it shows when empty, and breaking
+-- it up.
+local function stackMenu(row)
+	local item, bar = row.item, Editor.Bar()
+	MenuUtil.CreateContextMenu(row, function(_, root)
+		root:CreateCheckbox(L["Show when empty"], function()
+			return item.entry.showEmpty == true
+		end, function()
+			Editor.SetShowEmpty(bar, item.index, not item.entry.showEmpty)
+		end)
+		root:CreateButton(L["Break up the stack"], function()
+			Editor.BreakUp(bar, item.index)
+		end)
+	end)
 end
 
 -- The items taken off while the window is open (for tests).
@@ -299,14 +595,21 @@ end
 
 -- Where a drag would end now: "left" and the place in the bar's entries
 -- before which the row goes, "right" for off the bar, or nil for nowhere.
+-- Over the middle third of a row, a drop stacks the dragged row with it; else
+-- it goes into the gap nearest to the mouse.
 local function dropTarget()
 	local left = window.left
 	if left.box:IsMouseOver() then
 		local _, y = GetCursorPosition()
 		local top = left.content:GetTop() or 0
-		local count = #Bars.Entries(Editor.Bar())
-		local gap = math.floor((top - y / left.content:GetEffectiveScale()) / Editor.ROW_HEIGHT + 0.5)
-		return "left", math.min(math.max(gap, 0), count) + 1
+		local count = #(left.items or {})
+		local at = (top - y / left.content:GetEffectiveScale()) / Editor.ROW_HEIGHT
+		local row = math.floor(at)
+		local part = at - row
+		if row >= 0 and row < count and part >= 1 / 3 and part < 2 / 3 then
+			return "left", { on = row + 1 }
+		end
+		return "left", { gap = math.min(math.max(math.floor(at + 0.5), 0), count) + 1 }
 	elseif dragging.list == left and window.right.box:IsMouseOver() then
 		return "right"
 	end
@@ -324,13 +627,20 @@ function Editor.FollowDrag()
 	copy:ClearAllPoints()
 	copy:SetPoint("LEFT", UIParent, "BOTTOMLEFT", x / scale + 12, y / scale)
 	local target, place = dropTarget()
-	local marker = window.left.Marker
-	marker:SetShown(target == "left")
-	if target == "left" then
-		local offset = -(place - 1) * Editor.ROW_HEIGHT + 1
+	place = place or {}
+	local left = window.left
+	local marker = left.Marker
+	marker:SetShown(target == "left" and place.gap ~= nil)
+	if target == "left" and place.gap then
+		local offset = -(place.gap - 1) * Editor.ROW_HEIGHT + 1
+		-- Inside a stack, the line is indented as its members are.
+		local inside = left.items and left.items[place.gap] and left.items[place.gap].member
 		marker:ClearAllPoints()
-		marker:SetPoint("TOPLEFT", window.left.content, "TOPLEFT", 0, offset)
-		marker:SetPoint("TOPRIGHT", window.left.content, "TOPRIGHT", 0, offset)
+		marker:SetPoint("TOPLEFT", left.content, "TOPLEFT", inside and Editor.INDENT or 0, offset)
+		marker:SetPoint("TOPRIGHT", left.content, "TOPRIGHT", 0, offset)
+	end
+	for number, row in ipairs(left.rows) do
+		row.Target:SetShown(target == "left" and place.on == number)
 	end
 	window.right.box.Target:SetShown(target == "right")
 end
@@ -358,6 +668,9 @@ local function endDrag()
 	if window then
 		window.left.Marker:Hide()
 		window.right.box.Target:Hide()
+		for _, row in ipairs(window.left.rows) do
+			row.Target:Hide()
+		end
 	end
 	if drag then
 		drag.row:SetAlpha(1)
@@ -377,14 +690,19 @@ local function stopDrag()
 		return
 	end
 	if target == "right" then
-		if Editor.Remove(bar, item.index) then
+		local taken
+		if item.member then
+			taken = Editor.RemoveMember(bar, item.index, item.member)
+		else
+			taken = Editor.Remove(bar, item.index)
+		end
+		if taken then
 			window.right.chosen, window.left.chosen = keyOf(item.entry), nil
 		end
 	elseif drag.list == window.left then
-		Editor.Move(bar, item.index, place)
-	elseif Editor.Add(bar, item.entry) then
+		Editor.Drop(bar, { row = item.row }, place)
+	elseif Editor.Drop(bar, { entry = item.entry }, place) then
 		window.left.chosen, window.right.chosen = keyOf(item.entry), nil
-		Editor.Move(bar, #Bars.Entries(bar), place)
 	end
 	Editor.Refresh()
 end
@@ -401,6 +719,11 @@ local function createRow(list, index)
 	row.Highlight = row:CreateTexture(nil, "HIGHLIGHT")
 	row.Highlight:SetAllPoints()
 	row.Highlight:SetColorTexture(1, 1, 1, 0.1)
+	-- Lit while a row dropped here would be stacked with it.
+	row.Target = row:CreateTexture(nil, "BORDER")
+	row.Target:SetAllPoints()
+	row.Target:SetColorTexture(1, 0.82, 0, 0.3)
+	row.Target:Hide()
 	row.Icon = row:CreateTexture(nil, "ARTWORK")
 	row.Icon:SetSize(Editor.ROW_HEIGHT - 4, Editor.ROW_HEIGHT - 4)
 	row.Icon:SetPoint("LEFT", 2, 0)
@@ -409,7 +732,18 @@ local function createRow(list, index)
 	row.Name:SetPoint("RIGHT", -4, 0)
 	row.Name:SetJustifyH("LEFT")
 	row.Name:SetWordWrap(false)
-	row:SetScript("OnClick", function(self)
+	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	row:SetScript("OnClick", function(self, button)
+		if button == "RightButton" then
+			if window and list == window.left and self.item then
+				if self.item.stack then
+					stackMenu(self)
+				elseif self.item.entry.kind == "item" then
+					itemMenu(self)
+				end
+			end
+			return
+		end
 		list.chosen = self.item and keyOf(self.item.entry)
 		Editor.Refresh()
 	end)
@@ -427,6 +761,9 @@ local function fill(list, items)
 	for index, item in ipairs(items) do
 		local row = list.rows[index] or createRow(list, index)
 		row.item = item
+		-- A stack's members sit under it, indented.
+		row.Icon:ClearAllPoints()
+		row.Icon:SetPoint("LEFT", item.member and Editor.INDENT or 2, 0)
 		row.Icon:SetTexture(item.look.icon or item.look.listIcon)
 		row.Name:SetText(item.look.name)
 		row.Selected:SetShown(list.chosen == keyOf(item.entry))
@@ -602,7 +939,9 @@ local function build()
 	frame.offBar:SetText(">")
 	frame.offBar:SetScript("OnClick", function()
 		local item = chosenItem(frame.left)
-		if item and Editor.Remove(Editor.Bar(), item.index) then
+		local taken = item and (item.member and Editor.RemoveMember(Editor.Bar(), item.index, item.member)
+			or not item.member and Editor.Remove(Editor.Bar(), item.index))
+		if taken then
 			frame.right.chosen, frame.left.chosen = keyOf(item.entry), nil
 			Editor.Refresh()
 		end
@@ -630,7 +969,7 @@ local function build()
 	hint:SetPoint("BOTTOMLEFT", 20, 14)
 	hint:SetPoint("BOTTOMRIGHT", -20, 14)
 	hint:SetJustifyH("LEFT")
-	hint:SetText(L["Drag rows up and down or from one list to the other, or drop an item from your bags on the left list. Width, gap and size: in Edit Mode."])
+	hint:SetText(L["Drag rows up and down, onto each other to stack them, or from one list to the other; drop an item from your bags on the left list; right-click a row for more. Width, gap and size: in Edit Mode."])
 
 	frame:SetScript("OnShow", Editor.Refresh)
 	frame:SetScript("OnHide", function()

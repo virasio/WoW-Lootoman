@@ -23,9 +23,16 @@ describe("Currencies provider", function()
 		assert.same({ 2815, 3110 }, Currencies.Backpack())
 	end)
 
-	it("count items in the bags", function()
+	it("count items in the bags, the banks or both", function()
 		Test.SetBags({ [0] = { size = 4, items = { [1] = { itemID = 2589, count = 5 }, [3] = { itemID = 2589, count = 2 } } } })
-		assert.equals(7, Currencies.ItemCount(2589))
+		Test.SetItems({ [2589] = { name = "Linen Cloth", bank = 30, warband = 100 } })
+		Test.state.capabilities["Enum.BankType.Account"] = true
+		assert.same({ 7, 7, 130, 137 }, { Currencies.ItemCount(2589), Currencies.ItemCount(2589, "bags"),
+			Currencies.ItemCount(2589, "banks"), Currencies.ItemCount(2589, "all") })
+		assert.same({ bags = 7, bank = 30, warband = 100 }, Currencies.ItemCounts(2589))
+		-- A client without a warband bank.
+		Test.state.capabilities["Enum.BankType.Account"] = nil
+		assert.same({ 30, 37 }, { Currencies.ItemCount(2589, "banks"), Currencies.ItemCount(2589, "all") })
 	end)
 
 	it("say when a currency changes, once watched", function()

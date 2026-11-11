@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Compat, Inventory, SelfTest = ns.Bus, ns.Compat, ns.Inventory, ns.SelfTest
+local Bus, Compat, Data, Inventory, SelfTest = ns.Bus, ns.Compat, ns.Data, ns.Inventory, ns.SelfTest
 
 -- Free space in the player's bags: whether the stacks of a loot fit. Read
 -- from the inventory (Inventory.lua), again after each change.
@@ -54,13 +54,33 @@ end
 -- Free and total slots of all bags and of each kind: general (the backpack
 -- and general bags), reagent (the reagent bag) and profession (the profession
 -- bags together). { free, total, used, general, generalTotal, reagent,
--- reagentTotal, profession, professionTotal }.
+-- reagentTotal, profession, professionTotal, reagentFamily }, and for each bag
+-- family of Data.BagFamilies its token and token .. "Total": every bag of that
+-- family, in the reagent bag's slot too (a bag of two families counts for
+-- both). reagentFamily is the family of the bag in the reagent bag's slot: 0
+-- for a reagent bag, a herb bag's on WoW Forever.
 function Bags.FreeSlots()
-	local slots = { general = 0, generalTotal = 0, reagent = 0, reagentTotal = 0, profession = 0, professionTotal = 0 }
+	local slots = { general = 0, generalTotal = 0, reagent = 0, reagentTotal = 0, profession = 0, professionTotal = 0,
+		reagentFamily = 0 }
+	local families = Data.BagFamilies or {}
+	for _, family in ipairs(families) do
+		slots[family.token], slots[family.token .. "Total"] = 0, 0
+	end
 	for _, bag in ipairs(Inventory.Bags()) do
 		local kind = bag.reagent and "reagent" or (bag.family ~= 0 and "profession" or "general")
+		if bag.reagent then
+			slots.reagentFamily = bag.family
+		end
 		slots[kind] = slots[kind] + bag.free
 		slots[kind .. "Total"] = slots[kind .. "Total"] + bag.size
+		if bag.family ~= 0 then
+			for _, family in ipairs(families) do
+				if sharesFamily(bag.family, family.bit) then
+					slots[family.token] = slots[family.token] + bag.free
+					slots[family.token .. "Total"] = slots[family.token .. "Total"] + bag.size
+				end
+			end
+		end
 	end
 	slots.free = slots.general + slots.reagent + slots.profession
 	slots.total = slots.generalTotal + slots.reagentTotal + slots.professionTotal
@@ -116,7 +136,9 @@ end
 -- reserved. The stack first fills partial stacks of the same item; what is
 -- left needs a free slot per stack, taken from the most specific bags first,
 -- as the game puts items: a profession bag of the item's family, the reagent
--- bag for crafting reagents, then general bags. An item the client has not
+-- bag for crafting reagents, then general bags. A bag of a family in the
+-- reagent bag's slot (a herb bag on WoW Forever) takes only that family's
+-- items, as the game does. An item the client has not
 -- loaded yet counts as one stack that only a general bag takes.
 function PlanMixin:Take(item, count)
 	count = count or 1
@@ -146,7 +168,12 @@ function PlanMixin:Take(item, count)
 		end
 	end
 	take(function(bag) return not bag.reagent and bag.family ~= 0 and sharesFamily(family, bag.family) end)
-	take(function(bag) return bag.reagent and reagent end)
+	take(function(bag)
+		if bag.reagent and bag.family ~= 0 then
+			return sharesFamily(family, bag.family)
+		end
+		return bag.reagent and reagent
+	end)
 	take(function(bag) return not bag.reagent and bag.family == 0 end)
 	if found < needed then
 		return false

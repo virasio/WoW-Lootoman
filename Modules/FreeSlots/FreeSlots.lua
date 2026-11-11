@@ -1,5 +1,5 @@
 local _, ns = ...
-local L, Text = ns.L, ns.Text
+local Compat, L, Text = ns.Compat, ns.L, ns.Text
 
 -- The settings of the module's page; the Edit Mode dialog shows the ones it
 -- can (not the colour).
@@ -9,6 +9,8 @@ local function settings()
 		{ kind = "color", key = "color", label = L["Default colour"],
 			tooltip = L["For the text between the tokens, and for tokens without a colour of their own."] },
 		{ kind = "slider", key = "size", label = L["Text size"], min = 8, max = 32, step = 1, format = "%d" },
+		{ kind = "checkbox", key = "background", label = L["Background"] },
+		{ kind = "slider", key = "opacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
 		{ kind = "checkbox", key = "broker", label = L["Also in broker panels"],
 			tooltip = L["Offers the text to broker displays such as Titan Panel or ElvUI's data texts."] },
 	}
@@ -30,6 +32,8 @@ local FreeSlots = ns.Modules:Register({
 		template = "{free|33ff33} ({reagent|ffd100}) / {general}",
 		color = "ffffffff",
 		size = 14,
+		background = false,
+		opacity = 50,
 		broker = true,
 	},
 	settings = settings,
@@ -49,9 +53,24 @@ function FreeSlots:Text()
 end
 
 -- The tooltip's lines: free and total slots of all bags and of each kind the
--- player has.
+-- player has, then of each bag family with a token, named by the kind of its
+-- sample bag as the client gives it ("Herb Bag").
 function FreeSlots.TooltipLines()
 	local slots = ns.Bags.FreeSlots()
+	-- A bag of a family in the reagent bag's slot (a herb bag on WoW Forever)
+	-- has its family's line, and no reagent bag line besides.
+	local familyLines, reagentListed = {}, false
+	for _, family in ipairs(ns.Data.BagFamilies or {}) do
+		local total = slots[family.token .. "Total"] or 0
+		if total > 0 then
+			local kind = family.bag and Compat.GetItemKind(family.bag)
+			familyLines[#familyLines + 1] = L["%s: %d free of %d"]:format(kind and kind.subType or family.token, slots[family.token], total)
+			-- Each family is one bit.
+			if math.floor((slots.reagentFamily or 0) / family.bit) % 2 == 1 then
+				reagentListed = true
+			end
+		end
+	end
 	local lines = { L["All bags: %d free of %d"]:format(slots.free, slots.total) }
 	local kinds = {
 		{ "general", L["General bags: %d free of %d"] },
@@ -59,9 +78,12 @@ function FreeSlots.TooltipLines()
 		{ "profession", L["Profession bags: %d free of %d"] },
 	}
 	for _, kind in ipairs(kinds) do
-		if slots[kind[1] .. "Total"] > 0 then
+		if slots[kind[1] .. "Total"] > 0 and not (kind[1] == "reagent" and reagentListed) then
 			lines[#lines + 1] = kind[2]:format(slots[kind[1]], slots[kind[1] .. "Total"])
 		end
+	end
+	for _, line in ipairs(familyLines) do
+		lines[#lines + 1] = line
 	end
 	return lines
 end
@@ -75,6 +97,8 @@ function FreeSlots:Refresh()
 	local font = { GameFontNormal:GetFont() }
 	label:SetFont(font[1], self:Get("size"), font[3])
 	label:SetText(text)
+	self.frame.Background:SetColorTexture(0, 0, 0, self:Get("opacity") / 100)
+	self.frame.Background:SetShown(self:Get("background"))
 	local padding = FreeSlots.PADDING
 	self.frame:SetSize(math.max(label:GetUnboundedStringWidth(), 20) + 2 * padding, self:Get("size") + 2 * padding)
 	self:UpdateBroker(text)
@@ -104,10 +128,25 @@ function FreeSlots:UpdateBroker(text)
 	end
 end
 
+-- Outside Edit Mode the bar sits above the bag buttons and the bags (HIGH),
+-- so its count can be put on them, and a click goes through to what is under
+-- it while its tooltip still shows. In Edit Mode it is as any other frame
+-- there (MEDIUM, the mouse on): Edit Mode's selection, which moves it, is its
+-- child in the MEDIUM strata, and gets no clicks while the bar lets them
+-- through.
+local function setLayer(frame, editing)
+	frame:SetFrameStrata(editing and "MEDIUM" or "HIGH")
+	frame:SetMouseMotionEnabled(true)
+	frame:SetMouseClickEnabled(editing)
+end
+
 local function createFrame(module)
 	local frame = CreateFrame("Frame", nil, UIParent)
+	setLayer(frame, false)
 	frame:SetClampedToScreen(true)
-	frame:EnableMouse(true)
+	frame.Background = frame:CreateTexture(nil, "BACKGROUND")
+	frame.Background:SetAllPoints()
+	frame.Background:Hide()
 	frame.Label = frame:CreateFontString(nil, "OVERLAY")
 	frame.Label:SetPoint("CENTER")
 	frame.Label:SetWordWrap(false)
@@ -127,6 +166,9 @@ local function createFrame(module)
 		default = FreeSlots.DEFAULT_POSITION,
 		settings = module:Settings(),
 		buttons = { { text = L["Edit the text"], click = function() module:EditTemplate() end } },
+		onEditMode = function(active)
+			setLayer(frame, active)
+		end,
 	})
 end
 
@@ -143,7 +185,7 @@ end
 -- The tokens as the player types them, for the help texts.
 function FreeSlots.TokenList()
 	local names = {}
-	for index, token in ipairs(FreeSlots.Template.TOKENS) do
+	for index, token in ipairs(FreeSlots.Template.Tokens()) do
 		names[index] = "{" .. token[1] .. "}"
 	end
 	return table.concat(names, " ")
@@ -163,6 +205,9 @@ function FreeSlots:OnEnable()
 		createFrame(self)
 	end
 	self.frame:Show()
+	-- Edit Mode may have opened or closed while the module was off, and an
+	-- inactive module misses its callbacks.
+	setLayer(self.frame, ns.EditMode.IsActive())
 	self:Refresh()
 	self:On("InventoryChanged", function()
 		self:Refresh()

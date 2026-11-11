@@ -51,6 +51,8 @@ function methods:SetFrameLevel(level) self.level = level end
 function methods:SetWidth(width) self.width = width end
 function methods:SetHeight(height) self.height = height end
 function methods:EnableMouseWheel(enabled) self.wheel = enabled end
+function methods:SetMouseClickEnabled(enabled) self.mouseClicks = enabled end
+function methods:SetMouseMotionEnabled(enabled) self.mouseMotion = enabled end
 function methods:IsMouseOver() return self.mouseOver == true end
 function methods:SetParent(parent)
 	self.parent = parent
@@ -140,6 +142,11 @@ local function newDescription(kind, text)
 		radio.isSelected, radio.setSelected, radio.data = isSelected, setSelected, data
 		return radio
 	end
+	function description:CreateCheckbox(checkboxText, isSelected, setSelected, data)
+		local checkbox = add(newDescription("checkbox", checkboxText))
+		checkbox.isSelected, checkbox.setSelected, checkbox.data = isSelected, setSelected, data
+		return checkbox
+	end
 	function description:CreateButton(buttonText, callback)
 		local button = add(newDescription("button", buttonText))
 		button.callback = callback
@@ -207,6 +214,7 @@ function UI.Install()
 	function tooltip:SetOwner(owner) self.owner, self.lines, self.bagItem, self.compared = owner, {}, nil, false end
 	function tooltip:SetBagItem(bag, slot) self.bagItem = { bag, slot } end
 	function tooltip:AddLine(text) self.lines[#self.lines + 1] = text end
+	function tooltip:AddDoubleLine(left, right) self.lines[#self.lines + 1] = tostring(left) .. " | " .. tostring(right) end
 	function tooltip:SetHyperlink(link) self.link = link end
 	function tooltip:SetCurrencyByID(id) self.currency = id end
 	function tooltip:SetItemByID(id) self.item = id end
@@ -252,7 +260,11 @@ function UI.Install()
 		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
 	})
 	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
-	rawset(_G, "GameTooltip_SetTitle", function(lines, text) lines[#lines + 1] = text end)
+	-- A tooltip's title goes first among its lines (a menu's tooltip gives a plain list).
+	rawset(_G, "GameTooltip_SetTitle", function(owner, text)
+		local lines = owner.lines or owner
+		lines[#lines + 1] = text
+	end)
 	rawset(_G, "GameTooltip_AddNormalLine", function(lines, text) lines[#lines + 1] = text end)
 	api.OpenMenu = UI.OpenMenu
 	-- MenuUtil.CreateContextMenu: the last menu opened, as built.

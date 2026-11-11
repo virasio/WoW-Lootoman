@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Compat, Currencies, L = ns.Compat, ns.Currencies, ns.L
 
 -- One currency bar on screen: its entries from one edge (the left, or the
 -- right for a bar that fills from the right), an icon and a count each, a gap
@@ -32,6 +32,9 @@ BarFrame.GRIP = 8
 BarFrame.MARKER = 2
 BarFrame.RED = { 1, 0.13, 0.13 }
 BarFrame.WHITE = { 1, 1, 1 }
+-- An item's count in its colour when it counts more than the bags, so two
+-- entries of one item tell apart: the banks in light blue, both in light green.
+BarFrame.COUNT_COLORS = { banks = { 0.55, 0.78, 1 }, all = { 0.6, 1, 0.6 } }
 -- The bags' coin box (ContainerFrameCurrencyBorderTemplate): its ends are 8 by
 -- 17 pixels, its middle stretches.
 BarFrame.BORDER_ATLAS = { left = "common-coinbox-left", middle = "_common-coinbox-center", right = "common-coinbox-right" }
@@ -80,13 +83,36 @@ local function fromRight(bar)
 	return bar.direction == "left"
 end
 
+-- A stack's members, most important first: icon and name, and the count on
+-- the right; the shown one in gold, a count at its cap in red.
+local function stackTooltip(look)
+	GameTooltip_SetTitle(GameTooltip, look.memberName)
+	for index, member in ipairs(look.members) do
+		local icon = member.icon and ("|T%s:0|t "):format(tostring(member.icon)) or ""
+		local name = index == look.shown and { 1, 0.82, 0 } or BarFrame.WHITE
+		local count = member.red and BarFrame.RED or BarFrame.WHITE
+		GameTooltip:AddDoubleLine(icon .. member.name, member.text, name[1], name[2], name[3], count[1], count[2], count[3])
+	end
+end
+
 function SlotMixin:ShowTooltip(button)
 	local entry = button.entry
 	GameTooltip:SetOwner(button, "ANCHOR_TOP")
-	if entry.kind == "currency" then
+	if entry.kind == "stack" then
+		local look = Bars.Describe(entry)
+		if look then
+			stackTooltip(look)
+		end
+	elseif entry.kind == "currency" then
 		GameTooltip:SetCurrencyByID(entry.id)
 	elseif entry.kind == "item" then
 		GameTooltip:SetItemByID(entry.id)
+		local counts = Currencies.ItemCounts(entry.id)
+		GameTooltip:AddDoubleLine(L["Bags"], counts.bags, 1, 0.82, 0, 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Bank"], counts.bank, 1, 0.82, 0, 1, 1, 1)
+		if Compat.HasWarbandBank() then
+			GameTooltip:AddDoubleLine(L["Warband bank"], counts.warband, 1, 0.82, 0, 1, 1, 1)
+		end
 	else
 		GameTooltip_SetTitle(GameTooltip, L["Money"])
 		GameTooltip:AddLine(GetMoneyString(Compat.GetMoney(), true), 1, 1, 1)
@@ -152,7 +178,8 @@ function SlotMixin:Measure()
 	measure:SetFont(font[1], fontSize(bar), font[3])
 	for index, entry in ipairs(Bars.Entries(bar)) do
 		local look = Bars.Describe(entry)
-		if look then
+		-- A stack with nothing to show takes no room.
+		if look and not look.hidden then
 			local iconWidth = look.icon and (bar.size + BarFrame.SPACE) or 0
 			list[#list + 1] = { entry = entry, index = index, look = look, width = iconWidth + textWidth(measure, look.text, fontSize(bar)) }
 		end
@@ -208,7 +235,7 @@ local function layoutButton(slot, button, item)
 	end
 	button.Count:SetFont(font[1], fontSize(bar), font[3])
 	button.Count:SetText(item.look.text)
-	button.Count:SetTextColor(unpack(item.look.red and BarFrame.RED or BarFrame.WHITE))
+	button.Count:SetTextColor(unpack(item.look.red and BarFrame.RED or BarFrame.COUNT_COLORS[item.look.count] or BarFrame.WHITE))
 	button:SetAlpha(1)
 	button:Show()
 end
@@ -315,7 +342,8 @@ function SlotMixin:StartDrag(button)
 	if ns.EditMode.IsActive() or not button.entry or BarFrame.Asking() then
 		return
 	end
-	self.dragged = button
+	-- The entry itself: a new layout during the drag can give the button another.
+	self.dragged, self.draggedEntry = button, button.entry
 	button:SetAlpha(0.35)
 	local ghost = BarFrame.Ghost()
 	ghost.Icon:SetShown(button.Icon:IsShown())
@@ -346,15 +374,15 @@ function SlotMixin:FollowDrag()
 end
 
 function SlotMixin:StopDrag()
-	local dragged = self.dragged
-	self.dragged = nil
+	local dragged, entry = self.dragged, self.draggedEntry
+	self.dragged, self.draggedEntry = nil, nil
 	BarFrame.Ghost():Hide()
 	self.frame.Marker:Hide()
-	if not dragged or not dragged.entry then
+	if not dragged or not entry then
 		return
 	end
 	dragged:SetAlpha(1)
-	local bar, entry = self.bar, dragged.entry
+	local bar = self.bar
 	if not self.frame:IsMouseOver() then
 		local look = Bars.Describe(entry)
 		question = ns.NameMenu.Confirm(L["Take “%s” off the bar?"], look and look.name or "", L["Take off"], function()
@@ -364,17 +392,38 @@ function SlotMixin:StopDrag()
 		end)
 		return
 	end
-	BarFrame.Move(bar, dragged.index, self:DropIndex(self:CursorDistance()))
-	setChanged()
+	local from = BarFrame.IndexOf(bar, entry)
+	if from then
+		BarFrame.Move(bar, from, self:DropIndex(self:CursorDistance()))
+		setChanged()
+	end
+end
+
+-- Where an entry stands on a bar now: the same table. A currency or money is
+-- also found by its ID: a bar that shows the backpack's currencies makes them
+-- anew each time it is read, and each stands on a bar once. Items and stacks
+-- are not: the same item can count the bags and the banks, and a stack has no
+-- ID.
+function BarFrame.IndexOf(bar, entry)
+	local entries = Bars.Entries(bar)
+	for index, existing in ipairs(entries) do
+		if existing == entry then
+			return index
+		end
+	end
+	if entry.kind == "currency" or entry.kind == "money" then
+		for index, existing in ipairs(entries) do
+			if existing.kind == entry.kind and existing.id == entry.id then
+				return index
+			end
+		end
+	end
 end
 
 -- Takes an entry off a bar, wherever it stands on the bar now.
 function BarFrame.TakeOff(bar, entry)
-	for index, existing in ipairs(Bars.Entries(bar)) do
-		if existing.kind == entry.kind and existing.id == entry.id then
-			return Bars.Editor and Bars.Editor.Remove(bar, index)
-		end
-	end
+	local index = BarFrame.IndexOf(bar, entry)
+	return index and Bars.Editor and Bars.Editor.Remove(bar, index)
 end
 
 -- Moves an entry of a bar from one place to another; to is a place before

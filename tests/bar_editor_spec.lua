@@ -177,6 +177,134 @@ describe("bar editor", function()
 		assert.same({ false, 1 }, { Editor.Ghost().shown, row.alpha })
 	end)
 
+	it("sets what an item counts from its right-click menu, and shows it again counting what is not shown yet", function()
+		Editor.AddItem(Editor.Bar(), 2589)
+		local row = rowOf(window().left, "Linen Cloth")
+		row.scripts.OnClick(row, "RightButton")
+		local menu = Loader.ui.contextMenu
+		assert.same({ "Count the bags", "Count the banks", "Count everything", "Show it again" },
+			{ menu.entries[1].text, menu.entries[2].text, menu.entries[3].text, menu.entries[5].text })
+		menu.entries[2].setSelected()
+		assert.same({ "Valorstones", "Linen Cloth, in the banks" }, names(window().left))
+		-- Counting the banks, it is another entry than the item in the bags.
+		assert.is_true(Editor.AddItem(Editor.Bar(), 2589))
+		assert.same({ "Valorstones", "Linen Cloth, in the banks", "Linen Cloth" }, names(window().left))
+		row = rowOf(window().left, "Linen Cloth, in the banks")
+		row.scripts.OnClick(row, "RightButton")
+		Loader.ui.contextMenu.entries[5].callback()
+		assert.same({ "Valorstones", "Linen Cloth, in the banks", "Linen Cloth, everywhere", "Linen Cloth" }, names(window().left))
+		-- All three are on the bar: no fourth, and no count another entry has.
+		row = rowOf(window().left, "Linen Cloth")
+		row.scripts.OnClick(row, "RightButton")
+		menu = Loader.ui.contextMenu
+		assert.same({ true, false, false, false }, { menu.entries[1].enabled, menu.entries[2].enabled, menu.entries[3].enabled, menu.entries[5].enabled })
+		assert.is_false(Editor.SetCount(Editor.Bar(), 4, "banks"))
+		assert.same({ { kind = "currency", id = 3008 }, { kind = "item", id = 2589, count = "banks" }, { kind = "item", id = 2589, count = "all" },
+			{ kind = "item", id = 2589 } }, Sets.Get("Default").bars[1].entries)
+		-- A currency has no such menu.
+		Loader.ui.contextMenu = nil
+		row = rowOf(window().left, "Valorstones")
+		row.scripts.OnClick(row, "RightButton")
+		assert.is_nil(Loader.ui.contextMenu)
+	end)
+
+	it("lists a stack on the bar by its shown member, and its members not again on the right", function()
+		Sets.Get("Default").bars[1].entries = { { kind = "stack", showEmpty = false,
+			members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 2815 } } } }
+		Sets.Changed("Default")
+		assert.same({ "Stack: Gilded Crest", "Gilded Crest", "Resonance Crystals" }, names(window().left))
+		assert.same({ "Money", "Valorstones" }, names(window().right))
+	end)
+
+	-- The bar's entries, a stack as the list of its members' IDs.
+	local function barEntries()
+		local list = {}
+		for index, entry in ipairs(Sets.Get("Default").bars[1].entries) do
+			if entry.kind == "stack" then
+				local ids = {}
+				for position, member in ipairs(entry.members) do
+					ids[position] = member.id
+				end
+				list[index] = ids
+			else
+				list[index] = entry.id
+			end
+		end
+		return list
+	end
+
+	local function drag(list, name, over, below)
+		local row = rowOf(list, name)
+		row.scripts.OnDragStart(row)
+		point(over, below)
+		row.scripts.OnDragStop(row)
+	end
+
+	it("stacks a row dropped on another, puts one in a stack's gap, and takes a member out", function()
+		Editor.Add(Editor.Bar(), { kind = "currency", id = 3110 })
+		Editor.Add(Editor.Bar(), { kind = "currency", id = 2815 })
+		-- Onto the middle of the first row: it lights up, and no line shows.
+		local row = rowOf(window().left, "Gilded Crest")
+		row.scripts.OnDragStart(row)
+		point("left", 11)
+		assert.same({ true, false }, { window().left.rows[1].Target.shown, window().left.Marker.shown })
+		row.scripts.OnDragStop(row)
+		assert.same({ { 3008, 3110 }, 2815 }, barEntries())
+		assert.same({ "Stack: Valorstones", "Valorstones", "Gilded Crest", "Resonance Crystals" }, names(window().left))
+		-- Into the gap above the stack's first member: the line is indented.
+		row = rowOf(window().left, "Resonance Crystals")
+		row.scripts.OnDragStart(row)
+		point("left", 22)
+		assert.same({ "TOPLEFT", window().left.content, "TOPLEFT", Editor.INDENT, -21 }, window().left.Marker.points[1])
+		row.scripts.OnDragStop(row)
+		assert.same({ { 2815, 3008, 3110 } }, barEntries())
+		-- Money stacks with nothing; at the end it is an entry.
+		drag(window().right, "Money", "left", 11)
+		assert.same({ { 2815, 3008, 3110 } }, barEntries())
+		drag(window().right, "Money", "left", 88)
+		assert.same({ { 2815, 3008, 3110 }, 0 }, barEntries())
+		-- The gap after a stack's last member is the top level.
+		drag(window().left, "Gilded Crest", "left", 88)
+		assert.same({ { 2815, 3008 }, 3110, 0 }, barEntries())
+		-- A member off the bar: a stack of one is its member again.
+		drag(window().left, "Valorstones", "right")
+		assert.same({ 2815, 3110, 0 }, barEntries())
+		assert.same({ "Resonance Crystals", "Gilded Crest", "Money" }, names(window().left))
+	end)
+
+	it("stacks a row from the other list, shows a stack when empty and breaks it up from its menu", function()
+		drag(window().right, "Resonance Crystals", "left", 11)
+		assert.same({ { 3008, 2815 } }, barEntries())
+		local row = rowOf(window().left, "Stack: Valorstones")
+		row.scripts.OnClick(row, "RightButton")
+		local menu = Loader.ui.contextMenu
+		assert.same({ "checkbox", "Show when empty", false, "Break up the stack" },
+			{ menu.entries[1].kind, menu.entries[1].text, menu.entries[1].isSelected(), menu.entries[2].text })
+		menu.entries[1].setSelected()
+		assert.is_true(Sets.Get("Default").bars[1].entries[1].showEmpty)
+		menu.entries[2].callback()
+		assert.same({ 3008, 2815 }, barEntries())
+		-- The button between the lists takes a chosen member off too.
+		Editor.Drop(Editor.Bar(), { row = 2 }, { on = 1 })
+		choose(window().left, "Resonance Crystals")
+		click(window().offBar)
+		assert.same({ 3008 }, barEntries())
+		-- Dropped on itself or next to itself, nothing changes.
+		assert.is_false(Editor.Drop(Editor.Bar(), { row = 1 }, { on = 1 }))
+		assert.is_false(Editor.Drop(Editor.Bar(), { row = 1 }, { gap = 1 }))
+	end)
+
+	it("keeps an item taken off whole, with what it counts, and puts it back so", function()
+		Editor.AddItem(Editor.Bar(), 2589)
+		Editor.SetCount(Editor.Bar(), 2, "banks")
+		choose(window().left, "Linen Cloth, in the banks")
+		click(window().offBar)
+		assert.same({ "Gilded Crest", "Linen Cloth, in the banks", "Money", "Resonance Crystals" }, names(window().right))
+		choose(window().right, "Linen Cloth, in the banks")
+		click(window().toBar)
+		assert.same({ { kind = "currency", id = 3008 }, { kind = "item", id = 2589, count = "banks" } }, Sets.Get("Default").bars[1].entries)
+	end)
+
 	it("adds nothing while the set has no bar", function()
 		click(window().remove)
 		assert.same({ 0, false }, { #Sets.Get("Default").bars, window().addItem.enabled })
