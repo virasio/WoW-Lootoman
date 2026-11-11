@@ -130,7 +130,9 @@ end
 -- reserved. The stack first fills partial stacks of the same item; what is
 -- left needs a free slot per stack, taken from the most specific bags first,
 -- as the game puts items: a profession bag of the item's family, the reagent
--- bag for crafting reagents, then general bags. An item the client has not
+-- bag for crafting reagents, then general bags. A bag of a family in the
+-- reagent bag's slot (a herb bag on WoW Forever) takes only that family's
+-- items, as the game does. An item the client has not
 -- loaded yet counts as one stack that only a general bag takes.
 function PlanMixin:Take(item, count)
 	count = count or 1
@@ -160,7 +162,12 @@ function PlanMixin:Take(item, count)
 		end
 	end
 	take(function(bag) return not bag.reagent and bag.family ~= 0 and sharesFamily(family, bag.family) end)
-	take(function(bag) return bag.reagent and reagent end)
+	take(function(bag)
+		if bag.reagent and bag.family ~= 0 then
+			return sharesFamily(family, bag.family)
+		end
+		return bag.reagent and reagent
+	end)
 	take(function(bag) return not bag.reagent and bag.family == 0 end)
 	if found < needed then
 		return false

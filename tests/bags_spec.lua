@@ -69,6 +69,13 @@ describe("Bags provider", function()
 			assert.is_false(fits(6948))
 		end)
 
+		it("only items of its family into a bag of a family in the reagent bag's slot (WoW Forever)", function()
+			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [5] = { size = 4, family = HERBS } })
+			assert.is_true(fits(765, 3))
+			assert.is_false(fits(2589))
+			assert.is_false(fits(2770))
+		end)
+
 		it("nothing into a reagent bag on a client without one", function()
 			Test.state.reagentBag = nil
 			Test.SetBags({ [0] = { size = 16, items = filled(16) }, [5] = { size = 36 } })
