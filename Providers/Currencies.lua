@@ -29,8 +29,23 @@ function Currencies.Backpack()
 	return Compat.GetBackpackCurrencyIDs()
 end
 
--- How many of an item the bags and the reagent bag hold.
-function Currencies.ItemCount(itemID)
+-- How many of an item there are in the bags (with the reagent bag), the bank
+-- and the warband bank: { bags, bank, warband }.
+function Currencies.ItemCounts(itemID)
+	return Compat.GetItemCounts(itemID)
+end
+
+-- What an entry on a bar counts: "bags" (the default, the bags and the reagent
+-- bag), "banks" (the bank and the warband bank) or "all" (both).
+Currencies.COUNTS = { bags = true, banks = true, all = true }
+
+-- How many of an item there are where count says.
+function Currencies.ItemCount(itemID, count)
+	if count == "banks" or count == "all" then
+		local counts = Compat.GetItemCounts(itemID)
+		local banks = counts.bank + counts.warband
+		return count == "all" and counts.bags + banks or banks
+	end
 	return Compat.GetBagItemCount(itemID)
 end
 

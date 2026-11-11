@@ -86,6 +86,55 @@ describe("currency bars", function()
 		assert.equals("0", buttons[2].Count.text)
 	end)
 
+	it("count an item in the bags, the banks or both, side by side in their colours, and list where it is", function()
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 4, bank = 30, warband = 100 } })
+		Test.state.capabilities["Enum.BankType.Account"] = true
+		Sets.Get("Default").bars[1].entries = { { kind = "item", id = 2589 }, { kind = "item", id = 2589, count = "banks" },
+			{ kind = "item", id = 2589, count = "all" } }
+		Sets.Changed("Default")
+		assert.same({ "7", "130", "137" }, shown(1))
+		local buttons, colors = slot(1).buttons, Bars.BarFrame.COUNT_COLORS
+		assert.same({ { 1, 1, 1 }, colors.banks, colors.all }, { buttons[1].Count.color, buttons[2].Count.color, buttons[3].Count.color })
+		buttons[2].scripts.OnEnter(buttons[2])
+		assert.same({ 2589, "Bags | 7", "Bank | 30", "Warband bank | 100" },
+			{ Loader.ui.tooltip.item, Loader.ui.tooltip.lines[1], Loader.ui.tooltip.lines[2], Loader.ui.tooltip.lines[3] })
+		-- The bank changes apart from the bags.
+		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 4, bank = 40, warband = 100 } })
+		Test.FireEvent("PLAYERBANKSLOTS_CHANGED", 1)
+		assert.same({ "7", "140", "147" }, shown(1))
+		-- No warband bank on this client: no such line.
+		Test.state.capabilities["Enum.BankType.Account"] = nil
+		buttons[1].scripts.OnEnter(buttons[1])
+		assert.same({ "Bags | 7", "Bank | 40", "Drag it along the bar to move it, or off the bar to take it off." }, Loader.ui.tooltip.lines)
+	end)
+
+	it("show a stack's most important member with a count above zero, and list them all on hover", function()
+		local bar = Sets.Get("Default").bars[1]
+		-- Most important first: the crest, then Valorstones.
+		bar.entries = { { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } },
+			{ kind = "currency", id = 2815 } }
+		Test.SetCurrency(3110, { name = "Gilded Crest", icon = 2, quantity = 0, max = 90, totalEarned = 0, capsTotalEarned = true })
+		Sets.Changed("Default")
+		assert.same({ "500 / 2000", "4000" }, shown(1))
+		local first = slot(1).buttons[1]
+		first.scripts.OnEnter(first)
+		assert.same({ "Valorstones", "|T2:0|t Gilded Crest | 0", "|T1:0|t Valorstones | 500 / 2000" },
+			{ Loader.ui.tooltip.lines[1], Loader.ui.tooltip.lines[2], Loader.ui.tooltip.lines[3] })
+		Test.ChangeCurrency(3110, 5)
+		assert.same({ "5", "4000" }, shown(1))
+		-- Every member at zero: the stack takes no room, or shows its least important member with Show when empty.
+		Test.ChangeCurrency(3110, -5)
+		Test.SetCurrency(3008, { name = "Valorstones", icon = 1, quantity = 0, max = 2000, backpack = 1 })
+		Test.ChangeCurrency(3008, 0)
+		assert.same({ "4000" }, shown(1))
+		assert.equals(0, slot(1).buttons[1].x)
+		bar.entries[1].showEmpty = true
+		Sets.Changed("Default")
+		assert.same({ "0 / 2000", "4000" }, shown(1))
+		-- Its name in the overflow list and in the question: the shown member's.
+		assert.equals("Stack: Valorstones", Bars.Describe(bar.entries[1]).name)
+	end)
+
 	it("lay entries out from the left edge a gap apart, and hide what does not fit behind the arrow", function()
 		local bar = Sets.Get("Default").bars[1]
 		bar.entries = { { kind = "currency", id = 3008 }, { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } }
@@ -208,6 +257,42 @@ describe("currency bars", function()
 		assert.same({ "500 / 2000" }, shown(1))
 		dragOff(1)
 		assert.equals(3, #api.popups)
+	end)
+
+	it("take off the entry asked about when the same item counts twice, or of two stacks", function()
+		local api = SettingsAPI.Install()
+		local bar = Sets.Get("Default").bars[1]
+		bar.entries = { { kind = "item", id = 2589 }, { kind = "item", id = 2589, count = "banks" } }
+		Sets.Changed("Default")
+		dragOff(2)
+		api.AcceptPopup()
+		assert.same({ { kind = "item", id = 2589 } }, bar.entries)
+		local first = { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } }
+		bar.entries = { first, { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } } } }
+		Sets.Changed("Default")
+		dragOff(2)
+		api.AcceptPopup()
+		assert.same({ first }, bar.entries)
+	end)
+
+	it("keep the dragged entry when the bar is laid out again during the drag", function()
+		local api = SettingsAPI.Install()
+		local bar = Sets.Get("Default").bars[1]
+		-- A stack at zero takes no room: the first button shows Resonance Crystals.
+		Test.SetCurrency(3110, { name = "Gilded Crest", icon = 2, quantity = 0, max = 90, totalEarned = 0, capsTotalEarned = true })
+		Test.SetCurrency(3008, { name = "Valorstones", icon = 1, quantity = 0, max = 2000, backpack = 1 })
+		local stack = { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } }
+		bar.entries = { stack, { kind = "currency", id = 2815 } }
+		Sets.Changed("Default")
+		local button = slot(1).buttons[1]
+		button.scripts.OnDragStart(button)
+		-- The stack shows again, and takes the first button.
+		Test.ChangeCurrency(3110, 5)
+		assert.equals(stack, button.entry)
+		slot(1).frame.mouseOver = false
+		button.scripts.OnDragStop(button)
+		api.AcceptPopup()
+		assert.same({ stack }, bar.entries)
 	end)
 
 	it("add an item dropped from the bags on the bar where it is dropped, also outside Edit Mode", function()

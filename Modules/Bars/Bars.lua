@@ -37,17 +37,53 @@ function Bars.OwnEntries(bar)
 	return bar.entries
 end
 
+-- What an item entry counts (entry.count): the bags (the default, as nil), the
+-- banks or both. The same item can stand on a bar once for each.
+Bars.COUNTS = { "bags", "banks", "all" }
+Bars.COUNT_NAMES = { banks = L["%s, in the banks"], all = L["%s, everywhere"] }
+
 -- The money entry's icon in the editor's lists; on a bar, money is its coins.
 Bars.MONEY_ICON = [[Interface\Icons\INV_Misc_Coin_01]]
 
--- What an entry shows: { icon, name, text, red }, or nil for a currency the
--- character does not have. A capped currency shows "quantity / cap" (with a
--- seasonal cap, only the quantity, as the cap counts what was earned), red at
--- its cap. Money shows in gold, silver and copper coins, as in the bags, and
--- has no icon on the bar.
+-- A stack: the first member with a count above zero, or with showEmpty its
+-- last (least important) one; nil when every member is at zero.
+local function describeStack(entry)
+	local members, shown = {}, nil
+	for _, member in ipairs(entry.members or {}) do
+		local look = Bars.Describe(member)
+		if look then
+			members[#members + 1] = look
+			if not shown and look.amount > 0 then
+				shown = #members
+			end
+		end
+	end
+	if #members == 0 then
+		return nil
+	end
+	if not shown and entry.showEmpty then
+		shown = #members
+	end
+	local top = members[shown or #members]
+	return {
+		icon = top.icon, listIcon = top.icon or top.listIcon, name = L["Stack: %s"]:format(top.name), memberName = top.name,
+		text = top.text, red = top.red, count = top.count, amount = top.amount,
+		members = members, shown = shown, hidden = shown == nil,
+	}
+end
+
+-- What an entry shows: { icon, name, text, red, amount }, or nil for a
+-- currency the character does not have. A capped currency shows "quantity /
+-- cap" (with a seasonal cap, only the quantity, as the cap counts what was
+-- earned), red at its cap. Money shows in gold, silver and copper coins, as in
+-- the bags, and has no icon on the bar. A stack shows one member (and lists
+-- them all, in members, the shown one at shown); hidden when it shows none.
 function Bars.Describe(entry)
-	if entry.kind == "money" then
-		return { name = L["Money"], text = GetMoneyString(Compat.GetMoney(), true), red = false, listIcon = Bars.MONEY_ICON }
+	if entry.kind == "stack" then
+		return describeStack(entry)
+	elseif entry.kind == "money" then
+		local money = Compat.GetMoney()
+		return { name = L["Money"], text = GetMoneyString(money, true), red = false, listIcon = Bars.MONEY_ICON, amount = money }
 	elseif entry.kind == "currency" then
 		local info = Currencies.Info(entry.id)
 		if not info or not info.name or info.name == "" then
@@ -57,7 +93,7 @@ function Bars.Describe(entry)
 		if info.max > 0 and not info.capsTotalEarned then
 			text = L["%d / %d"]:format(info.quantity, info.max)
 		end
-		return { icon = info.icon, name = info.name, text = text, red = info.atCap }
+		return { icon = info.icon, name = info.name, text = text, red = info.atCap, amount = info.quantity }
 	end
 	local icon = Compat.GetItemLook(entry.id)
 	local info = Compat.GetItemInfo(entry.id)
@@ -65,11 +101,17 @@ function Bars.Describe(entry)
 		-- Asking for it makes the client load it (GET_ITEM_INFO_RECEIVED).
 		Bars.loading[entry.id] = true
 	end
+	local name = info and info.name or L["Item %d"]:format(entry.id)
+	local count = entry.count or "bags"
+	local amount = Currencies.ItemCount(entry.id, count)
 	return {
 		icon = icon,
-		name = info and info.name or L["Item %d"]:format(entry.id),
-		text = tostring(Currencies.ItemCount(entry.id)),
+		-- Two entries of one item that count different places tell apart.
+		name = Bars.COUNT_NAMES[count] and Bars.COUNT_NAMES[count]:format(name) or name,
+		text = tostring(amount),
 		red = false,
+		count = count,
+		amount = amount,
 	}
 end
 
@@ -138,6 +180,12 @@ function Bars:OnEnable()
 	self:OnEvent("PLAYER_MONEY", function()
 		self:RefreshCounts()
 	end)
+	-- The bank's contents change apart from the bags.
+	for _, event in ipairs({ "PLAYERBANKSLOTS_CHANGED", "BANKFRAME_CLOSED" }) do
+		self:OnEvent(event, function()
+			self:RefreshCounts()
+		end)
+	end
 	self:OnEvent("GET_ITEM_INFO_RECEIVED", function(_, itemID, success)
 		if success and Bars.loading[itemID] then
 			Bars.loading[itemID] = nil
