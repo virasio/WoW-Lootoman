@@ -116,6 +116,8 @@ local function createFrame(module)
 	local frame = CreateFrame("Frame", nil, UIParent)
 	-- Above the bag buttons and the bags, so its count can sit on them; a
 	-- click goes through to what is under it, while its tooltip still shows.
+	-- In Edit Mode it takes no mouse at all: Edit Mode's selection, which
+	-- moves it, sits in the MEDIUM strata, under it.
 	frame:SetFrameStrata("HIGH")
 	frame:SetClampedToScreen(true)
 	frame:SetMouseMotionEnabled(true)
@@ -139,6 +141,9 @@ local function createFrame(module)
 		default = FreeSlots.DEFAULT_POSITION,
 		settings = module:Settings(),
 		buttons = { { text = L["Edit the text"], click = function() module:EditTemplate() end } },
+		onEditMode = function(active)
+			frame:SetMouseMotionEnabled(not active)
+		end,
 	})
 end
 

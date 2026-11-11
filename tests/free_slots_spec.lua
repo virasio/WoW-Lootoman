@@ -11,8 +11,19 @@ describe("free-slot bar", function()
 		function fake:AddFrame(frame, _, default, name) self.frames[frame] = { default = default, name = name } end
 		function fake:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 		function fake:AddFrameSettingsButtons(frame, buttons) self.buttons[frame] = buttons end
-		function fake:RegisterCallback() end
-		function fake:IsInEditMode() return false end
+		fake.callbacks = {}
+		function fake:RegisterCallback(event, callback)
+			self.callbacks[event] = self.callbacks[event] or {}
+			table.insert(self.callbacks[event], callback)
+		end
+		function fake:IsInEditMode() return self.editing == true end
+		function fake:RefreshFrameSettings() end
+		function fake.Fire(event, ...)
+			fake.editing = event == "enter" or (event ~= "exit" and fake.editing)
+			for _, callback in ipairs(fake.callbacks[event] or {}) do
+				callback(...)
+			end
+		end
 		return fake
 	end
 
@@ -63,6 +74,21 @@ describe("free-slot bar", function()
 		assert.same({ "HIGH", false, true }, { frame.strata, frame.mouseClicks, frame.mouseMotion })
 		frame.scripts.OnEnter(frame)
 		assert.same({ true, "Free slots" }, { Loader.ui.tooltip.shown, Loader.ui.tooltip.lines[1] })
+	end)
+
+	it("takes no mouse in Edit Mode, so Edit Mode's selection under it can move it", function()
+		local frame = module.frame
+		lib.Fire("enter")
+		assert.is_false(frame.mouseMotion)
+		lib.Fire("exit")
+		assert.is_true(frame.mouseMotion)
+		-- Turned off and on during Edit Mode.
+		lib.Fire("enter")
+		ns.Modules:SetEnabled("FreeSlots", false)
+		ns.Modules:SetEnabled("FreeSlots", true)
+		assert.is_false(frame.mouseMotion)
+		lib.Fire("exit")
+		assert.is_true(frame.mouseMotion)
 	end)
 
 	it("lists the free and total slots of each kind of bag the player has in its tooltip", function()
