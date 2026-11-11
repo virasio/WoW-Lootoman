@@ -181,6 +181,29 @@ describe("Bags provider", function()
 		Test.SetBags({ [0] = { size = 16 } })
 		slots = Bags.FreeSlots()
 		assert.same({ 0, 0 }, { slots.herb, slots.herbTotal })
+		-- A bag of a family in the reagent bag's slot (WoW Forever) counts for both.
+		Test.SetBags({ [0] = { size = 16 }, [5] = { size = 4, family = HERBS, items = filled(1, 765) } })
+		slots = Bags.FreeSlots()
+		assert.same({ 3, 4, 3, 4 }, { slots.herb, slots.herbTotal, slots.reagent, slots.reagentTotal })
+	end)
+
+	it("knows well-formed bag families on each client: a token, one bit, a bag to name it, each once", function()
+		for _, gameType in ipairs({ "standard", "camelot" }) do
+			local data = Loader.LoadAddon({ gameType = gameType, skip = { "Settings/", "Modules/" } }).Data
+			local tokens = {}
+			for _, family in ipairs(data.BagFamilies) do
+				assert.matches("^%l+$", family.token)
+				assert.is_nil(tokens[family.token], family.token)
+				tokens[family.token] = true
+				-- One bit: a power of two.
+				local bit = family.bit
+				while bit > 1 and bit % 2 == 0 do
+					bit = bit / 2
+				end
+				assert.equals(1, bit, family.token)
+				assert.equals("number", type(family.bag), family.token)
+			end
+		end
 	end)
 
 	it("counts the free slots of the backpack and the general bags only", function()

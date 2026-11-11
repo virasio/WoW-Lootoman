@@ -35,7 +35,7 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 
 ### Free-slot bar
 
-- One line of text with your bags' free slots, placed with Edit Mode, in your own format: tokens in braces with an optional colour, and any text between them, such as `{free|33ff33} ({reagent|ffd100}) / {general}`. Tokens: `{free}`, `{total}`, `{used}` for all bags, and `{general}`, `{reagent}`, `{profession}` with their `.total`, such as `{reagent.total}`. A default colour applies to the text between tokens and to tokens without a colour; the text size is set too.
+- One line of text with your bags' free slots, placed with Edit Mode, in your own format: tokens in braces with an optional colour, and any text between them, such as `{free|33ff33} ({reagent|ffd100}) / {general}`. Tokens: `{free}`, `{total}`, `{used}` for all bags, and `{general}`, `{reagent}`, `{profession}` with their `.total`, such as `{reagent.total}`. On WoW Forever, also one pair per kind of special bag: `{herb}`, `{enchanting}`, `{soul}`, `{quiver}` and `{ammo}`, with their `.total`. A default colour applies to the text between tokens and to tokens without a colour; the text size is set too.
 - Its tooltip lists the free and total slots of each kind of bag you have.
 - It sits above the bag buttons and the bags, so you can put the count right on them; a click goes through to what is under it.
 - The same text shows in broker displays (Titan Panel, ElvUI's data texts and others) when one is installed; a click there opens the bags.

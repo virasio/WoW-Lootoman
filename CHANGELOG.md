@@ -7,6 +7,7 @@ Stacks and banks on the currency bars.
 - **Stacks**: put several currencies or items in one spot on a bar, most important first, such as upgrade crests. The bar shows the most important one you have, and hovering it lists them all. A stack at zero hides, unless you want it shown.
 - **Bags, banks or both**: an item on a bar counts your bags, your banks or both, and the same item can stand on a bar once for each, so you can see what you carry next to what is stored. Its tooltip tells how many are in the bags, the bank and the warband bank.
 - **Bar editor**: drop a row on another to make a stack; right-click a stack or an item for its options.
+- **Free-slot bar**: it can sit right on your bags, and clicks go through to them. On WoW Forever, new tokens for herb, enchanting and soul bags, quivers and ammo pouches, such as `{herb}` and `{quiver.total}`.
 
 ## 0.3
 

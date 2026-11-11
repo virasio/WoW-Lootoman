@@ -55,8 +55,8 @@ end
 -- and general bags), reagent (the reagent bag) and profession (the profession
 -- bags together). { free, total, used, general, generalTotal, reagent,
 -- reagentTotal, profession, professionTotal }, and for each bag family of
--- Data.BagFamilies its token and token .. "Total" (a bag of two families
--- counts for both).
+-- Data.BagFamilies its token and token .. "Total": every bag of that family,
+-- in the reagent bag's slot too (a bag of two families counts for both).
 function Bags.FreeSlots()
 	local slots = { general = 0, generalTotal = 0, reagent = 0, reagentTotal = 0, profession = 0, professionTotal = 0 }
 	local families = Data.BagFamilies or {}
@@ -67,7 +67,7 @@ function Bags.FreeSlots()
 		local kind = bag.reagent and "reagent" or (bag.family ~= 0 and "profession" or "general")
 		slots[kind] = slots[kind] + bag.free
 		slots[kind .. "Total"] = slots[kind .. "Total"] + bag.size
-		if kind == "profession" then
+		if bag.family ~= 0 then
 			for _, family in ipairs(families) do
 				if sharesFamily(bag.family, family.bit) then
 					slots[family.token] = slots[family.token] + bag.free
