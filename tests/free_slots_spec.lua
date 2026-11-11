@@ -76,6 +76,16 @@ describe("free-slot bar", function()
 		assert.same({ true, "Free slots" }, { Loader.ui.tooltip.shown, Loader.ui.tooltip.lines[1] })
 	end)
 
+	it("shows a background of its opacity when asked", function()
+		local frame = module.frame
+		assert.is_false(frame.Background.shown)
+		module:Set("background", true)
+		module:Set("opacity", 30)
+		assert.same({ true, 0.3 }, { frame.Background.shown, frame.Background.colorTexture[4] })
+		module:Set("background", false)
+		assert.is_false(frame.Background.shown)
+	end)
+
 	it("is as any other frame in Edit Mode, so Edit Mode's selection gets the clicks that move it", function()
 		local frame = module.frame
 		local function state()
@@ -113,13 +123,13 @@ describe("free-slot bar", function()
 		for _, setting in ipairs(lib.settings[frame]) do
 			names[#names + 1] = setting.name
 		end
-		assert.same({ "Look", "Text size", "Also in broker panels" }, names)
+		assert.same({ "Look", "Text size", "Background", "Background opacity", "Also in broker panels" }, names)
 		assert.equals("Edit the text", lib.buttons[frame][1].text)
 	end)
 
-	it("has a page with the text button, the colour swatch, the size and the broker switch", function()
+	it("has a page with the text button, the colour swatch, the size, the background and the broker switch", function()
 		assert.same({ "checkbox:Enabled", "button:Text", "header:Look", "color:Default colour", "slider:Text size",
-			"checkbox:Also in broker panels" }, api.Kinds(api.FindCategory("Free slots")))
+			"checkbox:Background", "slider:Background opacity", "checkbox:Also in broker panels" }, api.Kinds(api.FindCategory("Free slots")))
 	end)
 
 	it("edits the text in a dialog, which gives a typed | back doubled", function()

@@ -9,6 +9,8 @@ local function settings()
 		{ kind = "color", key = "color", label = L["Default colour"],
 			tooltip = L["For the text between the tokens, and for tokens without a colour of their own."] },
 		{ kind = "slider", key = "size", label = L["Text size"], min = 8, max = 32, step = 1, format = "%d" },
+		{ kind = "checkbox", key = "background", label = L["Background"] },
+		{ kind = "slider", key = "opacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
 		{ kind = "checkbox", key = "broker", label = L["Also in broker panels"],
 			tooltip = L["Offers the text to broker displays such as Titan Panel or ElvUI's data texts."] },
 	}
@@ -30,6 +32,8 @@ local FreeSlots = ns.Modules:Register({
 		template = "{free|33ff33} ({reagent|ffd100}) / {general}",
 		color = "ffffffff",
 		size = 14,
+		background = false,
+		opacity = 50,
 		broker = true,
 	},
 	settings = settings,
@@ -83,6 +87,8 @@ function FreeSlots:Refresh()
 	local font = { GameFontNormal:GetFont() }
 	label:SetFont(font[1], self:Get("size"), font[3])
 	label:SetText(text)
+	self.frame.Background:SetColorTexture(0, 0, 0, self:Get("opacity") / 100)
+	self.frame.Background:SetShown(self:Get("background"))
 	local padding = FreeSlots.PADDING
 	self.frame:SetSize(math.max(label:GetUnboundedStringWidth(), 20) + 2 * padding, self:Get("size") + 2 * padding)
 	self:UpdateBroker(text)
@@ -128,6 +134,9 @@ local function createFrame(module)
 	local frame = CreateFrame("Frame", nil, UIParent)
 	setLayer(frame, false)
 	frame:SetClampedToScreen(true)
+	frame.Background = frame:CreateTexture(nil, "BACKGROUND")
+	frame.Background:SetAllPoints()
+	frame.Background:Hide()
 	frame.Label = frame:CreateFontString(nil, "OVERLAY")
 	frame.Label:SetPoint("CENTER")
 	frame.Label:SetWordWrap(false)
