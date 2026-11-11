@@ -108,7 +108,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 - [ ] **Text.** Options → Free slots → *Edit the text*: type `{general|ff0000} / {general.total}`, then a text with a typo `{genral}` and a plain `|`. *Expected:* the bar follows at once; the typo and the `|` show as typed.
 - [ ] **Colour and size.** Change *Default colour* and *Text size*. *Expected:* the text between tokens and tokens without a colour take the new colour; the size follows.
 - [ ] **Edit Mode.** Move the bar; change its text size in its dialog. *Expected:* it keeps its place per Edit Mode layout and after `/reload`.
-- [ ] **On the bags.** In Edit Mode, put the bar on the bag buttons, then open the bags. *Expected:* its text shows above the bag buttons and the open bags; pointing at it shows its tooltip; a click on it opens or closes the bag under it, as if the bar were not there.
+- [ ] **On the bags.** In Edit Mode, put the bar on the bag buttons (there it can show under them), close Edit Mode, then open the bags. *Expected:* it can be selected and moved in Edit Mode; afterwards its text shows above the bag buttons and the open bags; pointing at it shows its tooltip; a click on it opens or closes the bag under it, as if the bar were not there.
 - [ ] **Broker.** With a broker display (Titan Panel, ElvUI's data texts or another): add "Lootoman: free slots". *Expected:* the same coloured text, the same tooltip, a click opens the bags; turning *Also in broker panels* off empties it (it goes after `/reload`). `/lootoman selftest` shows `Broker: working` with a display and `Broker: no broker display loaded` without one.
 
 ### Bag families

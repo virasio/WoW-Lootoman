@@ -112,16 +112,22 @@ function FreeSlots:UpdateBroker(text)
 	end
 end
 
+-- Outside Edit Mode the bar sits above the bag buttons and the bags (HIGH),
+-- so its count can be put on them, and a click goes through to what is under
+-- it while its tooltip still shows. In Edit Mode it is as any other frame
+-- there (MEDIUM, the mouse on): Edit Mode's selection, which moves it, is its
+-- child in the MEDIUM strata, and gets no clicks while the bar lets them
+-- through.
+local function setLayer(frame, editing)
+	frame:SetFrameStrata(editing and "MEDIUM" or "HIGH")
+	frame:SetMouseMotionEnabled(true)
+	frame:SetMouseClickEnabled(editing)
+end
+
 local function createFrame(module)
 	local frame = CreateFrame("Frame", nil, UIParent)
-	-- Above the bag buttons and the bags, so its count can sit on them; a
-	-- click goes through to what is under it, while its tooltip still shows.
-	-- In Edit Mode it takes no mouse at all: Edit Mode's selection, which
-	-- moves it, sits in the MEDIUM strata, under it.
-	frame:SetFrameStrata("HIGH")
+	setLayer(frame, false)
 	frame:SetClampedToScreen(true)
-	frame:SetMouseMotionEnabled(true)
-	frame:SetMouseClickEnabled(false)
 	frame.Label = frame:CreateFontString(nil, "OVERLAY")
 	frame.Label:SetPoint("CENTER")
 	frame.Label:SetWordWrap(false)
@@ -142,7 +148,7 @@ local function createFrame(module)
 		settings = module:Settings(),
 		buttons = { { text = L["Edit the text"], click = function() module:EditTemplate() end } },
 		onEditMode = function(active)
-			frame:SetMouseMotionEnabled(not active)
+			setLayer(frame, active)
 		end,
 	})
 end

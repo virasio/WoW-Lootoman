@@ -76,19 +76,22 @@ describe("free-slot bar", function()
 		assert.same({ true, "Free slots" }, { Loader.ui.tooltip.shown, Loader.ui.tooltip.lines[1] })
 	end)
 
-	it("takes no mouse in Edit Mode, so Edit Mode's selection under it can move it", function()
+	it("is as any other frame in Edit Mode, so Edit Mode's selection gets the clicks that move it", function()
 		local frame = module.frame
+		local function state()
+			return { frame.strata, frame.mouseClicks, frame.mouseMotion }
+		end
 		lib.Fire("enter")
-		assert.is_false(frame.mouseMotion)
+		assert.same({ "MEDIUM", true, true }, state())
 		lib.Fire("exit")
-		assert.is_true(frame.mouseMotion)
+		assert.same({ "HIGH", false, true }, state())
 		-- Turned off and on during Edit Mode.
 		lib.Fire("enter")
 		ns.Modules:SetEnabled("FreeSlots", false)
 		ns.Modules:SetEnabled("FreeSlots", true)
-		assert.is_false(frame.mouseMotion)
+		assert.same({ "MEDIUM", true, true }, state())
 		lib.Fire("exit")
-		assert.is_true(frame.mouseMotion)
+		assert.same({ "HIGH", false, true }, state())
 	end)
 
 	it("lists the free and total slots of each kind of bag the player has in its tooltip", function()
