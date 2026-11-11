@@ -114,6 +114,12 @@ describe("free-slot bar", function()
 		Test.SetBags({ [0] = { size = 20 }, [1] = { size = 12, family = 32, items = { [1] = { itemID = 2, count = 1, name = "Herb", quality = 1 } } } })
 		assert.same({ "All bags: 31 free of 32", "General bags: 20 free of 20", "Profession bags: 11 free of 12", "Herb Bag: 11 free of 12" },
 			module.TooltipLines())
+		-- A herb bag in the reagent bag's slot (WoW Forever): its family's line, no reagent bag line.
+		Test.SetBags({ [0] = { size = 20 }, [5] = { size = 4, family = 32 } })
+		assert.same({ "All bags: 24 free of 24", "General bags: 20 free of 20", "Herb Bag: 4 free of 4" }, module.TooltipLines())
+		-- A reagent bag still has its line.
+		Test.SetBags({ [0] = { size = 20 }, [5] = { size = 30 } })
+		assert.same({ "All bags: 50 free of 50", "General bags: 20 free of 20", "Reagent bag: 30 free of 30" }, module.TooltipLines())
 	end)
 
 	it("is placed with Edit Mode left of the bag buttons, with its settings in the dialog but the colour", function()

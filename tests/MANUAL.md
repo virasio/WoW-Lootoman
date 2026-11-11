@@ -115,7 +115,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 ### Bag families
 
 - [ ] **Bag families.** In a debug build (the addon linked from the repository), `/lootoman families`, then `/reload`. *Expected:* a line per kind of bag; "as expected" for each family the client knows; the lines are kept in the character's session data for Claude to read. Add the IDs of any profession bags you have that are not listed, after the command.
-- [ ] **Family tokens.** Once the checked families are in the addon's data: put `{herb} / {herb.total}` (and others you have bags for) in the template. *Expected:* the free and total slots of those bags; the tooltip lists each family you have by its bag's kind ("Herb Bag").
+- [ ] **Family tokens.** Once the checked families are in the addon's data: put `{herb} / {herb.total}` (and others you have bags for) in the template. *Expected:* the free and total slots of those bags; the tooltip lists each family you have by its bag's kind ("Herb Bag"). On WoW Forever, with a herb bag in the reagent bag's slot, the tooltip has its "Herb Bag" line and no "Reagent bag" line.
 
 ## Currency bars
 

@@ -170,7 +170,7 @@ describe("Bags provider", function()
 		})
 		assert.same({
 			free = 39, total = 84, used = 45, general = 5, generalTotal = 36,
-			reagent = 20, reagentTotal = 30, profession = 14, professionTotal = 18,
+			reagent = 20, reagentTotal = 30, profession = 14, professionTotal = 18, reagentFamily = 0,
 		}, Bags.FreeSlots())
 	end)
 
@@ -191,7 +191,7 @@ describe("Bags provider", function()
 		-- A bag of a family in the reagent bag's slot (WoW Forever) counts for both.
 		Test.SetBags({ [0] = { size = 16 }, [5] = { size = 4, family = HERBS, items = filled(1, 765) } })
 		slots = Bags.FreeSlots()
-		assert.same({ 3, 4, 3, 4 }, { slots.herb, slots.herbTotal, slots.reagent, slots.reagentTotal })
+		assert.same({ 3, 4, 3, 4, HERBS }, { slots.herb, slots.herbTotal, slots.reagent, slots.reagentTotal, slots.reagentFamily })
 	end)
 
 	it("knows well-formed bag families on each client: a token, one bit, a bag to name it, each once", function()

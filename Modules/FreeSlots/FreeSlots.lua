@@ -57,6 +57,20 @@ end
 -- sample bag as the client gives it ("Herb Bag").
 function FreeSlots.TooltipLines()
 	local slots = ns.Bags.FreeSlots()
+	-- A bag of a family in the reagent bag's slot (a herb bag on WoW Forever)
+	-- has its family's line, and no reagent bag line besides.
+	local familyLines, reagentListed = {}, false
+	for _, family in ipairs(ns.Data.BagFamilies or {}) do
+		local total = slots[family.token .. "Total"] or 0
+		if total > 0 then
+			local kind = family.bag and Compat.GetItemKind(family.bag)
+			familyLines[#familyLines + 1] = L["%s: %d free of %d"]:format(kind and kind.subType or family.token, slots[family.token], total)
+			-- Each family is one bit.
+			if math.floor((slots.reagentFamily or 0) / family.bit) % 2 == 1 then
+				reagentListed = true
+			end
+		end
+	end
 	local lines = { L["All bags: %d free of %d"]:format(slots.free, slots.total) }
 	local kinds = {
 		{ "general", L["General bags: %d free of %d"] },
@@ -64,16 +78,12 @@ function FreeSlots.TooltipLines()
 		{ "profession", L["Profession bags: %d free of %d"] },
 	}
 	for _, kind in ipairs(kinds) do
-		if slots[kind[1] .. "Total"] > 0 then
+		if slots[kind[1] .. "Total"] > 0 and not (kind[1] == "reagent" and reagentListed) then
 			lines[#lines + 1] = kind[2]:format(slots[kind[1]], slots[kind[1] .. "Total"])
 		end
 	end
-	for _, family in ipairs(ns.Data.BagFamilies or {}) do
-		local total = slots[family.token .. "Total"] or 0
-		if total > 0 then
-			local kind = family.bag and Compat.GetItemKind(family.bag)
-			lines[#lines + 1] = L["%s: %d free of %d"]:format(kind and kind.subType or family.token, slots[family.token], total)
-		end
+	for _, line in ipairs(familyLines) do
+		lines[#lines + 1] = line
 	end
 	return lines
 end
