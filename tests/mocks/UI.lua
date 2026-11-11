@@ -51,6 +51,8 @@ function methods:SetFrameLevel(level) self.level = level end
 function methods:SetWidth(width) self.width = width end
 function methods:SetHeight(height) self.height = height end
 function methods:EnableMouseWheel(enabled) self.wheel = enabled end
+function methods:SetMouseClickEnabled(enabled) self.mouseClicks = enabled end
+function methods:SetMouseMotionEnabled(enabled) self.mouseMotion = enabled end
 function methods:IsMouseOver() return self.mouseOver == true end
 function methods:SetParent(parent)
 	self.parent = parent

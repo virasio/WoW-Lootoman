@@ -114,8 +114,12 @@ end
 
 local function createFrame(module)
 	local frame = CreateFrame("Frame", nil, UIParent)
+	-- Above the bag buttons and the bags, so its count can sit on them; a
+	-- click goes through to what is under it, while its tooltip still shows.
+	frame:SetFrameStrata("HIGH")
 	frame:SetClampedToScreen(true)
-	frame:EnableMouse(true)
+	frame:SetMouseMotionEnabled(true)
+	frame:SetMouseClickEnabled(false)
 	frame.Label = frame:CreateFontString(nil, "OVERLAY")
 	frame.Label:SetPoint("CENTER")
 	frame.Label:SetWordWrap(false)

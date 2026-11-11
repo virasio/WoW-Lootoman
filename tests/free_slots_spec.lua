@@ -58,6 +58,13 @@ describe("free-slot bar", function()
 		assert.same({ 20, 28 }, { module.frame.Label.font[2], module.frame.height })
 	end)
 
+	it("sits above the bags, lets clicks through to what is under it, and still shows its tooltip", function()
+		local frame = module.frame
+		assert.same({ "HIGH", false, true }, { frame.strata, frame.mouseClicks, frame.mouseMotion })
+		frame.scripts.OnEnter(frame)
+		assert.same({ true, "Free slots" }, { Loader.ui.tooltip.shown, Loader.ui.tooltip.lines[1] })
+	end)
+
 	it("lists the free and total slots of each kind of bag the player has in its tooltip", function()
 		assert.same({ "All bags: 12 free of 30", "General bags: 7 free of 20", "Reagent bag: 5 free of 10" }, module.TooltipLines())
 	end)
