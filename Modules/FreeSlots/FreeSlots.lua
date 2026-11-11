@@ -205,6 +205,9 @@ function FreeSlots:OnEnable()
 		createFrame(self)
 	end
 	self.frame:Show()
+	-- Edit Mode may have opened or closed while the module was off, and an
+	-- inactive module misses its callbacks.
+	setLayer(self.frame, ns.EditMode.IsActive())
 	self:Refresh()
 	self:On("InventoryChanged", function()
 		self:Refresh()

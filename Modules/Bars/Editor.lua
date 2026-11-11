@@ -39,12 +39,13 @@ Editor.INDENT = 18
 
 local window
 local barID
--- Bag items taken off a bar while the window is open, by item ID.
+-- Bag items taken off a bar while the window is open, whole (an item counting
+-- the banks stays one), by their key.
 local removed = {}
 
 local function forgetRemoved()
-	for itemID in pairs(removed) do
-		removed[itemID] = nil
+	for key in pairs(removed) do
+		removed[key] = nil
 	end
 end
 
@@ -166,8 +167,7 @@ function Editor.Lists(bar)
 			right[#right + 1] = { entry = entry, look = look }
 		end
 	end
-	for itemID in pairs(removed) do
-		local entry = { kind = "item", id = itemID }
+	for _, entry in pairs(removed) do
 		if not on[keyOf(entry)] then
 			right[#right + 1] = { entry = entry, look = Bars.Describe(entry) }
 		end
@@ -191,8 +191,8 @@ function Editor.Add(bar, entry)
 	if onBar(entries, keyOf(entry)) then
 		return false
 	end
-	entries[#entries + 1] = { kind = entry.kind, id = entry.id }
-	removed[entry.kind == "item" and entry.id or 0] = nil
+	entries[#entries + 1] = { kind = entry.kind, id = entry.id, count = entry.count }
+	removed[keyOf(entry)] = nil
 	changed()
 	return true
 end
@@ -208,7 +208,7 @@ function Editor.Remove(bar, index)
 	if window and window:IsShown() and entry then
 		for _, taken in ipairs(entry.kind == "stack" and entry.members or { entry }) do
 			if taken.kind == "item" then
-				removed[taken.id] = true
+				removed[keyOf(taken)] = { kind = "item", id = taken.id, count = taken.count }
 			end
 		end
 	end
@@ -229,7 +229,7 @@ function Editor.RemoveMember(bar, index, member)
 	end
 	normalize(entries)
 	if entry.kind == "item" and window and window:IsShown() then
-		removed[entry.id] = true
+		removed[keyOf(entry)] = { kind = "item", id = entry.id, count = entry.count }
 	end
 	changed()
 	return entry
@@ -251,7 +251,7 @@ function Editor.Drop(bar, from, target)
 		source = rows[from.row]
 		dragged = source and source.entry
 	elseif from.entry and not onBar(entries, keyOf(from.entry)) then
-		dragged = { kind = from.entry.kind, id = from.entry.id }
+		dragged = { kind = from.entry.kind, id = from.entry.id, count = from.entry.count }
 	end
 	if not dragged then
 		return false
@@ -296,9 +296,7 @@ function Editor.Drop(bar, from, target)
 		table.insert(entries, before and indexOf(entries, before) or #entries + 1, dragged)
 	end
 	normalize(entries)
-	if dragged.kind == "item" then
-		removed[dragged.id] = nil
-	end
+	removed[keyOf(dragged)] = nil
 	changed()
 	return true
 end

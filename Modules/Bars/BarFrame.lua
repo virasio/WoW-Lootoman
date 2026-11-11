@@ -342,7 +342,8 @@ function SlotMixin:StartDrag(button)
 	if ns.EditMode.IsActive() or not button.entry or BarFrame.Asking() then
 		return
 	end
-	self.dragged = button
+	-- The entry itself: a new layout during the drag can give the button another.
+	self.dragged, self.draggedEntry = button, button.entry
 	button:SetAlpha(0.35)
 	local ghost = BarFrame.Ghost()
 	ghost.Icon:SetShown(button.Icon:IsShown())
@@ -373,15 +374,15 @@ function SlotMixin:FollowDrag()
 end
 
 function SlotMixin:StopDrag()
-	local dragged = self.dragged
-	self.dragged = nil
+	local dragged, entry = self.dragged, self.draggedEntry
+	self.dragged, self.draggedEntry = nil, nil
 	BarFrame.Ghost():Hide()
 	self.frame.Marker:Hide()
-	if not dragged or not dragged.entry then
+	if not dragged or not entry then
 		return
 	end
 	dragged:SetAlpha(1)
-	local bar, entry = self.bar, dragged.entry
+	local bar = self.bar
 	if not self.frame:IsMouseOver() then
 		local look = Bars.Describe(entry)
 		question = ns.NameMenu.Confirm(L["Take “%s” off the bar?"], look and look.name or "", L["Take off"], function()
@@ -391,17 +392,38 @@ function SlotMixin:StopDrag()
 		end)
 		return
 	end
-	BarFrame.Move(bar, dragged.index, self:DropIndex(self:CursorDistance()))
-	setChanged()
+	local from = BarFrame.IndexOf(bar, entry)
+	if from then
+		BarFrame.Move(bar, from, self:DropIndex(self:CursorDistance()))
+		setChanged()
+	end
+end
+
+-- Where an entry stands on a bar now: the same table. A currency or money is
+-- also found by its ID: a bar that shows the backpack's currencies makes them
+-- anew each time it is read, and each stands on a bar once. Items and stacks
+-- are not: the same item can count the bags and the banks, and a stack has no
+-- ID.
+function BarFrame.IndexOf(bar, entry)
+	local entries = Bars.Entries(bar)
+	for index, existing in ipairs(entries) do
+		if existing == entry then
+			return index
+		end
+	end
+	if entry.kind == "currency" or entry.kind == "money" then
+		for index, existing in ipairs(entries) do
+			if existing.kind == entry.kind and existing.id == entry.id then
+				return index
+			end
+		end
+	end
 end
 
 -- Takes an entry off a bar, wherever it stands on the bar now.
 function BarFrame.TakeOff(bar, entry)
-	for index, existing in ipairs(Bars.Entries(bar)) do
-		if existing.kind == entry.kind and existing.id == entry.id then
-			return Bars.Editor and Bars.Editor.Remove(bar, index)
-		end
-	end
+	local index = BarFrame.IndexOf(bar, entry)
+	return index and Bars.Editor and Bars.Editor.Remove(bar, index)
 end
 
 -- Moves an entry of a bar from one place to another; to is a place before

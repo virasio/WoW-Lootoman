@@ -95,6 +95,12 @@ describe("free-slot bar", function()
 		assert.same({ "MEDIUM", true, true }, state())
 		lib.Fire("exit")
 		assert.same({ "HIGH", false, true }, state())
+		-- Turned off in Edit Mode, and on again after it.
+		lib.Fire("enter")
+		ns.Modules:SetEnabled("FreeSlots", false)
+		lib.Fire("exit")
+		ns.Modules:SetEnabled("FreeSlots", true)
+		assert.same({ "HIGH", false, true }, state())
 		-- Turned off and on during Edit Mode.
 		lib.Fire("enter")
 		ns.Modules:SetEnabled("FreeSlots", false)

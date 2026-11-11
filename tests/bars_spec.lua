@@ -259,6 +259,42 @@ describe("currency bars", function()
 		assert.equals(3, #api.popups)
 	end)
 
+	it("take off the entry asked about when the same item counts twice, or of two stacks", function()
+		local api = SettingsAPI.Install()
+		local bar = Sets.Get("Default").bars[1]
+		bar.entries = { { kind = "item", id = 2589 }, { kind = "item", id = 2589, count = "banks" } }
+		Sets.Changed("Default")
+		dragOff(2)
+		api.AcceptPopup()
+		assert.same({ { kind = "item", id = 2589 } }, bar.entries)
+		local first = { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } }
+		bar.entries = { first, { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 2815 }, { kind = "item", id = 2589 } } } }
+		Sets.Changed("Default")
+		dragOff(2)
+		api.AcceptPopup()
+		assert.same({ first }, bar.entries)
+	end)
+
+	it("keep the dragged entry when the bar is laid out again during the drag", function()
+		local api = SettingsAPI.Install()
+		local bar = Sets.Get("Default").bars[1]
+		-- A stack at zero takes no room: the first button shows Resonance Crystals.
+		Test.SetCurrency(3110, { name = "Gilded Crest", icon = 2, quantity = 0, max = 90, totalEarned = 0, capsTotalEarned = true })
+		Test.SetCurrency(3008, { name = "Valorstones", icon = 1, quantity = 0, max = 2000, backpack = 1 })
+		local stack = { kind = "stack", showEmpty = false, members = { { kind = "currency", id = 3110 }, { kind = "currency", id = 3008 } } }
+		bar.entries = { stack, { kind = "currency", id = 2815 } }
+		Sets.Changed("Default")
+		local button = slot(1).buttons[1]
+		button.scripts.OnDragStart(button)
+		-- The stack shows again, and takes the first button.
+		Test.ChangeCurrency(3110, 5)
+		assert.equals(stack, button.entry)
+		slot(1).frame.mouseOver = false
+		button.scripts.OnDragStop(button)
+		api.AcceptPopup()
+		assert.same({ stack }, bar.entries)
+	end)
+
 	it("add an item dropped from the bags on the bar where it is dropped, also outside Edit Mode", function()
 		Test.state.cursorItem = 2589
 		-- Before the middle of the first entry.
