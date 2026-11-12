@@ -11,6 +11,29 @@ local function qualityChoices()
 	return choices
 end
 
+-- Directions the feed fills in; the sideways ones only with icons.
+local DIRECTIONS = {
+	{ "up", L["Bottom to top"] },
+	{ "down", L["Top to bottom"] },
+	{ "right", L["Left to right"] },
+	{ "left", L["Right to left"] },
+}
+local SIDEWAYS = { left = true, right = true }
+
+-- Whether the profile's layout is of the icons view.
+local function usesIcons()
+	local Design = Feed.Design
+	return Design.View(Design.Current(Feed.Layouts.CurrentDesign())) == "icons"
+end
+
+-- The directions the controls offer now: rows fill only up or down.
+local function offeredDirections()
+	if usesIcons() then
+		return DIRECTIONS
+	end
+	return { DIRECTIONS[1], DIRECTIONS[2] }
+end
+
 -- The settings, in groups, for the options page and the Edit Mode dialog
 -- alike; the row designer's button ends the last group.
 local function settings()
@@ -26,9 +49,9 @@ local function settings()
 		{ kind = "header", label = L["Rows and timing"] },
 		{ kind = "slider", key = "maxRows", label = L["Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
 			min = 1, max = 20, step = 1, format = "%d" },
-		{ kind = "dropdown", key = "direction", label = L["New rows appear"],
-			tooltip = L["On top: the oldest row stays at the bottom edge and new rows stack above it. At the bottom: the oldest row stays at the top edge and new rows stack below it."],
-			choices = { { "up", L["On top"] }, { "down", L["At the bottom"] } } },
+		{ kind = "dropdown", key = "direction", label = L["Fill direction"],
+			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
+			choices = DIRECTIONS, offered = offeredDirections },
 		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
 			min = 2, max = 30, step = 1, format = L["%d s"] },
 		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
@@ -167,10 +190,20 @@ function LootFeed:Warnings()
 	return warnings
 end
 
+-- The direction the feed fills in: a sideways one left from an Icons layout
+-- counts as bottom to top with rows.
+function LootFeed:Direction()
+	local direction = self:Get("direction")
+	if SIDEWAYS[direction] and not usesIcons() then
+		return "up"
+	end
+	return direction
+end
+
 function LootFeed:Apply()
 	self.model:SetOptions(self:ModelOptions(), Compat.GetTime())
 	self.feed:SetOptions({
-		direction = self:Get("direction"),
+		direction = self:Direction(),
 		maxRows = self:Get("maxRows"),
 		layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size")),
 		opacity = self:Get("backgroundOpacity") / 100,
@@ -199,10 +232,18 @@ function LootFeed:OnEnable()
 			self.feed:Wake()
 		end
 	end)
-	self:On("SettingChanged", function(_, module)
-		if module == self.name then
-			self:Apply()
+	self:On("SettingChanged", function(_, module, key)
+		if module ~= self.name then
+			return
 		end
+		-- A rows layout fills only up or down; the dialog offers what it can.
+		if key == "layout" then
+			if self:Direction() ~= self:Get("direction") then
+				self:Set("direction", self:Direction())
+			end
+			ns.EditMode.Refresh(self.feed.frame)
+		end
+		self:Apply()
 	end)
 	self:On("ProfileChanged", function()
 		self:Apply()

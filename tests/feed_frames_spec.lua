@@ -127,6 +127,40 @@ describe("loot feed frames", function()
 			assert.equals(119, feed.frame.height)
 		end)
 
+		it("fills sideways with icons: the oldest at the left or the right edge, the new ones beside it", function()
+			local icons = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13)
+			feed:SetOptions(options({ direction = "right", layout = icons }))
+			model:Add({ kind = "money", amount = 100 }, 0)
+			model:Add({ kind = "xp", amount = 50 }, 0)
+			feed:Draw(1)
+			-- Icons 36 wide, 4 apart: three of them make the strip.
+			assert.same({ "100 copper@0", "Experience@40" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 40, 0 }, frameWith("Experience").points[1])
+			assert.same({ 116, 36 }, { feed.frame.width, feed.frame.height })
+			feed:SetOptions(options({ direction = "left", layout = icons }))
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", -40, 0 }, frameWith("Experience").points[1])
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, frameWith("100 copper").points[1])
+		end)
+
+		it("puts warnings in lines above a sideways strip, which keeps its places", function()
+			feed:SetOptions(options({ direction = "right", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
+			feed:SetWarnings({ "Free bag slots: 2", "No free reagent bag slots" })
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			assert.same({ "100 copper@0" }, layout())
+			-- Lines as high as their text and a little room, the first one nearest to the strip.
+			local first, second = feed.warningLines[1], feed.warningLines[2]
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 36 }, first.points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 55 }, second.points[1])
+			assert.same({ 116, 19 }, { first.width, first.height })
+			-- The background spans the strip and the lines, evenly behind icons.
+			local background = feed.frame.Background
+			assert.same({ 124, 82 }, { background.width, background.height })
+			assert.same({ 0.5, 0.5 }, { background.gradient[2].a, background.gradient[3].a })
+			feed:SetOptions(options({ direction = "left", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 36 }, first.points[1])
+		end)
+
 		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()
 			feed:SetWarnings({ "Free bag slots: 2" })
 			assert.is_true(feed.frame.shown)

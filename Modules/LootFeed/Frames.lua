@@ -10,13 +10,16 @@ local Compat, L = ns.Compat, ns.L
 --
 -- The oldest row sits at the anchor edge of the feed and new rows stack away
 -- from it: with direction "up" new rows appear on top of the oldest one at the
--- bottom edge, with "down" below the oldest one at the top edge. When a row
+-- bottom edge, with "down" below the oldest one at the top edge, with "right"
+-- right of the oldest one at the left edge, with "left" left of the oldest
+-- one at the right edge (the sideways directions are for icons). When a row
 -- leaves, the others slide to their new places. Rows pushed out when the feed
 -- is full slide past the anchor edge as they fade.
 --
 -- Warnings (few free bag slots) take the first places at the anchor edge, one
--- row's height each, and the rows stack after them; while there is a warning
--- the feed stays shown.
+-- row's height each, and the rows stack after them; filling sideways, they are
+-- lines above the strip of icons instead. While there is a warning the feed
+-- stays shown.
 --
 -- Rows show tooltips but let clicks through to the game world, and the mouse
 -- wheel keeps zooming the camera. Hovering pauses the model's timers. The
@@ -254,20 +257,37 @@ end
 Frames.WARNING_COLOR = { 1, 0.25, 0.25 }
 Frames.WARNING_ICON = [[Interface\Icons\INV_Misc_Bag_08]]
 
--- How far the rows start from the anchor edge: past the warnings.
+local SIDEWAYS = { left = true, right = true }
+
+local function sideways(feed)
+	return SIDEWAYS[feed.options.direction] == true
+end
+
+-- How far the rows start from the anchor edge: past the warnings, unless they
+-- are lines above a sideways strip.
 local function base(feed)
-	return #feed.warnings * feed.step
+	return sideways(feed) and 0 or #feed.warnings * feed.step
 end
 
 -- Puts a row at a distance from the anchor edge.
 local function place(feed, rowFrame, offset)
 	rowFrame.offset = offset
 	rowFrame:ClearAllPoints()
-	if feed.options.direction == "down" then
+	local direction = feed.options.direction
+	if direction == "down" then
 		rowFrame:SetPoint("TOPLEFT", feed.frame, "TOPLEFT", 0, -offset)
+	elseif direction == "right" then
+		rowFrame:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", offset, 0)
+	elseif direction == "left" then
+		rowFrame:SetPoint("BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", -offset, 0)
 	else
 		rowFrame:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, offset)
 	end
+end
+
+-- A warning line's height above a sideways strip: its text and a little room.
+local function lineHeight(feed)
+	return feed.options.layout.parts.name.fontSize + 6
 end
 
 local function release(feed, row, rowFrame)
@@ -279,23 +299,36 @@ local function release(feed, row, rowFrame)
 end
 
 -- The shared background spans the rows on screen, from the anchor edge to the
--- farthest row, with the gap as a margin; it fades out to the right.
+-- farthest row, with the gap as a margin; it fades out to the right, but for
+-- icons. Filling sideways, it also spans the warning lines above the strip.
 local function placeBackground(feed)
-	local far = #feed.warnings > 0 and (base(feed) - feed.options.layout.gap) or 0
+	local layout = feed.options.layout
+	local length = sideways(feed) and layout.width or layout.height
+	local far = (#feed.warnings > 0 and not sideways(feed)) and (base(feed) - layout.gap) or 0
 	for _, rowFrame in pairs(feed.frameOf) do
-		far = math.max(far, rowFrame.offset + feed.options.layout.height)
+		far = math.max(far, rowFrame.offset + length)
 	end
 	local background = feed.frame.Background
-	background:SetShown(far > 0)
-	if far > 0 then
-		local margin = feed.options.layout.gap
+	local lines = sideways(feed) and #feed.warnings * lineHeight(feed) or 0
+	background:SetShown(far > 0 or lines > 0)
+	if far > 0 or lines > 0 then
+		local margin = layout.gap
+		local direction = feed.options.direction
 		background:ClearAllPoints()
-		if feed.options.direction == "down" then
+		if direction == "down" then
 			background:SetPoint("TOPLEFT", feed.frame, "TOPLEFT", -margin, margin)
+		elseif direction == "left" then
+			background:SetPoint("BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", margin, -margin)
 		else
 			background:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -margin, -margin)
 		end
-		background:SetSize(feed.options.layout.width + 2 * margin, far + 2 * margin)
+		if sideways(feed) then
+			-- Under warning lines, as wide as the strip they may take.
+			local span = lines > 0 and (feed.options.maxRows * feed.step - layout.gap) or math.max(far, layout.width)
+			background:SetSize(span + 2 * margin, layout.height + lines + 2 * margin)
+		else
+			background:SetSize(layout.width + 2 * margin, far + 2 * margin)
+		end
 	end
 end
 
@@ -335,10 +368,14 @@ function Frames.Create(model)
 	return feed
 end
 
--- The warning lines, at the anchor edge in the order given.
+-- The warning lines, at the anchor edge in the order given, or above a
+-- sideways strip, the first one nearest to it.
 local function placeWarnings(feed)
 	local layout = feed.options.layout
 	local font = getFonts().text
+	local across = sideways(feed)
+	local height = across and lineHeight(feed) or layout.height
+	local width = across and (feed.options.maxRows * feed.step - layout.gap) or layout.width
 	for index, text in ipairs(feed.warnings) do
 		local line = feed.warningLines[index]
 		if not line then
@@ -350,8 +387,8 @@ local function placeWarnings(feed)
 			line.Text:SetJustifyH("LEFT")
 			feed.warningLines[index] = line
 		end
-		line:SetSize(layout.width, layout.height)
-		line.Icon:SetSize(layout.height * 0.6, layout.height * 0.6)
+		line:SetSize(width, height)
+		line.Icon:SetSize(height * 0.6, height * 0.6)
 		line.Icon:ClearAllPoints()
 		line.Icon:SetPoint("LEFT", line, "LEFT", 0, 0)
 		line.Text:SetFont(font[1], layout.parts.name.fontSize, font[3])
@@ -359,7 +396,14 @@ local function placeWarnings(feed)
 		line.Text:ClearAllPoints()
 		line.Text:SetPoint("LEFT", line.Icon, "RIGHT", 6, 0)
 		line.Text:SetText(text)
-		place(feed, line, (index - 1) * feed.step)
+		if across then
+			local edge = feed.options.direction == "left" and "BOTTOMRIGHT" or "BOTTOMLEFT"
+			line.offset = nil
+			line:ClearAllPoints()
+			line:SetPoint(edge, feed.frame, edge, 0, layout.height + (index - 1) * height)
+		else
+			place(feed, line, (index - 1) * feed.step)
+		end
 		line:Show()
 	end
 	for index = #feed.warnings + 1, #feed.warningLines do
@@ -380,10 +424,17 @@ end
 function FeedMixin:SetOptions(options)
 	self.options = options
 	local layout = options.layout
-	self.step = layout.height + layout.gap
-	self.frame:SetSize(layout.width, options.maxRows * self.step - layout.gap)
+	if sideways(self) then
+		self.step = layout.width + layout.gap
+		self.frame:SetSize(options.maxRows * self.step - layout.gap, layout.height)
+	else
+		self.step = layout.height + layout.gap
+		self.frame:SetSize(layout.width, options.maxRows * self.step - layout.gap)
+	end
 	placeWarnings(self)
-	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, 0))
+	-- Behind icons the background is even; behind rows it fades out to the right.
+	local fadeTo = Design.View(layout) == "icons" and options.opacity or 0
+	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, fadeTo))
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 	end

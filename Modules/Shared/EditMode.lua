@@ -221,9 +221,13 @@ local function toLibSetting(module, setting)
 		end
 	elseif setting.kind == "dropdown" then
 		object.kind = lib.SettingType.Dropdown
-		object.values = {}
-		for index, choice in ipairs(setting.choices) do
-			object.values[index] = { value = choice[1], text = choice[2] }
+		-- Built when the menu opens, so it offers the choices of that moment.
+		object.values = function()
+			local values = {}
+			for index, choice in ipairs(setting.offered and setting.offered() or setting.choices) do
+				values[index] = { value = choice[1], text = choice[2] }
+			end
+			return values
 		end
 	else
 		error(("%s.%s: unknown Edit Mode setting kind %s"):format(name, setting.key, tostring(setting.kind)))

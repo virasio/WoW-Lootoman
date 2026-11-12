@@ -80,7 +80,8 @@ end
 
 -- A dropdown bound to a string or number module setting. choices lists
 -- { value, label } pairs in the order shown; the default must be one of them.
-function Panel.AddDropdown(category, module, key, label, tooltip, choices)
+-- offered(), when given, gives the choices to show now, of all the choices.
+function Panel.AddDropdown(category, module, key, label, tooltip, choices, offered)
 	local default = Storage:GetDefault(module, key)
 	local found = false
 	for _, choice in ipairs(choices) do
@@ -91,7 +92,7 @@ function Panel.AddDropdown(category, module, key, label, tooltip, choices)
 	local setting = register(category, module, key, label, varType)
 	local function options()
 		local container = Settings.CreateControlTextContainer()
-		for _, choice in ipairs(choices) do
+		for _, choice in ipairs(offered and offered() or choices) do
 			container:Add(choice[1], choice[2])
 		end
 		return container:GetData()
@@ -125,7 +126,7 @@ function Panel.AddSettings(category, layout, module, settings)
 			Panel.AddSlider(category, module, setting.key, setting.label, setting.tooltip,
 				setting.min, setting.max, setting.step, setting.format)
 		elseif setting.kind == "dropdown" then
-			Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices)
+			Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices, setting.offered)
 		else
 			error(("%s: unknown setting kind %s"):format(module, tostring(setting.kind)))
 		end

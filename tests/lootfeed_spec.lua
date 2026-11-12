@@ -56,12 +56,38 @@ describe("loot feed module", function()
 			"checkbox:Enabled",
 			"header:What the feed shows", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
 			"checkbox:Experience", "dropdown:Minimum quality",
-			"header:Rows and timing", "slider:Rows", "dropdown:New rows appear", "slider:Time on screen", "slider:Fade-out time",
+			"header:Rows and timing", "slider:Rows", "dropdown:Fill direction", "slider:Time on screen", "slider:Fade-out time",
 			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Owned count", "checkbox:Glow for rare items",
 			"header:Low-space warnings", "checkbox:Warn when few bag slots are free", "slider:Bag slots",
 			"checkbox:Warn when few reagent bag slots are free", "slider:Reagent bag slots",
 			"button:Row design",
 		}, api.Kinds(api.FindCategory("Loot feed")))
+	end)
+
+	it("fills sideways only with an Icons layout, and up or down with rows", function()
+		local direction
+		for _, setting in ipairs(module:Settings()) do
+			direction = setting.key == "direction" and setting or direction
+		end
+		local function offered()
+			local list = {}
+			for index, choice in ipairs(direction.offered()) do
+				list[index] = choice[1]
+			end
+			return table.concat(list, " ")
+		end
+		assert.equals("up down", offered())
+		local Layouts = ns.Feed.Layouts
+		Layouts.Create("Strip", "icons")
+		Layouts.Use("Strip")
+		assert.equals("up down right left", offered())
+		module:Set("direction", "left")
+		assert.equals("left", module.feed.options.direction)
+		-- Back on rows, a sideways direction becomes bottom to top.
+		Layouts.Use("Default")
+		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
+		-- Every direction may come in a profile text.
+		assert.is_true(module:Validate("direction", "right"))
 	end)
 
 	describe("low-space warnings", function()
