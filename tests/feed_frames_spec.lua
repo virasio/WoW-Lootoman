@@ -103,8 +103,14 @@ describe("loot feed frames", function()
 			-- The client's decimal point.
 			ns.Compat.Test.state.globalStrings.DECIMAL_SEPERATOR = ","
 			assert.equals("1,23|A:coin-silver|a", Frames.Describe({ kind = "money", amount = 123 }, icons).amount)
+			-- So are the owned count and a currency's total.
+			local owned = { layout = icons.layout, showOwned = true }
+			assert.equals("1,23M", Frames.Describe({ kind = "currency", name = "Crest", amount = 5, total = 1234567 }, owned).ownedText)
+			assert.equals("12,34K", Frames.Describe({ kind = "item", name = "Ore", quality = 1, owned = 12345 }, owned).ownedText)
 			-- Rows keep the long form.
-			assert.equals("+12345", Frames.Describe({ kind = "xp", amount = 12345 }, { layout = Design.Layout(Design.LARGE, 13) }).amount)
+			local rows = { layout = Design.Layout(Design.LARGE, 13), showOwned = true }
+			assert.equals("+12345", Frames.Describe({ kind = "xp", amount = 12345 }, rows).amount)
+			assert.equals("12345", Frames.Describe({ kind = "item", name = "Ore", quality = 1, owned = 12345 }, rows).ownedText)
 		end)
 
 		it("uses its own phrase for a faction name the client declined", function()

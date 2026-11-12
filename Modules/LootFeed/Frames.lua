@@ -130,6 +130,10 @@ function Frames.Describe(row, options)
 		if look.owned == 0 then
 			look.owned = nil
 		end
+		-- On icons the owned count is short too, as the amount is.
+		if look.owned then
+			look.ownedText = icons and ns.Text.ShortNumber(look.owned, decimalPoint()) or tostring(look.owned)
+		end
 		return look
 	elseif kind == "money" then
 		local look = { icon = ICONS.money, label = GetMoneyString(row.amount, true), labelColor = WHITE }
@@ -311,7 +315,7 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	end
 	-- On the icon, the owned count goes with it.
 	rowFrame.Owned:SetShown(parts.owned.shown and look.owned ~= nil and (iconShown or parts.owned.anchor ~= "icon"))
-	rowFrame.Owned:SetText(look.owned and tostring(look.owned) or "")
+	rowFrame.Owned:SetText(look.ownedText or "")
 	rowFrame.Amount:SetShown(parts.amount.shown and look.amount ~= nil)
 	rowFrame.Amount:SetText(look.amount or "")
 	if look.amountColor then
