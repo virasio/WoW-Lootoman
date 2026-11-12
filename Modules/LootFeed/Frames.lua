@@ -22,8 +22,13 @@ local Compat, L = ns.Compat, ns.L
 -- tooltip. Filling sideways, they are lines above the strip of icons instead.
 -- While there is a warning the feed stays shown.
 --
--- Rows show tooltips but let clicks through to the game world, and the mouse
--- wheel keeps zooming the camera. Hovering pauses the model's timers. The
+-- A stuck row (Model.lua: an item the character can use) takes the very first
+-- place at the anchor edge, before the warnings, so that place never moves. It
+-- shows a pin, or the bags' quest mark for an item that starts a quest, and a
+-- badge with how many more wait under it; a left click lets it go.
+--
+-- Rows show tooltips but let clicks through to the game world, but for the
+-- stuck one, and the mouse wheel keeps zooming the camera. Hovering pauses the model's timers. The
 -- frame is hidden, and costs nothing, while there are no rows and no warnings.
 --
 --   local feed = Frames.Create(model)        -- out of combat, when the module starts
@@ -40,6 +45,8 @@ local Design = ns.Feed.Design
 
 -- The most rows on screen: 20 rows, and a few fading out after a push.
 Frames.POOL = 24
+-- A stuck row's pin: the game's own map pin.
+Frames.PIN = "Waypoint-MapPin-Tracked"
 Frames.FADE_IN = 0.2
 -- Seconds a row takes to slide one place.
 Frames.SLIDE_TIME = 0.15
@@ -155,6 +162,9 @@ local function showTooltip(rowFrame)
 	if row.link and row.kind == "item" then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip:SetHyperlink(row.link)
+		if rowFrame.stuck then
+			GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use."], 0.5, 1, 0.5)
+		end
 		GameTooltip:Show()
 	elseif row.kind == "currency" and row.id then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
@@ -213,6 +223,26 @@ function Frames.CreateRow(parent)
 	rowFrame.AmountBackground:SetPoint("BOTTOMRIGHT", rowFrame.Amount, "BOTTOMRIGHT", 2, -1)
 	rowFrame.AmountBackground:Hide()
 	rowFrame.Amount:SetDrawLayer("OVERLAY", 4)
+	-- A stuck row's marks: the bags' quest mark over the icon of an item that
+	-- starts a quest, else a pin at the icon's top left; and how many wait.
+	rowFrame.QuestMark = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
+	rowFrame.QuestMark:SetAllPoints(rowFrame.Icon)
+	rowFrame.QuestMark:SetTexture(TEXTURE_ITEM_QUEST_BANG)
+	rowFrame.QuestMark:Hide()
+	rowFrame.Pin = rowFrame:CreateTexture(nil, "OVERLAY", nil, 5)
+	rowFrame.Pin:SetAtlas(Frames.PIN)
+	rowFrame.Pin:SetPoint("CENTER", rowFrame.Icon, "TOPLEFT", 2, -2)
+	rowFrame.Pin:Hide()
+	rowFrame.Waiting = rowFrame:CreateFontString(nil, "OVERLAY")
+	rowFrame.Waiting:SetDrawLayer("OVERLAY", 5)
+	rowFrame.Waiting:SetPoint("BOTTOMLEFT", rowFrame.Icon, "BOTTOMLEFT", 2, 2)
+	rowFrame.Waiting:Hide()
+	rowFrame:SetScript("OnMouseUp", function(self, button)
+		-- A left click lets the stuck item go (its right click is the use button's).
+		if self.stuck and button == "LeftButton" and self.feed then
+			self.feed:Dismiss(self.data)
+		end
+	end)
 	rowFrame:SetScript("OnEnter", showTooltip)
 	rowFrame:SetScript("OnLeave", hideTooltip)
 	rowFrame:Hide()
@@ -252,8 +282,9 @@ function Frames.ApplyLayout(rowFrame, layout)
 	end
 end
 
--- Shows a row in a row frame; options as for the feed (layout, showOwned, showGlow).
-function Frames.Fill(rowFrame, row, options)
+-- Shows a row in a row frame; options as for the feed (layout, showOwned,
+-- showGlow); stuck, for the stuck row: { waiting = the rows under it }.
+function Frames.Fill(rowFrame, row, options, stuck)
 	local parts = options.layout.parts
 	local look = Frames.Describe(row, options)
 	local iconShown = parts.icon.shown and look.icon ~= nil
@@ -294,6 +325,19 @@ function Frames.Fill(rowFrame, row, options)
 	end
 	rowFrame.AmountBackground:SetColorTexture(0, 0, 0, parts.amount.opacity / 100)
 	rowFrame.AmountBackground:SetShown(parts.amount.background and rowFrame.Amount:IsShown())
+	-- The quest mark as soon as the item is known to start a quest; the pin and
+	-- the clicks for the stuck row.
+	rowFrame.QuestMark:SetShown(iconShown and row.sticky == "quest")
+	rowFrame.Pin:SetShown(iconShown and stuck ~= nil and row.sticky ~= "quest")
+	local size = math.max(8, math.floor(parts.icon.pixels * 0.4 + 0.5))
+	rowFrame.Pin:SetSize(size, size)
+	local waiting = stuck and stuck.waiting or 0
+	local font = getFonts().number
+	rowFrame.Waiting:SetFont(font[1], parts.owned.fontSize, font[3])
+	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
+	rowFrame.Waiting:SetShown(iconShown and waiting > 0)
+	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting
+	rowFrame:SetMouseClickEnabled(stuck ~= nil)
 	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
 end
 
@@ -323,10 +367,15 @@ local function sideways(feed)
 	return SIDEWAYS[feed.options.direction] == true
 end
 
--- How far the rows start from the anchor edge: past the warnings, unless they
--- are lines above a sideways strip.
+-- Where the warnings start: past the stuck row, if any.
+local function warningBase(feed)
+	return feed.hasStuck and feed.step or 0
+end
+
+-- How far the rows start from the anchor edge: past the stuck row and the
+-- warnings, unless they are lines above a sideways strip.
 local function base(feed)
-	return sideways(feed) and 0 or #feed.warnings * feed.step
+	return warningBase(feed) + (sideways(feed) and 0 or #feed.warnings * feed.step)
 end
 
 -- Puts a row at a distance from the anchor edge.
@@ -419,6 +468,7 @@ function Frames.Create(model)
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
 		feed.rows[index] = Frames.CreateRow(frame)
+		feed.rows[index].feed = feed
 		feed.free[index] = feed.rows[index]
 	end
 	frame:SetScript("OnUpdate", function()
@@ -463,7 +513,7 @@ local function placeWarningIcons(feed)
 		icon.Count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -2, 2)
 		icon.Count:SetText(tostring(warning.count or 0))
 		icon.text = warning.text
-		place(feed, icon, (index - 1) * feed.step)
+		place(feed, icon, warningBase(feed) + (index - 1) * feed.step)
 		icon:Show()
 	end
 	for index = #feed.warnings + 1, #feed.warningIcons do
@@ -516,7 +566,7 @@ local function placeWarnings(feed)
 			line:ClearAllPoints()
 			line:SetPoint(edge, feed.frame, edge, 0, layout.height + (index - 1) * height)
 		else
-			place(feed, line, (index - 1) * feed.step)
+			place(feed, line, warningBase(feed) + (index - 1) * feed.step)
 		end
 		line:Show()
 	end
@@ -567,6 +617,16 @@ function FeedMixin:Wake()
 	self.frame:Show()
 end
 
+-- Lets a stuck row go, as a left click on it does; onDismiss(row) hears of it.
+function FeedMixin:Dismiss(row)
+	if row and self.model:Release(row) then
+		if self.onDismiss then
+			self.onDismiss(row)
+		end
+		self:Wake()
+	end
+end
+
 -- Owned counts are read again on the next draw.
 function FeedMixin:RefreshOwned()
 	self.version = self.version + 1
@@ -603,13 +663,21 @@ function FeedMixin:Draw(now)
 		end
 	end
 
-	-- Views come newest first; the oldest of the live rows takes the place at the
-	-- anchor edge, and rows pushed out past maxRows get places beyond it.
-	local live = math.min(#views, self.options.maxRows)
+	-- The stuck row comes last and takes the first place; the warnings move
+	-- past it while it is there.
+	local last = views[#views]
+	local stuck = last and last.stuck and last or nil
+	if (stuck ~= nil) ~= (self.hasStuck == true) then
+		self.hasStuck = stuck ~= nil
+		placeWarnings(self)
+	end
+	-- The other views come newest first; the oldest of the live rows takes the
+	-- next place, and rows pushed out past maxRows get places beyond it.
+	local live = math.min(#views - (stuck and 1 or 0), self.options.maxRows - (stuck and 1 or 0))
 	local slide = self.step / Frames.SLIDE_TIME * elapsed
 	for index, view in ipairs(views) do
 		local row = view.row
-		local target = base(self) + (live - index) * self.step
+		local target = view.stuck and 0 or base(self) + (live - index) * self.step
 		local rowFrame = self.frameOf[row]
 		if not rowFrame and #self.free > 0 then
 			rowFrame = table.remove(self.free)
@@ -622,9 +690,10 @@ function FeedMixin:Draw(now)
 		end
 		if rowFrame then
 			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total
-				or rowFrame.version ~= self.version then
-				Frames.Fill(rowFrame, row, self.options)
-				rowFrame.version = self.version
+				or rowFrame.version ~= self.version or rowFrame.stuck ~= (view.stuck == true)
+				or rowFrame.waiting ~= (view.waiting or 0) or rowFrame.sticky ~= row.sticky then
+				Frames.Fill(rowFrame, row, self.options, view.stuck and { waiting = view.waiting } or nil)
+				rowFrame.version, rowFrame.sticky = self.version, row.sticky
 			end
 			self.seen[row] = self.seen[row] or now
 			local fadeIn = math.min(1, (now - self.seen[row]) / Frames.FADE_IN)

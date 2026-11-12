@@ -106,6 +106,7 @@ files["Modules/"] = {
 		"UISpecialFrames",
 		"StaticPopup_Hide",
 		"StaticPopup_Show",
+		"TEXTURE_ITEM_QUEST_BANG",
 		"TooltipUtil",
 		"UIParent",
 	},

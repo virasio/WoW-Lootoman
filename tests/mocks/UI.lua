@@ -260,6 +260,7 @@ function UI.Install()
 		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
 	})
 	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
+	rawset(_G, "TEXTURE_ITEM_QUEST_BANG", "Interface\\ContainerFrame\\UI-Icon-QuestBang")
 	-- A tooltip's title goes first among its lines (a menu's tooltip gives a plain list).
 	rawset(_G, "GameTooltip_SetTitle", function(owner, text)
 		local lines = owner.lines or owner

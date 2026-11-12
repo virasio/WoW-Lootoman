@@ -205,6 +205,41 @@ describe("loot feed frames", function()
 			assert.is_false(feed.warningLines[1].shown)
 		end)
 
+		it("puts the stuck row in the first place, before the warnings, with its marks and its clicks", function()
+			feed:SetWarnings({ "Free bag slots: 2" })
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
+			model:SetSticky(quest, "quest", 0)
+			local clam = model:Add({ kind = "item", id = 2, name = "Clam", link = LINK, icon = 2, amount = 1 }, 0)
+			model:SetSticky(clam, "container", 0)
+			model:Add({ kind = "money", amount = 100 }, 6.5)
+			feed:Draw(6.5)
+			-- The letter stuck first: its place is the first, the warning's the next.
+			assert.same({ "Letter@0", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 42 }, feed.warningLines[1].points[1])
+			local letter = frameWith("Letter")
+			assert.same({ true, false, true, "+1", true }, { letter.QuestMark.shown, letter.Pin.shown, letter.Waiting.shown,
+				letter.Waiting.text, letter.mouseClicks })
+			assert.is_false(frameWith("100 copper").mouseClicks)
+			letter.scripts.OnEnter(letter)
+			assert.equals("Left-click: dismiss. Right-click: use.", tooltip.lines[#tooltip.lines])
+			-- A left click lets it go; the clam takes the place, with a pin.
+			local dismissed
+			feed.onDismiss = function(row) dismissed = row end
+			letter.scripts.OnMouseUp(letter, "LeftButton")
+			assert.equals(quest, dismissed)
+			feed:Draw(6.6)
+			assert.same({ "Clam@0", "100 copper@84" }, layout())
+			local clamFrame = frameWith("Clam")
+			assert.same({ false, true, false }, { clamFrame.QuestMark.shown, clamFrame.Pin.shown, clamFrame.Waiting.shown })
+			-- A right click is not the row's.
+			clamFrame.scripts.OnMouseUp(clamFrame, "RightButton")
+			assert.equals(quest, dismissed)
+			-- With no stuck row, the warning goes back to the first place.
+			feed:Dismiss(clam)
+			feed:Draw(6.7)
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+		end)
+
 		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()
 			feed:SetWarnings({ "Free bag slots: 2" })
 			assert.is_true(feed.frame.shown)

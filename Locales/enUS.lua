@@ -40,6 +40,7 @@ ns.Locales.AddEnglish({
 
 	-- Modules/LootFeed/Frames.lua
 	"Experience",
+	"Left-click: dismiss. Right-click: use.",
 	-- Sample rows in Edit Mode.
 	"Sample item",
 	"Sample rare item",
