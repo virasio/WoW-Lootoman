@@ -37,7 +37,7 @@ Designer.CONTROL_HEIGHT = 52
 -- The window's global name, for UISpecialFrames.
 Designer.NAME = "LootomanDesigner"
 
-local NAMES = { large = L["Large"], compact = L["Compact"], minimal = L["Minimal"] }
+local NAMES = { large = L["Large"], compact = L["Compact"], minimal = L["Minimal"], icons = L["Icons"] }
 local TITLES = { row = L["Row"], icon = L["Icon"], name = L["Name"], amount = L["Amount"], owned = L["Owned count"] }
 local PART_ORDER = { "row", "icon", "name", "amount", "owned" }
 local POINT_NAMES = {

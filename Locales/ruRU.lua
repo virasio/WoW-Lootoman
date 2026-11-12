@@ -103,6 +103,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Large"] = "Крупная",
 	["Compact"] = "Компактная",
 	["Minimal"] = "Минимальная",
+	["Icons"] = "Только иконки",
 	["Part:"] = "Часть:",
 	["Row"] = "Строка",
 	["Icon"] = "Значок",

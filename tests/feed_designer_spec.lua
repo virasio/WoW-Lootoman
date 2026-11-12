@@ -263,7 +263,7 @@ describe("loot feed designer's layout menu", function()
 			"radio:Default*", "radio:Raid", "divider:",
 			"button:|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New layout|r", "button:Import", "button:Share",
 		}, texts(root.entries))
-		assert.same({ "button:Large", "button:Compact", "button:Minimal" }, texts(root.entries[4].entries))
+		assert.same({ "button:Large", "button:Compact", "button:Minimal", "button:Icons" }, texts(root.entries[4].entries))
 		assert.same({ 2, 1 }, root.grid)
 	end)
 

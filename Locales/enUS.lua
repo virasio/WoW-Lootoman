@@ -107,6 +107,7 @@ ns.Locales.AddEnglish({
 	"Large",
 	"Compact",
 	"Minimal",
+	"Icons",
 	"Reset",
 	"Part:",
 	"Row",

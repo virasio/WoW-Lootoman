@@ -161,6 +161,49 @@ describe("loot feed designs", function()
 		end)
 	end)
 
+	describe("the icons view", function()
+		local icons
+
+		before_each(function()
+			icons = { schema = Design.SCHEMA, base = "icons" }
+		end)
+
+		it("is a square icon with the amount on its corner and no name", function()
+			local design = Design.Current(icons)
+			assert.same({ "icons", 36, 36, false, "icon", "BOTTOMRIGHT" }, { Design.View(design), design.height, design.width,
+				design.parts.name.shown, design.parts.amount.anchor, design.parts.amount.point })
+			assert.equals("rows", Design.View(Design.Current(section)))
+		end)
+
+		it("stays square, with the icon whole and the name, the owned count and the icon's place fixed", function()
+			Design.Set(icons, "row", "height", 50)
+			Design.Set(icons, "icon", "size", 60)
+			Design.Set(icons, "name", "shown", true)
+			Design.Set(icons, "owned", "point", "BOTTOMLEFT")
+			Design.Set(icons, "amount", "anchor", "row")
+			local design = Design.Current(icons)
+			assert.same({ 50, 50, 100, false, "TOPRIGHT", "icon" }, { design.height, design.width, design.parts.icon.size,
+				design.parts.name.shown, design.parts.owned.point, design.parts.amount.anchor })
+		end)
+
+		it("keeps the amount within one icon's size of the icon", function()
+			local design = Design.Current(icons)
+			-- Its right edge up to an icon's size past the icon; its left edge as far
+			-- the other way, keeping room for two digits; its bottom and top alike.
+			assert.same({ -60, 36 }, { Design.Range(design, "amount", "x") })
+			assert.same({ -36, 59 }, { Design.Range(design, "amount", "y") })
+			assert.equals(36, Design.Set(icons, "amount", "x", 500))
+		end)
+
+		it("gives the amount a background of its own, off until asked, with its opacity", function()
+			assert.same({ false, 60 }, { Design.Current(icons).parts.amount.background, Design.Current(icons).parts.amount.opacity })
+			Design.Set(icons, "amount", "background", true)
+			assert.equals(100, Design.Set(icons, "amount", "opacity", 150))
+			assert.same({ true, 100 }, { Design.Current(icons).parts.amount.background, Design.Current(icons).parts.amount.opacity })
+			assert.same({ 0, 100 }, { Design.Range(Design.Current(icons), "amount", "opacity") })
+		end)
+	end)
+
 	describe("text room", function()
 		it("gives a text the width of its words, up to its maximum and the row's edge, less what follows it", function()
 			Design.Set(section, "name", "width", 300)
