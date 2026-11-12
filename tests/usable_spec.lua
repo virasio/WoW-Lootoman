@@ -49,6 +49,11 @@ describe("usable items", function()
 		holding({ itemID = 1, use = { questID = 500 } })
 		assert.same({ "quest", true }, { Usable.Find(1) })
 		assert.same({ nil, false }, { Usable.Find(99) })
+		-- The item moved and the scan has not caught up: its kind is not known.
+		Test.state.bags[0].items[1] = { itemID = 7, count = 1 }
+		assert.same({ nil, true, true }, { Usable.Find(1) })
+		Test.SetBags({ [0] = { size = 16, items = { [2] = { itemID = 1, count = 1, use = { questID = 500 } } } } })
+		assert.same({ "quest", true }, { Usable.Find(1) })
 	end)
 
 	it("offers only the kinds of collection the client has", function()

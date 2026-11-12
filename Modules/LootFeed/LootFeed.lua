@@ -305,7 +305,11 @@ function LootFeed:CheckUsable(row, now)
 	if row.kind ~= "item" or not row.id then
 		return
 	end
-	local kind, held = ns.Rules.Usable.Find(row.id)
+	local kind, held, behind = ns.Rules.Usable.Find(row.id)
+	-- The item moved and the bags' scan has not caught up: the next one decides.
+	if behind then
+		return
+	end
 	if not held then
 		if row.held then
 			self.model:SetSticky(row, nil, now)
@@ -332,8 +336,8 @@ function LootFeed:CheckAll()
 	end
 	for index = #self.lowQuality, 1, -1 do
 		local waiting = self.lowQuality[index]
-		local kind, held = ns.Rules.Usable.Find(waiting.entry.id)
-		if held or now - waiting.at > LootFeed.WAIT then
+		local kind, held, behind = ns.Rules.Usable.Find(waiting.entry.id)
+		if (held and not behind) or now - waiting.at > LootFeed.WAIT then
 			table.remove(self.lowQuality, index)
 			if held and kind and self:Keeps(kind) then
 				local row = self.model:Add(waiting.entry, now, true)

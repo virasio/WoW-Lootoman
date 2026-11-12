@@ -310,6 +310,18 @@ describe("loot feed module", function()
 			assert.is_nil(rowOf(600))
 		end)
 
+		it("keep a kept row while the bags' scan is behind a moved item", function()
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			holding({ { itemID = 500, count = 1, use = { questID = 9 } } })
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			-- The letter's slot holds something else now, before the next scan.
+			Test.state.bags[0].items[1] = { itemID = 2589, count = 1 }
+			module:CheckAll()
+			assert.equals(1, #module.model:Stuck())
+		end)
+
 		it("keep only the kinds turned on, and nothing with the switch off", function()
 			module:Set("keepQuest", false)
 			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")

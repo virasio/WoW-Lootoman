@@ -18,11 +18,15 @@ Usable.KINDS = { "quest", "recipe", "container", "pet", "mount", "toy", "set", "
 -- Kinds of collectible items (Compat.GetCollectible).
 local COLLECTIONS = { pet = true, mount = true, toy = true, set = true, heirloom = true }
 
--- The kind of usable item in a bag slot, or nil.
-function Usable.Kind(bag, slot)
+-- The kind of usable item in a bag slot, or nil. Given the item the slot
+-- should hold, nil and true when it holds another one now: the bags' scan is
+-- behind (the item moved), and its kind is not known.
+function Usable.Kind(bag, slot, itemID)
 	local use = Compat.GetBagItemUse(bag, slot)
 	if not use then
 		return nil
+	elseif itemID and use.itemID ~= itemID then
+		return nil, true
 	elseif use.questID and not use.questTaken then
 		return "quest"
 	elseif use.recipe then
@@ -38,12 +42,21 @@ function Usable.Kind(bag, slot)
 end
 
 -- The kind of usable item an item is, from the first bag slot that holds it,
--- and whether the bags hold it at all.
+-- and whether the bags hold it at all. While the bags' scan is behind, so no
+-- slot it names holds the item now, the kind is not known: nil, true, true.
 function Usable.Find(itemID)
+	local behind = false
 	for _, item in ipairs(ns.Inventory.Items()) do
 		if item.itemID == itemID then
-			return Usable.Kind(item.bag, item.slot), true
+			local kind, moved = Usable.Kind(item.bag, item.slot, itemID)
+			if not moved then
+				return kind, true
+			end
+			behind = true
 		end
+	end
+	if behind then
+		return nil, true, true
 	end
 	return nil, false
 end
