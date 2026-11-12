@@ -48,10 +48,30 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Sources.** Pick up items, currencies, money and reputation; turn *Experience* on and gain experience. *Expected:* each shows a row with its icon, name and amount; money from a merchant, mail or trade does not.
 - [ ] **Merging.** Loot the same item from several corpses quickly. *Expected:* one row with the total.
 - [ ] **Feed turned on at a merchant.** Turn the loot feed off, talk to a merchant, turn the feed on in the options and sell an item. *Expected:* no money row; after the merchant closes, looted money shows again. The same at a mailbox, at a bank and in a trade with another player.
-- [ ] **Options.** Change each: what the feed shows, minimum quality, rows, where new rows appear, time on screen, fade-out time, size, background opacity, owned count, glow for rare items. *Expected:* the feed changes at once, also after `/reload`. A full feed fades its oldest rows out.
-- [ ] **Tooltips.** Point at an item row and at a currency row. *Expected:* their tooltips; the rows wait while the pointer is over them; clicks and the mouse wheel reach the game world.
+- [ ] **Options.** Change each: what the feed shows, minimum quality, rows (3 at least), fill direction, time on screen, fade-out time, size, background opacity, glow for rare items. *Expected:* the feed changes at once, also after `/reload`. A full feed fades its oldest rows out. With a rows layout, *Fill direction* offers only bottom to top and top to bottom.
+- [ ] **Tooltips.** Point at an item row, a currency row, money, experience and reputation. *Expected:* their tooltips (money, experience and reputation in full, "+12,345"); the rows wait while the pointer is over them; clicks and the mouse wheel reach the game world.
+- [ ] **Saved data of 0.3.5.** With saved variables of 0.3.5 that have a feed of 1 or 2 rows and a layout whose owned count was hidden in the designer. *Expected:* the feed shows 3 rows; the owned count stays hidden, now with *Hide the owned count* ticked in the designer.
 - [ ] **Edit Mode.** Open Edit Mode. *Expected:* the loot feed is listed with sample rows, can be moved, and keeps its position per Edit Mode layout and across `/reload`. Its dialog shows the same option groups and a *Design rows* button; changes apply at once. Dragging a slider in the dialog moves smoothly from end to end.
 - [ ] **Look.** The Default layout. *Expected:* a big icon with its quality border, the owned count on it, a glow on rare and better items, one shared background.
+
+### Compact view
+
+- [ ] **Icons.** In the designer, *+ New layout* → *Icons*. *Expected:* square icons, the amount at the bottom right, the owned count small at the top right; the inspector offers the icon's size, the gap and the amount only; the samples stand side by side.
+- [ ] **Four directions.** With the Icons layout, each *Fill direction*. *Expected:* the oldest icon stays at the edge it fills from, new ones line up away from it; back on a rows layout, a sideways direction becomes bottom to top.
+- [ ] **Amount.** Move the amount over the icon and beside it (no more than an icon's size away), change its text size, turn its background on with an opacity, and hide it. *Expected:* the feed follows; hidden, only the owned count shows.
+- [ ] **Numbers.** Loot 78 copper, 1 silver 23 copper, 1 gold 2 silver 45 copper, a few hundred gold and over a thousand gold; gain experience in the thousands. *Expected:* "78" with a copper coin, "1.23" silver, "1.02" gold, whole gold, "1.23K" gold; experience as "1.23K" or "12.34K", cut, not rounded.
+- [ ] **Hide the owned count.** Tick *Hide the owned count* in the designer's top bar, with the Icons layout and with a rows layout. *Expected:* no owned count in either; it is not on the options page or in the Edit Mode dialog any more.
+- [ ] **Warnings with icons.** Fill the bags down to the warning. *Expected:* filling up or down, a bag icon with the free slots in red, its text in the tooltip; filling sideways, a line above the icons.
+
+### Usable items
+
+- [ ] **Quest starter on WoW Forever.** With fast autoloot, loot an item that starts a quest. *Expected:* it stays in the feed's first place with the bags' quest mark; others fade in the places after it; its tooltip ends with "Left-click: dismiss. Right-click: use."; a right click opens the quest's offer, and taking the quest lets the row go. On retail, taking it from the game's own offer lets it go too.
+- [ ] **Kinds.** Loot a recipe you can learn and one you know, a clam (and a locked box before and after picking it), and a new pet, mount, toy, appearance set or heirloom where you can. *Expected:* the usable ones stay with a pin; the known recipe, a collected pet and a locked box do not.
+- [ ] **Several.** Two kept items at once. *Expected:* the second waits under the first, with a "+1" badge; letting the first go shows the second.
+- [ ] **Stacks.** Loot three clams. *Expected:* right clicks open them one by one, the count going down; a left click hides the row; looting another clam brings it back.
+- [ ] **In a fight.** With a kept item in the first place, start a fight: right-click it, left-click it, loot another usable item. *Expected:* no Lua errors and no blocked action; the left click lets the row go; a right click does nothing for the next row until the fight ends, then works.
+- [ ] **Switches.** Turn off each kind, then *Keep usable items*. *Expected:* those items fade as usual; the kinds sit under the switch on the options page, greyed out while it is off, and are not in the Edit Mode dialog.
+- [ ] **Below the minimum quality.** Set the minimum quality to Uncommon and loot a common usable item. *Expected:* it shows and stays.
 
 ### Low-space warnings
 
