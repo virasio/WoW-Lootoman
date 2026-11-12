@@ -77,6 +77,26 @@ describe("loot feed frames", function()
 			assert.is_nil(Frames.Describe({ kind = "reputation", name = "Darnassus" }).amount)
 		end)
 
+		it("shortens the amounts on icons: no times sign and no plus, thousands short, money as a number and a coin", function()
+			local Design = ns.Feed.Design
+			local icons = { layout = Design.Layout(Design.ICONS, 13) }
+			assert.same({ "1.23K", { 1, 1, 1 } }, { Frames.Describe({ kind = "item", name = "Cloth", quality = 1, amount = 1234 }, icons).amount,
+				Frames.Describe({ kind = "item", name = "Cloth", quality = 1, amount = 1234 }, icons).amountColor })
+			assert.equals("5", Frames.Describe({ kind = "currency", name = "Crest", amount = 5 }, icons).amount)
+			assert.same({ "12.34K", { 0.1, 1, 0.1 } }, { Frames.Describe({ kind = "xp", amount = 12345 }, icons).amount,
+				Frames.Describe({ kind = "xp", amount = 12345 }, icons).amountColor })
+			assert.same({ "-250", { 1, 0.13, 0.13 } }, { Frames.Describe({ kind = "reputation", name = "Stormwind", amount = -250 }, icons).amount,
+				Frames.Describe({ kind = "reputation", name = "Stormwind", amount = -250 }, icons).amountColor })
+			local money = Frames.Describe({ kind = "money", amount = 10245 }, icons)
+			assert.same({ "1.02|A:coin-gold|a", "10245 copper" }, { money.amount, money.label })
+			assert.equals("78|A:coin-copper|a", Frames.Describe({ kind = "money", amount = 78 }, icons).amount)
+			-- The client's decimal point.
+			ns.Compat.Test.state.globalStrings.DECIMAL_SEPERATOR = ","
+			assert.equals("1,23|A:coin-silver|a", Frames.Describe({ kind = "money", amount = 123 }, icons).amount)
+			-- Rows keep the long form.
+			assert.equals("+12345", Frames.Describe({ kind = "xp", amount = 12345 }, { layout = Design.Layout(Design.LARGE, 13) }).amount)
+		end)
+
 		it("uses its own phrase for a faction name the client declined", function()
 			assert.equals("Штормграда reputation", Frames.Describe({ kind = "reputation", name = "Штормграда", declined = true, amount = 5 }).label)
 		end)

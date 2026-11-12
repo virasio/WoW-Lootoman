@@ -44,3 +44,33 @@ describe("Text.Truncate", function()
 		assert.equals("", Text.Truncate("Рейд", 0))
 	end)
 end)
+
+describe("Text.ShortNumber and Text.ShortMoney", function()
+	local Text
+
+	before_each(function()
+		Text = Loader.LoadAddon().Text
+	end)
+
+	it("shorten a number for an icon, cut and never rounded", function()
+		local shown = {}
+		for _, number in ipairs({ 0, 850, 999, 1000, 1234, 1500, 12349, 99999, 100000, 123456, 999999, 1234567, 99999999, 123456789 }) do
+			shown[#shown + 1] = Text.ShortNumber(number)
+		end
+		assert.same({ "0", "850", "999", "1K", "1.23K", "1.5K", "12.34K", "99.99K", "100K", "123K", "999K", "1.23M", "99.99M", "123M" },
+			shown)
+		assert.equals("12,34K", Text.ShortNumber(12345, ","))
+	end)
+
+	it("shorten money to a number and its coin: copper, silver with its copper, gold with its silver, then whole", function()
+		local function money(copper)
+			local text, coin = Text.ShortMoney(copper)
+			return text .. " " .. coin
+		end
+		assert.same({ "78 copper", "1.00 silver", "1.23 silver", "99.99 silver", "1.02 gold", "1.00 gold", "12.34 gold",
+			"123 gold", "999 gold", "1.23K gold", "123K gold" }, {
+			money(78), money(100), money(123), money(9999), money(10245), money(10099), money(123456),
+			money(1234500), money(9999999), money(12345600), money(1234560000) })
+		assert.equals("1,02", (Text.ShortMoney(10245, ",")))
+	end)
+end)

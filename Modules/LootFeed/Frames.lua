@@ -66,16 +66,40 @@ local function signed(amount)
 	return ("%+d"):format(amount), amount < 0 and RED or GREEN
 end
 
+-- The decimal point of the client's language.
+local function decimalPoint()
+	return Compat.GetGlobalString("DECIMAL_SEPERATOR") or "."
+end
+
+-- On an icon a gain needs no sign, and a loss shows a minus in red.
+local function short(amount)
+	if amount < 0 then
+		return "-" .. ns.Text.ShortNumber(-amount, decimalPoint()), RED
+	end
+	return ns.Text.ShortNumber(amount, decimalPoint()), GREEN
+end
+
+-- Money on an icon: the short number and its coin, as big as the text.
+local function shortMoney(copper, layout)
+	local text, coin = ns.Text.ShortMoney(copper, decimalPoint())
+	local size = layout.parts.amount.fontSize
+	return text .. CreateAtlasMarkup("coin-" .. coin, size, size)
+end
+
 -- What a row shows: { icon, label, labelColor, amount, amountColor, border,
 -- glow, owned }. border and glow are atlas names, owned a count; each can be
--- nil. options: showOwned, showGlow.
+-- nil. options: showOwned, showGlow, layout (an icons layout makes the
+-- amounts short: no "×" and no "+", thousands as "1.23K", money as a number
+-- and a coin).
 function Frames.Describe(row, options)
 	options = options or {}
 	local kind = row.kind
+	local icons = options.layout ~= nil and Design.View(options.layout) == "icons"
 	if kind == "item" or kind == "currency" then
 		local look = { icon = row.icon, label = row.name, labelColor = qualityColor(row.quality) }
 		if (row.amount or 1) > 1 then
-			look.amount, look.amountColor = ("×%d"):format(row.amount), WHITE
+			look.amount = icons and ns.Text.ShortNumber(row.amount, decimalPoint()) or ("×%d"):format(row.amount)
+			look.amountColor = WHITE
 		end
 		if kind == "currency" then
 			look.owned = options.showOwned and row.total or nil
@@ -94,9 +118,13 @@ function Frames.Describe(row, options)
 		end
 		return look
 	elseif kind == "money" then
-		return { icon = ICONS.money, label = GetMoneyString(row.amount, true), labelColor = WHITE }
+		local look = { icon = ICONS.money, label = GetMoneyString(row.amount, true), labelColor = WHITE }
+		if icons then
+			look.amount, look.amountColor = shortMoney(row.amount, options.layout), WHITE
+		end
+		return look
 	elseif kind == "xp" then
-		local amount, color = signed(row.amount)
+		local amount, color = (icons and short or signed)(row.amount)
 		return { icon = ICONS.xp, label = L["Experience"], labelColor = WHITE, amount = amount, amountColor = color }
 	elseif kind == "reputation" then
 		-- A Russian client declines the faction name in most messages; each
@@ -104,7 +132,7 @@ function Frames.Describe(row, options)
 		local phrase = row.declined and L["%s reputation"] or L["Reputation with %s"]
 		local amount, color
 		if row.amount then
-			amount, color = signed(row.amount)
+			amount, color = (icons and short or signed)(row.amount)
 		end
 		return { icon = ICONS.reputation, label = phrase:format(row.name), labelColor = WHITE, amount = amount, amountColor = color }
 	end
