@@ -44,6 +44,7 @@
     "SlashCmdList",
     "StaticPopup_Hide",
     "StaticPopup_Show",
+    "SecureHandlerWrapScript",
     "TEXTURE_ITEM_QUEST_BANG",
     "TooltipUtil",
     "UISpecialFrames",

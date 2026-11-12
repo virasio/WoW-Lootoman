@@ -226,7 +226,9 @@ function LootFeed:OnEnable()
 			end,
 			buttons = { { text = L["Design rows"], click = function() self.Designer.Open() end } },
 		})
+		self.feed.useButton = Feed.UseButton.Create(self.feed)
 	end
+	self.feed.disabled = false
 	self:Apply()
 	Feed.Sources.Start(self, function(entry)
 		if self.model:Add(entry, Compat.GetTime()) then
@@ -269,6 +271,9 @@ function LootFeed:OnDisable()
 		self.feed:SetPreview(false)
 		self.feed:SetWarnings({})
 		self.feed.frame:Hide()
+		-- The use button hides now, or after the fight.
+		self.feed.disabled = true
+		self.feed:SyncUse()
 	end
 end
 

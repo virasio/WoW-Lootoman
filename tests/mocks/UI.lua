@@ -4,12 +4,31 @@
 -- only when it and all its parents are shown, and takes its parent's strata
 -- when the parent changes. Loader.LoadAddon installs it; Loader.ui is the
 -- last installed one.
+--
+-- A frame made from a secure template is protected: in combat (api.inCombat,
+-- which the loader ties to the fake client) showing, hiding, moving, sizing it
+-- or setting its attributes is refused and recorded in api.blocked, as the
+-- client blocks it. api.SecureClick plays a click on such a button: its
+-- wrapped secure snippet, its action (type "item" records api.used), then the
+-- hooks.
 
 local UI = {}
 
 local function noop() end
 
 local methods = {}
+
+-- The last installed api.
+local current
+
+-- Whether a call on a protected frame is refused now; it is recorded.
+local function blocked(frame, call)
+	if frame.protected and current and current.inCombat and current.inCombat() then
+		current.blocked[#current.blocked + 1] = call
+		return true
+	end
+	return false
+end
 
 -- A frame's OnShow or OnHide script and its hooks, as the client runs them.
 local function runScript(frame, name)
@@ -25,6 +44,9 @@ end
 -- (DropdownSelectionTextMixin:OnShow calls GenerateMenu). OnShow and OnHide run
 -- when the frame itself is shown or hidden (not when a parent is).
 function methods:SetShown(shown)
+	if blocked(self, shown and "Show" or "Hide") then
+		return
+	end
 	local was = self.shown
 	self.shown = shown and true or false
 	if self.dropdown and self.shown and not was then
@@ -41,9 +63,28 @@ function methods:IsVisible() return self.shown and (self.parent == nil or self.p
 function methods:SetAlpha(alpha) self.alpha = alpha end
 function methods:SetScript(name, fn) self.scripts[name] = fn end
 function methods:GetScript(name) return self.scripts[name] end
-function methods:ClearAllPoints() self.points = {} end
-function methods:SetPoint(...) self.points[#self.points + 1] = { ... } end
-function methods:SetSize(width, height) self.width, self.height = width, height end
+function methods:ClearAllPoints()
+	if not blocked(self, "ClearAllPoints") then
+		self.points = {}
+	end
+end
+function methods:SetPoint(...)
+	if not blocked(self, "SetPoint") then
+		self.points[#self.points + 1] = { ... }
+	end
+end
+function methods:SetSize(width, height)
+	if not blocked(self, "SetSize") then
+		self.width, self.height = width, height
+	end
+end
+function methods:SetAttribute(name, value)
+	if not blocked(self, "SetAttribute") then
+		self.attributes = self.attributes or {}
+		self.attributes[name] = value
+	end
+end
+function methods:GetAttribute(name) return self.attributes and self.attributes[name] end
 function methods:SetAllPoints(target) self.allPoints = target or self.parent end
 function methods:SetDesaturated(desaturated) self.desaturated = desaturated end
 function methods:SetColorTexture(r, g, b, a) self.colorTexture = { r, g, b, a } end
@@ -186,12 +227,14 @@ function UI.OpenMenu(dropdown)
 end
 
 function UI.Install()
-	local api = { frames = {} }
+	local api = { frames = {}, blocked = {}, used = {} }
+	current = api
 
 	api.UIParent = UI.NewFake()
 	rawset(_G, "UIParent", api.UIParent)
 	rawset(_G, "CreateFrame", function(_, name, parent, template)
 		local frame = UI.NewFake(parent)
+		frame.protected = type(template) == "string" and template:find("Secure") ~= nil
 		-- A named frame is a global, as in the client.
 		if name then
 			frame.name = name
@@ -260,6 +303,34 @@ function UI.Install()
 		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
 	})
 	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
+	-- Secure handlers (SecureHandlers.lua): the snippet runs before the script.
+	rawset(_G, "SecureHandlerWrapScript", function(frame, script, _, preBody)
+		frame.wrapped = frame.wrapped or {}
+		frame.wrapped[script] = preBody
+	end)
+	-- A click on a secure button, as the client plays it: the wrapped snippet,
+	-- run with a handle that may set attributes in combat too; the action of
+	-- the button's type for that mouse button; the OnClick hooks.
+	function api.SecureClick(frame, button, down)
+		local snippet = frame.wrapped and frame.wrapped.OnClick
+		if snippet then
+			local handle = {
+				SetAttribute = function(_, name, value)
+					frame.attributes = frame.attributes or {}
+					frame.attributes[name] = value
+				end,
+				GetAttribute = function(_, name) return frame:GetAttribute(name) end,
+			}
+			assert(loadstring("local self, button, down = ...\n" .. snippet))(handle, button, down)
+		end
+		local suffix = button == "RightButton" and "2" or "1"
+		if not down and (frame:GetAttribute("type" .. suffix) or frame:GetAttribute("type")) == "item" then
+			api.used[#api.used + 1] = frame:GetAttribute("item")
+		end
+		for _, hook in ipairs(frame.hooks and frame.hooks.OnClick or {}) do
+			hook(frame, button, down)
+		end
+	end
 	rawset(_G, "TEXTURE_ITEM_QUEST_BANG", "Interface\\ContainerFrame\\UI-Icon-QuestBang")
 	-- A tooltip's title goes first among its lines (a menu's tooltip gives a plain list).
 	rawset(_G, "GameTooltip_SetTitle", function(owner, text)

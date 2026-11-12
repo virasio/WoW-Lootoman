@@ -105,6 +105,7 @@ files["Modules/"] = {
 		"NumberFontNormal",
 		"UISpecialFrames",
 		"StaticPopup_Hide",
+		"SecureHandlerWrapScript",
 		"StaticPopup_Show",
 		"TEXTURE_ITEM_QUEST_BANG",
 		"TooltipUtil",

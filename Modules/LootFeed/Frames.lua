@@ -399,6 +399,23 @@ local function lineHeight(feed)
 	return feed.options.layout.parts.name.fontSize + 6
 end
 
+-- The feed's first place on the screen, { left, bottom, width, height }, or
+-- nil before the client has placed the feed.
+local function firstPlace(feed)
+	local frame, layout = feed.frame, feed.options.layout
+	local left, bottom, right, top = frame:GetLeft(), frame:GetBottom(), frame:GetRight(), frame:GetTop()
+	if not (left and bottom and right and top) then
+		return nil
+	end
+	local direction = feed.options.direction
+	return {
+		left = direction == "left" and right - layout.width or left,
+		bottom = direction == "down" and top - layout.height or bottom,
+		width = layout.width,
+		height = layout.height,
+	}
+end
+
 local function release(feed, row, rowFrame)
 	feed.frameOf[row] = nil
 	rowFrame.data = nil
@@ -617,6 +634,18 @@ function FeedMixin:Wake()
 	self.frame:Show()
 end
 
+-- Brings the use button (UseButton.lua) in line with the stuck row now: none
+-- while the feed is turned off.
+function FeedMixin:SyncUse()
+	if not self.useButton then
+		return
+	end
+	local views = self.disabled and {} or self.model:Visible(Compat.GetTime())
+	local last = views[#views]
+	local stuck = last and last.stuck and last or nil
+	self.useButton:Sync(stuck and stuck.row or nil, stuck and firstPlace(self) or nil)
+end
+
 -- Lets a stuck row go, as a left click on it does; onDismiss(row) hears of it.
 function FeedMixin:Dismiss(row)
 	if row and self.model:Release(row) then
@@ -702,6 +731,9 @@ function FeedMixin:Draw(now)
 		end
 	end
 	placeBackground(self)
+	if self.useButton then
+		self.useButton:Sync(stuck and stuck.row or nil, stuck and firstPlace(self) or nil)
+	end
 
 	if #views == 0 and not hovered and #self.warnings == 0 then
 		self.frame:Hide()
