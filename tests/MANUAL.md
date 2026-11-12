@@ -13,11 +13,11 @@ The PTR and WoW Forever load the same `sources/` through their own `Interface/Ad
 - [ ] **Self-test on each client.** `/lootoman selftest`. *Expected:* the client's version and interface, one of the TOC's `## Interface` numbers; on retail and the PTR `Game Standard, family Mainline, project 1; data set: Mainline`. On Forever, note the game, family, project and data set it shows, and every check that is not `OK`: they decide the Forever data and capability fixes.
 - [ ] **Commands.** `/ltm` opens the options; `/lootoman help` lists the commands; `/lootoman debug` shows the state, `on` and `off` change it.
 - [ ] **Smoke test on the PTR and Forever.** Loot with fast autoloot, watch the feed, open the toss window, sell junk at a merchant.
-- [ ] **Bars on the PTR and Forever.** On the PTR and WoW Forever: a stack, an item counting the banks. *Expected:* they work; without a warband bank, its tooltip line is not there.
+- [ ] **Saved data with bars.** Log in with saved variables of 0.3 or 0.3.5 that have a bar set and the free-slot bar set up. *Expected:* no errors; no bar frames in Edit Mode and no bar pages in the options; `/lootoman bars` and `/lootoman families` are unknown commands; a profile text of 0.3.5 with a bar set imports its other parts. After `/reload`, the saved variables still hold `barSets` and the bars' settings.
 
 ## Options and profiles
 
-- [ ] **Main page.** Options → AddOns → Lootoman. *Expected:* *Profile* above its dropdown with *Reset* beside it, a divider, then a switch for each feature: *Enable fast autoloot* with its bind-on-pickup option under it (greyed out while autoloot is off); *Enable loot feed*, *Enable the free-slot bar* and *Enable currency bars*, each with *Configure* under it (opens its page); *Enable junk tossing and selling* with *Sell junk at merchants* (greyed out while it is off) and *Configure*. Hovering a checkbox highlights only its row. The panel's *Defaults* button is hidden on Lootoman's pages and back on others.
+- [ ] **Main page.** Options → AddOns → Lootoman. *Expected:* *Profile* above its dropdown with *Reset* beside it, a divider, then a switch for each feature: *Enable fast autoloot* with its bind-on-pickup option under it (greyed out while autoloot is off); *Enable loot feed* with *Configure* under it (opens its page); *Enable junk tossing and selling* with *Sell junk at merchants* (greyed out while it is off) and *Configure*. Hovering a checkbox highlights only its row. The panel's *Defaults* button is hidden on Lootoman's pages and back on others.
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.
 - [ ] **Two characters.** Give two characters different profiles. *Expected:* each keeps its own after relog.
 - [ ] **Share.** *Share* in the profile menu; untick some parts. *Expected:* the loot feed's position and layout are under *Loot feed*, the position only while *Loot feed* is ticked; the text changes with the ticks and can be copied.
@@ -101,61 +101,6 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 - [ ] **Turning the module off.** Untick *Enable junk tossing and selling*. *Expected:* no toss button, the game's own sell-junk button works again, nothing is sold at merchants; `/lootoman toss` says it is off.
 - [ ] **Taint.** After the rounds above, `/reload` and look at `Logs/taint.log`. *Expected:* no lines blaming Lootoman for the loot window, the merchant frame or the game menu.
-
-## Free-slot bar
-
-- [ ] **Default.** *Expected:* left of the bag buttons, `free (reagent) / general` with free in green and reagent in gold; its tooltip lists all bags and each kind you have.
-- [ ] **Text.** Options → Free slots → *Edit the text*: type `{general|ff0000} / {general.total}`, then a text with a typo `{genral}` and a plain `|`. *Expected:* the bar follows at once; the typo and the `|` show as typed.
-- [ ] **Colour and size.** Change *Default colour* and *Text size*. *Expected:* the text between tokens and tokens without a colour take the new colour; the size follows.
-- [ ] **Edit Mode.** Move the bar; change its text size in its dialog. *Expected:* it keeps its place per Edit Mode layout and after `/reload`.
-- [ ] **Background.** Turn on *Background*, on the options page and in the Edit Mode dialog, and try opacities. *Expected:* a dark background behind the text, following the opacity at once; off, none.
-- [ ] **On the bags.** In Edit Mode, put the bar on the bag buttons (there it can show under them), close Edit Mode, then open the bags. *Expected:* it can be selected and moved in Edit Mode; afterwards its text shows above the bag buttons and the open bags; pointing at it shows its tooltip; a click on it opens or closes the bag under it, as if the bar were not there.
-- [ ] **Broker.** With a broker display (Titan Panel, ElvUI's data texts or another): add "Lootoman: free slots". *Expected:* the same coloured text, the same tooltip, a click opens the bags; turning *Also in broker panels* off empties it (it goes after `/reload`). `/lootoman selftest` shows `Broker: working` with a display and `Broker: no broker display loaded` without one.
-
-### Bag families
-
-- [ ] **Bag families.** In a debug build (the addon linked from the repository), `/lootoman families`, then `/reload`. *Expected:* a line per kind of bag; "as expected" for each family the client knows; the lines are kept in the character's session data for Claude to read. Add the IDs of any profession bags you have that are not listed, after the command.
-- [ ] **Family tokens.** Once the checked families are in the addon's data: put `{herb} / {herb.total}` (and others you have bags for) in the template. *Expected:* the free and total slots of those bags; the tooltip lists each family you have by its bag's kind ("Herb Bag"). On WoW Forever, with a herb bag in the reagent bag's slot, the tooltip has its "Herb Bag" line and no "Reagent bag" line.
-
-## Currency bars
-
-### On the bar
-
-- [ ] **Default.** Mark two currencies *Show on backpack* in the currency tab. *Expected:* one bar near the bottom centre with them, an icon and a count each.
-- [ ] **Caps.** A capped currency shows `quantity / cap` and turns red at its cap; a season-capped one (crests) shows its quantity, red once the season's cap is earned.
-- [ ] **Money.** Add *Money* from the editor's right list. *Expected:* your money in gold, silver and copper coins, as in the bags, with no icon; it follows a purchase or a sale. Put an entry after it and try sizes 12 and 48: the next entry starts a gap after the copper coin, never on it.
-- [ ] **Overflow.** Make a bar narrow. *Expected:* what does not fit hides behind `»`; its click lists the hidden entries with icons and counts.
-- [ ] **Reorder on the bar.** Outside Edit Mode, drag an entry along the bar. *Expected:* the entry dims, a copy follows the mouse, a gold line shows where it will go; it moves there; nothing goes onto the cursor; the tooltip is the currency's or item's own.
-- [ ] **Take off by dragging.** Drag an entry off the bar. *Expected:* the copy turns red; on release Lootoman asks; *Take off* removes it, *Cancel* keeps it. With the bar editor open, a bag item taken off waits in its right list until the window closes; with the editor closed, it is not kept.
-- [ ] **Nothing changes while it asks.** Drag an entry off the bar and leave the question open. Try to drag another entry off, to reorder, to drop an item from the bags, to change the bar in the bar editor (also its set menu) and in Edit Mode (width, grip, moving the bar, *New bar*). *Expected:* none of it does anything (an item from the bags stays on the cursor); *Take off* then removes only the entry asked about; after the answer, everything works again.
-- [ ] **Drop from the bags.** Outside Edit Mode, drag an item from the bags onto a bar, between two entries. *Expected:* it is added there and the item goes back to its bag slot.
-
-### Edit Mode
-
-- [ ] **Edit Mode.** Open Edit Mode. *Expected:* each bar is listed as "Currency bar N"; move it; set width, gap and size in its dialog and the width with the grip on its right edge; *New bar* adds one (an empty bar shows a hint), *Remove this bar* removes it, *Edit bars* opens the editor. Positions are kept per Edit Mode layout and after `/reload`.
-- [ ] **Look.** In the bar's Edit Mode dialog turn on *Background* (try opacities) and *Border*. *Expected:* a dark background behind the bar; the bags' coin-box border around it, its ends not stretched at any width and size.
-- [ ] **Dialog sliders.** In a bar's Edit Mode dialog, drag *Width*, *Gap* and *Size* slowly from one end to the other. *Expected:* each slider follows the mouse all the way; the bar changes as it moves.
-- [ ] **Right to left.** *Fill from: The right edge*. *Expected:* entries start at the right edge; the overflow arrow `«` sits on the left; reordering, drops and the width grip (now on the left edge) work the same way.
-
-### Bar editor
-
-- [ ] **Editor.** `/lootoman bars`. *Expected:* on the left the bar's entries, on the right the other currencies by name. Move one across with each button, and by dragging it to the other list (the right list lights up when a row would leave the bar); drag a row up and down (it dims, a copy follows the mouse, a gold line shows where it goes; dropped outside both lists, nothing changes); drop an item from the bags on the left list; type an item ID and *Add item by ID*. Take an item off: it waits on the right while the window is open; close and reopen it: it is gone, only money and currencies are there. Each change shows on the bar at once.
-
-### Stacks
-
-- [ ] **Stack of crests.** In the editor, drop one crest on another, then the others between the stack's rows, most important first. *Expected:* the row you drop on lights up; inside a stack the line is indented; the stack shows its members under it. On the bar: the most important crest the character has; hovering lists every member with its count (the shown one in gold, a capped one in red).
-- [ ] **Empty stack.** A stack of currencies the character has none of. *Expected:* it takes no room on the bar; right-click it in the editor, *Show when empty*: it shows its last (least important) member at 0.
-- [ ] **Taking a stack apart.** Drag a member to the gap after the stack's last row, then one to the other list, then *Break up the stack*. *Expected:* the first becomes an entry after the stack; the second leaves the bar; a stack left with one member is that member again; breaking up puts the members in its place, in order. Money cannot join a stack.
-- [ ] **Stacks kept.** `/reload`, and share the set as text and import it on another character. *Expected:* stacks, their order and *Show when empty* come along.
-
-### Bags and banks
-
-- [ ] **Bags and banks.** An item with some in the bags, the bank and the warband bank: add it, right-click it in the editor, *Count the banks*, then *Show it again* twice. *Expected:* three entries, "…, in the banks", "…, everywhere" and the plain one, with their counts (the banks in light blue, both in light green); hovering one lists bags, bank and warband bank. Right after login, before opening a bank, the bank counts are already right (if not, say so: the tooltip then needs a "not opened this session" line). Deposit and take out at the bank: the counts follow.
-
-### Sets and sharing
-
-- [ ] **Sets.** In the editor's set menu: new set, copy, rename, reset, delete; two profiles on two sets. *Expected:* each profile shows its set's bars; a deleted set's profiles go back to Default.
-- [ ] **Share.** Share the profile with its bar set, and a set alone from the editor's menu; import both on another character. *Expected:* the bars, their entries and positions come along; a taken name offers keep both, replace or keep mine.
 
 ## Russian client
 

@@ -1,7 +1,7 @@
 ## Interface: 120105, 120107, 16001
 ## Title: Lootoman
-## Notes: Fast autoloot, a loot feed you can design, junk thrown away or sold in a click, and bars of currencies and free slots.
-## Notes-ruRU: Быстрый автолут, лента лута с настраиваемым видом, хлам, который выбрасывается или продаётся в один щелчок, и полосы валют и свободных ячеек.
+## Notes: Fast autoloot, a loot feed you can design, and junk thrown away or sold in a click.
+## Notes-ruRU: Быстрый автолут, лента лута с настраиваемым видом и хлам, который выбрасывается или продаётся в один щелчок.
 ## Author: Victor Surikov
 ## Version: @project-version@
 ## Category: Loot
