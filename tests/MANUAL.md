@@ -157,7 +157,7 @@ The Default layout and default options unless a check says otherwise.
 *Keep usable items* and all its kinds on (the default).
 
 - [ ] **Quest starter on WoW Forever.** With fast autoloot, loot an item that starts a quest.
-  - *Expected:* it stays in the feed's first place with the bags' quest mark; others fade in the places after it.
+  - *Expected:* it stays at the start of the feed with the bags' quest mark; others fade in the places after it.
   - Its tooltip ends with "Left-click: dismiss. Right-click: use.".
   - A right click opens the quest's offer, and taking the quest lets the row go.
 - [ ] **Quest starter on retail.** Loot an item that starts a quest. *Expected:* it stays, as above; taking the quest from the game's own offer lets the row go.
@@ -173,7 +173,7 @@ The Default layout and default options unless a check says otherwise.
   - a left click hides the row;
   - looting another clam brings it back.
 - [ ] **Used from the bags.** Keep a recipe, then learn it from the bags (or sell it). *Expected:* its row goes by itself.
-- [ ] **In a fight.** With a kept item in the first place, start a fight: right-click it, then left-click it, then loot another usable item.
+- [ ] **In a fight.** With a kept item showing, start a fight: right-click it, then left-click it, then loot another usable item.
   - *Expected:* no Lua errors and no blocked action.
   - The left click lets the row go.
   - A right click does nothing for the next row until the fight ends, then works.
@@ -190,12 +190,15 @@ The Default layout and default options unless a check says otherwise.
   - Down to 0: "No free bag slots".
 
   *Expected:* the warning stays while it holds, also with no rows, and goes when slots are freed. With *Fill direction: Top to bottom* it sits at the top edge.
-- [ ] **After a kept item.** A kept item in the first place while a warning holds. *Expected:* the kept item first, the warning after it, then the rows; when the item goes, the warning moves back to the edge.
+- [ ] **Before a kept item.** A kept item while a warning holds, with rows and with icons filling up or down. *Expected:*
+  - the warning at the edge, the kept item after it, then the fading rows;
+  - when the warning goes, the kept item moves to the edge, and right clicks still hit it;
+  - when a warning comes in a fight, the kept item stays where it is and the warning comes after it until the fight ends; then they swap.
 - [ ] **Reagent bag.** Turn on *Warn when few reagent bag slots are free*; fill the reagent bag. *Expected:* its own warning, under its own threshold; without a reagent bag, none.
 - [ ] **Thresholds.** Set each to 0 and to 5. *Expected:* the warnings follow at once.
 - [ ] **With icons.** With the Icons layout. *Expected:*
   - filling up or down, a bag icon with the free slots in red, its text in the tooltip;
-  - filling sideways, a line of text above the icons, and the background behind both.
+  - filling sideways, a line of text above the icons, a little apart from them, and the background behind both.
 
 ## Junk
 

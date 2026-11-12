@@ -178,17 +178,25 @@ describe("loot feed frames", function()
 			model:Add({ kind = "money", amount = 100 }, 0)
 			feed:Draw(1)
 			assert.same({ "100 copper@0" }, layout())
-			-- Lines as high as their text and a little room, the first one nearest to the strip.
+			-- Lines as high as their text and a little room, the first one nearest to the strip,
+			-- 4 apart from it.
 			local first, second = feed.warningLines[1], feed.warningLines[2]
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 36 }, first.points[1])
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 55 }, second.points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 40 }, first.points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 59 }, second.points[1])
 			assert.same({ 116, 19 }, { first.width, first.height })
-			-- The background spans the strip and the lines, evenly behind icons.
+			-- The background spans the strip, the gap and the lines, evenly behind icons.
 			local background = feed.frame.Background
-			assert.same({ 124, 82 }, { background.width, background.height })
+			assert.same({ 124, 86 }, { background.width, background.height })
 			assert.same({ 0.5, 0.5 }, { background.gradient[2].a, background.gradient[3].a })
 			feed:SetOptions(options({ direction = "left", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
-			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 36 }, first.points[1])
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 40 }, first.points[1])
+			-- A stuck icon still takes the strip's first place.
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 1)
+			model:SetSticky(quest, "quest", 1)
+			model:Add({ kind = "money", amount = 5 }, 7.5)
+			feed:Draw(7.5)
+			assert.same({ "Letter@0", "5 copper@40" }, layout())
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 40 }, first.points[1])
 		end)
 
 		it("shows warnings as bag icons with the free slots in an Icons layout filling up or down", function()
@@ -215,7 +223,7 @@ describe("loot feed frames", function()
 			assert.is_false(feed.warningLines[1].shown)
 		end)
 
-		it("puts the stuck row in the first place, before the warnings, with its marks and its clicks", function()
+		it("puts the stuck row after the warnings, before the other rows, with its marks and its clicks", function()
 			feed:SetWarnings({ "Free bag slots: 2" })
 			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
 			model:SetSticky(quest, "quest", 0)
@@ -223,9 +231,9 @@ describe("loot feed frames", function()
 			model:SetSticky(clam, "container", 0)
 			model:Add({ kind = "money", amount = 100 }, 6.5)
 			feed:Draw(6.5)
-			-- The letter stuck first: its place is the first, the warning's the next.
-			assert.same({ "Letter@0", "100 copper@84" }, layout())
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 42 }, feed.warningLines[1].points[1])
+			-- The warning at the edge, then the letter, stuck first, then the rest.
+			assert.same({ "Letter@42", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
 			local letter = frameWith("Letter")
 			assert.same({ true, false, true, "+1", true }, { letter.QuestMark.shown, letter.Pin.shown, letter.Waiting.shown,
 				letter.Waiting.text, letter.mouseClicks })
@@ -238,16 +246,48 @@ describe("loot feed frames", function()
 			letter.scripts.OnMouseUp(letter, "LeftButton")
 			assert.equals(quest, dismissed)
 			feed:Draw(6.6)
-			assert.same({ "Clam@0", "100 copper@84" }, layout())
+			assert.same({ "Clam@42", "100 copper@84" }, layout())
 			local clamFrame = frameWith("Clam")
 			assert.same({ false, true, false }, { clamFrame.QuestMark.shown, clamFrame.Pin.shown, clamFrame.Waiting.shown })
 			-- A right click is not the row's.
 			clamFrame.scripts.OnMouseUp(clamFrame, "RightButton")
 			assert.equals(quest, dismissed)
-			-- With no stuck row, the warning goes back to the first place.
+			-- With no stuck row, the warning stays at the edge and the rows come after it.
 			feed:Dismiss(clam)
 			feed:Draw(6.7)
 			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			-- Without the warning, the stuck row takes the edge.
+			local letter2 = model:Add({ kind = "item", id = 3, name = "Note", link = LINK, icon = 3, amount = 1 }, 6.7)
+			model:SetSticky(letter2, "quest", 6.7)
+			feed:SetWarnings({})
+			feed:Draw(13)
+			assert.same({ "Note@0", "100 copper@42" }, layout())
+		end)
+
+		it("keeps the stuck row's place in a fight, the warnings that come meanwhile after it", function()
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
+			model:SetSticky(quest, "quest", 0)
+			feed:Draw(6.5)
+			assert.same({ "Letter@0" }, layout())
+			ns.Compat.Test.SetCombat(true)
+			feed:SetWarnings({ "Free bag slots: 2" })
+			model:Add({ kind = "money", amount = 100 }, 6.6)
+			feed:Draw(6.7)
+			assert.same({ "Letter@0", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 42 }, feed.warningLines[1].points[1])
+			-- After the fight they swap.
+			ns.Compat.Test.SetCombat(false)
+			feed:Draw(7)
+			assert.same({ "Letter@42", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			-- A warning that goes in a fight leaves its place empty until it ends.
+			ns.Compat.Test.SetCombat(true)
+			feed:SetWarnings({})
+			feed:Draw(7.5)
+			assert.same({ "Letter@42", "100 copper@84" }, layout())
+			ns.Compat.Test.SetCombat(false)
+			feed:Draw(8)
+			assert.same({ "Letter@0", "100 copper@42" }, layout())
 		end)
 
 		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()

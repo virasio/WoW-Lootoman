@@ -62,7 +62,7 @@ local function settings()
 		{ kind = "dropdown", key = "minQuality", label = L["Minimum quality"],
 			tooltip = L["Items of a lower quality are not shown."], choices = qualityChoices() },
 		{ kind = "checkbox", key = "keepUsable", label = L["Keep usable items"],
-			tooltip = L["Items this character can use right now stay in the feed's first place, also below the minimum quality, until you click them: left to dismiss, right to use."] },
+			tooltip = L["Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use."] },
 	}
 	for _, kind in ipairs(ns.Rules.Usable.Kinds()) do
 		list[#list + 1] = { kind = "checkbox", key = KEEP[kind][1], label = KEEP[kind][2], parent = "keepUsable", pageOnly = true }
@@ -114,7 +114,7 @@ local LootFeed = ns.Modules:Register({
 		reputation = true,
 		xp = false,
 		minQuality = 0,
-		-- Usable items stay in the first place until clicked (Rules/Usable.lua).
+		-- Usable items stay at the start until clicked (Rules/Usable.lua).
 		keepUsable = true,
 		keepQuest = true,
 		keepRecipes = true,
@@ -124,7 +124,7 @@ local LootFeed = ns.Modules:Register({
 		keepToys = true,
 		keepSets = true,
 		keepHeirlooms = true,
-		-- At least 3: the first place for a kept item, two for the rest.
+		-- At least 3: a place for a kept item, two for the rest.
 		maxRows = 8,
 		direction = "up",
 		duration = 6,

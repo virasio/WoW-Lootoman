@@ -17,15 +17,18 @@ local Compat, L = ns.Compat, ns.L
 -- is full slide past the anchor edge as they fade.
 --
 -- Warnings (few free bag slots) take the first places at the anchor edge, one
--- row's height each, and the rows stack after them: lines of text, or with an
--- Icons layout a bag icon with the free slots in red and the text in its
--- tooltip. Filling sideways, they are lines above the strip of icons instead.
--- While there is a warning the feed stays shown.
+-- row's height each: lines of text, or with an Icons layout a bag icon with
+-- the free slots in red and the text in its tooltip. Filling sideways, they are
+-- lines above the strip of icons instead. While there is a warning the feed
+-- stays shown.
 --
--- A stuck row (Model.lua: an item the character can use) takes the very first
--- place at the anchor edge, before the warnings, so that place never moves. It
--- shows a pin, or the bags' quest mark for an item that starts a quest, and a
--- badge with how many more wait under it; a left click lets it go.
+-- A stuck row (Model.lua: an item the character can use) comes next, after the
+-- warnings, and the fading rows stack after it. It shows a pin, or the bags'
+-- quest mark for an item that starts a quest, and a badge with how many more
+-- wait under it; a left click lets it go. In a fight the use button over it
+-- cannot move (UseButton.lua), so the stuck row keeps its place: a warning that
+-- comes meanwhile goes after it, and one that goes leaves a gap, until the
+-- fight is over.
 --
 -- Rows show tooltips but let clicks through to the game world, but for the
 -- stuck one, and the mouse wheel keeps zooming the camera. Hovering pauses the model's timers. The
@@ -383,15 +386,47 @@ local function sideways(feed)
 	return SIDEWAYS[feed.options.direction] == true
 end
 
--- Where the warnings start: past the stuck row, if any.
-local function warningBase(feed)
-	return feed.hasStuck and feed.step or 0
+-- How many warning places come before the stuck row's place: all the
+-- warnings, but in a fight the number when it began (above). None sideways,
+-- where the warnings are lines above the strip.
+local function stuckSlot(feed)
+	if sideways(feed) then
+		return 0
+	end
+	return feed.stuckAfter or #feed.warnings
 end
 
--- How far the rows start from the anchor edge: past the stuck row and the
--- warnings, unless they are lines above a sideways strip.
+-- Out of combat the stuck row's place follows the warnings.
+local function settle(feed)
+	if not Compat.InCombat() or feed.stuckAfter == nil then
+		feed.stuckAfter = #feed.warnings
+	end
+end
+
+-- A warning's distance from the anchor edge: in the first places, but for
+-- those that came in a fight, after the stuck row.
+local function warningOffset(feed, index)
+	if feed.hasStuck and index > stuckSlot(feed) then
+		return index * feed.step
+	end
+	return (index - 1) * feed.step
+end
+
+-- The stuck row's distance from the anchor edge.
+local function stuckOffset(feed)
+	return stuckSlot(feed) * feed.step
+end
+
+-- How far the fading rows start from the anchor edge: past the warnings and
+-- the stuck row, if any; warnings above a sideways strip take no place in it.
 local function base(feed)
-	return warningBase(feed) + (sideways(feed) and 0 or #feed.warnings * feed.step)
+	if sideways(feed) then
+		return feed.hasStuck and feed.step or 0
+	end
+	if feed.hasStuck then
+		return (math.max(#feed.warnings, stuckSlot(feed)) + 1) * feed.step
+	end
+	return #feed.warnings * feed.step
 end
 
 -- Puts a row at a distance from the anchor edge.
@@ -415,21 +450,35 @@ local function lineHeight(feed)
 	return feed.options.layout.parts.name.fontSize + 6
 end
 
--- The feed's first place on the screen, { left, bottom, width, height }, or
+-- The room between a sideways strip and the warning lines above it.
+Frames.LINE_GAP = 4
+
+-- How high the warning lines above a sideways strip reach, with their gap.
+local function linesHeight(feed)
+	if #feed.warnings == 0 then
+		return 0
+	end
+	return Frames.LINE_GAP + #feed.warnings * lineHeight(feed)
+end
+
+-- The stuck row's place on the screen, { left, bottom, width, height }, or
 -- nil before the client has placed the feed.
-local function firstPlace(feed)
+local function stuckPlace(feed)
 	local frame, layout = feed.frame, feed.options.layout
 	local left, bottom, right, top = frame:GetLeft(), frame:GetBottom(), frame:GetRight(), frame:GetTop()
 	if not (left and bottom and right and top) then
 		return nil
 	end
-	local direction = feed.options.direction
-	return {
-		left = direction == "left" and right - layout.width or left,
-		bottom = direction == "down" and top - layout.height or bottom,
-		width = layout.width,
-		height = layout.height,
-	}
+	local direction, offset = feed.options.direction, stuckOffset(feed)
+	local spot = { left = left, bottom = bottom + offset, width = layout.width, height = layout.height }
+	if direction == "down" then
+		spot.bottom = top - layout.height - offset
+	elseif direction == "right" then
+		spot.left, spot.bottom = left + offset, bottom
+	elseif direction == "left" then
+		spot.left, spot.bottom = right - layout.width - offset, bottom
+	end
+	return spot
 end
 
 local function release(feed, row, rowFrame)
@@ -451,7 +500,7 @@ local function placeBackground(feed)
 		far = math.max(far, rowFrame.offset + length)
 	end
 	local background = feed.frame.Background
-	local lines = sideways(feed) and #feed.warnings * lineHeight(feed) or 0
+	local lines = sideways(feed) and linesHeight(feed) or 0
 	background:SetShown(far > 0 or lines > 0)
 	if far > 0 or lines > 0 then
 		local margin = layout.gap
@@ -546,7 +595,7 @@ local function placeWarningIcons(feed)
 		icon.Count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -2, 2)
 		icon.Count:SetText(tostring(warning.count or 0))
 		icon.text = warning.text
-		place(feed, icon, warningBase(feed) + (index - 1) * feed.step)
+		place(feed, icon, warningOffset(feed, index))
 		icon:Show()
 	end
 	for index = #feed.warnings + 1, #feed.warningIcons do
@@ -597,9 +646,9 @@ local function placeWarnings(feed)
 			local edge = feed.options.direction == "left" and "BOTTOMRIGHT" or "BOTTOMLEFT"
 			line.offset = nil
 			line:ClearAllPoints()
-			line:SetPoint(edge, feed.frame, edge, 0, layout.height + (index - 1) * height)
+			line:SetPoint(edge, feed.frame, edge, 0, layout.height + Frames.LINE_GAP + (index - 1) * height)
 		else
-			place(feed, line, warningBase(feed) + (index - 1) * feed.step)
+			place(feed, line, warningOffset(feed, index))
 		end
 		line:Show()
 	end
@@ -615,6 +664,7 @@ function FeedMixin:SetWarnings(warnings)
 	for index, warning in ipairs(warnings) do
 		self.warnings[index] = type(warning) == "table" and warning or { text = warning }
 	end
+	settle(self)
 	placeWarnings(self)
 	self.version = self.version + 1
 	if #warnings > 0 then
@@ -659,7 +709,7 @@ function FeedMixin:SyncUse()
 	local views = self.disabled and {} or self.model:Visible(Compat.GetTime())
 	local last = views[#views]
 	local stuck = last and last.stuck and last or nil
-	self.useButton:Sync(stuck and stuck.row or nil, stuck and firstPlace(self) or nil)
+	self.useButton:Sync(stuck and stuck.row or nil, stuck and stuckPlace(self) or nil)
 end
 
 -- Lets a stuck row go, as a left click on it does; onDismiss(row) hears of it.
@@ -711,11 +761,12 @@ function FeedMixin:Draw(now)
 		end
 	end
 
-	-- The stuck row comes last and takes the first place; the warnings move
-	-- past it while it is there.
+	-- The stuck row comes last and takes the place after the warnings.
 	local last = views[#views]
 	local stuck = last and last.stuck and last or nil
-	if (stuck ~= nil) ~= (self.hasStuck == true) then
+	local after = self.stuckAfter
+	settle(self)
+	if (stuck ~= nil) ~= (self.hasStuck == true) or self.stuckAfter ~= after then
 		self.hasStuck = stuck ~= nil
 		placeWarnings(self)
 	end
@@ -725,7 +776,7 @@ function FeedMixin:Draw(now)
 	local slide = self.step / Frames.SLIDE_TIME * elapsed
 	for index, view in ipairs(views) do
 		local row = view.row
-		local target = view.stuck and 0 or base(self) + (live - index) * self.step
+		local target = view.stuck and stuckOffset(self) or base(self) + (live - index) * self.step
 		local rowFrame = self.frameOf[row]
 		if not rowFrame and #self.free > 0 then
 			rowFrame = table.remove(self.free)
@@ -751,7 +802,7 @@ function FeedMixin:Draw(now)
 	end
 	placeBackground(self)
 	if self.useButton then
-		self.useButton:Sync(stuck and stuck.row or nil, stuck and firstPlace(self) or nil)
+		self.useButton:Sync(stuck and stuck.row or nil, stuck and stuckPlace(self) or nil)
 	end
 
 	if #views == 0 and not hovered and #self.warnings == 0 then

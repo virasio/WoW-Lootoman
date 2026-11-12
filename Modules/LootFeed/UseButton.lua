@@ -3,14 +3,14 @@ local Bus, Compat = ns.Bus, ns.Compat
 
 -- The button that uses the stuck item with a right click. Using an item is a
 -- protected action, so it is a secure action button (type "item" on the right
--- button only), made out of combat with the feed. It lies over the feed's
--- first place, where the stuck row sits. Its parent and its anchor are the
--- screen, not the feed: a frame a protected one hangs on is protected too,
--- and the feed must stay free to resize and hide in combat. Its first place
--- never moves, as nothing comes before the stuck row.
+-- button only), made out of combat with the feed. It lies over the stuck
+-- row's place, after the warnings. Its parent and its anchor are the screen,
+-- not the feed: a frame a protected one hangs on is protected too, and the
+-- feed must stay free to resize and hide in combat. In a fight the stuck row
+-- keeps its place for the button (Frames.lua).
 --
--- Out of combat it follows the stuck row: its item, and where the first
--- place is; with no stuck row it hides. In combat the game lets no addon
+-- Out of combat it follows the stuck row: its item, and where its place is;
+-- with no stuck row it hides. In combat the game lets no addon
 -- change what it uses, or show, hide or move it, so it stays as the fight
 -- found it:
 -- - A left click still lets the row go; the button's own secure handler, which
@@ -21,7 +21,7 @@ local Bus, Compat = ns.Bus, ns.Compat
 -- After the fight it catches up.
 --
 --   local use = UseButton.Create(feed)       -- out of combat, with the feed
---   use:Sync(row, place)                     -- each draw: the stuck row and the first place, or nil
+--   use:Sync(row, place)                     -- each draw: the stuck row and its place, or nil
 ns.Feed = ns.Feed or {}
 local UseButton = {}
 ns.Feed.UseButton = UseButton
@@ -77,8 +77,8 @@ local function afterCombat(use)
 	use.feed:SyncUse()
 end
 
--- Stands for the stuck row (row, or nil) at the first place (place: { left,
--- bottom, width, height } on the screen, or nil while the feed has none). The
+-- Stands for the stuck row (row, or nil) at its place (place: { left, bottom,
+-- width, height } on the screen, or nil while the feed has none). The
 -- row is followed in combat too, for the left click and the tooltip; the rest
 -- waits for the end of the fight.
 function ButtonMixin:Sync(row, place)

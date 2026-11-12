@@ -65,7 +65,7 @@ ns.Locales.AddEnglish({
 	"Minimum quality",
 	"Items of a lower quality are not shown.",
 	"Keep usable items",
-	"Items this character can use right now stay in the feed's first place, also below the minimum quality, until you click them: left to dismiss, right to use.",
+	"Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use.",
 	"Items that start a quest",
 	"Recipes",
 	"Containers",
