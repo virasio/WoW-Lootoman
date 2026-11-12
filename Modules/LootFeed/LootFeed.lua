@@ -19,11 +19,16 @@ local DIRECTIONS = {
 	{ "left", L["Right to left"] },
 }
 local SIDEWAYS = { left = true, right = true }
+local VALID_DIRECTION = { up = true, down = true, left = true, right = true }
 
 -- Whether the profile's layout is of the icons view.
 local function usesIcons()
 	local Design = Feed.Design
 	return Design.View(Design.Current(Feed.Layouts.CurrentDesign())) == "icons"
+end
+
+local function currentView()
+	return usesIcons() and "icons" or "rows"
 end
 
 -- The directions the controls offer now: rows fill only up or down.
@@ -127,6 +132,9 @@ local LootFeed = ns.Modules:Register({
 		-- At least 3: a place for a kept item, two for the rest.
 		maxRows = 8,
 		direction = "up",
+		-- The direction the other view (rows or icons) left: each keeps its own,
+		-- and switching views swaps the two. It has no control of its own.
+		otherViewDirection = "up",
 		duration = 6,
 		fade = 1,
 		size = 13,
@@ -236,6 +244,14 @@ function LootFeed:Direction()
 	return direction
 end
 
+-- After a switch between a rows layout and an Icons layout: the new view gets
+-- back the direction it had, and keeps the old view's for the way back.
+function LootFeed:SwapDirections()
+	local current, other = self:Get("direction"), self:Get("otherViewDirection")
+	self:Set("otherViewDirection", VALID_DIRECTION[current] and current or "up")
+	self:Set("direction", VALID_DIRECTION[other] and other or "up")
+end
+
 -- Whether the feed keeps items of a kind of usable item.
 function LootFeed:Keeps(kind)
 	return self:Get("keepUsable") and KEEP[kind] ~= nil and self:Get(KEEP[kind][1]) == true
@@ -296,6 +312,7 @@ function LootFeed:CheckAll()
 end
 
 function LootFeed:Apply()
+	self.view = currentView()
 	self.model:SetOptions(self:ModelOptions(), Compat.GetTime())
 	self.feed:SetOptions({
 		direction = self:Direction(),
@@ -341,8 +358,13 @@ function LootFeed:OnEnable()
 		if module ~= self.name then
 			return
 		end
-		-- A rows layout fills only up or down; the dialog offers what it can.
+		-- Each view keeps its own direction; a rows layout fills only up or
+		-- down, and the dialog offers what it can.
 		if key == "layout" then
+			if self.view and currentView() ~= self.view then
+				self.view = currentView()
+				self:SwapDirections()
+			end
 			if self:Direction() ~= self:Get("direction") then
 				self:Set("direction", self:Direction())
 			end

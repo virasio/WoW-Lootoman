@@ -142,7 +142,7 @@ The Default layout and default options unless a check says otherwise.
   - The samples stand side by side, wrapping at the preview's edge.
 - [ ] **Four directions.** With the Icons layout, each *Fill direction*.
   - *Expected:* the oldest icon stays at the edge it fills from, new ones line up away from it.
-  - Back on a rows layout, a sideways direction becomes *Bottom to top*.
+  - Each view keeps its own direction: with *Right to left* on Icons and *Top to bottom* on a rows layout, switching to the rows layout and back brings back each one's own.
 - [ ] **Amount.** Move the amount over the icon and beside it (it stops one icon's size away); change its text size; turn its background on with an opacity; untick its *Shown*. *Expected:* the feed follows; hidden, only the owned count shows.
 - [ ] **Owned count.** The same for the owned count, and *Counts* set to *Bags only*. *Expected:* the feed follows; untick *Shown*, and only the amount shows.
 - [ ] **Numbers.** Loot 78 copper, 1 silver 23 copper, 1 gold 2 silver 45 copper, a few hundred gold and over a thousand gold; gain experience in the thousands; loot a stack of 1,234 of an item if you can.

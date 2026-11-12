@@ -85,7 +85,21 @@ describe("loot feed module", function()
 		assert.equals("up down right left", offered())
 		module:Set("direction", "left")
 		assert.equals("left", module.feed.options.direction)
-		-- Back on rows, a sideways direction becomes bottom to top.
+		-- Back on rows, the rows' own direction comes back; then the icons' does.
+		Layouts.Use("Default")
+		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
+		module:Set("direction", "down")
+		Layouts.Use("Strip")
+		assert.same({ "left", "left" }, { module:Get("direction"), module.feed.options.direction })
+		Layouts.Use("Default")
+		assert.same({ "down", "down" }, { module:Get("direction"), module.feed.options.direction })
+		-- Another layout of the same view keeps the direction.
+		Layouts.Create("Wide", "large")
+		Layouts.Use("Wide")
+		assert.equals("down", module:Get("direction"))
+		-- A sideways direction left for rows, say from a profile text, becomes bottom to top.
+		Layouts.Use("Strip")
+		module:Set("otherViewDirection", "right")
 		Layouts.Use("Default")
 		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
 		-- Every direction may come in a profile text.
