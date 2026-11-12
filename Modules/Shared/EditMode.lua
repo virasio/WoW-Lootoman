@@ -20,14 +20,7 @@ local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
 --       },
 --       onEditMode = function(active) end,   -- show a preview while Edit Mode is on
 --       buttons = { { text = …, click = function() end } },   -- in the Edit Mode dialog
---       position = { get = function(layoutName) end, set = function(layoutName, position) end },
---                                            -- keeps the positions elsewhere (a bar set)
 --   })
---
--- A setting with its own get() and set(value) stores its value itself, not in
--- the module's settings. EditMode.AddLayoutHandler(fn(from, to, move)) lets the
--- owner of a position store follow Edit Mode layouts that are copied (move
--- false), renamed (move true) or deleted (to nil), as the profile's do.
 --
 -- LibEditMode draws the selection on the frame itself, so a hidden frame
 -- cannot be picked: an active module shows a preview in onEditMode(true). An
@@ -36,7 +29,6 @@ local EditMode = {}
 ns.EditMode = EditMode
 
 local entries = {}
-local layoutHandlers = {}
 local lib
 local layoutName
 -- True while a value set in the Edit Mode dialog is being stored.
@@ -87,13 +79,8 @@ function EditMode.SharePosition(module, key)
 end
 
 local function apply(entry)
-	local position
-	if entry.position then
-		position = layoutName and entry.position.get(layoutName) or entry.default
-	else
-		local saved = layoutName and positions()[entry.key]
-		position = saved and saved[layoutName] or entry.default
-	end
+	local saved = layoutName and positions()[entry.key]
+	local position = saved and saved[layoutName] or entry.default
 	entry.frame:ClearAllPoints()
 	entry.frame:SetPoint(position.point, position.x, position.y)
 end
@@ -113,9 +100,6 @@ end
 -- Positions of one layout under another name (or none, to forget them), in
 -- every profile; move drops the old name.
 local function copyLayout(from, to, move)
-	for _, handler in ipairs(layoutHandlers) do
-		handler(from, to, move)
-	end
 	Storage:EachSection("positions", function(section)
 		for _, layouts in pairs(section) do
 			if type(layouts) == "table" and layouts[from] then
@@ -185,7 +169,7 @@ local function setup()
 end
 
 -- Runs what stores a value set in the Edit Mode dialog, marked as coming from
--- it: its own set() or the module's settings.
+-- it.
 local function fromTheDialog(action, ...)
 	fromDialog = true
 	local ok, problem = pcall(action, ...)
@@ -213,24 +197,13 @@ local function toLibSetting(module, setting)
 		return nil
 	end
 	local function save(value)
-		if setting.set then
-			fromTheDialog(setting.set, value)
-		else
-			store(name, setting.key, value)
-		end
-	end
-	local default = setting.default
-	if default == nil then
-		default = Storage:GetDefault(name, setting.key)
+		store(name, setting.key, value)
 	end
 	local object = {
 		name = setting.label,
 		desc = setting.tooltip,
-		default = default,
+		default = Storage:GetDefault(name, setting.key),
 		get = function()
-			if setting.get then
-				return setting.get()
-			end
 			return Storage:Get(name, setting.key)
 		end,
 		set = function(_, value)
@@ -280,15 +253,10 @@ function EditMode.Register(module, frame, options)
 		default = options.default,
 		onEditMode = options.onEditMode,
 		settings = options.settings,
-		position = options.position,
 	}
 	entries[#entries + 1] = entry
 	lib:AddFrame(frame, function(_, name, point, x, y)
 		if not name then
-			return
-		end
-		if entry.position then
-			entry.position.set(name, { point = point, x = x, y = y })
 			return
 		end
 		local layouts = positions()[entry.key] or {}
@@ -312,14 +280,8 @@ function EditMode.Register(module, frame, options)
 	return true
 end
 
--- Follows Edit Mode layouts that are copied, renamed or deleted:
--- handler(from, to, move), as described above.
-function EditMode.AddLayoutHandler(handler)
-	layoutHandlers[#layoutHandlers + 1] = handler
-end
-
--- Puts a registered frame where its position store says, and shows its
--- settings again in an open Edit Mode dialog (after its bar changed), unless
+-- Puts a registered frame where its saved position says, and shows its
+-- settings again in an open Edit Mode dialog (after their choices changed), unless
 -- the change comes from that dialog: rebuilding it would hide and recreate
 -- the slider being dragged.
 function EditMode.Refresh(frame)

@@ -125,14 +125,14 @@ describe("share and import dialogs", function()
 		it("lists each module's settings with its parts under them, then the layouts, with only the profile's own ticked", function()
 			assert.same({
 				"Fast autoloot settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use layout “Default” [x]",
-				"Free slots settings [x]", "Currency bars settings [x]", "  Use bar set “Default” [x]", "Junk settings [x]",
-				"# Loot feed layouts", "  Default [x]", "  Raid [ ]", "# Bar sets", "  Default [x]",
+				"Free slots settings [x]", "Junk settings [x]",
+				"# Loot feed layouts", "  Default [x]", "  Raid [ ]",
 			}, shown(frame))
 		end)
 
 		it("shows the text of the ticked lines, selected", function()
-			assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "layout:LootFeed", "module:FreeSlots", "module:Bars",
-				"set:Bars", "module:Junk" }, read().names)
+			assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "layout:LootFeed", "module:FreeSlots",
+				"module:Junk" }, read().names)
 			assert.same({ "Default" }, read().collections.layouts.names)
 			assert.equals(12, read().sections["module:LootFeed"].maxRows)
 			tick(frame, "Raid", true)
@@ -142,14 +142,14 @@ describe("share and import dialogs", function()
 		it("leaves the parts under the loot feed's settings out without them, and Use layout without its layout", function()
 			tick(frame, "Default", false)
 			assert.same({ "Fast autoloot settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use layout “Default” (off)",
-				"Free slots settings [x]", "Currency bars settings [x]", "  Use bar set “Default” [x]", "Junk settings [x]",
-				"# Loot feed layouts", "  Default [ ]", "  Raid [ ]", "# Bar sets", "  Default [x]" }, shown(frame))
-			assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "module:FreeSlots", "module:Bars", "set:Bars",
+				"Free slots settings [x]", "Junk settings [x]",
+				"# Loot feed layouts", "  Default [ ]", "  Raid [ ]" }, shown(frame))
+			assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "module:FreeSlots",
 				"module:Junk" }, read().names)
 			tick(frame, "Default", true)
 			tick(frame, "Loot feed settings", false)
 			assert.same({ "Loot feed settings [ ]", "  Position (off)", "  Use layout “Default” (off)" }, { unpack(shown(frame), 2, 4) })
-			assert.same({ "module:AutoLoot", "module:FreeSlots", "module:Bars", "set:Bars", "module:Junk" }, read().names)
+			assert.same({ "module:AutoLoot", "module:FreeSlots", "module:Junk" }, read().names)
 			tick(frame, "Loot feed settings", true)
 			assert.same({ "  Position [x]", "  Use layout “Default” [x]" }, { unpack(shown(frame), 3, 4) })
 		end)

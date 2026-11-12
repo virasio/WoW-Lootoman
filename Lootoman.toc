@@ -54,7 +54,6 @@ Rules\Junk.lua
 Providers\Inventory.lua
 Providers\Bags.lua
 Providers\Prices.lua
-Providers\Currencies.lua
 
 Integrations\Auctionator.lua
 Integrations\Broker.lua
@@ -75,11 +74,6 @@ Modules\LootFeed\Designer.lua
 
 Modules\FreeSlots\FreeSlots.lua
 Modules\FreeSlots\Template.lua
-
-Modules\Bars\Bars.lua
-Modules\Bars\Sets.lua
-Modules\Bars\BarFrame.lua
-Modules\Bars\Editor.lua
 
 Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua

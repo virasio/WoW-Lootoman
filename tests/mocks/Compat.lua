@@ -312,70 +312,14 @@ function Compat.GetItemLook(item)
 	return info.icon, info.quality
 end
 
--- Currencies: { name, icon, quantity, max, totalEarned, capsTotalEarned,
--- backpack = order on the backpack }; every currency is in the list.
+-- Currencies: { name, icon, quantity, max, totalEarned, capsTotalEarned }.
 function Compat.GetCurrencyInfo(currencyID)
 	local info = copy(state.currencies[currencyID])
 	if info then
 		info.max, info.totalEarned = info.max or 0, info.totalEarned or 0
-		info.capsTotalEarned, info.backpack = info.capsTotalEarned == true, nil
+		info.capsTotalEarned = info.capsTotalEarned == true
 	end
 	return info
-end
-
-function Compat.GetCurrencyIDs()
-	local ids = {}
-	for currencyID in pairs(state.currencies) do
-		ids[#ids + 1] = currencyID
-	end
-	table.sort(ids)
-	return ids
-end
-
-function Compat.GetBackpackCurrencyIDs()
-	local ids = {}
-	for currencyID, info in pairs(state.currencies) do
-		if info.backpack then
-			ids[#ids + 1] = currencyID
-		end
-	end
-	table.sort(ids, function(a, b) return state.currencies[a].backpack < state.currencies[b].backpack end)
-	return ids
-end
-
--- Counts the items in state.bags.
-function Compat.GetBagItemCount(item)
-	local id = type(item) == "string" and tonumber(item:match("item:(%d+)")) or item
-	local count = 0
-	for _, bag in pairs(state.bags) do
-		for _, slotItem in pairs(bag.items or {}) do
-			if slotItem.itemID == id then
-				count = count + (slotItem.count or 1)
-			end
-		end
-	end
-	return count
-end
-
-function Compat.HasWarbandBank()
-	return Compat.Has("Enum.BankType.Account")
-end
-
--- The banks hold info.bank and info.warband of an item (state.items).
-function Compat.GetItemCounts(item)
-	local info = findItem(item)
-	return { bags = Compat.GetBagItemCount(item), bank = info and info.bank or 0,
-		warband = Compat.HasWarbandBank() and info and info.warband or 0 }
-end
-
--- The cursor holds an item from outside the bags: state.cursorItem = itemID.
-function Compat.GetCursorItemID()
-	if state.cursorItem then
-		return state.cursorItem
-	end
-	local cursor = state.cursor
-	local item = cursor and state.bags[cursor.bag] and state.bags[cursor.bag].items and state.bags[cursor.bag].items[cursor.slot]
-	return item and item.itemID or nil
 end
 
 function Compat.GetMoney()
