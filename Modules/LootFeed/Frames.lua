@@ -338,7 +338,11 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
 	rowFrame.Waiting:SetShown(iconShown and waiting > 0)
 	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting
-	rowFrame:SetMouseClickEnabled(stuck ~= nil)
+	-- In the feed only the stuck row takes clicks; the designer's rows take
+	-- them all (they choose the row).
+	if rowFrame.feed then
+		rowFrame:SetMouseClickEnabled(stuck ~= nil)
+	end
 	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
 end
 

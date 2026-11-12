@@ -62,6 +62,8 @@ describe("loot feed designer", function()
 		it("shows the sample rows, each in its box, and the row in the inspector", function()
 			assert.is_true(window.shown)
 			assert.equals(7, #window.rows)
+			-- Each row takes clicks on its free space, the stuck sample too.
+			assert.same({ true, true }, { window.rows[1].mouseClicks, window.rows[7].mouseClicks })
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			assert.equals("Row", window.inspectorTitle.text)
 			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30" }, inspector())
