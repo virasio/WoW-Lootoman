@@ -115,6 +115,8 @@ ns.Locales.AddEnglish({
 	"Minimal",
 	"Icons",
 	"Background",
+	"Icon size",
+	"Gap between icons",
 	"Reset",
 	"Part:",
 	"Row",

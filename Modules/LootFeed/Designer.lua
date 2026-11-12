@@ -13,6 +13,10 @@ local Feed = ns.Feed
 -- far as the row's box allows (Design.Range). Every change is saved in the
 -- layout and the feed follows at once.
 --
+-- An Icons layout lists only what it lets the player change: the icon's size
+-- and the gap between icons (as the row), and the amount; its samples stand
+-- side by side.
+--
 -- On top, the layout the profile uses (Layouts.lua), with a menu like the
 -- profile menu (NameMenu): every layout, with Copy, Rename and Reset under its
 -- gear and a delete button; + New layout, whose submenu has the built-in
@@ -88,11 +92,47 @@ for index, control in ipairs(TEXT_CONTROLS) do
 end
 table.insert(CONTROLS.amount, { key = "background", label = L["Background"] })
 table.insert(CONTROLS.amount, { key = "opacity", label = L["Background opacity"] })
+-- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
+local ICON_PARTS = { "row", "amount" }
+local ICON_CONTROLS = {
+	row = {
+		{ key = "height", label = L["Icon size"] },
+		{ key = "gap", label = L["Gap between icons"] },
+	},
+	amount = {
+		{ key = "shown", label = L["Shown"] },
+		{ key = "point", label = L["Anchor point"] },
+		{ key = "align", label = L["Text alignment"] },
+		{ key = "fontSize", label = L["Text size"] },
+		{ key = "x", label = L["Horizontal offset"] },
+		{ key = "y", label = L["Vertical offset"] },
+		{ key = "background", label = L["Background"] },
+		{ key = "opacity", label = L["Background opacity"] },
+	},
+}
 -- A checkbox for a switch, a dropdown for a choice, else a slider with a field.
 local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice" }
 local CONTROL_COUNT = 0
 for _, list in pairs(CONTROLS) do
 	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
+end
+
+local function isIcons(design)
+	return Design.View(design) == "icons"
+end
+
+-- The parts a design lists, in order, and their controls.
+local function partsOf(design)
+	return isIcons(design) and ICON_PARTS or PART_ORDER
+end
+
+local function controlsOf(design)
+	return isIcons(design) and ICON_CONTROLS or CONTROLS
+end
+
+-- An Icons layout's row is its icon.
+local function titleOf(design, part)
+	return isIcons(design) and part == "row" and TITLES.icon or TITLES[part]
 end
 
 local window
@@ -153,25 +193,52 @@ local function mark(rowFrame, layout)
 	end
 end
 
+-- Whether a part's hit area is there: an Icons layout's name and owned count
+-- cannot be changed, and its icon stands for the row.
+local function hittable(design, part)
+	return not isIcons(design) or part == "icon" or part == "amount"
+end
+
+-- What clicking or dragging a part chooses: an Icons layout's icon is its row.
+local function partOf(part)
+	if part == "icon" and isIcons(Design.Current(section())) then
+		return "row"
+	end
+	return part
+end
+
 -- After any change: the preview, the inspector and the feed itself.
 function Designer.Refresh()
 	if not window then
 		return
 	end
-	local layout = Design.Layout(Design.Current(section()), LootFeed:Get("size"))
+	local design = Design.Current(section())
+	if not controlsOf(design)[selected] then
+		selected = "row"
+	end
+	local layout = Design.Layout(design, LootFeed:Get("size"))
 	local options = { layout = layout, showOwned = LootFeed:Get("owned"), showGlow = LootFeed:Get("glow") }
-	local top = 0
+	-- Rows one under another; icons side by side, wrapping at the preview's edge.
+	local left, top = 0, 0
+	local room = Designer.PREVIEW_WIDTH - 24
 	for index, rowFrame in ipairs(window.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 		Frames.Fill(rowFrame, window.samples[index].row, options)
+		if isIcons(design) and left > 0 and left + layout.width > room then
+			left, top = 0, top + layout.height + layout.gap
+		end
 		rowFrame:ClearAllPoints()
-		rowFrame:SetPoint("TOPLEFT", window.preview, "TOPLEFT", 12, -12 - top)
+		rowFrame:SetPoint("TOPLEFT", window.preview, "TOPLEFT", 12 + left, -12 - top)
 		rowFrame:Show()
-		top = top + layout.height + layout.gap
+		if isIcons(design) then
+			left = left + layout.width + layout.gap
+		else
+			top = top + layout.height + layout.gap
+		end
 		rowFrame.Box:SetAlpha(selected == "row" and 1 or 0.5)
 		mark(rowFrame, layout)
 		for part, hit in pairs(rowFrame.hits) do
-			hit:SetShown(rowFrame[Frames.REGIONS[part]]:IsShown())
+			hit:SetShown(rowFrame[Frames.REGIONS[part]]:IsShown() and hittable(design, part))
 		end
 	end
 	Designer.UpdateInspector()
@@ -314,10 +381,10 @@ end
 function Designer.UpdateInspector()
 	local design = Design.Current(section())
 	local values = selected == "row" and design or design.parts[selected]
-	window.inspectorTitle:SetText(TITLES[selected])
+	window.inspectorTitle:SetText(titleOf(design, selected))
 	window.updating = true
 	for index, control in ipairs(window.controls) do
-		local spec = CONTROLS[selected][index]
+		local spec = controlsOf(design)[selected][index]
 		local kind = spec and (KINDS[spec.key] or "number")
 		control.spec, control.part, control.kind = spec, selected, kind
 		control.value = spec and values[spec.key]
@@ -409,10 +476,15 @@ local function createHit(rowFrame, part)
 	hit.Highlight:SetAllPoints()
 	hit.Highlight:SetColorTexture(1, 1, 1, 0.15)
 	hit:SetScript("OnClick", function()
-		Designer.Select(part)
+		Designer.Select(partOf(part))
 	end)
 	hit:SetScript("OnDragStart", function()
-		startDrag(part)
+		-- An Icons layout's icon stays where it is.
+		if partOf(part) == part then
+			startDrag(part)
+		else
+			Designer.Select(partOf(part))
+		end
 	end)
 	hit:SetScript("OnDragStop", stopDrag)
 	return hit
@@ -581,8 +653,9 @@ local function build()
 	frame.parts:SetPoint("LEFT", partLabel, "RIGHT", 8, 0)
 	frame.parts:SetWidth(150)
 	frame.parts:SetupMenu(function(_, root)
-		for _, part in ipairs(PART_ORDER) do
-			root:CreateRadio(TITLES[part], function()
+		local design = Design.Current(section())
+		for _, part in ipairs(partsOf(design)) do
+			root:CreateRadio(titleOf(design, part), function()
 				return selected == part
 			end, Designer.Select, part)
 		end

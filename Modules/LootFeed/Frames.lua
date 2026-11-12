@@ -308,6 +308,7 @@ function Frames.PreviewRows()
 		{ row = { kind = "money", amount = 123456 }, alpha = 1 },
 		{ row = { kind = "currency", name = L["Sample currency"], icon = [[Interface\Icons\inv_misc_coin_17]], quality = 3, amount = 5, total = 120 }, alpha = 1 },
 		{ row = { kind = "reputation", name = L["Sample faction"], amount = 250 }, alpha = 1 },
+		{ row = { kind = "xp", amount = 12345 }, alpha = 1 },
 	}
 end
 

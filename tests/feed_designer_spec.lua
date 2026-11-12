@@ -61,7 +61,7 @@ describe("loot feed designer", function()
 
 		it("shows the sample rows, each in its box, and the row in the inspector", function()
 			assert.is_true(window.shown)
-			assert.equals(5, #window.rows)
+			assert.equals(6, #window.rows)
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			assert.equals("Row", window.inspectorTitle.text)
 			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30" }, inspector())
@@ -187,6 +187,29 @@ describe("loot feed designer", function()
 		it("offers every part, also a hidden one, in its part list", function()
 			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts, "owned"))
 			assert.equals("Owned count", window.inspectorTitle.text)
+		end)
+
+		it("lists only what an Icons layout lets change, with its samples side by side", function()
+			ns.Feed.Layouts.Create("Strip", "icons")
+			Designer.Use("Strip")
+			assert.equals("Icon", window.inspectorTitle.text)
+			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
+			assert.same({ "Icon*", "Amount" }, menu(window.parts))
+			Designer.Select("amount")
+			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
+				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "Background: false",
+				"Background opacity: 60 in 0..100" }, inspector())
+			-- Icons 36 wide and 4 apart, side by side.
+			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
+			-- The icon stands for the row; the name and the owned count cannot be chosen.
+			local rowFrame = window.rows[1]
+			assert.same({ true, false, false, true }, { rowFrame.hits.icon.shown, rowFrame.hits.name.shown, rowFrame.hits.owned.shown,
+				rowFrame.hits.amount.shown })
+			rowFrame.hits.icon.scripts.OnClick(rowFrame.hits.icon)
+			assert.equals("Icon", window.inspectorTitle.text)
+			-- Back on rows, every part again.
+			Designer.Use("Default")
+			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts))
 		end)
 
 		it("hides on Escape and with its close button, and the command toggles it", function()

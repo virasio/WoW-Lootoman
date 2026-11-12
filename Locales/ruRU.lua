@@ -111,6 +111,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Minimal"] = "Минимальная",
 	["Icons"] = "Только иконки",
 	["Background"] = "Фон",
+	["Icon size"] = "Размер иконки",
+	["Gap between icons"] = "Промежуток между иконками",
 	["Part:"] = "Часть:",
 	["Row"] = "Строка",
 	["Icon"] = "Значок",
