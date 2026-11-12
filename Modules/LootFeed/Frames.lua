@@ -116,7 +116,8 @@ function Frames.Describe(row, options)
 			if options.showGlow and (row.quality or 0) >= Frames.GLOW_QUALITY then
 				look.glow = ColorManager.GetAtlasDataForNewItemQuality(row.quality)
 			end
-			if options.showOwned then
+			-- The client counts only an item it is told of.
+			if options.showOwned and (row.owned or row.link or row.id) then
 				look.owned = row.owned or Compat.GetItemCount(row.link or row.id)
 			end
 		end
@@ -355,7 +356,7 @@ function Frames.PreviewRows()
 		{ row = { kind = "reputation", name = L["Sample faction"], amount = 250 }, alpha = 1 },
 		{ row = { kind = "xp", amount = 12345 }, alpha = 1 },
 		{ row = { kind = "item", name = L["Sample quest item"], icon = [[Interface\Icons\INV_Misc_Note_02]], quality = 1, amount = 1,
-			sticky = "quest" }, alpha = 1, stuck = true, waiting = 1 },
+			owned = 1, sticky = "quest" }, alpha = 1, stuck = true, waiting = 1 },
 	}
 end
 

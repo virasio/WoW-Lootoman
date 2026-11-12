@@ -326,7 +326,9 @@ function Compat.GetItemInfo(item)
 	}
 end
 
+-- Like the client, which raises an error for no item at all.
 function Compat.GetItemCount(item)
+	assert(item ~= nil, "bad argument #1 to 'GetItemCount' (Usage: local count = C_Item.GetItemCount(itemInfo))")
 	local info = findItem(item)
 	return info and info.owned or 0
 end

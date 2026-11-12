@@ -52,6 +52,8 @@ describe("loot feed frames", function()
 			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" }, owned).owned)
 			assert.equals(120, Frames.Describe({ kind = "currency", name = "Valorstones", total = 120 }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "item", id = 7, name = "Gone" }, owned).owned)
+			-- An item the client is not told of (a sample) has no count, and no error.
+			assert.is_nil(Frames.Describe({ kind = "item", name = "Sample" }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "money", amount = 5 }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" }).owned)
 		end)
