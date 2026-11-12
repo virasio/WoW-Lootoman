@@ -252,9 +252,10 @@ function LootFeed:SwapDirections()
 	self:Set("direction", VALID_DIRECTION[other] and other or "up")
 end
 
--- Whether the feed keeps items of a kind of usable item.
+-- Whether the feed keeps items of a kind of usable item: not while it shows
+-- no items at all.
 function LootFeed:Keeps(kind)
-	return self:Get("keepUsable") and KEEP[kind] ~= nil and self:Get(KEEP[kind][1]) == true
+	return self:Get("items") and self:Get("keepUsable") and KEEP[kind] ~= nil and self:Get(KEEP[kind][1]) == true
 end
 
 -- A looted item below the minimum quality waits this long for the bags to

@@ -304,6 +304,13 @@ describe("loot feed module", function()
 			assert.equals("quest", rowOf(500).sticky)
 			module:Set("keepUsable", false)
 			assert.is_nil(rowOf(500).sticky)
+			-- Nor while the feed shows no items: a kept row goes.
+			module:Set("keepUsable", true)
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			module:Set("items", false)
+			assert.same({}, module.model:Stuck())
 		end)
 
 		it("puts the kinds under their switch, on the options page only", function()

@@ -178,7 +178,7 @@ The Default layout and default options unless a check says otherwise.
   - The left click lets the row go.
   - A right click does nothing for the next row until the fight ends, then works.
 - [ ] **Placing.** With a kept item showing, move the feed in Edit Mode, change its size and its fill direction. *Expected:* right clicks still hit the item where it is, after each change (out of combat).
-- [ ] **Switches.** Turn off each kind, then *Keep usable items*. *Expected:* those items fade as usual; the kinds sit under the switch on the options page, greyed out while it is off.
+- [ ] **Switches.** Turn off each kind, then *Keep usable items*, then *Items* with a kept item showing. *Expected:* those items fade as usual, and with *Items* off a kept item goes; the kinds sit under the switch on the options page, greyed out while it is off.
 - [ ] **Below the minimum quality.** Set the minimum quality to Uncommon and loot a common usable item. *Expected:* it shows and stays.
 - [ ] **WoW Forever's collections.** On WoW Forever, the options page's kinds. *Expected:* only the kinds whose collections the client has (note which).
 
