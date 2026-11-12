@@ -14,10 +14,18 @@ local _, ns = ...
 -- over at most PUSH_FADE seconds. While the pointer is over the feed
 -- (SetHover), every timer stops.
 --
+-- A sticky row (SetSticky: an item the character can use) does not fade: when
+-- its time is up, or a full feed would push it out, it sticks. The row stuck
+-- first takes the first slot, at the anchor edge, and stays there; the others
+-- stuck after it wait under it, and the rest of the rows go on fading in the
+-- slots after it. Release lets a row go at once, and the next stuck row
+-- takes the slot. Looting a stuck item again adds to its row in place.
+--
 --   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, minQuality = 0,
 --       kinds = { item = true, currency = true, money = true, reputation = true, xp = false } }, now)
 --   model:Add(entry, now); model:Update(now)
 --   for _, view in ipairs(model:Visible(now)) do -- view.row, view.alpha
+--   model:SetSticky(row, "quest", now); model:Release(row)
 ns.Feed = ns.Feed or {}
 local Model = {}
 ns.Feed.Model = Model
@@ -28,7 +36,7 @@ local ModelMixin = {}
 ModelMixin.__index = ModelMixin
 
 function Model.New(options, now)
-	local model = setmetatable({ rows = {} }, ModelMixin)
+	local model = setmetatable({ rows = {}, stuckCount = 0 }, ModelMixin)
 	model:SetOptions(options, now or 0)
 	return model
 end
@@ -61,13 +69,67 @@ local function restart(model, row, now)
 	row.fadeEnd = row.fadeStart + model.options.fade
 end
 
--- Rows past maxRows start fading now, quickly.
-local function pushOut(model, now)
-	local fade = math.min(model.options.fade, Model.PUSH_FADE)
-	for index = model.options.maxRows + 1, #model.rows do
+local function stick(model, row)
+	row.stuck = true
+	model.stuckCount = model.stuckCount + 1
+	-- In the order they stuck, so the first one keeps the slot.
+	row.stuckOrder = model.stuckCount
+	row.fadeStart, row.fadeEnd = math.huge, math.huge
+end
+
+-- Sticky rows whose time is up stick, the oldest first (rows are newest first).
+local function stickDue(model, now)
+	for index = #model.rows, 1, -1 do
 		local row = model.rows[index]
-		if row.fadeStart > now then
-			row.fadeStart, row.fadeEnd = now, now + fade
+		if row.sticky and not row.stuck and now >= row.fadeStart then
+			stick(model, row)
+		end
+	end
+end
+
+local function anyStuck(model)
+	for _, row in ipairs(model.rows) do
+		if row.stuck then
+			return true
+		end
+	end
+	return false
+end
+
+-- How many rows fit after the stuck one, if any.
+local function room(model)
+	return model.options.maxRows - (anyStuck(model) and 1 or 0)
+end
+
+-- Rows past maxRows start fading now, quickly. A stuck row takes the first
+-- slot, and a sticky row a full feed would push out sticks instead, the
+-- oldest first.
+local function pushOut(model, now)
+	local oldest
+	repeat
+		oldest = nil
+		local seen = 0
+		for _, row in ipairs(model.rows) do
+			if not row.stuck then
+				seen = seen + 1
+				if seen > room(model) and row.sticky and row.fadeStart > now then
+					oldest = row
+				end
+			end
+		end
+		if oldest then
+			stick(model, oldest)
+		end
+	until not oldest
+	local fade = math.min(model.options.fade, Model.PUSH_FADE)
+	local fits = room(model)
+	local seen = 0
+	for _, row in ipairs(model.rows) do
+		if not row.stuck then
+			seen = seen + 1
+			if seen > fits and row.fadeStart > now then
+				row.fadeStart, row.fadeEnd = now, now + fade
+			end
 		end
 	end
 end
@@ -84,10 +146,20 @@ function ModelMixin:Add(entry, now)
 		return nil
 	end
 	now = clock(self, now)
+	stickDue(self, now)
 	local key = keyOf(entry)
 	local row
 	for index, existing in ipairs(self.rows) do
-		if existing.key == key then
+		if existing.key == key and existing.stuck then
+			-- In place, and stuck still.
+			existing.amount = (existing.amount or 0) + (entry.amount or 0)
+			for field, value in pairs(entry) do
+				if field ~= "amount" then
+					existing[field] = value
+				end
+			end
+			return existing
+		elseif existing.key == key then
 			table.remove(self.rows, index)
 			-- A row that has faded out is gone, even before Update removes it.
 			row = existing.fadeEnd > now and existing or nil
@@ -117,9 +189,34 @@ function ModelMixin:Add(entry, now)
 	return row
 end
 
+-- Makes a row sticky (kind: what makes the item usable, as Rules.Usable says)
+-- or, with nil, not sticky: a stuck row then goes at once.
+function ModelMixin:SetSticky(row, kind, now)
+	if kind then
+		row.sticky = kind
+		pushOut(self, clock(self, now))
+	elseif row.stuck then
+		self:Release(row)
+	else
+		row.sticky = nil
+	end
+end
+
+-- Lets a row go at once: the player dismissed it, or used up its item.
+function ModelMixin:Release(row)
+	for index, existing in ipairs(self.rows) do
+		if existing == row then
+			table.remove(self.rows, index)
+			return true
+		end
+	end
+	return false
+end
+
 -- Removes rows that have faded out; returns true when any was removed.
 function ModelMixin:Update(now)
 	now = clock(self, now)
+	stickDue(self, now)
 	local removed = false
 	for index = #self.rows, 1, -1 do
 		if self.rows[index].fadeEnd <= now then
@@ -142,15 +239,38 @@ local function alpha(row, now)
 end
 
 -- The rows to draw, newest first, each as { row, alpha }: up to maxRows
--- rows, and after them the ones fading out after a push.
+-- rows, and after them the ones fading out after a push. The row stuck first
+-- comes last, at the anchor edge, as { row, alpha = 1, stuck = true, waiting
+-- = the stuck rows under it }.
 function ModelMixin:Visible(now)
 	now = clock(self, now)
-	local list = {}
+	stickDue(self, now)
+	local list, top, waiting = {}, nil, 0
 	for _, row in ipairs(self.rows) do
-		if row.fadeEnd > now then
+		if row.stuck then
+			if not top or row.stuckOrder < top.stuckOrder then
+				top = row
+			end
+			waiting = waiting + 1
+		elseif row.fadeEnd > now then
 			list[#list + 1] = { row = row, alpha = alpha(row, now) }
 		end
 	end
+	if top then
+		list[#list + 1] = { row = top, alpha = 1, stuck = true, waiting = waiting - 1 }
+	end
+	return list
+end
+
+-- The stuck rows, the first one first.
+function ModelMixin:Stuck()
+	local list = {}
+	for _, row in ipairs(self.rows) do
+		if row.stuck then
+			list[#list + 1] = row
+		end
+	end
+	table.sort(list, function(a, b) return a.stuckOrder < b.stuckOrder end)
 	return list
 end
 
