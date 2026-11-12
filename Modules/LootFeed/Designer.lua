@@ -29,11 +29,11 @@ local Designer = {}
 LootFeed.Designer = Designer
 
 Designer.WIDTH = 760
-Designer.HEIGHT = 580
+Designer.HEIGHT = 600
 Designer.PREVIEW_WIDTH = 440
 -- The inspector's controls are this far apart; each one's label is nearer to
 -- it than to the one before.
-Designer.CONTROL_HEIGHT = 52
+Designer.CONTROL_HEIGHT = 46
 -- The window's global name, for UISpecialFrames.
 Designer.NAME = "LootomanDesigner"
 
@@ -80,12 +80,20 @@ local CONTROLS = {
 		{ key = "y", label = L["Vertical offset"] },
 	},
 	name = TEXT_CONTROLS,
-	amount = TEXT_CONTROLS,
+	amount = {},
 	owned = TEXT_CONTROLS,
 }
--- A checkbox for shown, a dropdown for a choice, else a slider with a field.
-local KINDS = { shown = "check", anchor = "choice", point = "choice", align = "choice" }
-local CONTROL_COUNT = #TEXT_CONTROLS
+for index, control in ipairs(TEXT_CONTROLS) do
+	CONTROLS.amount[index] = control
+end
+table.insert(CONTROLS.amount, { key = "background", label = L["Background"] })
+table.insert(CONTROLS.amount, { key = "opacity", label = L["Background opacity"] })
+-- A checkbox for a switch, a dropdown for a choice, else a slider with a field.
+local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice" }
+local CONTROL_COUNT = 0
+for _, list in pairs(CONTROLS) do
+	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
+end
 
 local window
 local selected = "row"

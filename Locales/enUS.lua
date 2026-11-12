@@ -114,6 +114,7 @@ ns.Locales.AddEnglish({
 	"Compact",
 	"Minimal",
 	"Icons",
+	"Background",
 	"Reset",
 	"Part:",
 	"Row",

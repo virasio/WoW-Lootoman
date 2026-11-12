@@ -325,6 +325,21 @@ describe("loot feed frames", function()
 			assert.same({ true, "42" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
+		it("draws the amount's own background when the design asks, with its opacity", function()
+			local Design = ns.Feed.Design
+			local design = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { amount = { background = true, opacity = 30 } } })
+			local rowFrame = Frames.CreateRow(nil)
+			local withBackground = { layout = Design.Layout(design, 13) }
+			Frames.ApplyLayout(rowFrame, withBackground.layout)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, withBackground)
+			assert.same({ true, 0.3 }, { rowFrame.AmountBackground.shown, rowFrame.AmountBackground.colorTexture[4] })
+			-- No amount, no background.
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 1 }, withBackground)
+			assert.is_false(rowFrame.AmountBackground.shown)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, { layout = Design.Layout(Design.ICONS, 13) })
+			assert.is_false(rowFrame.AmountBackground.shown)
+		end)
+
 		it("shows the owned count and the glow, and hides them when turned off", function()
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42 } })
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 4 }, 0)

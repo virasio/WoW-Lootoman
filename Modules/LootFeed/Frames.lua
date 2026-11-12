@@ -205,6 +205,13 @@ function Frames.CreateRow(parent)
 	for _, text in ipairs({ rowFrame.Owned, rowFrame.Label, rowFrame.Amount }) do
 		text:SetWordWrap(false)
 	end
+	-- The amount's own background, when the design asks: over the icon and its
+	-- border, under the amount.
+	rowFrame.AmountBackground = rowFrame:CreateTexture(nil, "OVERLAY", nil, 3)
+	rowFrame.AmountBackground:SetPoint("TOPLEFT", rowFrame.Amount, "TOPLEFT", -2, 1)
+	rowFrame.AmountBackground:SetPoint("BOTTOMRIGHT", rowFrame.Amount, "BOTTOMRIGHT", 2, -1)
+	rowFrame.AmountBackground:Hide()
+	rowFrame.Amount:SetDrawLayer("OVERLAY", 4)
 	rowFrame:SetScript("OnEnter", showTooltip)
 	rowFrame:SetScript("OnLeave", hideTooltip)
 	rowFrame:Hide()
@@ -284,6 +291,8 @@ function Frames.Fill(rowFrame, row, options)
 		region:SetWidth(math.max(1, width))
 		region:SetShown(region:IsShown() and width >= 1)
 	end
+	rowFrame.AmountBackground:SetColorTexture(0, 0, 0, parts.amount.opacity / 100)
+	rowFrame.AmountBackground:SetShown(parts.amount.background and rowFrame.Amount:IsShown())
 	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
 end
 

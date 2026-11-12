@@ -77,6 +77,15 @@ describe("loot feed designer", function()
 				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23" }, inspector())
 		end)
 
+		it("sets the amount's own background and its opacity", function()
+			Designer.Select("amount")
+			local list = inspector()
+			assert.same({ "Background: false", "Background opacity: 60 in 0..100" }, { list[9], list[10] })
+			window.controls[9].check.checked = true
+			window.controls[9].check.scripts.OnClick(window.controls[9].check)
+			assert.is_true(design().parts.amount.background)
+		end)
+
 		it("marks the row, the chosen icon, or the most room the chosen text may take, with a frame", function()
 			local row = window.rows[1]
 			assert.same({ true, { "TOPLEFT", row, "TOPLEFT", -2, 2 } }, { row.Selected.shown, row.Selected.points[1] })
