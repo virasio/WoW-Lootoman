@@ -172,6 +172,7 @@ The Default layout and default options unless a check says otherwise.
   - right clicks open them one by one, the count going down;
   - a left click hides the row;
   - looting another clam brings it back.
+- [ ] **Stacks with some in the bags already.** With ten clams in the bags, loot three. *Expected:* the row shows ×3, counts down as you open them, and goes after three are opened, with ten still in the bags.
 - [ ] **Used from the bags.** Keep a recipe, then learn it from the bags (or sell it). *Expected:* its row goes by itself.
 - [ ] **In a fight.** With a kept item showing, start a fight: right-click it, then left-click it, then loot another usable item.
   - *Expected:* no Lua errors and no blocked action.
