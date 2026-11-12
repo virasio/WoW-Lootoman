@@ -354,6 +354,8 @@ function Frames.PreviewRows()
 		{ row = { kind = "currency", name = L["Sample currency"], icon = [[Interface\Icons\inv_misc_coin_17]], quality = 3, amount = 5, total = 120 }, alpha = 1 },
 		{ row = { kind = "reputation", name = L["Sample faction"], amount = 250 }, alpha = 1 },
 		{ row = { kind = "xp", amount = 12345 }, alpha = 1 },
+		{ row = { kind = "item", name = L["Sample quest item"], icon = [[Interface\Icons\INV_Misc_Note_02]], quality = 1, amount = 1,
+			sticky = "quest" }, alpha = 1, stuck = true, waiting = 1 },
 	}
 end
 
@@ -676,10 +678,13 @@ function FeedMixin:Draw(now)
 	model:Update(now)
 	local views = model:Visible(now)
 	if self.preview then
+		-- The rows that fit after the stuck sample, then the stuck sample.
 		views = {}
-		for index = 1, math.min(#self.preview, self.options.maxRows) do
+		local samples = #self.preview - 1
+		for index = 1, math.min(samples, self.options.maxRows - 1) do
 			views[index] = self.preview[index]
 		end
+		views[#views + 1] = self.preview[#self.preview]
 	end
 
 	local shown = {}

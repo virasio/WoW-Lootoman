@@ -52,11 +52,13 @@ local function keyOf(entry)
 	return kind .. ":" .. tostring(entry.id or entry.link or entry.name)
 end
 
-local function shown(model, entry)
+-- Whether an entry is shown; force: below the minimum quality too (an item
+-- the character can use).
+local function shown(model, entry, force)
 	if not model.options.kinds[entry.kind] then
 		return false
 	end
-	return entry.kind ~= "item" or entry.quality == nil or entry.quality >= model.options.minQuality
+	return force or entry.kind ~= "item" or entry.quality == nil or entry.quality >= model.options.minQuality
 end
 
 -- While hovered, time stands still at the moment the hover began.
@@ -140,9 +142,10 @@ function ModelMixin:SetOptions(options, now)
 	pushOut(self, clock(self, now))
 end
 
--- Adds an entry; returns its row, or nil when the entry is not shown.
-function ModelMixin:Add(entry, now)
-	if not shown(self, entry) then
+-- Adds an entry; returns its row, or nil when the entry is not shown. force
+-- shows an item below the minimum quality.
+function ModelMixin:Add(entry, now, force)
+	if not shown(self, entry, force) then
 		return nil
 	end
 	now = clock(self, now)

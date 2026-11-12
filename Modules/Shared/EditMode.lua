@@ -190,6 +190,9 @@ local function toLibSetting(module, setting)
 	local name = module.name
 	if setting.kind == "header" then
 		return lib.SettingType.Divider and { kind = lib.SettingType.Divider, name = setting.label } or nil
+	elseif setting.pageOnly then
+		-- On the options page only, to keep the dialog short.
+		return nil
 	end
 	local function save(value)
 		store(name, setting.key, value)

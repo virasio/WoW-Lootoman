@@ -116,19 +116,32 @@ end
 
 -- A module's settings from the list the Edit Mode dialog also takes
 -- (EditMode.Register): headers, checkboxes, sliders and dropdowns, in order.
+-- A setting with a parent (the key of a checkbox before it) sits indented
+-- under it, usable only while that one is on.
 function Panel.AddSettings(category, layout, module, settings)
+	local made = {}
 	for _, setting in ipairs(settings) do
+		local initializer
 		if setting.kind == "header" then
 			Panel.AddHeader(layout, setting.label, setting.tooltip)
 		elseif setting.kind == "checkbox" then
-			Panel.AddCheckbox(category, module, setting.key, setting.label, setting.tooltip)
+			initializer = Panel.AddCheckbox(category, module, setting.key, setting.label, setting.tooltip)
 		elseif setting.kind == "slider" then
-			Panel.AddSlider(category, module, setting.key, setting.label, setting.tooltip,
+			initializer = Panel.AddSlider(category, module, setting.key, setting.label, setting.tooltip,
 				setting.min, setting.max, setting.step, setting.format)
 		elseif setting.kind == "dropdown" then
-			Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices, setting.offered)
+			initializer = Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices, setting.offered)
 		else
 			error(("%s: unknown setting kind %s"):format(module, tostring(setting.kind)))
+		end
+		if setting.key then
+			made[setting.key] = initializer
+		end
+		local parent = setting.parent and made[setting.parent]
+		if parent and initializer then
+			initializer:SetParentInitializer(parent, function()
+				return Storage:Get(module, setting.parent) == true
+			end)
 		end
 	end
 end

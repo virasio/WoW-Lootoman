@@ -55,7 +55,9 @@ describe("loot feed module", function()
 		assert.same({
 			"checkbox:Enabled",
 			"header:What the feed shows", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
-			"checkbox:Experience", "dropdown:Minimum quality",
+			"checkbox:Experience", "dropdown:Minimum quality", "checkbox:Keep usable items",
+			"  checkbox:Items that start a quest", "  checkbox:Recipes", "  checkbox:Containers", "  checkbox:Pets", "  checkbox:Mounts",
+			"  checkbox:Toys", "  checkbox:Appearance sets", "  checkbox:Heirlooms",
 			"header:Rows and timing", "slider:Rows", "dropdown:Fill direction", "slider:Time on screen", "slider:Fade-out time",
 			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Glow for rare items",
 			"header:Low-space warnings", "checkbox:Warn when few bag slots are free", "slider:Bag slots",
@@ -169,7 +171,7 @@ describe("loot feed module", function()
 			end
 		end
 		assert.same({ "What the feed shows", "Rows and timing", "Appearance", "Low-space warnings" }, names)
-		assert.equals(21, #lib.settings[frame])
+		assert.equals(22, #lib.settings[frame])
 		assert.same({ "divider", "Items" }, { lib.settings[frame][1].kind, lib.settings[frame][2].name })
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
@@ -187,6 +189,96 @@ describe("loot feed module", function()
 			shown[rowFrame.Label.text] = rowFrame.Amount.text
 		end
 		assert.same({ ["150 copper"] = "", ["Linen Cloth"] = "×2" }, shown)
+	end)
+
+	describe("usable items", function()
+		local LETTER = "|cffffffff|Hitem:500::|h[Letter]|h|r"
+		local CLAM = "|cffffffff|Hitem:600::|h[Clam]|h|r"
+
+		before_each(function()
+			Test.SetItems({
+				[500] = { name = "Letter", icon = 1, quality = 1, stackSize = 20, owned = 1 },
+				[600] = { name = "Clam", icon = 2, quality = 0, stackSize = 20, owned = 3 },
+			})
+		end)
+
+		local function holding(items)
+			local slots = {}
+			for index, item in ipairs(items) do
+				slots[index] = item
+			end
+			Test.SetBags({ [0] = { size = 16, items = slots } })
+		end
+
+		local function rowOf(id)
+			for _, row in ipairs(module.model.rows) do
+				if row.id == id then
+					return row
+				end
+			end
+		end
+
+		it("keep an item that starts a quest once the bags hold it, and let it go when the quest is taken", function()
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			-- Not in the bags yet.
+			assert.is_nil(rowOf(500).sticky)
+			local letter = { itemID = 500, count = 1, use = { questID = 9 } }
+			holding({ letter })
+			assert.equals("quest", rowOf(500).sticky)
+			Test.Advance(10)
+			local views = module.model:Visible(Test.state.time)
+			assert.same({ true, "Letter" }, { views[#views].stuck, views[#views].row.name })
+			letter.use.questTaken = true
+			Test.FireEvent("QUEST_ACCEPTED", 9)
+			assert.same({}, module.model:Stuck())
+		end)
+
+		it("keep a usable item below the minimum quality, and count down what is left as it is used", function()
+			module:Set("minQuality", 1)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. CLAM .. "x3", "Tester")
+			assert.is_nil(rowOf(600))
+			local clams = { itemID = 600, count = 3, use = { openable = true } }
+			holding({ clams })
+			local row = rowOf(600)
+			assert.same({ "container", 3 }, { row.sticky, row.amount })
+			Test.Advance(10)
+			module:CheckAll()
+			Test.state.items[600].owned = 2
+			clams.count = 2
+			holding({ clams })
+			assert.equals(2, row.amount)
+			-- The last one used: the row goes.
+			holding({})
+			assert.same({}, module.model:Stuck())
+		end)
+
+		it("keep only the kinds turned on, and nothing with the switch off", function()
+			module:Set("keepQuest", false)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			holding({ { itemID = 500, count = 1, use = { questID = 9 } } })
+			assert.is_nil(rowOf(500).sticky)
+			module:Set("keepQuest", true)
+			assert.equals("quest", rowOf(500).sticky)
+			module:Set("keepUsable", false)
+			assert.is_nil(rowOf(500).sticky)
+		end)
+
+		it("puts the kinds under their switch, on the options page only", function()
+			local Usable = ns.Rules.Usable
+			Test.state.collections = { mount = true }
+			local keys = {}
+			for _, setting in ipairs(module:Settings()) do
+				if setting.parent == "keepUsable" then
+					keys[#keys + 1] = setting.key .. (setting.pageOnly and "" or "!")
+				end
+			end
+			assert.same({ "keepQuest", "keepRecipes", "keepContainers", "keepMounts" }, keys)
+			assert.same({ "quest", "recipe", "container", "mount" }, Usable.Kinds())
+		end)
+
+		it("shows at least 3 rows", function()
+			assert.same({ false, true }, { module:Validate("maxRows", 2), module:Validate("maxRows", 3) })
+		end)
 	end)
 
 	it("reads owned counts again when the bags change", function()

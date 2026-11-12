@@ -92,6 +92,9 @@ describe("saved data of version 0.3.5", function()
 		expected.LootomanDB.schema = #ns.Migrations.account
 		-- The layout's owned part leaves its switch to the profile, which had it off already.
 		expected.LootomanDB.sections.feedLayouts.Quiet.changes.owned = nil
+		-- The feed shows at least 3 rows.
+		expected.LootomanDB.profiles.Default.modules.LootFeed.maxRows = 3
+		expected.LootomanDB.profiles.Raid.modules.LootFeed.maxRows = 3
 		holds(ns.Compat.Test.state.saved, expected, "saved")
 		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned)
 	end)

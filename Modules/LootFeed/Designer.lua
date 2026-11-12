@@ -227,7 +227,8 @@ function Designer.Refresh()
 	local room = Designer.PREVIEW_WIDTH - 24
 	for index, rowFrame in ipairs(window.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
-		Frames.Fill(rowFrame, window.samples[index].row, options)
+		local sample = window.samples[index]
+		Frames.Fill(rowFrame, sample.row, options, sample.stuck and { waiting = sample.waiting } or nil)
 		if isIcons(design) and left > 0 and left + layout.width > room then
 			left, top = 0, top + layout.height + layout.gap
 		end

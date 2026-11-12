@@ -34,10 +34,25 @@ local function offeredDirections()
 	return { DIRECTIONS[1], DIRECTIONS[2] }
 end
 
+-- The setting of each kind of usable item the feed keeps (Rules/Usable.lua),
+-- and its label.
+local KEEP = {
+	quest = { "keepQuest", L["Items that start a quest"] },
+	recipe = { "keepRecipes", L["Recipes"] },
+	container = { "keepContainers", L["Containers"] },
+	pet = { "keepPets", L["Pets"] },
+	mount = { "keepMounts", L["Mounts"] },
+	toy = { "keepToys", L["Toys"] },
+	set = { "keepSets", L["Appearance sets"] },
+	heirloom = { "keepHeirlooms", L["Heirlooms"] },
+}
+
 -- The settings, in groups, for the options page and the Edit Mode dialog
--- alike; the row designer's button ends the last group.
+-- alike; the row designer's button ends the last group. The kinds of usable
+-- item are on the options page only, under their switch, so the dialog stays
+-- short; a kind the client has no collection for is not offered.
 local function settings()
-	return {
+	local list = {
 		{ kind = "header", label = L["What the feed shows"] },
 		{ kind = "checkbox", key = "items", label = L["Items"] },
 		{ kind = "checkbox", key = "currencies", label = L["Currencies"] },
@@ -46,9 +61,16 @@ local function settings()
 		{ kind = "checkbox", key = "xp", label = L["Experience"] },
 		{ kind = "dropdown", key = "minQuality", label = L["Minimum quality"],
 			tooltip = L["Items of a lower quality are not shown."], choices = qualityChoices() },
+		{ kind = "checkbox", key = "keepUsable", label = L["Keep usable items"],
+			tooltip = L["Items this character can use right now stay in the feed's first place, also below the minimum quality, until you click them: left to dismiss, right to use."] },
+	}
+	for _, kind in ipairs(ns.Rules.Usable.Kinds()) do
+		list[#list + 1] = { kind = "checkbox", key = KEEP[kind][1], label = KEEP[kind][2], parent = "keepUsable", pageOnly = true }
+	end
+	local rest = {
 		{ kind = "header", label = L["Rows and timing"] },
 		{ kind = "slider", key = "maxRows", label = L["Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
-			min = 1, max = 20, step = 1, format = "%d" },
+			min = 3, max = 20, step = 1, format = "%d" },
 		{ kind = "dropdown", key = "direction", label = L["Fill direction"],
 			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
 			choices = DIRECTIONS, offered = offeredDirections },
@@ -68,6 +90,10 @@ local function settings()
 			tooltip = L["Shows a warning at the feed's edge while no more reagent bag slots are free than the number below."] },
 		{ kind = "slider", key = "warnReagentAt", label = L["Reagent bag slots"], min = 0, max = 20, step = 1, format = "%d" },
 	}
+	for _, setting in ipairs(rest) do
+		list[#list + 1] = setting
+	end
+	return list
 end
 
 -- The loot feed: what you pick up shows next to the screen
@@ -88,6 +114,17 @@ local LootFeed = ns.Modules:Register({
 		reputation = true,
 		xp = false,
 		minQuality = 0,
+		-- Usable items stay in the first place until clicked (Rules/Usable.lua).
+		keepUsable = true,
+		keepQuest = true,
+		keepRecipes = true,
+		keepContainers = true,
+		keepPets = true,
+		keepMounts = true,
+		keepToys = true,
+		keepSets = true,
+		keepHeirlooms = true,
+		-- At least 3: the first place for a kept item, two for the rest.
 		maxRows = 8,
 		direction = "up",
 		duration = 6,
@@ -201,6 +238,65 @@ function LootFeed:Direction()
 	return direction
 end
 
+-- Whether the feed keeps items of a kind of usable item.
+function LootFeed:Keeps(kind)
+	return self:Get("keepUsable") and KEEP[kind] ~= nil and self:Get(KEEP[kind][1]) == true
+end
+
+-- A looted item below the minimum quality waits this long for the bags to
+-- hold it: a usable one comes in anyway.
+LootFeed.WAIT = 10
+
+-- Whether a looted item, once the bags hold it, is a usable one the feed
+-- keeps: its row sticks, or stops being sticky. A kept row counts down what
+-- is left as each use takes one, and goes when its item has left the bags.
+function LootFeed:CheckUsable(row, now)
+	if row.kind ~= "item" or not row.id then
+		return
+	end
+	local kind, held = ns.Rules.Usable.Find(row.id)
+	if not held then
+		if row.held then
+			self.model:SetSticky(row, nil, now)
+		end
+		return
+	end
+	row.held = true
+	if kind and self:Keeps(kind) then
+		self.model:SetSticky(row, kind, now)
+		row.amount = math.max(1, math.min(row.amount or 1, Compat.GetItemCount(row.id)))
+	elseif row.sticky then
+		self.model:SetSticky(row, nil, now)
+	end
+end
+
+-- Checks every row again, and the items waiting below the minimum quality.
+function LootFeed:CheckAll()
+	local now = Compat.GetTime()
+	local rows = {}
+	for index, row in ipairs(self.model.rows) do
+		rows[index] = row
+	end
+	for _, row in ipairs(rows) do
+		self:CheckUsable(row, now)
+	end
+	for index = #self.lowQuality, 1, -1 do
+		local waiting = self.lowQuality[index]
+		local kind, held = ns.Rules.Usable.Find(waiting.entry.id)
+		if held or now - waiting.at > LootFeed.WAIT then
+			table.remove(self.lowQuality, index)
+			if held and kind and self:Keeps(kind) then
+				local row = self.model:Add(waiting.entry, now, true)
+				if row then
+					row.held = true
+					self.model:SetSticky(row, kind, now)
+				end
+			end
+		end
+	end
+	self.feed:Wake()
+end
+
 function LootFeed:Apply()
 	self.model:SetOptions(self:ModelOptions(), Compat.GetTime())
 	self.feed:SetOptions({
@@ -229,10 +325,17 @@ function LootFeed:OnEnable()
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
 	end
 	self.feed.disabled = false
+	self.lowQuality = {}
 	self:Apply()
 	Feed.Sources.Start(self, function(entry)
-		if self.model:Add(entry, Compat.GetTime()) then
+		local now = Compat.GetTime()
+		local row = self.model:Add(entry, now)
+		if row then
+			self:CheckUsable(row, now)
 			self.feed:Wake()
+		elseif entry.kind == "item" and entry.id and self:Get("keepUsable") and self:Get("items") then
+			-- Below the minimum quality: shown anyway if it turns out usable.
+			self.lowQuality[#self.lowQuality + 1] = { entry = entry, at = now }
 		end
 	end)
 	self:On("SettingChanged", function(_, module, key)
@@ -247,9 +350,11 @@ function LootFeed:OnEnable()
 			ns.EditMode.Refresh(self.feed.frame)
 		end
 		self:Apply()
+		self:CheckAll()
 	end)
 	self:On("ProfileChanged", function()
 		self:Apply()
+		self:CheckAll()
 	end)
 	-- The designer, a reset or an import changed the layout's design.
 	self:On("FeedLayoutChanged", function(_, name)
@@ -261,8 +366,14 @@ function LootFeed:OnEnable()
 	self:OnEvent("BAG_UPDATE_DELAYED", function()
 		self.feed:RefreshOwned()
 	end)
+	-- So does what the character can use, read from the bags once they are read
+	-- again; and taking a quest from an item.
 	self:On("InventoryChanged", function()
 		self.feed:SetWarnings(self:Warnings())
+		self:CheckAll()
+	end)
+	self:OnEvent("QUEST_ACCEPTED", function()
+		self:CheckAll()
 	end)
 end
 

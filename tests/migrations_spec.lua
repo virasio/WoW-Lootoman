@@ -52,6 +52,14 @@ describe("migrations", function()
 		assert.same({ nil, nil }, { db.sections.feedLayouts.Shown.changes, db.sections.feedLayouts.Default.changes })
 	end)
 
+	it("gives the loot feed at least 3 rows", function()
+		local db = Migrations.Run(Migrations.account, { schema = 1, profiles = {
+			One = { modules = { LootFeed = { maxRows = 1 } } },
+			Five = { modules = { LootFeed = { maxRows = 5 } } },
+		} })
+		assert.same({ 3, 5 }, { db.profiles.One.modules.LootFeed.maxRows, db.profiles.Five.modules.LootFeed.maxRows })
+	end)
+
 	it("runs every missing step in order", function()
 		local ran = {}
 		local steps = {

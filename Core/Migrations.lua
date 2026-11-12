@@ -24,7 +24,8 @@ Migrations.account = {
 	end,
 	-- 2 (0.4): one switch for the loot feed's owned count, the profile's. A row
 	-- layout that hid its owned part turns the owned count off in every profile
-	-- that uses it, and layouts no longer keep that part's switch.
+	-- that uses it, and layouts no longer keep that part's switch. And the feed
+	-- shows at least 3 rows: the first place for an item it keeps, two more.
 	function(db)
 		local sections = type(db.sections) == "table" and db.sections or {}
 		local layouts = type(sections.feedLayouts) == "table" and sections.feedLayouts or {}
@@ -41,6 +42,9 @@ Migrations.account = {
 					profile.modules = modules or {}
 					profile.modules.LootFeed = feed or {}
 					profile.modules.LootFeed.owned = false
+				end
+				if feed and type(feed.maxRows) == "number" and feed.maxRows < 3 then
+					feed.maxRows = 3
 				end
 			end
 		end
