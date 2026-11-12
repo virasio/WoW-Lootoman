@@ -28,6 +28,62 @@ function Text.FoldCase(text)
 	end))
 end
 
+-- Hundredths as a number with up to two decimals ("12", "1.5", "1.23"), or
+-- always two ("1.20"); point is the decimal point.
+local function decimals(hundredths, point, keepZeros)
+	local whole, rest = math.floor(hundredths / 100), hundredths % 100
+	if keepZeros then
+		return ("%d%s%02d"):format(whole, point, rest)
+	elseif rest == 0 then
+		return tostring(whole)
+	elseif rest % 10 == 0 then
+		return ("%d%s%d"):format(whole, point, rest / 10)
+	end
+	return ("%d%s%02d"):format(whole, point, rest)
+end
+
+-- A number of 0 or more, short enough for an icon, cut and never rounded:
+-- below 1,000 whole ("850"); thousands with up to two decimals below 100,000
+-- ("1.5K", "12.34K"), then whole thousands ("123K"); millions alike ("1.23M",
+-- "123M"). point is the decimal point, "." by default.
+function Text.ShortNumber(number, point)
+	point = point or "."
+	local whole = math.floor(number)
+	if whole < 1000 then
+		return tostring(whole)
+	end
+	local unit, format = 1000, ns.L["%sK"]
+	if whole >= 1000000 then
+		unit, format = 1000000, ns.L["%sM"]
+	end
+	if whole < 100 * unit then
+		return format:format(decimals(math.floor(whole * 100 / unit), point))
+	end
+	return format:format(tostring(math.floor(whole / unit)))
+end
+
+-- Money short enough for an icon, cut and never rounded: the text and the
+-- coin it counts ("gold", "silver" or "copper"). Copper below a silver
+-- ("78"); silver with its copper as two decimals ("1.23"); gold below 100 with
+-- its silver ("1.02"), then whole gold below 1,000 ("123"), then as
+-- ShortNumber ("1.23K").
+function Text.ShortMoney(copper, point)
+	point = point or "."
+	copper = math.floor(copper)
+	if copper < 100 then
+		return tostring(copper), "copper"
+	elseif copper < 10000 then
+		return decimals(copper, point, true), "silver"
+	end
+	local gold = math.floor(copper / 10000)
+	if gold < 100 then
+		return decimals(math.floor(copper / 100), point, true), "gold"
+	elseif gold < 1000 then
+		return tostring(gold), "gold"
+	end
+	return Text.ShortNumber(gold, point), "gold"
+end
+
 -- Characters, not bytes: Cyrillic letters take two bytes in UTF-8.
 function Text.Length(text)
 	return select(2, text:gsub("[^\128-\191]", ""))

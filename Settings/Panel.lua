@@ -80,7 +80,8 @@ end
 
 -- A dropdown bound to a string or number module setting. choices lists
 -- { value, label } pairs in the order shown; the default must be one of them.
-function Panel.AddDropdown(category, module, key, label, tooltip, choices)
+-- offered(), when given, gives the choices to show now, of all the choices.
+function Panel.AddDropdown(category, module, key, label, tooltip, choices, offered)
 	local default = Storage:GetDefault(module, key)
 	local found = false
 	for _, choice in ipairs(choices) do
@@ -91,19 +92,12 @@ function Panel.AddDropdown(category, module, key, label, tooltip, choices)
 	local setting = register(category, module, key, label, varType)
 	local function options()
 		local container = Settings.CreateControlTextContainer()
-		for _, choice in ipairs(choices) do
+		for _, choice in ipairs(offered and offered() or choices) do
 			container:Add(choice[1], choice[2])
 		end
 		return container:GetData()
 	end
 	return Settings.CreateDropdown(category, setting, options, tooltip)
-end
-
--- A colour swatch bound to a string module setting holding AARRGGBB, the
--- format Blizzard's swatch reads and writes.
-function Panel.AddColor(category, module, key, label, tooltip)
-	local setting = register(category, module, key, label, Settings.VarType.String)
-	return Settings.CreateColorSwatch(category, setting, tooltip)
 end
 
 -- A button on a page, for BuildSettings(category, layout).
@@ -121,23 +115,33 @@ function Panel.AddHeader(layout, label, tooltip)
 end
 
 -- A module's settings from the list the Edit Mode dialog also takes
--- (EditMode.Register): headers, checkboxes, sliders, dropdowns and colours, in
--- order.
+-- (EditMode.Register): headers, checkboxes, sliders and dropdowns, in order.
+-- A setting with a parent (the key of a checkbox before it) sits indented
+-- under it, usable only while that one is on.
 function Panel.AddSettings(category, layout, module, settings)
+	local made = {}
 	for _, setting in ipairs(settings) do
+		local initializer
 		if setting.kind == "header" then
 			Panel.AddHeader(layout, setting.label, setting.tooltip)
 		elseif setting.kind == "checkbox" then
-			Panel.AddCheckbox(category, module, setting.key, setting.label, setting.tooltip)
+			initializer = Panel.AddCheckbox(category, module, setting.key, setting.label, setting.tooltip)
 		elseif setting.kind == "slider" then
-			Panel.AddSlider(category, module, setting.key, setting.label, setting.tooltip,
+			initializer = Panel.AddSlider(category, module, setting.key, setting.label, setting.tooltip,
 				setting.min, setting.max, setting.step, setting.format)
 		elseif setting.kind == "dropdown" then
-			Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices)
-		elseif setting.kind == "color" then
-			Panel.AddColor(category, module, setting.key, setting.label, setting.tooltip)
+			initializer = Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices, setting.offered)
 		else
 			error(("%s: unknown setting kind %s"):format(module, tostring(setting.kind)))
+		end
+		if setting.key then
+			made[setting.key] = initializer
+		end
+		local parent = setting.parent and made[setting.parent]
+		if parent and initializer then
+			initializer:SetParentInitializer(parent, function()
+				return Storage:Get(module, setting.parent) == true
+			end)
 		end
 	end
 end

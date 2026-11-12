@@ -52,6 +52,16 @@ describe("loot feed frames", function()
 			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" }, owned).owned)
 			assert.equals(120, Frames.Describe({ kind = "currency", name = "Valorstones", total = 120 }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "item", id = 7, name = "Gone" }, owned).owned)
+			-- In the bags only, when the layout's owned count says so.
+			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42, inBags = 12 } })
+			local Design = ns.Feed.Design
+			local bags = Design.Current({ schema = Design.SCHEMA, changes = { owned = { count = "bags" } } })
+			assert.equals(12, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
+				{ showOwned = true, layout = Design.Layout(bags, 13) }).owned)
+			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
+				{ showOwned = true, layout = Design.Layout(Design.LARGE, 13) }).owned)
+			-- An item the client is not told of (a sample) has no count, and no error.
+			assert.is_nil(Frames.Describe({ kind = "item", name = "Sample" }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "money", amount = 5 }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" }).owned)
 		end)
@@ -75,6 +85,32 @@ describe("loot feed frames", function()
 			local loss = Frames.Describe({ kind = "reputation", name = "Defias Brotherhood", amount = -10 })
 			assert.same({ "-10", { 1, 0.13, 0.13 } }, { loss.amount, loss.amountColor })
 			assert.is_nil(Frames.Describe({ kind = "reputation", name = "Darnassus" }).amount)
+		end)
+
+		it("shortens the amounts on icons: no times sign and no plus, thousands short, money as a number and a coin", function()
+			local Design = ns.Feed.Design
+			local icons = { layout = Design.Layout(Design.ICONS, 13) }
+			assert.same({ "1.23K", { 1, 1, 1 } }, { Frames.Describe({ kind = "item", name = "Cloth", quality = 1, amount = 1234 }, icons).amount,
+				Frames.Describe({ kind = "item", name = "Cloth", quality = 1, amount = 1234 }, icons).amountColor })
+			assert.equals("5", Frames.Describe({ kind = "currency", name = "Crest", amount = 5 }, icons).amount)
+			assert.same({ "12.34K", { 0.1, 1, 0.1 } }, { Frames.Describe({ kind = "xp", amount = 12345 }, icons).amount,
+				Frames.Describe({ kind = "xp", amount = 12345 }, icons).amountColor })
+			assert.same({ "-250", { 1, 0.13, 0.13 } }, { Frames.Describe({ kind = "reputation", name = "Stormwind", amount = -250 }, icons).amount,
+				Frames.Describe({ kind = "reputation", name = "Stormwind", amount = -250 }, icons).amountColor })
+			local money = Frames.Describe({ kind = "money", amount = 10245 }, icons)
+			assert.same({ "1.02|A:coin-gold|a", "10245 copper" }, { money.amount, money.label })
+			assert.equals("78|A:coin-copper|a", Frames.Describe({ kind = "money", amount = 78 }, icons).amount)
+			-- The client's decimal point.
+			ns.Compat.Test.state.globalStrings.DECIMAL_SEPERATOR = ","
+			assert.equals("1,23|A:coin-silver|a", Frames.Describe({ kind = "money", amount = 123 }, icons).amount)
+			-- So are the owned count and a currency's total.
+			local owned = { layout = icons.layout, showOwned = true }
+			assert.equals("1,23M", Frames.Describe({ kind = "currency", name = "Crest", amount = 5, total = 1234567 }, owned).ownedText)
+			assert.equals("12,34K", Frames.Describe({ kind = "item", name = "Ore", quality = 1, owned = 12345 }, owned).ownedText)
+			-- Rows keep the long form.
+			local rows = { layout = Design.Layout(Design.LARGE, 13), showOwned = true }
+			assert.equals("+12345", Frames.Describe({ kind = "xp", amount = 12345 }, rows).amount)
+			assert.equals("12345", Frames.Describe({ kind = "item", name = "Ore", quality = 1, owned = 12345 }, rows).ownedText)
 		end)
 
 		it("uses its own phrase for a faction name the client declined", function()
@@ -125,6 +161,139 @@ describe("loot feed frames", function()
 			assert.same({ "TOPLEFT", feed.frame, "TOPLEFT", 0, -42 }, frameWith("Experience").points[1])
 			assert.same({ "TOPLEFT", feed.frame, "TOPLEFT", 0, 0 }, frameWith("100 copper").points[1])
 			assert.equals(119, feed.frame.height)
+		end)
+
+		it("fills sideways with icons: the oldest at the left or the right edge, the new ones beside it", function()
+			local icons = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13)
+			feed:SetOptions(options({ direction = "right", layout = icons }))
+			model:Add({ kind = "money", amount = 100 }, 0)
+			model:Add({ kind = "xp", amount = 50 }, 0)
+			feed:Draw(1)
+			-- Icons 36 wide, 4 apart: three of them make the strip.
+			assert.same({ "100 copper@0", "Experience@40" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 40, 0 }, frameWith("Experience").points[1])
+			assert.same({ 116, 36 }, { feed.frame.width, feed.frame.height })
+			feed:SetOptions(options({ direction = "left", layout = icons }))
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", -40, 0 }, frameWith("Experience").points[1])
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, frameWith("100 copper").points[1])
+		end)
+
+		it("puts warnings in lines above a sideways strip, which keeps its places", function()
+			feed:SetOptions(options({ direction = "right", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
+			feed:SetWarnings({ "Free bag slots: 2", "No free reagent bag slots" })
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			assert.same({ "100 copper@0" }, layout())
+			-- Lines as high as their text and a little room, the first one nearest to the strip,
+			-- 4 apart from it.
+			local first, second = feed.warningLines[1], feed.warningLines[2]
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 40 }, first.points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 59 }, second.points[1])
+			assert.same({ 116, 19 }, { first.width, first.height })
+			-- The background spans the strip, the gap and the lines, evenly behind icons.
+			local background = feed.frame.Background
+			assert.same({ 124, 86 }, { background.width, background.height })
+			assert.same({ 0.5, 0.5 }, { background.gradient[2].a, background.gradient[3].a })
+			feed:SetOptions(options({ direction = "left", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 40 }, first.points[1])
+			-- A stuck icon still takes the strip's first place.
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 1)
+			model:SetSticky(quest, "quest", 1)
+			model:Add({ kind = "money", amount = 5 }, 7.5)
+			feed:Draw(7.5)
+			assert.same({ "Letter@0", "5 copper@40" }, layout())
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 40 }, first.points[1])
+		end)
+
+		it("shows warnings as bag icons with the free slots in an Icons layout filling up or down", function()
+			local Design = ns.Feed.Design
+			feed:SetOptions(options({ layout = Design.Layout(Design.ICONS, 13) }))
+			feed:SetWarnings({ { text = "Free bag slots: 2", count = 2 }, { text = "No free reagent bag slots", count = 0 } })
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			-- The icons take the first places, 40 apart, and the row comes after them.
+			local first, second = feed.warningIcons[1], feed.warningIcons[2]
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, first.points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 40 }, second.points[1])
+			assert.same({ "2", "0", { 1, 0.25, 0.25 } }, { first.Count.text, second.Count.text, first.Count.color })
+			assert.same({ "100 copper@80" }, layout())
+			assert.is_nil(feed.warningLines[1])
+			first.scripts.OnEnter(first)
+			assert.same({ true, "Free bag slots: 2" }, { tooltip.shown, tooltip.lines[1] })
+			-- Sideways they are lines again; with rows too.
+			feed:SetOptions(options({ direction = "right", layout = Design.Layout(Design.ICONS, 13) }))
+			assert.same({ false, true, "Free bag slots: 2" }, { first.shown, feed.warningLines[1].shown, feed.warningLines[1].Text.text })
+			feed:SetOptions(options())
+			assert.same({ false, true }, { first.shown, feed.warningLines[1].shown })
+			feed:SetWarnings({})
+			assert.is_false(feed.warningLines[1].shown)
+		end)
+
+		it("puts the stuck row after the warnings, before the other rows, with its marks and its clicks", function()
+			feed:SetWarnings({ "Free bag slots: 2" })
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
+			model:SetSticky(quest, "quest", 0)
+			local clam = model:Add({ kind = "item", id = 2, name = "Clam", link = LINK, icon = 2, amount = 1 }, 0)
+			model:SetSticky(clam, "container", 0)
+			model:Add({ kind = "money", amount = 100 }, 6.5)
+			feed:Draw(6.5)
+			-- The warning at the edge, then the letter, stuck first, then the rest.
+			assert.same({ "Letter@42", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			local letter = frameWith("Letter")
+			assert.same({ true, false, true, "+1", true }, { letter.QuestMark.shown, letter.Pin.shown, letter.Waiting.shown,
+				letter.Waiting.text, letter.mouseClicks })
+			assert.is_false(frameWith("100 copper").mouseClicks)
+			letter.scripts.OnEnter(letter)
+			assert.equals("Left-click: dismiss. Right-click: use.", tooltip.lines[#tooltip.lines])
+			-- A left click lets it go; the clam takes the place, with a pin.
+			local dismissed
+			feed.onDismiss = function(row) dismissed = row end
+			letter.scripts.OnMouseUp(letter, "LeftButton")
+			assert.equals(quest, dismissed)
+			feed:Draw(6.6)
+			assert.same({ "Clam@42", "100 copper@84" }, layout())
+			local clamFrame = frameWith("Clam")
+			assert.same({ false, true, false }, { clamFrame.QuestMark.shown, clamFrame.Pin.shown, clamFrame.Waiting.shown })
+			-- A right click is not the row's.
+			clamFrame.scripts.OnMouseUp(clamFrame, "RightButton")
+			assert.equals(quest, dismissed)
+			-- With no stuck row, the warning stays at the edge and the rows come after it.
+			feed:Dismiss(clam)
+			feed:Draw(6.7)
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			-- Without the warning, the stuck row takes the edge.
+			local letter2 = model:Add({ kind = "item", id = 3, name = "Note", link = LINK, icon = 3, amount = 1 }, 6.7)
+			model:SetSticky(letter2, "quest", 6.7)
+			feed:SetWarnings({})
+			feed:Draw(13)
+			assert.same({ "Note@0", "100 copper@42" }, layout())
+		end)
+
+		it("keeps the stuck row's place in a fight, the warnings that come meanwhile after it", function()
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
+			model:SetSticky(quest, "quest", 0)
+			feed:Draw(6.5)
+			assert.same({ "Letter@0" }, layout())
+			ns.Compat.Test.SetCombat(true)
+			feed:SetWarnings({ "Free bag slots: 2" })
+			model:Add({ kind = "money", amount = 100 }, 6.6)
+			feed:Draw(6.7)
+			assert.same({ "Letter@0", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 42 }, feed.warningLines[1].points[1])
+			-- After the fight they swap.
+			ns.Compat.Test.SetCombat(false)
+			feed:Draw(7)
+			assert.same({ "Letter@42", "100 copper@84" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			-- A warning that goes in a fight leaves its place empty until it ends.
+			ns.Compat.Test.SetCombat(true)
+			feed:SetWarnings({})
+			feed:Draw(7.5)
+			assert.same({ "Letter@42", "100 copper@84" }, layout())
+			ns.Compat.Test.SetCombat(false)
+			feed:Draw(8)
+			assert.same({ "Letter@0", "100 copper@42" }, layout())
 		end)
 
 		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()
@@ -271,6 +440,29 @@ describe("loot feed frames", function()
 			assert.same({ true, "42" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
+		it("draws the amount's own background when the design asks, with its opacity", function()
+			local Design = ns.Feed.Design
+			local design = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { amount = { background = true, opacity = 30 } } })
+			local rowFrame = Frames.CreateRow(nil)
+			local withBackground = { layout = Design.Layout(design, 13) }
+			Frames.ApplyLayout(rowFrame, withBackground.layout)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, withBackground)
+			assert.same({ true, 0.3 }, { rowFrame.AmountBackground.shown, rowFrame.AmountBackground.colorTexture[4] })
+			-- The owned count's own, alike.
+			local owned = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { owned = { background = true, opacity = 40 } } })
+			local withOwned = { layout = Design.Layout(owned, 13), showOwned = true }
+			Frames.ApplyLayout(rowFrame, withOwned.layout)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", icon = 1, quality = 1, amount = 20, owned = 30 }, withOwned)
+			assert.same({ true, 0.4, false }, { rowFrame.OwnedBackground.shown, rowFrame.OwnedBackground.colorTexture[4],
+				rowFrame.AmountBackground.shown })
+			Frames.ApplyLayout(rowFrame, withBackground.layout)
+			-- No amount, no background.
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 1 }, withBackground)
+			assert.is_false(rowFrame.AmountBackground.shown)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, { layout = Design.Layout(Design.ICONS, 13) })
+			assert.is_false(rowFrame.AmountBackground.shown)
+		end)
+
 		it("shows the owned count and the glow, and hides them when turned off", function()
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42 } })
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 4 }, 0)
@@ -313,10 +505,11 @@ describe("loot feed frames", function()
 			feed:SetPreview(true)
 			assert.is_true(feed.frame.shown)
 			feed:Draw(0)
-			assert.same({ "123456 copper@0", "Sample rare item@42", "Sample item@84" }, layout())
+			-- The stuck sample in the first place, and the rows that fit after it.
+			assert.same({ "Sample quest item@0", "Sample rare item@42", "Sample item@84" }, layout())
 			feed:SetOptions(options({ maxRows = 8 }))
 			feed:Draw(0)
-			assert.equals(5, #layout())
+			assert.equals(7, #layout())
 			assert.is_true(feed.frame.PreviewBackground.shown)
 			feed:SetPreview(false)
 			assert.is_false(feed.frame.shown)
@@ -334,6 +527,22 @@ describe("loot feed frames", function()
 			local currency = frameWith("Valorstones")
 			currency.scripts.OnEnter(currency)
 			assert.equals(3008, tooltip.currency)
+		end)
+
+		it("shows money, experience and reputation in full in a tooltip, as an icon cannot", function()
+			feed:SetOptions(options({ maxRows = 3 }))
+			model:Add({ kind = "money", amount = 10245 }, 0)
+			model:Add({ kind = "xp", amount = 12345 }, 0)
+			model:Add({ kind = "reputation", name = "Stormwind", amount = -250 }, 0)
+			feed:Draw(1)
+			local function hover(label)
+				local rowFrame = frameWith(label)
+				rowFrame.scripts.OnEnter(rowFrame)
+				return { tooltip.shown, unpack(tooltip.lines) }
+			end
+			assert.same({ true, "Money", "10245 copper" }, hover("10245 copper"))
+			assert.same({ true, "Experience", "+12,345" }, hover("Experience"))
+			assert.same({ true, "Reputation with Stormwind", "-250" }, hover("Reputation with Stormwind"))
 		end)
 	end)
 end)

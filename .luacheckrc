@@ -22,15 +22,22 @@ files["Locales/Locales.lua"] = {
 files["Compat/"] = {
 	globals = { "SlashCmdList" },
 	read_globals = {
+		"BreakUpLargeNumbers",
 		"C_AddOns",
 		"C_CVar",
 		"C_Container",
 		"C_CurrencyInfo",
 		"C_Cursor",
 		"C_EncodingUtil",
+		"C_Heirloom",
 		"C_Item",
+		"C_MountJournal",
+		"C_PetJournal",
 		"C_PlayerInteractionManager",
 		"C_Timer",
+		"C_ToyBox",
+		"C_TooltipInfo",
+		"C_TransmogSets",
 		"ClearCursor",
 		"ConfirmLootSlot",
 		"Constants",
@@ -48,6 +55,8 @@ files["Compat/"] = {
 		"GetNormalizedRealmName",
 		"GetNumLootItems",
 		"GetTime",
+		"ITEM_SPELL_KNOWN",
+		"PlayerHasToy",
 		"InCombatLockdown",
 		"IsFishingLoot",
 		"IsInGroup",
@@ -66,10 +75,6 @@ files["Compat/"] = {
 -- Third-party addons' APIs, each read only by its integration.
 files["Integrations/Auctionator.lua"] = {
 	read_globals = { "Auctionator" },
-}
-
-files["Integrations/Broker.lua"] = {
-	read_globals = { "LibStub" },
 }
 
 files["Modules/"] = {
@@ -100,8 +105,9 @@ files["Modules/"] = {
 		"NumberFontNormal",
 		"UISpecialFrames",
 		"StaticPopup_Hide",
+		"SecureHandlerWrapScript",
 		"StaticPopup_Show",
-		"ToggleAllBags",
+		"TEXTURE_ITEM_QUEST_BANG",
 		"TooltipUtil",
 		"UIParent",
 	},

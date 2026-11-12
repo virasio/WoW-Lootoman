@@ -241,6 +241,83 @@ function Compat.GetBagItemFacts(bag, slot)
 	}
 end
 
+-- What decides whether the item in a bag slot can be used right now:
+-- { itemID, questID (the quest it starts, if any), questTaken (that quest is
+-- in the log), recipe (a recipe item), known (a recipe the character knows,
+-- from its tooltip's "Already known"), openable (it holds loot), usable }, or
+-- nil for an empty slot.
+function Compat.GetBagItemUse(bag, slot)
+	local info = C_Container.GetContainerItemInfo(bag, slot)
+	if not info then
+		return nil
+	end
+	local quest = C_Container.GetContainerItemQuestInfo(bag, slot)
+	local classID = select(6, C_Item.GetItemInfoInstant(info.itemID))
+	local recipe = classID ~= nil and classID == Enum.ItemClass.Recipe
+	local known = false
+	if recipe and Compat.Has("C_TooltipInfo.GetBagItem") then
+		local tooltip = C_TooltipInfo.GetBagItem(bag, slot)
+		for _, line in ipairs(tooltip and tooltip.lines or {}) do
+			known = known or line.leftText == ITEM_SPELL_KNOWN
+		end
+	end
+	return {
+		itemID = info.itemID,
+		questID = quest and quest.questID or nil,
+		questTaken = quest ~= nil and quest.isActive == true,
+		recipe = recipe,
+		known = known,
+		openable = info.hasLoot == true,
+		usable = C_Item.IsUsableItem(info.itemID) == true,
+	}
+end
+
+-- The collections a client has, as kinds of collectible items: pet, mount,
+-- toy, set (appearance sets) and heirloom.
+function Compat.GetCollectionKinds()
+	return {
+		pet = Compat.Has("C_PetJournal.GetPetInfoByItemID") and Compat.Has("C_PetJournal.GetNumCollectedInfo"),
+		mount = Compat.Has("C_MountJournal.GetMountFromItem") and Compat.Has("C_MountJournal.GetMountInfoByID"),
+		toy = Compat.Has("C_ToyBox.GetToyInfo") and Compat.Has("PlayerHasToy"),
+		set = Compat.Has("C_Item.GetItemLearnTransmogSet") and Compat.Has("C_TransmogSets.GetSetInfo"),
+		heirloom = Compat.Has("C_Heirloom.IsItemHeirloom") and Compat.Has("C_Heirloom.PlayerHasHeirloom"),
+	}
+end
+
+-- What an item adds to a collection when used: { kind, collected }, kind as
+-- in GetCollectionKinds; collected is true once it is in the collection (a
+-- pet: when the species is at its limit). Nil for any other item.
+function Compat.GetCollectible(itemID)
+	local kinds = Compat.GetCollectionKinds()
+	if kinds.pet then
+		local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+		if speciesID then
+			local owned, limit = C_PetJournal.GetNumCollectedInfo(speciesID)
+			return { kind = "pet", collected = (owned or 0) >= (limit or 0) }
+		end
+	end
+	if kinds.mount then
+		local mountID = C_MountJournal.GetMountFromItem(itemID)
+		if mountID then
+			return { kind = "mount", collected = select(11, C_MountJournal.GetMountInfoByID(mountID)) == true }
+		end
+	end
+	if kinds.toy and C_ToyBox.GetToyInfo(itemID) then
+		return { kind = "toy", collected = PlayerHasToy(itemID) == true }
+	end
+	if kinds.set then
+		local setID = C_Item.GetItemLearnTransmogSet(itemID)
+		local set = setID and C_TransmogSets.GetSetInfo(setID)
+		if set then
+			return { kind = "set", collected = set.collected == true }
+		end
+	end
+	if kinds.heirloom and C_Heirloom.IsItemHeirloom(itemID) then
+		return { kind = "heirloom", collected = C_Heirloom.PlayerHasHeirloom(itemID) == true }
+	end
+	return nil
+end
+
 -- Whether the player told the game to leave a bag out of junk selling (the
 -- bag's menu); Blizzard's bag menu reads the backpack's flag apart. False on a
 -- client without the flag.
@@ -293,19 +370,6 @@ function Compat.GetItemFamily(item)
 	return C_Item.GetItemFamily(item) or 0
 end
 
--- What kind of item an ID is, from the client's own data (no server request):
--- { type, subType (in the client language, such as "Herb Bag"), classID,
--- subClassID, family (the bag families it fits; nil when the client does not
--- say) }, or nil when the client has no such item.
-function Compat.GetItemKind(item)
-	local itemID, itemType, itemSubType, _, _, classID, subClassID = C_Item.GetItemInfoInstant(item)
-	if not itemID then
-		return nil
-	end
-	return { type = itemType, subType = itemSubType, classID = classID, subClassID = subClassID,
-		family = C_Item.GetItemFamily(item) }
-end
-
 -- Item data by ID, link or name: name, link, quality, stackSize, sellPrice (a
 -- merchant's price for one, in copper), isCraftingReagent. Nil while the
 -- client has not loaded the item yet.
@@ -324,8 +388,12 @@ function Compat.GetItemInfo(item)
 	}
 end
 
--- How many of an item the character has in bags, bank and reagent bank.
-function Compat.GetItemCount(item)
+-- How many of an item the character has in bags, bank and reagent bank, or
+-- with bagsOnly in the bags (with the reagent bag) only.
+function Compat.GetItemCount(item, bagsOnly)
+	if bagsOnly then
+		return C_Item.GetItemCount(item, false, false, false, false)
+	end
 	return C_Item.GetItemCount(item, true, false, true, false)
 end
 
@@ -356,80 +424,9 @@ function Compat.GetCurrencyInfo(currencyID)
 	}
 end
 
--- The IDs of every currency in the character's currency list, as the
--- currency tab shows them. Headers the player collapsed are opened for the
--- read and closed again, in reverse order, so the tab stays as it was.
-function Compat.GetCurrencyIDs()
-	if not Compat.Has("C_CurrencyInfo.GetCurrencyListSize") then
-		return {}
-	end
-	local ids, opened = {}, {}
-	local index = 1
-	while index <= C_CurrencyInfo.GetCurrencyListSize() do
-		local info = C_CurrencyInfo.GetCurrencyListInfo(index)
-		if info and info.isHeader then
-			if not info.isHeaderExpanded then
-				C_CurrencyInfo.ExpandCurrencyList(index, true)
-				opened[#opened + 1] = index
-			end
-		elseif info and info.currencyID then
-			ids[#ids + 1] = info.currencyID
-		end
-		index = index + 1
-	end
-	for position = #opened, 1, -1 do
-		C_CurrencyInfo.ExpandCurrencyList(opened[position], false)
-	end
-	return ids
-end
-
--- The IDs of the currencies the player shows on the backpack (the currency
--- tab's "Show on backpack"), in their order.
-function Compat.GetBackpackCurrencyIDs()
-	local ids = {}
-	if not Compat.Has("C_CurrencyInfo.GetBackpackCurrencyInfo") then
-		return ids
-	end
-	local index = 1
-	while true do
-		local info = C_CurrencyInfo.GetBackpackCurrencyInfo(index)
-		if not info then
-			return ids
-		end
-		ids[#ids + 1] = info.currencyTypesID
-		index = index + 1
-	end
-end
-
--- How many of an item the bags and the reagent bag hold (not the bank).
-function Compat.GetBagItemCount(item)
-	return C_Item.GetItemCount(item, false, false, false, false)
-end
-
--- Whether the client has a warband bank (Forever may not).
-function Compat.HasWarbandBank()
-	return Compat.Has("Enum.BankType.Account")
-end
-
--- How many of an item the character has in the bags (with the reagent bag),
--- in the bank (whose tabs hold reagents too) and in the warband bank. The
--- client gives totals, so each bank is its total less the bags.
-function Compat.GetItemCounts(item)
-	local bags = C_Item.GetItemCount(item, false, false, false, false)
-	local counts = { bags = bags, bank = C_Item.GetItemCount(item, true, false, true, false) - bags, warband = 0 }
-	if Compat.HasWarbandBank() then
-		counts.warband = C_Item.GetItemCount(item, false, false, false, true) - bags
-	end
-	return counts
-end
-
--- The item on the cursor, as an item ID, while the cursor holds one.
-function Compat.GetCursorItemID()
-	local kind, itemID = GetCursorInfo()
-	if kind == "item" and type(itemID) == "number" then
-		return itemID
-	end
-	return nil
+-- A whole number with the client's thousands separators ("12,345").
+function Compat.BreakUpLargeNumbers(number)
+	return BreakUpLargeNumbers(number)
 end
 
 -- Copper.

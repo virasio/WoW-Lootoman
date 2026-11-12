@@ -212,6 +212,45 @@ function Compat.GetBagItemFacts(bag, slot)
 	}
 end
 
+-- An item in a bag slot may have use = { questID, questTaken, recipe, known,
+-- openable, usable }; usable is true unless it says false.
+function Compat.GetBagItemUse(bag, slot)
+	local info = state.bags[bag]
+	local item = info and info.items and info.items[slot]
+	if not item then
+		return nil
+	end
+	local use = item.use or {}
+	return {
+		itemID = item.itemID,
+		questID = use.questID,
+		questTaken = use.questTaken == true,
+		recipe = use.recipe == true,
+		known = use.known == true,
+		openable = use.openable == true,
+		usable = use.usable ~= false,
+	}
+end
+
+-- Every collection unless state.collections says otherwise.
+function Compat.GetCollectionKinds()
+	local kinds = {}
+	for _, kind in ipairs({ "pet", "mount", "toy", "set", "heirloom" }) do
+		kinds[kind] = not state.collections or state.collections[kind] == true
+	end
+	return kinds
+end
+
+-- Items (state.items) may be collectible = { kind, collected }.
+function Compat.GetCollectible(itemID)
+	local info = findItem(itemID)
+	local collectible = info and info.collectible
+	if not collectible or not Compat.GetCollectionKinds()[collectible.kind] then
+		return nil
+	end
+	return { kind = collectible.kind, collected = collectible.collected == true }
+end
+
 -- Bags: { keptFromJunkSale = true }.
 function Compat.IsBagKeptFromJunkSale(bag)
 	local info = state.bags[bag]
@@ -272,18 +311,6 @@ function Compat.GetItemFamily(item)
 	return info and info.family or 0
 end
 
--- An item's kind is info.kind = { type, subType, classID, subClassID }, its
--- family info.family.
-function Compat.GetItemKind(item)
-	local info = findItem(item)
-	if not info or not info.kind then
-		return nil
-	end
-	local kind = copy(info.kind)
-	kind.family = info.family
-	return kind
-end
-
 function Compat.GetItemInfo(item)
 	local info = findItem(item)
 	if not info then
@@ -299,9 +326,15 @@ function Compat.GetItemInfo(item)
 	}
 end
 
-function Compat.GetItemCount(item)
+-- Like the client, which raises an error for no item at all. Items own
+-- info.owned in all, info.inBags of them in the bags (all, unless given).
+function Compat.GetItemCount(item, bagsOnly)
+	assert(item ~= nil, "bad argument #1 to 'GetItemCount' (Usage: local count = C_Item.GetItemCount(itemInfo))")
 	local info = findItem(item)
-	return info and info.owned or 0
+	if not info then
+		return 0
+	end
+	return bagsOnly and (info.inBags or info.owned or 0) or (info.owned or 0)
 end
 
 function Compat.GetItemLook(item)
@@ -312,70 +345,21 @@ function Compat.GetItemLook(item)
 	return info.icon, info.quality
 end
 
--- Currencies: { name, icon, quantity, max, totalEarned, capsTotalEarned,
--- backpack = order on the backpack }; every currency is in the list.
+-- Currencies: { name, icon, quantity, max, totalEarned, capsTotalEarned }.
 function Compat.GetCurrencyInfo(currencyID)
 	local info = copy(state.currencies[currencyID])
 	if info then
 		info.max, info.totalEarned = info.max or 0, info.totalEarned or 0
-		info.capsTotalEarned, info.backpack = info.capsTotalEarned == true, nil
+		info.capsTotalEarned = info.capsTotalEarned == true
 	end
 	return info
 end
 
-function Compat.GetCurrencyIDs()
-	local ids = {}
-	for currencyID in pairs(state.currencies) do
-		ids[#ids + 1] = currencyID
-	end
-	table.sort(ids)
-	return ids
-end
-
-function Compat.GetBackpackCurrencyIDs()
-	local ids = {}
-	for currencyID, info in pairs(state.currencies) do
-		if info.backpack then
-			ids[#ids + 1] = currencyID
-		end
-	end
-	table.sort(ids, function(a, b) return state.currencies[a].backpack < state.currencies[b].backpack end)
-	return ids
-end
-
--- Counts the items in state.bags.
-function Compat.GetBagItemCount(item)
-	local id = type(item) == "string" and tonumber(item:match("item:(%d+)")) or item
-	local count = 0
-	for _, bag in pairs(state.bags) do
-		for _, slotItem in pairs(bag.items or {}) do
-			if slotItem.itemID == id then
-				count = count + (slotItem.count or 1)
-			end
-		end
-	end
-	return count
-end
-
-function Compat.HasWarbandBank()
-	return Compat.Has("Enum.BankType.Account")
-end
-
--- The banks hold info.bank and info.warband of an item (state.items).
-function Compat.GetItemCounts(item)
-	local info = findItem(item)
-	return { bags = Compat.GetBagItemCount(item), bank = info and info.bank or 0,
-		warband = Compat.HasWarbandBank() and info and info.warband or 0 }
-end
-
--- The cursor holds an item from outside the bags: state.cursorItem = itemID.
-function Compat.GetCursorItemID()
-	if state.cursorItem then
-		return state.cursorItem
-	end
-	local cursor = state.cursor
-	local item = cursor and state.bags[cursor.bag] and state.bags[cursor.bag].items and state.bags[cursor.bag].items[cursor.slot]
-	return item and item.itemID or nil
+-- Thousands separated by commas, as an English client does.
+function Compat.BreakUpLargeNumbers(number)
+	local text = tostring(math.floor(number))
+	local result = text:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (result:gsub("^,", ""))
 end
 
 function Compat.GetMoney()

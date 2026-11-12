@@ -3,6 +3,10 @@ local _, ns = ...
 -- Every user-visible string. English strings are their own keys, so this list
 -- is for the tests and for translators: add each new L["..."] key here.
 ns.Locales.AddEnglish({
+	-- Core/Text.lua: thousands and millions, short, as on an icon (“12.34K”).
+	"%sK",
+	"%sM",
+
 	-- Core/Startup.lua
 	"Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update.",
 
@@ -36,9 +40,11 @@ ns.Locales.AddEnglish({
 
 	-- Modules/LootFeed/Frames.lua
 	"Experience",
+	"Left-click: dismiss. Right-click: use.",
 	-- Sample rows in Edit Mode.
 	"Sample item",
 	"Sample rare item",
+	"Sample quest item",
 	"Sample currency",
 	"Sample faction",
 	-- A faction's reputation change. Russian clients decline the faction name in
@@ -55,26 +61,28 @@ ns.Locales.AddEnglish({
 	"Items",
 	"Currencies",
 	"Money",
-	"Stack: %s",
-	"%s, in the banks",
-	"%s, everywhere",
-	"Count the bags",
-	"Count the banks",
-	"Count everything",
-	"Show it again",
-	"Bags",
-	"Bank",
-	"Warband bank",
 	"Reputation",
 	"Minimum quality",
 	"Items of a lower quality are not shown.",
+	"Keep usable items",
+	"Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use.",
+	"Items that start a quest",
+	"Recipes",
+	"Containers",
+	"Pets",
+	"Mounts",
+	"Toys",
+	"Appearance sets",
+	"Heirlooms",
 	"Rows and timing",
 	"Rows",
 	"How many rows are shown at once. When there are more, the oldest ones fade out at once.",
-	"New rows appear",
-	"On top: the oldest row stays at the bottom edge and new rows stack above it. At the bottom: the oldest row stays at the top edge and new rows stack below it.",
-	"On top",
-	"At the bottom",
+	"Fill direction",
+	"Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts.",
+	"Bottom to top",
+	"Top to bottom",
+	"Left to right",
+	"Right to left",
 	"Time on screen",
 	"Seconds before a row starts to fade out.",
 	"%d s",
@@ -86,7 +94,6 @@ ns.Locales.AddEnglish({
 	"Background opacity",
 	"%d %%",
 	"Owned count",
-	"Shows on the icon how many of the item you have in your bags and bank, and the total of a currency.",
 	"Glow for rare items",
 	"Rare and better items glow in their quality colour.",
 
@@ -117,6 +124,13 @@ ns.Locales.AddEnglish({
 	"Large",
 	"Compact",
 	"Minimal",
+	"Icons",
+	"Background",
+	"Icon size",
+	"Gap between icons",
+	"Counts",
+	"Bags and bank",
+	"Bags only",
 	"Reset",
 	"Part:",
 	"Row",
@@ -297,88 +311,4 @@ ns.Locales.AddEnglish({
 	"Free bag slots: %d",
 	"No free reagent bag slots",
 	"Free reagent bag slots: %d",
-
-	-- Modules/FreeSlots/FreeSlots.lua
-	"Free slots",
-	"Enable the free-slot bar",
-	"Shows the free slots of your bags as text, in your own format and colours.",
-
-	-- Modules/FreeSlots/FreeSlots.lua
-	"Look",
-	"Default colour",
-	"For the text between the tokens, and for tokens without a colour of their own.",
-	"Also in broker panels",
-	"Offers the text to broker displays such as Titan Panel or ElvUI's data texts.",
-	"All bags: %d free of %d",
-	"General bags: %d free of %d",
-	"Reagent bag: %d free of %d",
-	"Profession bags: %d free of %d",
-	"%s: %d free of %d",
-	"Edit the text",
-	"The free-slot bar's text. Tokens: %s",
-	"Text",
-	"Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s",
-
-	-- Modules/Bars/Bars.lua
-	"Currency bars",
-	"Enable currency bars",
-	"Bars of currencies and of items in your bags, anywhere on the screen.",
-
-	-- Modules/Bars/Sets.lua
-	"Use bar set “%s”",
-	"Bar sets",
-
-	-- Modules/Bars/Bars.lua
-	"%d / %d",
-
-	-- Modules/Bars/BarFrame.lua
-	"Gap",
-	"Currency bar %d",
-	"Edit bars",
-	"New bar",
-	"Remove this bar",
-
-	-- Modules/Bars/Editor.lua
-	"Enter a set name.",
-	"The set name is too long.",
-	"A set with this name already exists.",
-	"This set no longer exists.",
-	"This set holds as many bars as it can.",
-	"Type an item's number (its ID), such as 2589.",
-	"Creates a copy of this set, and this profile uses it.",
-	"Renames this set in every profile that uses it.",
-	"Leaves this set one bar with the backpack's currencies.",
-	"Reset bar set “%s”?",
-	"Delete set",
-	"Delete bar set “%s”? Profiles that use it switch to the Default set.",
-	"New set",
-	"Starts a set with one bar, and this profile uses it.",
-	"Name of the new set:",
-	"Makes a text of your bar sets to copy and give to another character or player.",
-	"Bar %d",
-	"No bars",
-	"Set:",
-	"Bar:",
-	"Remove bar",
-	"On the bar",
-	"Not on the bar",
-	"Add item by ID",
-	"Drag rows up and down, onto each other to stack them, or from one list to the other; drop an item from your bags on the left list; right-click a row for more. Width, gap and size: in Edit Mode.",
-	"Show when empty",
-	"Break up the stack",
-	"/lootoman bars: open the currency bar editor",
-	"Bars",
-	"Open the bar editor",
-	"Choose what each bar shows, add and remove bars, and switch, copy or share sets of bars.",
-
-	-- Modules/Bars/BarFrame.lua
-	"Drag it along the bar to move it, or off the bar to take it off.",
-	"Take “%s” off the bar?",
-	"Take off",
-	"Fill from",
-	"The left edge",
-	"The right edge",
-	"Background",
-	"Border",
-	"An empty bar: fill it in the bar editor, or drop items from your bags on it.",
 })

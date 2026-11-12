@@ -5,11 +5,16 @@ local _, ns = ...
 -- setting (10–16) scales a design, so one design fits every size. Frames draws
 -- any design; the row designer edits the player's one.
 --
--- The row: height, width and gap (between rows). Parts, each with shown:
+-- The row: height, width and gap (between rows), and its view: "rows" (the
+-- default), or "icons" for the compact view of icons only. Parts, each with
+-- shown:
 --   icon                  size, in percent of the row's height
 --   glow                  over the icon of rare and better items
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
---                         align, LEFT or RIGHT
+--                         align, LEFT or RIGHT; the amount and the owned count
+--                         also a background of their own (background, and
+--                         its opacity in percent); the owned count what it
+--                         counts (count: "all", bags and bank, or "bags")
 -- Every part but the glow is anchored to an element (anchor: "row", "icon",
 -- "name", "amount" or "owned") at one of its points (point: TOPLEFT …
 -- BOTTOMRIGHT), and moved from there by x, y. The part's own point follows
@@ -18,8 +23,12 @@ local _, ns = ...
 -- when the chosen point is a top or bottom one.
 --
 -- A row is a box: Fit moves every part that sticks out back inside, and a text
--- is never wider than its maximum and the room it has to the row's edge, less
+-- is never wider than its maximum and the room it has to the box's edge, less
 -- the texts that follow it, like the amount after the name (Arrange).
+--
+-- In the icons view the row is a square icon, as high as it is wide. The name
+-- is never shown, and the amount and the owned count are anchored to the icon,
+-- inside it or beside it: their box is the icon and one icon's size around it.
 --
 -- A player's design is a named layout (Layouts.lua):
 --   { schema = 1, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
@@ -41,6 +50,8 @@ Design.POINTS = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTT
 Design.ELEMENTS = { "row", "icon", "name", "amount", "owned" }
 Design.ALIGNS = { "LEFT", "RIGHT" }
 Design.TEXTS = { name = true, amount = true, owned = true }
+-- What the owned count counts: bags and bank, or the bags only.
+Design.COUNTS = { "all", "bags" }
 -- The parts that are anchored, in the order they are listed.
 Design.PLACED = { "icon", "name", "amount", "owned" }
 
@@ -54,8 +65,10 @@ Design.LARGE = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = true, fontSize = 13, width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0 },
-		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3 },
+		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
+			background = false, opacity = 60 },
+		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
@@ -68,8 +81,10 @@ Design.COMPACT = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = true, fontSize = 12, width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
-		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0 },
-		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2 },
+		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
+			background = false, opacity = 60 },
+		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
@@ -82,14 +97,34 @@ Design.MINIMAL = {
 		icon = { shown = false, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = false },
 		name = { shown = true, fontSize = 13, width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0 },
-		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2 },
+		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
+			background = false, opacity = 60 },
+		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
-Design.BUILT_IN = { large = Design.LARGE, compact = Design.COMPACT, minimal = Design.MINIMAL }
+-- The compact view: square icons only, the amount on the bottom right corner,
+-- where the bags show stack counts, and the owned count small at the top right.
+Design.ICONS = {
+	view = "icons",
+	height = 36,
+	gap = 4,
+	width = 36,
+	parts = {
+		icon = { shown = true, size = 100, anchor = "row", point = "CENTER", x = 0, y = 0 },
+		glow = { shown = true },
+		name = { shown = false, fontSize = 13, width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
+		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, opacity = 60 },
+		owned = { shown = true, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
+			background = false, opacity = 60, count = "all" },
+	},
+}
+
+Design.BUILT_IN = { large = Design.LARGE, compact = Design.COMPACT, minimal = Design.MINIMAL, icons = Design.ICONS }
 -- In the order the designer lists them.
-Design.ORDER = { "large", "compact", "minimal" }
+Design.ORDER = { "large", "compact", "minimal", "icons" }
 
 local TEXT_LIMITS = { fontSize = { 8, 24 }, width = { 20, 600 } }
 
@@ -99,8 +134,8 @@ Design.LIMITS = {
 	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 } },
 	icon = { size = { 20, 100 } },
 	name = TEXT_LIMITS,
-	amount = TEXT_LIMITS,
-	owned = { fontSize = { 6, 20 }, width = { 20, 600 } },
+	amount = { fontSize = TEXT_LIMITS.fontSize, width = TEXT_LIMITS.width, opacity = { 0, 100 } },
+	owned = { fontSize = { 6, 20 }, width = { 20, 600 }, opacity = { 0, 100 } },
 }
 
 -- The values that are lengths, scaled with the size setting; an icon's size is
@@ -137,6 +172,22 @@ end
 
 local function vertical(point)
 	return point:match("^TOP") and "TOP" or point:match("^BOTTOM") and "BOTTOM" or ""
+end
+
+-- A design's view: "icons" for the compact view, else "rows".
+function Design.View(design)
+	return design.view == "icons" and "icons" or "rows"
+end
+
+-- The box a design's parts stay in, from the row's left edge and its middle:
+-- the row, or for icons the icon and one icon's size around it.
+local function boxOf(design)
+	local half = design.height / 2
+	if Design.View(design) == "icons" then
+		local size = design.height
+		return { left = -size, right = 2 * size, top = half + size, bottom = -half - size }
+	end
+	return { left = 0, right = design.width, top = half, bottom = -half }
 end
 
 local OPPOSITE = { LEFT = "RIGHT", RIGHT = "LEFT", [""] = "" }
@@ -194,9 +245,10 @@ end
 
 -- Where every anchored part ends up: { left, right, top, bottom, width }, from
 -- the row's left edge and its middle. textWidth(name, room) gives a text's
--- width when it has room up to the row's edge.
+-- width when it has room up to the box's edge.
 local function arrange(design, textWidth)
 	local width, height = design.width, design.height
+	local box = boxOf(design)
 	local rects = { row = { left = 0, right = width, top = height / 2, bottom = -height / 2 } }
 	local function place(name)
 		if rects[name] then
@@ -209,7 +261,8 @@ local function arrange(design, textWidth)
 		local side, edge = horizontal(own), vertical(own)
 		local partWidth, partHeight
 		if Design.TEXTS[name] then
-			local room = side == "LEFT" and width - x or side == "RIGHT" and x or 2 * math.min(x, width - x)
+			local room = side == "LEFT" and box.right - x or side == "RIGHT" and x - box.left
+				or 2 * math.min(x - box.left, box.right - x)
 			partWidth = math.max(0, textWidth(name, room))
 			partHeight = part.fontSize
 		else
@@ -271,35 +324,48 @@ local function anchorOrder(design)
 	return order
 end
 
--- Keeps a design inside its row: sizes within their limits and the row, and
--- every part that sticks out moved back in, the parts it is anchored to first.
--- A text keeps at least MIN_ROOM up to the edge it grows to.
+-- The icons view's fixed parts: the row is the icon, as wide as high; no
+-- name; the amount and the owned count on the icon.
+local function fixIcons(design)
+	local parts = design.parts
+	design.width = design.height
+	parts.icon.size, parts.icon.anchor, parts.icon.point, parts.icon.x, parts.icon.y = 100, "row", "CENTER", 0, 0
+	parts.name.shown = false
+	parts.amount.anchor, parts.owned.anchor = "icon", "icon"
+end
+
+-- Keeps a design inside its box (boxOf): sizes within their limits and the
+-- box, and every part that sticks out moved back in, the parts it is anchored
+-- to first. A text keeps at least MIN_ROOM up to the edge it grows to.
 function Design.Fit(design)
 	local parts = design.parts
+	if Design.View(design) == "icons" then
+		design.height = clamp(design.height, Design.LIMITS.row.height[1], Design.LIMITS.row.height[2])
+		fixIcons(design)
+	end
 	parts.icon.size = clamp(parts.icon.size, Design.LIMITS.icon.size[1], Design.LIMITS.icon.size[2])
+	local box = boxOf(design)
 	for name in pairs(Design.TEXTS) do
 		local part, limits = parts[name], Design.LIMITS[name]
-		part.fontSize = clamp(part.fontSize, limits.fontSize[1], math.min(limits.fontSize[2], design.height))
-		part.width = clamp(part.width, limits.width[1], math.min(limits.width[2], design.width))
+		part.fontSize = clamp(part.fontSize, limits.fontSize[1], math.min(limits.fontSize[2], box.top - box.bottom))
+		part.width = clamp(part.width, limits.width[1], math.min(limits.width[2], box.right - box.left))
 	end
-	local top, bottom = design.height / 2, -design.height / 2
 	local function least(name)
 		return math.min(Design.MIN_ROOM, parts[name].width)
 	end
 	for _, name in ipairs(anchorOrder(design)) do
 		local rect = arrange(design, least)[name]
-		local right = design.width
 		local part = parts[name]
 		-- Whole pixels, so whole places stay whole.
-		if rect.left < 0 then
-			part.x = part.x + math.ceil(-rect.left)
-		elseif rect.right > right then
-			part.x = part.x - math.ceil(rect.right - right)
+		if rect.left < box.left then
+			part.x = part.x + math.ceil(box.left - rect.left)
+		elseif rect.right > box.right then
+			part.x = part.x - math.ceil(rect.right - box.right)
 		end
-		if rect.top > top then
-			part.y = part.y - math.ceil(rect.top - top)
-		elseif rect.bottom < bottom then
-			part.y = part.y + math.ceil(bottom - rect.bottom)
+		if rect.top > box.top then
+			part.y = part.y - math.ceil(rect.top - box.top)
+		elseif rect.bottom < box.bottom then
+			part.y = part.y + math.ceil(box.bottom - rect.bottom)
 		end
 	end
 	return design
@@ -331,6 +397,8 @@ local function valid(design, part, key, value)
 		return contains(Design.POINTS, value)
 	elseif key == "align" then
 		return contains(Design.ALIGNS, value)
+	elseif key == "count" then
+		return contains(Design.COUNTS, value)
 	end
 	return true
 end
@@ -385,10 +453,11 @@ function Design.Range(design, part, key)
 	local limit = Design.LIMITS[part][key]
 	local low, high = limit[1], limit[2]
 	if Design.TEXTS[part] then
+		local box = boxOf(design)
 		if key == "fontSize" then
-			high = math.min(high, design.height)
+			high = math.min(high, box.top - box.bottom)
 		elseif key == "width" then
-			high = math.min(high, design.width)
+			high = math.min(high, box.right - box.left)
 		end
 	end
 	low, high = math.ceil(low), math.floor(high)

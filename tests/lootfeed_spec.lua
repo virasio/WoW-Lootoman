@@ -55,13 +55,70 @@ describe("loot feed module", function()
 		assert.same({
 			"checkbox:Enabled",
 			"header:What the feed shows", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
-			"checkbox:Experience", "dropdown:Minimum quality",
-			"header:Rows and timing", "slider:Rows", "dropdown:New rows appear", "slider:Time on screen", "slider:Fade-out time",
-			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Owned count", "checkbox:Glow for rare items",
+			"checkbox:Experience", "dropdown:Minimum quality", "checkbox:Keep usable items",
+			"  checkbox:Items that start a quest", "  checkbox:Recipes", "  checkbox:Containers", "  checkbox:Pets", "  checkbox:Mounts",
+			"  checkbox:Toys", "  checkbox:Appearance sets", "  checkbox:Heirlooms",
+			"header:Rows and timing", "slider:Rows", "dropdown:Fill direction", "slider:Time on screen", "slider:Fade-out time",
+			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Glow for rare items",
 			"header:Low-space warnings", "checkbox:Warn when few bag slots are free", "slider:Bag slots",
 			"checkbox:Warn when few reagent bag slots are free", "slider:Reagent bag slots",
 			"button:Row design",
 		}, api.Kinds(api.FindCategory("Loot feed")))
+	end)
+
+	it("fills sideways only with an Icons layout, and up or down with rows", function()
+		local direction
+		for _, setting in ipairs(module:Settings()) do
+			direction = setting.key == "direction" and setting or direction
+		end
+		local function offered()
+			local list = {}
+			for index, choice in ipairs(direction.offered()) do
+				list[index] = choice[1]
+			end
+			return table.concat(list, " ")
+		end
+		assert.equals("up down", offered())
+		local Layouts = ns.Feed.Layouts
+		Layouts.Create("Strip", "icons")
+		Layouts.Use("Strip")
+		assert.equals("up down right left", offered())
+		module:Set("direction", "left")
+		assert.equals("left", module.feed.options.direction)
+		-- Back on rows, the rows' own direction comes back; then the icons' does.
+		Layouts.Use("Default")
+		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
+		module:Set("direction", "down")
+		Layouts.Use("Strip")
+		assert.same({ "left", "left" }, { module:Get("direction"), module.feed.options.direction })
+		Layouts.Use("Default")
+		assert.same({ "down", "down" }, { module:Get("direction"), module.feed.options.direction })
+		-- Another layout of the same view keeps the direction.
+		Layouts.Create("Wide", "large")
+		Layouts.Use("Wide")
+		assert.equals("down", module:Get("direction"))
+		-- A sideways direction left for rows, say from a profile text, becomes bottom to top.
+		Layouts.Use("Strip")
+		module:Set("otherViewDirection", "right")
+		Layouts.Use("Default")
+		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
+		-- Every direction may come in a profile text.
+		assert.is_true(module:Validate("direction", "right"))
+	end)
+
+	it("swaps the views' directions also when an import replaces the layout with one of the other view", function()
+		local Layouts, Design = ns.Feed.Layouts, ns.Feed.Design
+		Layouts.Create("Strip", "icons")
+		Layouts.Use("Strip")
+		module:Set("direction", "left")
+		Layouts.Create("Wide", "large")
+		Layouts.Use("Wide")
+		module:Set("direction", "down")
+		-- "Replace yours": Wide becomes an Icons layout, then a rows layout is chosen.
+		Layouts.Put("Wide", { schema = Design.SCHEMA, base = "icons" })
+		assert.same({ "left", "left" }, { module:Get("direction"), module.feed.options.direction })
+		Layouts.Use("Default")
+		assert.same({ "down", "down" }, { module:Get("direction"), module.feed.options.direction })
 	end)
 
 	describe("low-space warnings", function()
@@ -79,7 +136,11 @@ describe("loot feed module", function()
 		end
 
 		local function shown()
-			return module.feed.warnings
+			local texts = {}
+			for index, warning in ipairs(module.feed.warnings) do
+				texts[index] = warning.text
+			end
+			return texts
 		end
 
 		it("warn when no more general slots are free than the threshold, 2 by default", function()
@@ -103,6 +164,8 @@ describe("loot feed module", function()
 			assert.same({ "Free reagent bag slots: 1" }, shown())
 			bags(1, 0)
 			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
+			-- With their counts, for the icons that show them in an Icons layout.
+			assert.same({ 1, 0 }, { module.feed.warnings[1].count, module.feed.warnings[2].count })
 			bags(5)
 			assert.same({}, shown())
 		end)
@@ -155,6 +218,144 @@ describe("loot feed module", function()
 			shown[rowFrame.Label.text] = rowFrame.Amount.text
 		end
 		assert.same({ ["150 copper"] = "", ["Linen Cloth"] = "×2" }, shown)
+	end)
+
+	describe("usable items", function()
+		local LETTER = "|cffffffff|Hitem:500::|h[Letter]|h|r"
+		local CLAM = "|cffffffff|Hitem:600::|h[Clam]|h|r"
+
+		before_each(function()
+			Test.SetItems({
+				[500] = { name = "Letter", icon = 1, quality = 1, stackSize = 20, owned = 1 },
+				[600] = { name = "Clam", icon = 2, quality = 0, stackSize = 20, owned = 3 },
+			})
+		end)
+
+		local function holding(items)
+			local slots = {}
+			for index, item in ipairs(items) do
+				slots[index] = item
+			end
+			Test.SetBags({ [0] = { size = 16, items = slots } })
+		end
+
+		local function rowOf(id)
+			for _, row in ipairs(module.model.rows) do
+				if row.id == id then
+					return row
+				end
+			end
+		end
+
+		it("keep an item that starts a quest once the bags hold it, and let it go when the quest is taken", function()
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			-- Not in the bags yet.
+			assert.is_nil(rowOf(500).sticky)
+			local letter = { itemID = 500, count = 1, use = { questID = 9 } }
+			holding({ letter })
+			assert.equals("quest", rowOf(500).sticky)
+			Test.Advance(10)
+			local views = module.model:Visible(Test.state.time)
+			assert.same({ true, "Letter" }, { views[#views].stuck, views[#views].row.name })
+			letter.use.questTaken = true
+			Test.FireEvent("QUEST_ACCEPTED", 9)
+			assert.same({}, module.model:Stuck())
+		end)
+
+		it("keep a usable item below the minimum quality, and count down what is left as it is used", function()
+			module:Set("minQuality", 1)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. CLAM .. "x3", "Tester")
+			assert.is_nil(rowOf(600))
+			local clams = { itemID = 600, count = 3, use = { openable = true } }
+			holding({ clams })
+			local row = rowOf(600)
+			assert.same({ "container", 3 }, { row.sticky, row.amount })
+			Test.Advance(10)
+			module:CheckAll()
+			Test.state.items[600].owned = 2
+			clams.count = 2
+			holding({ clams })
+			assert.equals(2, row.amount)
+			-- The last one used: the row goes.
+			holding({})
+			assert.same({}, module.model:Stuck())
+		end)
+
+		it("count down only the looted ones when the bags held some before", function()
+			-- Ten clams in the bags, three looted.
+			local clams = { itemID = 600, count = 10, use = { openable = true } }
+			Test.state.items[600].owned = 10
+			holding({ clams })
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. CLAM .. "x3", "Tester")
+			local row = rowOf(600)
+			assert.same({ "container", 3 }, { row.sticky, row.amount })
+			Test.state.items[600].owned, clams.count = 13, 13
+			holding({ clams })
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			module:CheckAll()
+			assert.same({ row }, module.model:Stuck())
+			-- Two opened: one left; more looted adds to it.
+			Test.state.items[600].owned, clams.count = 11, 11
+			holding({ clams })
+			assert.equals(1, row.amount)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. CLAM .. "x2", "Tester")
+			Test.state.items[600].owned, clams.count = 13, 13
+			holding({ clams })
+			assert.equals(3, row.amount)
+			-- The looted ones used: the row goes, with the ten from before still in the bags.
+			Test.state.items[600].owned, clams.count = 10, 10
+			holding({ clams })
+			assert.same({}, module.model:Stuck())
+			assert.is_nil(rowOf(600))
+		end)
+
+		it("keep a kept row while the bags' scan is behind a moved item", function()
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			holding({ { itemID = 500, count = 1, use = { questID = 9 } } })
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			-- The letter's slot holds something else now, before the next scan.
+			Test.state.bags[0].items[1] = { itemID = 2589, count = 1 }
+			module:CheckAll()
+			assert.equals(1, #module.model:Stuck())
+		end)
+
+		it("keep only the kinds turned on, and nothing with the switch off", function()
+			module:Set("keepQuest", false)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			holding({ { itemID = 500, count = 1, use = { questID = 9 } } })
+			assert.is_nil(rowOf(500).sticky)
+			module:Set("keepQuest", true)
+			assert.equals("quest", rowOf(500).sticky)
+			module:Set("keepUsable", false)
+			assert.is_nil(rowOf(500).sticky)
+			-- Nor while the feed shows no items: a kept row goes.
+			module:Set("keepUsable", true)
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			module:Set("items", false)
+			assert.same({}, module.model:Stuck())
+		end)
+
+		it("puts the kinds under their switch, on the options page only", function()
+			local Usable = ns.Rules.Usable
+			Test.state.collections = { mount = true }
+			local keys = {}
+			for _, setting in ipairs(module:Settings()) do
+				if setting.parent == "keepUsable" then
+					keys[#keys + 1] = setting.key .. (setting.pageOnly and "" or "!")
+				end
+			end
+			assert.same({ "keepQuest", "keepRecipes", "keepContainers", "keepMounts" }, keys)
+			assert.same({ "quest", "recipe", "container", "mount" }, Usable.Kinds())
+		end)
+
+		it("shows at least 3 rows", function()
+			assert.same({ false, true }, { module:Validate("maxRows", 2), module:Validate("maxRows", 3) })
+		end)
 	end)
 
 	it("reads owned counts again when the bags change", function()

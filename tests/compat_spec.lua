@@ -196,6 +196,67 @@ describe("Compat", function()
 			assert.is_nil(Compat.GetBagItem(0, 2))
 		end)
 
+		it("reads what decides whether a bag item can be used, a recipe's knowledge from its tooltip", function()
+			stub({
+				C_Container = {
+					GetContainerItemInfo = function(_, slot)
+						return slot <= 2 and { itemID = slot == 1 and 100 or 200, hasLoot = slot == 1 } or nil
+					end,
+					GetContainerItemQuestInfo = function(_, slot)
+						return { isQuestItem = slot == 1, questID = slot == 1 and 500 or nil, isActive = false }
+					end,
+				},
+				C_Item = {
+					GetItemInfoInstant = function(item) return item, "Kind", "Subkind", "", 1, item == 200 and 9 or 15, 0 end,
+					IsUsableItem = function(item) return item == 100, false end,
+				},
+				Enum = { ItemClass = { Recipe = 9 } },
+				C_TooltipInfo = { GetBagItem = function()
+					return { lines = { { leftText = "Tailoring (75)" }, { leftText = "Already known" } } }
+				end },
+				ITEM_SPELL_KNOWN = "Already known",
+			})
+			assert.same({ itemID = 100, questID = 500, questTaken = false, recipe = false, known = false, openable = true, usable = true },
+				Compat.GetBagItemUse(0, 1))
+			assert.same({ itemID = 200, questTaken = false, recipe = true, known = true, openable = false, usable = false },
+				Compat.GetBagItemUse(0, 2))
+			assert.is_nil(Compat.GetBagItemUse(0, 3))
+		end)
+
+		it("reads what an item adds to a collection, on the collections the client has", function()
+			stub({
+				C_PetJournal = {
+					GetPetInfoByItemID = function(item)
+						if item == 1 then
+							return "Cat", 1, 2, 3, "", "", false, false, 0, 0, 0, 5, 77
+						end
+					end,
+					GetNumCollectedInfo = function(species) return species == 77 and 3, 3 end,
+				},
+				C_MountJournal = {
+					GetMountFromItem = function(item) return item == 2 and 40 or nil end,
+					GetMountInfoByID = function() return "Horse", 1, 2, false, true, 0, false, false, nil, false, false, 40 end,
+				},
+				C_ToyBox = { GetToyInfo = function(item) return item == 3 and item or nil end },
+				PlayerHasToy = function() return true end,
+				C_Item = { GetItemLearnTransmogSet = function(item) return item == 4 and 900 or nil end },
+				C_TransmogSets = { GetSetInfo = function() return { collected = false } end },
+				C_Heirloom = { IsItemHeirloom = function(item) return item == 5 end, PlayerHasHeirloom = function() return false end },
+			})
+			assert.same({ pet = true, mount = true, toy = true, set = true, heirloom = true }, Compat.GetCollectionKinds())
+			assert.same({ { kind = "pet", collected = true }, { kind = "mount", collected = false }, { kind = "toy", collected = true },
+				{ kind = "set", collected = false }, { kind = "heirloom", collected = false } },
+				{ Compat.GetCollectible(1), Compat.GetCollectible(2), Compat.GetCollectible(3), Compat.GetCollectible(4),
+					Compat.GetCollectible(5) })
+			assert.is_nil(Compat.GetCollectible(6))
+			-- A client without the pet and mount journals.
+			rawset(_G, "C_PetJournal", nil)
+			rawset(_G, "C_MountJournal", nil)
+			assert.same({ false, false, true }, { Compat.GetCollectionKinds().pet, Compat.GetCollectionKinds().mount,
+				Compat.GetCollectionKinds().toy })
+			assert.is_nil(Compat.GetCollectible(1))
+		end)
+
 		it("reads what protects an item in a bag slot, and its guid", function()
 			local exists = true
 			stub({
@@ -288,21 +349,6 @@ describe("Compat", function()
 			assert.equals(0, Compat.GetItemFamily(2589))
 		end)
 
-		it("reads an item's kind from the client's own data, with its family as the client gives it", function()
-			stub({
-				C_Item = {
-					GetItemFamily = function(item) return item == 22250 and 32 or nil end,
-					GetItemInfoInstant = function(item)
-						if item == 22250 or item == 2589 then
-							return item, "Container", item == 22250 and "Herb Bag" or "Cloth", "INVTYPE_BAG", 133652, 1, 2
-						end
-					end,
-				},
-			})
-			assert.same({ type = "Container", subType = "Herb Bag", classID = 1, subClassID = 2, family = 32 }, Compat.GetItemKind(22250))
-			assert.is_nil(Compat.GetItemKind(2589).family)
-			assert.is_nil(Compat.GetItemKind(999))
-		end)
 	end)
 
 	describe("currencies", function()
@@ -315,70 +361,13 @@ describe("Compat", function()
 				capsTotalEarned = false }, Compat.GetCurrencyInfo(1))
 			assert.is_true(Compat.GetCurrencyInfo(2).capsTotalEarned)
 		end)
-
-		it("list every currency, opening collapsed headers for the read and closing them again", function()
-			-- A list of two headers: "Season" (collapsed) with a currency, "Old" (open) with one.
-			local list = {
-				{ isHeader = true, isHeaderExpanded = false, name = "Season", children = { { currencyID = 3008 } } },
-				{ isHeader = true, isHeaderExpanded = true, name = "Old", children = { { currencyID = 1792 } } },
-			}
-			local calls = {}
-			local function rows()
-				local shown = {}
-				for _, header in ipairs(list) do
-					shown[#shown + 1] = header
-					if header.isHeaderExpanded then
-						for _, child in ipairs(header.children) do
-							shown[#shown + 1] = child
-						end
-					end
-				end
-				return shown
-			end
-			stub({ C_CurrencyInfo = {
-				GetCurrencyListSize = function() return #rows() end,
-				GetCurrencyListInfo = function(index) return rows()[index] end,
-				ExpandCurrencyList = function(index, expand)
-					calls[#calls + 1] = ("%s %s"):format(rows()[index].name, tostring(expand))
-					rows()[index].isHeaderExpanded = expand
-				end,
-			} })
-			assert.same({ 3008, 1792 }, Compat.GetCurrencyIDs())
-			assert.same({ "Season true", "Season false" }, calls)
-			assert.same({ false, true }, { list[1].isHeaderExpanded, list[2].isHeaderExpanded })
-		end)
-
-		it("list the backpack's currencies in order", function()
-			local backpack = { { currencyTypesID = 3008 }, { currencyTypesID = 1792 } }
-			stub({ C_CurrencyInfo = { GetBackpackCurrencyInfo = function(index) return backpack[index] end } })
-			assert.same({ 3008, 1792 }, Compat.GetBackpackCurrencyIDs())
-		end)
 	end)
 
-	it("counts an item in the bags and in each bank, and reads the item on the cursor", function()
-		local asked
-		stub({
-			C_Item = { GetItemCount = function(...) asked = { ... } return 7 end },
-			GetCursorInfo = function() return "item", 2589, "link" end,
-		})
-		assert.equals(7, Compat.GetBagItemCount(2589))
-		assert.same({ 2589, false, false, false, false }, asked)
-		-- Each bank is its total less the bags; no warband bank without its bank type.
-		local totals = {}
-		stub({
-			C_Item = { GetItemCount = function(_, bank, _, reagentBank, warband)
-				totals[#totals + 1] = { bank, reagentBank, warband }
-				return 7 + (bank and reagentBank and 5 or 0) + (warband and 20 or 0)
-			end },
-			Enum = { BankType = { Character = 0, Guild = 1, Account = 2 } },
-		})
-		assert.same({ bags = 7, bank = 5, warband = 20 }, Compat.GetItemCounts(2589))
-		assert.same({ { false, false, false }, { true, true, false }, { false, false, true } }, totals)
-		stub({ Enum = { BankType = { Character = 0 } } })
-		assert.same({ bags = 7, bank = 5, warband = 0 }, Compat.GetItemCounts(2589))
-		assert.equals(2589, Compat.GetCursorItemID())
-		stub({ GetCursorInfo = function() return "money", 100 end })
-		assert.is_nil(Compat.GetCursorItemID())
+	it("counts an item in the bags and bank, or in the bags only", function()
+		local asked = {}
+		stub({ C_Item = { GetItemCount = function(...) asked[#asked + 1] = { ... } return 7 end } })
+		assert.same({ 7, 7 }, { Compat.GetItemCount(2589), Compat.GetItemCount(2589, true) })
+		assert.same({ { 2589, true, false, true, false }, { 2589, false, false, false, false } }, asked)
 	end)
 
 	it("registers slash commands the way the game expects", function()

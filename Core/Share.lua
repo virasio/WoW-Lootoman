@@ -28,8 +28,8 @@ local Share = {
 	PREFIX = "LTM",
 	FORMAT = 1,
 	MAX_LENGTH = 100000,
-	-- A bar set's entries and positions sit eight levels down, a stack's
-	-- members ten.
+	-- Texts of 0.3 and 0.3.5 can hold bar sets, whose stacks' members sit ten
+	-- levels down; such a text is still read for its other parts.
 	MAX_DEPTH = 12,
 	MAX_VALUES = 5000,
 }
