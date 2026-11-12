@@ -68,3 +68,55 @@ describe("saved data of version 0.3", function()
 		holds(ns.Compat.Test.state.saved, fixture(), "saved")
 	end)
 end)
+
+describe("saved data of version 0.3.5", function()
+	local fixture = dofile("tests/fixtures/saved_0_3_5.lua")
+	local ns
+
+	before_each(function()
+		ns = Loader.Start(Loader.LoadAddon(), fixture())
+	end)
+
+	it("loads without errors, with the profile, its feed settings and its layout", function()
+		assert.same({}, ns.Compat.Test.state.errors)
+		assert.same({ "Raid", "Quiet", false }, { ns.Profiles.GetCurrent(), ns.Feed.Layouts.Current(), ns.Storage:Get("LootFeed", "owned") })
+	end)
+
+	-- The bars left Lootoman: their sets, settings and positions stay as 0.3.5
+	-- saved them, for an addon that may take them over.
+	it("is saved again with nothing lost or changed, the bars' data too", function()
+		holds(ns.Compat.Test.state.saved, fixture(), "saved")
+	end)
+
+	it("makes profile texts without the bars", function()
+		local names = {}
+		for _, entry in ipairs(ns.Share.Parts()) do
+			names[#names + 1] = entry.name
+		end
+		for _, collection in ipairs(ns.Share.Collections()) do
+			names[#names + 1] = collection.name
+		end
+		assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "layout:LootFeed", "module:Junk", "layouts" }, names)
+	end)
+
+	it("reads a 0.3.5 profile text with bars: the feed's parts come in, the bars' are left out and counted", function()
+		local saved = fixture().LootomanDB
+		local text = "LTM1:" .. ns.Compat.Encode({
+			format = 1,
+			addon = "0.3.5",
+			sections = {
+				["module:LootFeed"] = { fade = 2 },
+				["layout:LootFeed"] = { layout = "Quiet" },
+				["module:Bars"] = { set = "Raid" },
+				["set:Bars"] = { set = "Raid" },
+				["module:FreeSlots"] = saved.profiles.Raid.modules.FreeSlots,
+			},
+			collections = { layouts = { Quiet = saved.sections.feedLayouts.Quiet }, barSets = { Raid = saved.sections.barSets.Raid } },
+		})
+		local read = assert(ns.Share.Read(text))
+		assert.same({ "module:LootFeed", "layout:LootFeed" }, read.names)
+		assert.same({ "Quiet" }, read.collections.layouts.names)
+		-- module:Bars, set:Bars and module:FreeSlots; the barSets collection.
+		assert.equals(4, read.skipped)
+	end)
+end)
