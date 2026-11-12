@@ -241,6 +241,83 @@ function Compat.GetBagItemFacts(bag, slot)
 	}
 end
 
+-- What decides whether the item in a bag slot can be used right now:
+-- { itemID, questID (the quest it starts, if any), questTaken (that quest is
+-- in the log), recipe (a recipe item), known (a recipe the character knows,
+-- from its tooltip's "Already known"), openable (it holds loot), usable }, or
+-- nil for an empty slot.
+function Compat.GetBagItemUse(bag, slot)
+	local info = C_Container.GetContainerItemInfo(bag, slot)
+	if not info then
+		return nil
+	end
+	local quest = C_Container.GetContainerItemQuestInfo(bag, slot)
+	local classID = select(6, C_Item.GetItemInfoInstant(info.itemID))
+	local recipe = classID ~= nil and classID == Enum.ItemClass.Recipe
+	local known = false
+	if recipe and Compat.Has("C_TooltipInfo.GetBagItem") then
+		local tooltip = C_TooltipInfo.GetBagItem(bag, slot)
+		for _, line in ipairs(tooltip and tooltip.lines or {}) do
+			known = known or line.leftText == ITEM_SPELL_KNOWN
+		end
+	end
+	return {
+		itemID = info.itemID,
+		questID = quest and quest.questID or nil,
+		questTaken = quest ~= nil and quest.isActive == true,
+		recipe = recipe,
+		known = known,
+		openable = info.hasLoot == true,
+		usable = C_Item.IsUsableItem(info.itemID) == true,
+	}
+end
+
+-- The collections a client has, as kinds of collectible items: pet, mount,
+-- toy, set (appearance sets) and heirloom.
+function Compat.GetCollectionKinds()
+	return {
+		pet = Compat.Has("C_PetJournal.GetPetInfoByItemID") and Compat.Has("C_PetJournal.GetNumCollectedInfo"),
+		mount = Compat.Has("C_MountJournal.GetMountFromItem") and Compat.Has("C_MountJournal.GetMountInfoByID"),
+		toy = Compat.Has("C_ToyBox.GetToyInfo") and Compat.Has("PlayerHasToy"),
+		set = Compat.Has("C_Item.GetItemLearnTransmogSet") and Compat.Has("C_TransmogSets.GetSetInfo"),
+		heirloom = Compat.Has("C_Heirloom.IsItemHeirloom") and Compat.Has("C_Heirloom.PlayerHasHeirloom"),
+	}
+end
+
+-- What an item adds to a collection when used: { kind, collected }, kind as
+-- in GetCollectionKinds; collected is true once it is in the collection (a
+-- pet: when the species is at its limit). Nil for any other item.
+function Compat.GetCollectible(itemID)
+	local kinds = Compat.GetCollectionKinds()
+	if kinds.pet then
+		local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+		if speciesID then
+			local owned, limit = C_PetJournal.GetNumCollectedInfo(speciesID)
+			return { kind = "pet", collected = (owned or 0) >= (limit or 0) }
+		end
+	end
+	if kinds.mount then
+		local mountID = C_MountJournal.GetMountFromItem(itemID)
+		if mountID then
+			return { kind = "mount", collected = select(11, C_MountJournal.GetMountInfoByID(mountID)) == true }
+		end
+	end
+	if kinds.toy and C_ToyBox.GetToyInfo(itemID) then
+		return { kind = "toy", collected = PlayerHasToy(itemID) == true }
+	end
+	if kinds.set then
+		local setID = C_Item.GetItemLearnTransmogSet(itemID)
+		local set = setID and C_TransmogSets.GetSetInfo(setID)
+		if set then
+			return { kind = "set", collected = set.collected == true }
+		end
+	end
+	if kinds.heirloom and C_Heirloom.IsItemHeirloom(itemID) then
+		return { kind = "heirloom", collected = C_Heirloom.PlayerHasHeirloom(itemID) == true }
+	end
+	return nil
+end
+
 -- Whether the player told the game to leave a bag out of junk selling (the
 -- bag's menu); Blizzard's bag menu reads the backpack's flag apart. False on a
 -- client without the flag.

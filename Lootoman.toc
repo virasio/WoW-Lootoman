@@ -50,6 +50,7 @@ Core\SelfTest.lua
 Core\Startup.lua
 
 Rules\Junk.lua
+Rules\Usable.lua
 
 Providers\Inventory.lua
 Providers\Bags.lua

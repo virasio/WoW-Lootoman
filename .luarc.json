@@ -28,6 +28,7 @@
     "GameTooltip_AddNormalLine",
     "GameTooltip_SetTitle",
     "GameTooltip_ShowCompareItem",
+    "ITEM_SPELL_KNOWN",
     "LibStub",
     "LootFrame",
     "MenuConstants",

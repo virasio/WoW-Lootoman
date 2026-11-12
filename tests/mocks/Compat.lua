@@ -212,6 +212,45 @@ function Compat.GetBagItemFacts(bag, slot)
 	}
 end
 
+-- An item in a bag slot may have use = { questID, questTaken, recipe, known,
+-- openable, usable }; usable is true unless it says false.
+function Compat.GetBagItemUse(bag, slot)
+	local info = state.bags[bag]
+	local item = info and info.items and info.items[slot]
+	if not item then
+		return nil
+	end
+	local use = item.use or {}
+	return {
+		itemID = item.itemID,
+		questID = use.questID,
+		questTaken = use.questTaken == true,
+		recipe = use.recipe == true,
+		known = use.known == true,
+		openable = use.openable == true,
+		usable = use.usable ~= false,
+	}
+end
+
+-- Every collection unless state.collections says otherwise.
+function Compat.GetCollectionKinds()
+	local kinds = {}
+	for _, kind in ipairs({ "pet", "mount", "toy", "set", "heirloom" }) do
+		kinds[kind] = not state.collections or state.collections[kind] == true
+	end
+	return kinds
+end
+
+-- Items (state.items) may be collectible = { kind, collected }.
+function Compat.GetCollectible(itemID)
+	local info = findItem(itemID)
+	local collectible = info and info.collectible
+	if not collectible or not Compat.GetCollectionKinds()[collectible.kind] then
+		return nil
+	end
+	return { kind = collectible.kind, collected = collectible.collected == true }
+end
+
 -- Bags: { keptFromJunkSale = true }.
 function Compat.IsBagKeptFromJunkSale(bag)
 	local info = state.bags[bag]
