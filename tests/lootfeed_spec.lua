@@ -106,6 +106,21 @@ describe("loot feed module", function()
 		assert.is_true(module:Validate("direction", "right"))
 	end)
 
+	it("swaps the views' directions also when an import replaces the layout with one of the other view", function()
+		local Layouts, Design = ns.Feed.Layouts, ns.Feed.Design
+		Layouts.Create("Strip", "icons")
+		Layouts.Use("Strip")
+		module:Set("direction", "left")
+		Layouts.Create("Wide", "large")
+		Layouts.Use("Wide")
+		module:Set("direction", "down")
+		-- "Replace yours": Wide becomes an Icons layout, then a rows layout is chosen.
+		Layouts.Put("Wide", { schema = Design.SCHEMA, base = "icons" })
+		assert.same({ "left", "left" }, { module:Get("direction"), module.feed.options.direction })
+		Layouts.Use("Default")
+		assert.same({ "down", "down" }, { module:Get("direction"), module.feed.options.direction })
+	end)
+
 	describe("low-space warnings", function()
 		-- General bags with this many free slots, and a reagent bag with that many.
 		local function bags(general, reagent)

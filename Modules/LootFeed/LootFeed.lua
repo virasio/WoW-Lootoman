@@ -252,6 +252,21 @@ function LootFeed:SwapDirections()
 	self:Set("direction", VALID_DIRECTION[other] and other or "up")
 end
 
+-- After the profile's layout or its design changed: when the view changed
+-- with it, the directions swap; a rows layout fills only up or down. Returns
+-- whether the view changed.
+function LootFeed:FollowView()
+	local changed = self.view ~= nil and currentView() ~= self.view
+	if changed then
+		self.view = currentView()
+		self:SwapDirections()
+	end
+	if self:Direction() ~= self:Get("direction") then
+		self:Set("direction", self:Direction())
+	end
+	return changed
+end
+
 -- Whether the feed keeps items of a kind of usable item: not while it shows
 -- no items at all.
 function LootFeed:Keeps(kind)
@@ -378,16 +393,9 @@ function LootFeed:OnEnable()
 		if module ~= self.name then
 			return
 		end
-		-- Each view keeps its own direction; a rows layout fills only up or
-		-- down, and the dialog offers what it can.
+		-- Each view keeps its own direction, and the dialog offers what it can.
 		if key == "layout" then
-			if self.view and currentView() ~= self.view then
-				self.view = currentView()
-				self:SwapDirections()
-			end
-			if self:Direction() ~= self:Get("direction") then
-				self:Set("direction", self:Direction())
-			end
+			self:FollowView()
 			ns.EditMode.Refresh(self.feed.frame)
 		end
 		self:Apply()
@@ -397,9 +405,13 @@ function LootFeed:OnEnable()
 		self:Apply()
 		self:CheckAll()
 	end)
-	-- The designer, a reset or an import changed the layout's design.
+	-- The designer, a reset or an import changed the layout's design; an
+	-- import may put a design of the other view in its place.
 	self:On("FeedLayoutChanged", function(_, name)
 		if name == Layouts.Current() then
+			if self:FollowView() then
+				ns.EditMode.Refresh(self.feed.frame)
+			end
 			self:Apply()
 		end
 	end)
