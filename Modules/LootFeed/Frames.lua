@@ -17,9 +17,10 @@ local Compat, L = ns.Compat, ns.L
 -- is full slide past the anchor edge as they fade.
 --
 -- Warnings (few free bag slots) take the first places at the anchor edge, one
--- row's height each, and the rows stack after them; filling sideways, they are
--- lines above the strip of icons instead. While there is a warning the feed
--- stays shown.
+-- row's height each, and the rows stack after them: lines of text, or with an
+-- Icons layout a bag icon with the free slots in red and the text in its
+-- tooltip. Filling sideways, they are lines above the strip of icons instead.
+-- While there is a warning the feed stays shown.
 --
 -- Rows show tooltips but let clicks through to the game world, and the mouse
 -- wheel keeps zooming the camera. Hovering pauses the model's timers. The
@@ -31,7 +32,7 @@ local Compat, L = ns.Compat, ns.L
 --   feed:Wake()                              -- after model:Add
 --   feed:RefreshOwned()                      -- after the bags change
 --   feed:SetPreview(true)                    -- in Edit Mode
---   feed:SetWarnings({ "Free bag slots: 2" }) -- or {} for none
+--   feed:SetWarnings({ { text = "Free bag slots: 2", count = 2 } }) -- or {} for none
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
@@ -414,6 +415,7 @@ function Frames.Create(model)
 		version = 0,
 		warnings = {},
 		warningLines = {},
+		warningIcons = {},
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
 		feed.rows[index] = Frames.CreateRow(frame)
@@ -427,15 +429,68 @@ function Frames.Create(model)
 	return feed
 end
 
--- The warning lines, at the anchor edge in the order given, or above a
--- sideways strip, the first one nearest to it.
+local function showWarningTooltip(icon)
+	GameTooltip:SetOwner(icon, "ANCHOR_LEFT")
+	GameTooltip_SetTitle(GameTooltip, icon.text)
+	GameTooltip:Show()
+end
+
+-- Warnings as icons, in an Icons layout filling up or down: a bag icon with
+-- the free slots in red where the amount sits, in the places of rows.
+local function placeWarningIcons(feed)
+	local layout = feed.options.layout
+	local amount = layout.parts.amount
+	local font = getFonts().number
+	for index, warning in ipairs(feed.warnings) do
+		local icon = feed.warningIcons[index]
+		if not icon then
+			icon = CreateFrame("Frame", nil, feed.frame)
+			icon:SetMouseClickEnabled(false)
+			icon:SetMouseMotionEnabled(true)
+			icon.Icon = icon:CreateTexture(nil, "ARTWORK")
+			icon.Icon:SetAllPoints()
+			icon.Icon:SetTexture(Frames.WARNING_ICON)
+			icon.Count = icon:CreateFontString(nil, "OVERLAY")
+			icon.Count:SetWordWrap(false)
+			icon:SetScript("OnEnter", showWarningTooltip)
+			icon:SetScript("OnLeave", hideTooltip)
+			feed.warningIcons[index] = icon
+		end
+		icon:SetSize(layout.width, layout.height)
+		icon.Count:SetFont(font[1], amount.fontSize, font[3])
+		icon.Count:SetTextColor(unpack(Frames.WARNING_COLOR))
+		icon.Count:ClearAllPoints()
+		icon.Count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -2, 2)
+		icon.Count:SetText(tostring(warning.count or 0))
+		icon.text = warning.text
+		place(feed, icon, (index - 1) * feed.step)
+		icon:Show()
+	end
+	for index = #feed.warnings + 1, #feed.warningIcons do
+		feed.warningIcons[index]:Hide()
+	end
+end
+
+-- The warnings, at the anchor edge in the order given, or above a sideways
+-- strip, the first one nearest to it: lines of text, or icons (above).
 local function placeWarnings(feed)
 	local layout = feed.options.layout
-	local font = getFonts().text
 	local across = sideways(feed)
+	local asIcons = Design.View(layout) == "icons" and not across
+	for index = 1, #feed.warningIcons do
+		feed.warningIcons[index]:SetShown(asIcons and index <= #feed.warnings)
+	end
+	if asIcons then
+		for index = 1, #feed.warningLines do
+			feed.warningLines[index]:Hide()
+		end
+		placeWarningIcons(feed)
+		return
+	end
+	local font = getFonts().text
 	local height = across and lineHeight(feed) or layout.height
 	local width = across and (feed.options.maxRows * feed.step - layout.gap) or layout.width
-	for index, text in ipairs(feed.warnings) do
+	for index, warning in ipairs(feed.warnings) do
 		local line = feed.warningLines[index]
 		if not line then
 			line = CreateFrame("Frame", nil, feed.frame)
@@ -454,7 +509,7 @@ local function placeWarnings(feed)
 		line.Text:SetTextColor(unpack(Frames.WARNING_COLOR))
 		line.Text:ClearAllPoints()
 		line.Text:SetPoint("LEFT", line.Icon, "RIGHT", 6, 0)
-		line.Text:SetText(text)
+		line.Text:SetText(warning.text)
 		if across then
 			local edge = feed.options.direction == "left" and "BOTTOMRIGHT" or "BOTTOMLEFT"
 			line.offset = nil
@@ -470,12 +525,16 @@ local function placeWarnings(feed)
 	end
 end
 
--- Shows these warning texts at the anchor edge; the rows move past them.
-function FeedMixin:SetWarnings(texts)
-	self.warnings = texts
+-- Shows these warnings at the anchor edge, each { text, count } (a text alone
+-- will do); the rows move past them.
+function FeedMixin:SetWarnings(warnings)
+	self.warnings = {}
+	for index, warning in ipairs(warnings) do
+		self.warnings[index] = type(warning) == "table" and warning or { text = warning }
+	end
 	placeWarnings(self)
 	self.version = self.version + 1
-	if #texts > 0 then
+	if #warnings > 0 then
 		self.frame:Show()
 	end
 end

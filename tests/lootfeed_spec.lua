@@ -105,7 +105,11 @@ describe("loot feed module", function()
 		end
 
 		local function shown()
-			return module.feed.warnings
+			local texts = {}
+			for index, warning in ipairs(module.feed.warnings) do
+				texts[index] = warning.text
+			end
+			return texts
 		end
 
 		it("warn when no more general slots are free than the threshold, 2 by default", function()
@@ -129,6 +133,8 @@ describe("loot feed module", function()
 			assert.same({ "Free reagent bag slots: 1" }, shown())
 			bags(1, 0)
 			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
+			-- With their counts, for the icons that show them in an Icons layout.
+			assert.same({ 1, 0 }, { module.feed.warnings[1].count, module.feed.warnings[2].count })
 			bags(5)
 			assert.same({}, shown())
 		end)

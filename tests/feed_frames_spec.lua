@@ -181,6 +181,30 @@ describe("loot feed frames", function()
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 36 }, first.points[1])
 		end)
 
+		it("shows warnings as bag icons with the free slots in an Icons layout filling up or down", function()
+			local Design = ns.Feed.Design
+			feed:SetOptions(options({ layout = Design.Layout(Design.ICONS, 13) }))
+			feed:SetWarnings({ { text = "Free bag slots: 2", count = 2 }, { text = "No free reagent bag slots", count = 0 } })
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			-- The icons take the first places, 40 apart, and the row comes after them.
+			local first, second = feed.warningIcons[1], feed.warningIcons[2]
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, first.points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 40 }, second.points[1])
+			assert.same({ "2", "0", { 1, 0.25, 0.25 } }, { first.Count.text, second.Count.text, first.Count.color })
+			assert.same({ "100 copper@80" }, layout())
+			assert.is_nil(feed.warningLines[1])
+			first.scripts.OnEnter(first)
+			assert.same({ true, "Free bag slots: 2" }, { tooltip.shown, tooltip.lines[1] })
+			-- Sideways they are lines again; with rows too.
+			feed:SetOptions(options({ direction = "right", layout = Design.Layout(Design.ICONS, 13) }))
+			assert.same({ false, true, "Free bag slots: 2" }, { first.shown, feed.warningLines[1].shown, feed.warningLines[1].Text.text })
+			feed:SetOptions(options())
+			assert.same({ false, true }, { first.shown, feed.warningLines[1].shown })
+			feed:SetWarnings({})
+			assert.is_false(feed.warningLines[1].shown)
+		end)
+
 		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()
 			feed:SetWarnings({ "Free bag slots: 2" })
 			assert.is_true(feed.frame.shown)
