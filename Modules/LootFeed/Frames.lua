@@ -139,6 +139,13 @@ function Frames.Describe(row, options)
 	return { label = tostring(row.name or kind), labelColor = WHITE }
 end
 
+-- An amount in full with its sign, for a tooltip ("+12,345").
+local function fullSigned(amount)
+	return (amount < 0 and "-" or "+") .. Compat.BreakUpLargeNumbers(math.abs(amount))
+end
+
+-- Over an item or a currency the game's tooltip; over money, experience and
+-- reputation what their row says in full, as an icon cannot.
 local function showTooltip(rowFrame)
 	local row = rowFrame.data
 	if not row then
@@ -151,6 +158,20 @@ local function showTooltip(rowFrame)
 	elseif row.kind == "currency" and row.id then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip:SetCurrencyByID(row.id)
+		GameTooltip:Show()
+	elseif row.kind == "money" or row.kind == "xp" or row.kind == "reputation" then
+		local look = Frames.Describe(row)
+		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
+		if row.kind == "money" then
+			GameTooltip_SetTitle(GameTooltip, L["Money"])
+			GameTooltip:AddLine(look.label, 1, 1, 1)
+		else
+			GameTooltip_SetTitle(GameTooltip, look.label)
+			if row.amount then
+				local color = row.amount < 0 and RED or GREEN
+				GameTooltip:AddLine(fullSigned(row.amount), color[1], color[2], color[3])
+			end
+		end
 		GameTooltip:Show()
 	end
 end

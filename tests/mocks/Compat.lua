@@ -310,6 +310,13 @@ function Compat.GetCurrencyInfo(currencyID)
 	return info
 end
 
+-- Thousands separated by commas, as an English client does.
+function Compat.BreakUpLargeNumbers(number)
+	local text = tostring(math.floor(number))
+	local result = text:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (result:gsub("^,", ""))
+end
+
 function Compat.GetMoney()
 	return state.money
 end

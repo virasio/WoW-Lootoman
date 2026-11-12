@@ -343,6 +343,11 @@ function Compat.GetCurrencyInfo(currencyID)
 	}
 end
 
+-- A whole number with the client's thousands separators ("12,345").
+function Compat.BreakUpLargeNumbers(number)
+	return BreakUpLargeNumbers(number)
+end
+
 -- Copper.
 function Compat.GetMoney()
 	return GetMoney()

@@ -22,6 +22,7 @@ files["Locales/Locales.lua"] = {
 files["Compat/"] = {
 	globals = { "SlashCmdList" },
 	read_globals = {
+		"BreakUpLargeNumbers",
 		"C_AddOns",
 		"C_CVar",
 		"C_Container",
