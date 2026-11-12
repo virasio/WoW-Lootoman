@@ -24,8 +24,8 @@ Migrations.account = {
 	end,
 	-- 2 (0.4): whether the loot feed shows the owned count belongs to the row
 	-- layout alone. A profile that turned it off hides it in the layout it uses
-	-- (hiding wins where profiles sharing a layout disagree), and its own switch
-	-- goes. And the feed shows at least 3 rows: the first place for an item it
+	-- (hiding wins where profiles sharing a layout disagree; a profile whose
+	-- layout is gone uses Default), and its own switch goes. And the feed shows at least 3 rows: the first place for an item it
 	-- keeps, two more.
 	function(db)
 		local sections = type(db.sections) == "table" and db.sections or nil
@@ -35,7 +35,10 @@ Migrations.account = {
 			local feed = modules and type(modules.LootFeed) == "table" and modules.LootFeed or nil
 			if feed then
 				local name = type(feed.layout) == "string" and feed.layout or "Default"
-				if feed.owned == false and (type(layouts[name]) == "table" or name == "Default") then
+				if type(layouts[name]) ~= "table" then
+					name = "Default"
+				end
+				if feed.owned == false then
 					-- Default always exists; the layouts' schema is 1.
 					layouts = ensureTable(ensureTable(db, "sections"), "feedLayouts")
 					local layout = ensureTable(layouts, name)

@@ -53,6 +53,16 @@ describe("migrations", function()
 		assert.same({ schema = 1, base = "large", changes = { owned = { shown = false } } }, layouts.Default)
 	end)
 
+	it("hides the owned count in Default for a profile whose layout is gone, as it uses Default", function()
+		local db = Migrations.Run(Migrations.account, { schema = 1, profiles = {
+			Gone = { modules = { LootFeed = { layout = "Deleted", owned = false } } },
+		}, sections = { feedLayouts = { Other = { schema = 1, base = "compact" } } } })
+		local layouts = db.sections.feedLayouts
+		assert.same({ schema = 1, base = "large", changes = { owned = { shown = false } } }, layouts.Default)
+		assert.same({ nil, { schema = 1, base = "compact" } }, { layouts.Deleted, layouts.Other })
+		assert.same({ layout = "Deleted" }, db.profiles.Gone.modules.LootFeed)
+	end)
+
 	it("gives the loot feed at least 3 rows", function()
 		local db = Migrations.Run(Migrations.account, { schema = 1, profiles = {
 			One = { modules = { LootFeed = { maxRows = 1 } } },
