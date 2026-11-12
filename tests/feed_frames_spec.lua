@@ -394,6 +394,14 @@ describe("loot feed frames", function()
 			Frames.ApplyLayout(rowFrame, withBackground.layout)
 			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, withBackground)
 			assert.same({ true, 0.3 }, { rowFrame.AmountBackground.shown, rowFrame.AmountBackground.colorTexture[4] })
+			-- The owned count's own, alike.
+			local owned = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { owned = { background = true, opacity = 40 } } })
+			local withOwned = { layout = Design.Layout(owned, 13), showOwned = true }
+			Frames.ApplyLayout(rowFrame, withOwned.layout)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", icon = 1, quality = 1, amount = 20, owned = 30 }, withOwned)
+			assert.same({ true, 0.4, false }, { rowFrame.OwnedBackground.shown, rowFrame.OwnedBackground.colorTexture[4],
+				rowFrame.AmountBackground.shown })
+			Frames.ApplyLayout(rowFrame, withBackground.layout)
 			-- No amount, no background.
 			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 1 }, withBackground)
 			assert.is_false(rowFrame.AmountBackground.shown)

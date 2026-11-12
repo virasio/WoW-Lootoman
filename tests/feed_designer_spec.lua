@@ -75,22 +75,19 @@ describe("loot feed designer", function()
 			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
 				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
 			Designer.Select("owned")
-			-- Whether it shows is the switch on top, for every layout.
-			assert.same({ "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
-				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23" }, inspector())
+			assert.same({ "Shown: true", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
+				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "Background: false",
+				"Background opacity: 60 in 0..100" }, inspector())
 		end)
 
-		it("hides the owned count for every layout from its switch on top", function()
-			assert.is_false(window.hideOwned.checked)
-			window.hideOwned.checked = true
-			window.hideOwned.scripts.OnClick(window.hideOwned)
-			assert.same({ false, false }, { module:Get("owned"), module.feed.options.showOwned })
+		it("shows or hides the owned count per layout, like any part", function()
+			Designer.Select("owned")
+			window.controls[1].check.checked = false
+			window.controls[1].check.scripts.OnClick(window.controls[1].check)
+			assert.same({ false, false }, { design().parts.owned.shown, module.feed.options.showOwned })
 			ns.Feed.Layouts.Create("Strip", "icons")
 			Designer.Use("Strip")
-			assert.same({ true, false }, { window.hideOwned.checked, module.feed.options.showOwned })
-			-- Set elsewhere too (a profile, an import), the switch follows.
-			module:Set("owned", true)
-			assert.is_false(window.hideOwned.checked)
+			assert.is_true(module.feed.options.showOwned)
 		end)
 
 		it("sets the amount's own background and its opacity", function()
@@ -210,16 +207,21 @@ describe("loot feed designer", function()
 			Designer.Use("Strip")
 			assert.equals("Icon", window.inspectorTitle.text)
 			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
-			assert.same({ "Icon*", "Amount" }, menu(window.parts))
+			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
+			-- The owned count set as the amount is, on the icon or beside it.
+			Designer.Select("owned")
+			assert.same({ "Shown: true", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
+				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "Background: false",
+				"Background opacity: 60 in 0..100" }, inspector())
 			Designer.Select("amount")
 			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
 				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
 			-- Icons 36 wide and 4 apart, side by side.
 			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
-			-- The icon stands for the row; the name and the owned count cannot be chosen.
+			-- The icon stands for the row; the name cannot be chosen.
 			local rowFrame = window.rows[1]
-			assert.same({ true, false, false, true }, { rowFrame.hits.icon.shown, rowFrame.hits.name.shown, rowFrame.hits.owned.shown,
+			assert.same({ true, false, true, true }, { rowFrame.hits.icon.shown, rowFrame.hits.name.shown, rowFrame.hits.owned.shown,
 				rowFrame.hits.amount.shown })
 			rowFrame.hits.icon.scripts.OnClick(rowFrame.hits.icon)
 			assert.equals("Icon", window.inspectorTitle.text)

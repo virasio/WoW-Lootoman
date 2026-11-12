@@ -131,8 +131,6 @@ local LootFeed = ns.Modules:Register({
 		fade = 1,
 		size = 13,
 		backgroundOpacity = 50,
-		-- Set in the row designer ("Hide the owned count"), the same for every layout.
-		owned = true,
 		glow = true,
 		-- The named layout of the rows (Layouts.lua).
 		layout = "Default",
@@ -304,7 +302,8 @@ function LootFeed:Apply()
 		maxRows = self:Get("maxRows"),
 		layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size")),
 		opacity = self:Get("backgroundOpacity") / 100,
-		showOwned = self:Get("owned"),
+		-- Whether the owned count shows is the layout's (its part's Shown).
+		showOwned = Feed.Design.Current(self:DesignSection()).parts.owned.shown,
 		showGlow = self:Get("glow"),
 	})
 	self.feed:SetWarnings(self:Warnings())

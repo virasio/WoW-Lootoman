@@ -71,11 +71,6 @@ describe("loot feed designs", function()
 			assert.same({ "name", "row" }, { design.parts.icon.anchor, design.parts.name.anchor })
 		end)
 
-		it("keeps whether the owned count shows as its template has it: the profile's switch decides", function()
-			assert.has_error(function() Design.Set(section, "owned", "shown", false) end)
-			assert.is_true(Design.Current({ schema = Design.SCHEMA, changes = { owned = { shown = false } } }).parts.owned.shown)
-		end)
-
 		it("ignores saved changes it does not know, or of the wrong type", function()
 			section.schema = 1
 			section.changes = { name = { x = "far", colour = 3, point = "MIDDLE" }, tail = { x = 1 }, row = { parts = {} },
@@ -180,15 +175,16 @@ describe("loot feed designs", function()
 			assert.equals("rows", Design.View(Design.Current(section)))
 		end)
 
-		it("stays square, with the icon whole and the name, the owned count and the icon's place fixed", function()
+		it("stays square, with the icon whole, no name, and the amount and the owned count on the icon", function()
 			Design.Set(icons, "row", "height", 50)
 			Design.Set(icons, "icon", "size", 60)
 			Design.Set(icons, "name", "shown", true)
 			Design.Set(icons, "owned", "point", "BOTTOMLEFT")
+			Design.Set(icons, "owned", "anchor", "row")
 			Design.Set(icons, "amount", "anchor", "row")
 			local design = Design.Current(icons)
-			assert.same({ 50, 50, 100, false, "TOPRIGHT", "icon" }, { design.height, design.width, design.parts.icon.size,
-				design.parts.name.shown, design.parts.owned.point, design.parts.amount.anchor })
+			assert.same({ 50, 50, 100, false, "BOTTOMLEFT", "icon", "icon" }, { design.height, design.width, design.parts.icon.size,
+				design.parts.name.shown, design.parts.owned.point, design.parts.owned.anchor, design.parts.amount.anchor })
 		end)
 
 		it("keeps the amount within one icon's size of the icon", function()

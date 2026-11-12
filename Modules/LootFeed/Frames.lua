@@ -217,13 +217,18 @@ function Frames.CreateRow(parent)
 	for _, text in ipairs({ rowFrame.Owned, rowFrame.Label, rowFrame.Amount }) do
 		text:SetWordWrap(false)
 	end
-	-- The amount's own background, when the design asks: over the icon and its
-	-- border, under the amount.
+	-- The amount's and the owned count's own backgrounds, when the design asks:
+	-- over the icon and its border, under the text.
 	rowFrame.AmountBackground = rowFrame:CreateTexture(nil, "OVERLAY", nil, 3)
 	rowFrame.AmountBackground:SetPoint("TOPLEFT", rowFrame.Amount, "TOPLEFT", -2, 1)
 	rowFrame.AmountBackground:SetPoint("BOTTOMRIGHT", rowFrame.Amount, "BOTTOMRIGHT", 2, -1)
 	rowFrame.AmountBackground:Hide()
 	rowFrame.Amount:SetDrawLayer("OVERLAY", 4)
+	rowFrame.OwnedBackground = rowFrame:CreateTexture(nil, "OVERLAY", nil, 3)
+	rowFrame.OwnedBackground:SetPoint("TOPLEFT", rowFrame.Owned, "TOPLEFT", -2, 1)
+	rowFrame.OwnedBackground:SetPoint("BOTTOMRIGHT", rowFrame.Owned, "BOTTOMRIGHT", 2, -1)
+	rowFrame.OwnedBackground:Hide()
+	rowFrame.Owned:SetDrawLayer("OVERLAY", 4)
 	-- A stuck row's marks: the bags' quest mark over the icon of an item that
 	-- starts a quest, else a pin at the icon's top left; and how many wait.
 	rowFrame.QuestMark = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
@@ -326,6 +331,8 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	end
 	rowFrame.AmountBackground:SetColorTexture(0, 0, 0, parts.amount.opacity / 100)
 	rowFrame.AmountBackground:SetShown(parts.amount.background and rowFrame.Amount:IsShown())
+	rowFrame.OwnedBackground:SetColorTexture(0, 0, 0, parts.owned.opacity / 100)
+	rowFrame.OwnedBackground:SetShown(parts.owned.background and rowFrame.Owned:IsShown())
 	-- The quest mark as soon as the item is known to start a quest; the pin and
 	-- the clicks for the stuck row.
 	rowFrame.QuestMark:SetShown(iconShown and row.sticky == "quest")

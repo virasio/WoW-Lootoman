@@ -82,7 +82,9 @@ describe("saved data of version 0.3.5", function()
 
 	it("loads without errors, with the profile, its feed settings and its layout", function()
 		assert.same({}, ns.Compat.Test.state.errors)
-		assert.same({ "Raid", "Quiet", false }, { ns.Profiles.GetCurrent(), ns.Feed.Layouts.Current(), ns.Storage:Get("LootFeed", "owned") })
+		local Feed = ns.Feed
+		assert.same({ "Raid", "Quiet", false }, { ns.Profiles.GetCurrent(), Feed.Layouts.Current(),
+			Feed.Design.Current(Feed.Layouts.Get("Quiet")).parts.owned.shown })
 	end)
 
 	-- The bars left Lootoman: their sets, settings and positions stay as 0.3.5
@@ -90,13 +92,13 @@ describe("saved data of version 0.3.5", function()
 	it("is saved again with nothing lost or changed, the bars' data too", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
-		-- The layout's owned part leaves its switch to the profile, which had it off already.
-		expected.LootomanDB.sections.feedLayouts.Quiet.changes.owned = nil
+		-- The profile's owned count switch goes; its layout hid the count already.
+		expected.LootomanDB.profiles.Raid.modules.LootFeed.owned = nil
 		-- The feed shows at least 3 rows.
 		expected.LootomanDB.profiles.Default.modules.LootFeed.maxRows = 3
 		expected.LootomanDB.profiles.Raid.modules.LootFeed.maxRows = 3
 		holds(ns.Compat.Test.state.saved, expected, "saved")
-		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned)
+		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.profiles.Raid.modules.LootFeed.owned)
 	end)
 
 	it("makes profile texts without the bars", function()

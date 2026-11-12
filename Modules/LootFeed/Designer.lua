@@ -85,34 +85,36 @@ local CONTROLS = {
 	},
 	name = TEXT_CONTROLS,
 	amount = {},
-	-- Whether it shows is the profile's switch on top, "Hide the owned count".
 	owned = {},
 }
-for index, control in ipairs(TEXT_CONTROLS) do
-	CONTROLS.amount[index] = control
-	if control.key ~= "shown" then
-		CONTROLS.owned[#CONTROLS.owned + 1] = control
+-- The amount and the owned count also have a background of their own.
+for _, part in ipairs({ "amount", "owned" }) do
+	for index, control in ipairs(TEXT_CONTROLS) do
+		CONTROLS[part][index] = control
 	end
+	table.insert(CONTROLS[part], { key = "background", label = L["Background"] })
+	table.insert(CONTROLS[part], { key = "opacity", label = L["Background opacity"] })
 end
-table.insert(CONTROLS.amount, { key = "background", label = L["Background"] })
-table.insert(CONTROLS.amount, { key = "opacity", label = L["Background opacity"] })
 -- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
-local ICON_PARTS = { "row", "amount" }
+-- The amount and the owned count sit on the icon, each set alike.
+local ICON_PARTS = { "row", "amount", "owned" }
+local ON_THE_ICON = {
+	{ key = "shown", label = L["Shown"] },
+	{ key = "point", label = L["Anchor point"] },
+	{ key = "align", label = L["Text alignment"] },
+	{ key = "fontSize", label = L["Text size"] },
+	{ key = "x", label = L["Horizontal offset"] },
+	{ key = "y", label = L["Vertical offset"] },
+	{ key = "background", label = L["Background"] },
+	{ key = "opacity", label = L["Background opacity"] },
+}
 local ICON_CONTROLS = {
 	row = {
 		{ key = "height", label = L["Icon size"] },
 		{ key = "gap", label = L["Gap between icons"] },
 	},
-	amount = {
-		{ key = "shown", label = L["Shown"] },
-		{ key = "point", label = L["Anchor point"] },
-		{ key = "align", label = L["Text alignment"] },
-		{ key = "fontSize", label = L["Text size"] },
-		{ key = "x", label = L["Horizontal offset"] },
-		{ key = "y", label = L["Vertical offset"] },
-		{ key = "background", label = L["Background"] },
-		{ key = "opacity", label = L["Background opacity"] },
-	},
+	amount = ON_THE_ICON,
+	owned = ON_THE_ICON,
 }
 -- A checkbox for a switch, a dropdown for a choice, else a slider with a field.
 local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice" }
@@ -197,10 +199,10 @@ local function mark(rowFrame, layout)
 	end
 end
 
--- Whether a part's hit area is there: an Icons layout's name and owned count
--- cannot be changed, and its icon stands for the row.
+-- Whether a part's hit area is there: an Icons layout's name cannot be
+-- changed, and its icon stands for the row.
 local function hittable(design, part)
-	return not isIcons(design) or part == "icon" or part == "amount"
+	return not isIcons(design) or part ~= "name"
 end
 
 -- What clicking or dragging a part chooses: an Icons layout's icon is its row.
@@ -221,7 +223,7 @@ function Designer.Refresh()
 		selected = "row"
 	end
 	local layout = Design.Layout(design, LootFeed:Get("size"))
-	local options = { layout = layout, showOwned = LootFeed:Get("owned"), showGlow = LootFeed:Get("glow") }
+	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = LootFeed:Get("glow") }
 	-- Rows one under another; icons side by side, wrapping at the preview's edge.
 	local left, top = 0, 0
 	local room = Designer.PREVIEW_WIDTH - 24
@@ -247,7 +249,6 @@ function Designer.Refresh()
 		end
 	end
 	Designer.UpdateInspector()
-	window.hideOwned:SetChecked(not LootFeed:Get("owned"))
 	window.layouts:GenerateMenu()
 	window.parts:GenerateMenu()
 	if LootFeed:IsActive() then
@@ -597,26 +598,6 @@ local function build()
 	frame.reset:SetScript("OnClick", function()
 		Designer.Reset()
 	end)
-	-- The profile's switch for every layout, so always here, beside the layout.
-	frame.hideOwned = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	frame.hideOwned:SetSize(26, 26)
-	frame.hideOwned:SetPoint("LEFT", frame.reset, "RIGHT", 16, 0)
-	frame.hideOwned.label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.hideOwned.label:SetPoint("LEFT", frame.hideOwned, "RIGHT", 2, 0)
-	frame.hideOwned.label:SetText(L["Hide the owned count"])
-	frame.hideOwned:SetScript("OnClick", function(button)
-		LootFeed:Set("owned", not button:GetChecked())
-		Designer.Refresh()
-	end)
-	frame.hideOwned:SetScript("OnEnter", function(button)
-		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-		GameTooltip_SetTitle(GameTooltip, L["Hide the owned count"])
-		GameTooltip:AddLine(L["The number on an item's icon of how many you have in your bags and bank, and a currency's total. For every layout."], 1, 1, 1, true)
-		GameTooltip:Show()
-	end)
-	frame.hideOwned:SetScript("OnLeave", function()
-		GameTooltip:Hide()
-	end)
 	-- Layouts change elsewhere too: an import, another profile.
 	local function refreshShown()
 		if frame:IsShown() then
@@ -626,7 +607,7 @@ local function build()
 	Bus:On("FeedLayoutChanged", Designer, refreshShown)
 	Bus:On("ProfileChanged", Designer, refreshShown)
 	Bus:On("SettingChanged", Designer, function(_, module, key)
-		if module == LootFeed.name and (key == "layout" or key == "owned") then
+		if module == LootFeed.name and key == "layout" then
 			refreshShown()
 		end
 	end)

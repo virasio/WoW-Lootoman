@@ -27,29 +27,30 @@ describe("migrations", function()
 		assert.same({ schema = 2, profiles = { Default = {} }, profileKeys = {}, global = { debug = true } }, db)
 	end)
 
-	it("turns the owned count off in the profiles of a layout that hid it, and drops that switch from layouts", function()
+	it("hides the owned count in the layout of a profile that turned it off, and drops the profile's switch", function()
 		local saved = {
 			schema = 1,
 			profileKeys = {},
 			global = {},
 			profiles = {
-				Default = { modules = { LootFeed = { layout = "Quiet" } } },
-				Raid = { modules = { LootFeed = { layout = "Shown" }, AutoLoot = { confirmBind = false } } },
-				-- On the Default layout, which hides it too.
-				Alt = {},
+				Default = { modules = { LootFeed = { layout = "Quiet", owned = false } } },
+				Raid = { modules = { LootFeed = { owned = true, layout = "Shown" }, AutoLoot = { confirmBind = false } } },
+				-- On the Default layout, which the saved data does not hold yet.
+				Alt = { modules = { LootFeed = { owned = false } } },
 			},
 			sections = { feedLayouts = {
-				Default = { schema = 1, base = "large", changes = { owned = { shown = false } } },
-				Quiet = { schema = 1, base = "compact", changes = { owned = { shown = false, x = 2 }, row = { gap = 2 } } },
+				Quiet = { schema = 1, base = "compact", changes = { row = { gap = 2 } } },
 				Shown = { schema = 1, base = "minimal", changes = { owned = { shown = true } } },
 			} },
 		}
 		local db = Migrations.Run(Migrations.account, saved)
-		assert.same({ layout = "Quiet", owned = false }, db.profiles.Default.modules.LootFeed)
+		assert.same({ layout = "Quiet" }, db.profiles.Default.modules.LootFeed)
 		assert.same({ LootFeed = { layout = "Shown" }, AutoLoot = { confirmBind = false } }, db.profiles.Raid.modules)
-		assert.same({ modules = { LootFeed = { owned = false } } }, db.profiles.Alt)
-		assert.same({ owned = { x = 2 }, row = { gap = 2 } }, db.sections.feedLayouts.Quiet.changes)
-		assert.same({ nil, nil }, { db.sections.feedLayouts.Shown.changes, db.sections.feedLayouts.Default.changes })
+		assert.same({ modules = {} }, db.profiles.Alt)
+		local layouts = db.sections.feedLayouts
+		assert.same({ owned = { shown = false }, row = { gap = 2 } }, layouts.Quiet.changes)
+		assert.same({ owned = { shown = true } }, layouts.Shown.changes)
+		assert.same({ schema = 1, base = "large", changes = { owned = { shown = false } } }, layouts.Default)
 	end)
 
 	it("gives the loot feed at least 3 rows", function()

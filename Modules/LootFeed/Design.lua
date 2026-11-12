@@ -11,8 +11,9 @@ local _, ns = ...
 --   icon                  size, in percent of the row's height
 --   glow                  over the icon of rare and better items
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
---                         align, LEFT or RIGHT; the amount also a background
---                         of its own (background, and its opacity in percent)
+--                         align, LEFT or RIGHT; the amount and the owned count
+--                         also a background of their own (background, and
+--                         its opacity in percent)
 -- Every part but the glow is anchored to an element (anchor: "row", "icon",
 -- "name", "amount" or "owned") at one of its points (point: TOPLEFT …
 -- BOTTOMRIGHT), and moved from there by x, y. The part's own point follows
@@ -25,9 +26,8 @@ local _, ns = ...
 -- the texts that follow it, like the amount after the name (Arrange).
 --
 -- In the icons view the row is a square icon, as high as it is wide. The name
--- is never shown, the owned count has a fixed place at the icon's top right,
--- and the amount is anchored to the icon, inside it or beside it: its box is
--- the icon and one icon's size around it.
+-- is never shown, and the amount and the owned count are anchored to the icon,
+-- inside it or beside it: their box is the icon and one icon's size around it.
 --
 -- A player's design is a named layout (Layouts.lua):
 --   { schema = 1, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
@@ -64,7 +64,8 @@ Design.LARGE = {
 		name = { shown = true, fontSize = 13, width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
 			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3 },
+		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
+			background = false, opacity = 60 },
 	},
 }
 
@@ -79,7 +80,8 @@ Design.COMPACT = {
 		name = { shown = true, fontSize = 12, width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
 		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2 },
+		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, opacity = 60 },
 	},
 }
 
@@ -94,7 +96,8 @@ Design.MINIMAL = {
 		name = { shown = true, fontSize = 13, width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2 },
+		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, opacity = 60 },
 	},
 }
 
@@ -111,7 +114,8 @@ Design.ICONS = {
 		name = { shown = false, fontSize = 13, width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2 },
+		owned = { shown = true, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
+			background = false, opacity = 60 },
 	},
 }
 
@@ -128,7 +132,7 @@ Design.LIMITS = {
 	icon = { size = { 20, 100 } },
 	name = TEXT_LIMITS,
 	amount = { fontSize = TEXT_LIMITS.fontSize, width = TEXT_LIMITS.width, opacity = { 0, 100 } },
-	owned = { fontSize = { 6, 20 }, width = { 20, 600 } },
+	owned = { fontSize = { 6, 20 }, width = { 20, 600 }, opacity = { 0, 100 } },
 }
 
 -- The values that are lengths, scaled with the size setting; an icon's size is
@@ -318,17 +322,13 @@ local function anchorOrder(design)
 end
 
 -- The icons view's fixed parts: the row is the icon, as wide as high; no
--- name; the owned count where the built-in design has it; the amount on the
--- icon.
+-- name; the amount and the owned count on the icon.
 local function fixIcons(design)
-	local parts, base = design.parts, Design.ICONS.parts
+	local parts = design.parts
 	design.width = design.height
 	parts.icon.size, parts.icon.anchor, parts.icon.point, parts.icon.x, parts.icon.y = 100, "row", "CENTER", 0, 0
 	parts.name.shown = false
-	local shown = parts.owned.shown
-	parts.owned = copy(base.owned)
-	parts.owned.shown = shown
-	parts.amount.anchor = "icon"
+	parts.amount.anchor, parts.owned.anchor = "icon", "icon"
 end
 
 -- Keeps a design inside its box (boxOf): sizes within their limits and the
@@ -380,17 +380,12 @@ local function valuesOf(design, part)
 	return design.parts[part]
 end
 
--- Values a design keeps as its template has them: whether the owned count
--- shows is the profile's switch, the same for every layout.
-local FIXED = { owned = { shown = true } }
-
 -- Whether a value may be set: a known key, not a table, of the same type, and
 -- for the anchor, point and align one of their choices (an anchor without
 -- loops).
 local function valid(design, part, key, value)
 	local values = valuesOf(design, part)
-	if not values or values[key] == nil or type(value) == "table" or type(values[key]) ~= type(value)
-		or (FIXED[part] and FIXED[part][key]) then
+	if not values or values[key] == nil or type(value) == "table" or type(values[key]) ~= type(value) then
 		return false
 	end
 	if key == "anchor" then
