@@ -28,6 +28,10 @@ function SettingsAPI.Install()
 
 	local function addInitializer(category, initializer)
 		category.initializers[#category.initializers + 1] = initializer
+		-- Indented under its parent, usable while predicate() is true.
+		function initializer:SetParentInitializer(parent, predicate)
+			self.parent, self.predicate = parent, predicate
+		end
 		return initializer
 	end
 
@@ -108,10 +112,6 @@ function SettingsAPI.Install()
 
 	function Settings.CreateDropdown(category, setting, options, tooltip)
 		return addInitializer(category, { kind = "dropdown", setting = setting, options = options, tooltip = tooltip })
-	end
-
-	function Settings.CreateColorSwatch(category, setting, tooltip)
-		return addInitializer(category, { kind = "color", setting = setting, tooltip = tooltip })
 	end
 
 	function Settings.CreateControlTextContainer()
@@ -233,7 +233,7 @@ function SettingsAPI.Install()
 	function api.Kinds(category)
 		local kinds = {}
 		for index, initializer in ipairs(category.initializers) do
-			kinds[index] = initializer.kind .. ":" .. (initializer.name or initializer.setting.name)
+			kinds[index] = (initializer.parent and "  " or "") .. initializer.kind .. ":" .. (initializer.name or initializer.setting.name)
 		end
 		return kinds
 	end

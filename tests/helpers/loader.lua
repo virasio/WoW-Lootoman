@@ -133,6 +133,8 @@ function Loader.LoadAddon(options)
 		merged[key] = value
 	end
 	local ns = Loader.Load(merged)
+	-- Protected frames refuse what the client refuses in combat.
+	Loader.ui.inCombat = function() return ns.Compat.InCombat() end
 	local current = client(merged.gameType or "standard")
 	local metadata = {}
 	for key, value in pairs(Toc.Parse(merged.toc or "Lootoman.toc").metadata) do

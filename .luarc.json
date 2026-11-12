@@ -28,6 +28,7 @@
     "GameTooltip_AddNormalLine",
     "GameTooltip_SetTitle",
     "GameTooltip_ShowCompareItem",
+    "ITEM_SPELL_KNOWN",
     "LibStub",
     "LootFrame",
     "MenuConstants",
@@ -43,7 +44,8 @@
     "SlashCmdList",
     "StaticPopup_Hide",
     "StaticPopup_Show",
-    "ToggleAllBags",
+    "SecureHandlerWrapScript",
+    "TEXTURE_ITEM_QUEST_BANG",
     "TooltipUtil",
     "UISpecialFrames",
     "WOW_PROJECT_ID"

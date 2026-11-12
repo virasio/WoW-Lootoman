@@ -67,8 +67,6 @@ local function allows(setting, value)
 			end
 		end
 		return false
-	elseif setting.kind == "color" then
-		return value:match("^%x%x%x%x%x%x%x%x$") ~= nil
 	end
 	return true
 end
@@ -76,7 +74,7 @@ end
 -- Whether a value is one the module's controls can set, from its declared
 -- settings (mainSettings and Settings()): a slider's value lies in its range
 -- and on its step (1.5 rows would break the loot feed), a dropdown's is one of
--- its choices, a colour is AARRGGBB. Profile texts read every module's values with it (Share). The
+-- its choices. Profile texts read every module's values with it (Share). The
 -- value already has the default's type.
 function ModuleMixin:Validate(key, value)
 	for _, list in ipairs({ self.mainSettings or {}, self:Settings() }) do

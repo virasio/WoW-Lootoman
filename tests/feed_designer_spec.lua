@@ -61,7 +61,9 @@ describe("loot feed designer", function()
 
 		it("shows the sample rows, each in its box, and the row in the inspector", function()
 			assert.is_true(window.shown)
-			assert.equals(5, #window.rows)
+			assert.equals(7, #window.rows)
+			-- Each row takes clicks on its free space, the stuck sample too.
+			assert.same({ true, true }, { window.rows[1].mouseClicks, window.rows[7].mouseClicks })
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			assert.equals("Row", window.inspectorTitle.text)
 			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30" }, inspector())
@@ -73,8 +75,34 @@ describe("loot feed designer", function()
 			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
 				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
 			Designer.Select("owned")
-			assert.same({ "Shown: true", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
-				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23" }, inspector())
+			assert.same({ "Shown: true", "Counts: all", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
+				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "Background: false",
+				"Background opacity: 60 in 0..100" }, inspector())
+		end)
+
+		it("counts bags and bank, or the bags only, as the layout's owned count says", function()
+			Designer.Select("owned")
+			assert.same({ "Bags and bank*", "Bags only" }, menu(window.controls[2].choice, "bags"))
+			assert.same({ "bags", "bags" }, { design().parts.owned.count, module.feed.options.layout.parts.owned.count })
+		end)
+
+		it("shows or hides the owned count per layout, like any part", function()
+			Designer.Select("owned")
+			window.controls[1].check.checked = false
+			window.controls[1].check.scripts.OnClick(window.controls[1].check)
+			assert.same({ false, false }, { design().parts.owned.shown, module.feed.options.showOwned })
+			ns.Feed.Layouts.Create("Strip", "icons")
+			Designer.Use("Strip")
+			assert.is_true(module.feed.options.showOwned)
+		end)
+
+		it("sets the amount's own background and its opacity", function()
+			Designer.Select("amount")
+			local list = inspector()
+			assert.same({ "Background: false", "Background opacity: 60 in 0..100" }, { list[9], list[10] })
+			window.controls[9].check.checked = true
+			window.controls[9].check.scripts.OnClick(window.controls[9].check)
+			assert.is_true(design().parts.amount.background)
 		end)
 
 		it("marks the row, the chosen icon, or the most room the chosen text may take, with a frame", function()
@@ -180,6 +208,34 @@ describe("loot feed designer", function()
 			assert.equals("Owned count", window.inspectorTitle.text)
 		end)
 
+		it("lists only what an Icons layout lets change, with its samples side by side", function()
+			ns.Feed.Layouts.Create("Strip", "icons")
+			Designer.Use("Strip")
+			assert.equals("Icon", window.inspectorTitle.text)
+			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
+			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
+			-- The owned count set as the amount is, on the icon or beside it.
+			Designer.Select("owned")
+			assert.same({ "Shown: true", "Counts: all", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
+				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "Background: false",
+				"Background opacity: 60 in 0..100" }, inspector())
+			Designer.Select("amount")
+			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
+				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "Background: false",
+				"Background opacity: 60 in 0..100" }, inspector())
+			-- Icons 36 wide and 4 apart, side by side.
+			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
+			-- The icon stands for the row; the name cannot be chosen.
+			local rowFrame = window.rows[1]
+			assert.same({ true, false, true, true }, { rowFrame.hits.icon.shown, rowFrame.hits.name.shown, rowFrame.hits.owned.shown,
+				rowFrame.hits.amount.shown })
+			rowFrame.hits.icon.scripts.OnClick(rowFrame.hits.icon)
+			assert.equals("Icon", window.inspectorTitle.text)
+			-- Back on rows, every part again.
+			Designer.Use("Default")
+			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts))
+		end)
+
 		it("hides on Escape and with its close button, and the command toggles it", function()
 			assert.is_true(ui.PressEscape())
 			assert.is_false(window.shown)
@@ -263,7 +319,7 @@ describe("loot feed designer's layout menu", function()
 			"radio:Default*", "radio:Raid", "divider:",
 			"button:|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New layout|r", "button:Import", "button:Share",
 		}, texts(root.entries))
-		assert.same({ "button:Large", "button:Compact", "button:Minimal" }, texts(root.entries[4].entries))
+		assert.same({ "button:Large", "button:Compact", "button:Minimal", "button:Icons" }, texts(root.entries[4].entries))
 		assert.same({ 2, 1 }, root.grid)
 	end)
 

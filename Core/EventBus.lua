@@ -30,8 +30,6 @@ Bus.MESSAGES = {
 	MarksChanged = { payload = "itemID, mark: the new mark, nil when removed; nil, nil when all were cleared", from = "Marks" },
 	InventoryChanged = { payload = "", from = "Inventory, after the bags changed (BAG_UPDATE_DELAYED)" },
 	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
-	CurrenciesChanged = { payload = "currencyID: the currency that changed, or nil", from = "Currencies, on CURRENCY_DISPLAY_UPDATE" },
-	BarSetChanged = { payload = "name: the bar set that changed", from = "Sets (the currency bars)" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot" },
 }

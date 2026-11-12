@@ -1,6 +1,6 @@
 # Lootoman
 
-Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It looks and feels like the default game interface.
+Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you can design, and junk thrown away or sold in a click. It looks and feels like the default game interface.
 
 ## Features
 
@@ -14,12 +14,14 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 ### Loot feed
 
 - What you pick up appears next to the centre of the screen and fades out: items, currencies, money, reputation and, if you want, experience. Repeated items merge into one row with a count. Money from merchants, mail, trade, the auction house and banks is not loot and is not shown.
-- Options: what the feed shows, the lowest item quality it shows, how many rows are shown at once (a full feed fades its oldest rows out), whether new rows appear on top or at the bottom, time on screen, fade-out time, size, background opacity, how many of the item you own on its icon, and a glow for rare items.
-- Point at a row to see the item's or currency's tooltip; the feed waits while you do. Clicks go through to the game world.
+- Options: what the feed shows, the lowest item quality it shows, how many rows are shown at once (3 to 20; a full feed fades its oldest rows out), the fill direction (bottom to top or top to bottom; with icons also left to right and right to left; rows and icons keep a direction each), time on screen, fade-out time, size, background opacity, and a glow for rare items.
+- **Compact view**: the Icons layout shows square icons only, with the amount and the owned count on each (or beside it, up to an icon's size away, each with a background of its own if you like). Big numbers, the owned count's too, are short, cut and never rounded: 850, 1.23K, 12.34K, 123K, 1.23M. Money is a number and a coin: 78 copper, 1.23 silver, 1.02 gold, then whole gold, then 1.23K gold.
+- **Usable items stay**: with *Keep usable items* on, an item this character can use right now stays at the start of the feed, after any warnings, until you click it: left to dismiss it, right to use it (out of combat; in a fight, a right click works only for the item that was there when it began). Items that start a quest (with the bags' quest mark), recipes you can learn, containers you can open, and pets, mounts, toys, appearance sets and heirlooms not in your collection yet; each kind can be turned off. Several wait under each other, with a badge counting them, and the others keep fading in the places after it. Such an item shows even below the minimum quality, counts down as you use it, and goes when it is used up, learned or its quest is taken.
+- Point at a row to see the item's or currency's tooltip, or money, experience and reputation in full; the feed waits while you do. Clicks go through to the game world, but for a kept item.
 - The feed is placed with the game's Edit Mode, with its own position in every Edit Mode layout. Its options are also in its Edit Mode dialog.
-- **Row designer** (`/lootoman design`, or the buttons on the loot feed's options page and in its Edit Mode dialog): click a part of the sample rows — icon, name, amount or owned count — to choose it, and drag it to move it. For each part, choose whether it is shown, what it is anchored to and at which point, its offsets, the icon's size as a share of the row's height, and a text's size, maximum width and alignment; for the rows, their height, width and gap. The feed follows every change at once.
-- **Row layouts** have names and are shared by every profile; each profile uses one of them. New layouts start from the Large, Compact or Minimal template, and layouts can be copied, renamed, reset to their template and deleted. The layout Default always exists.
-- **Low-space warnings**: while few general bag slots are free (2 or fewer by default), and if you want while few reagent bag slots are, a warning sits at the feed's edge where its oldest row is, and the rows stack after it. Each kind has its own threshold.
+- **Row designer** (`/lootoman design`, or the buttons on the loot feed's options page and in its Edit Mode dialog): click a part of the sample rows — icon, name, amount or owned count — to choose it, and drag it to move it. For each part, choose whether it is shown, what it is anchored to and at which point, its offsets, the icon's size as a share of the row's height, and a text's size, maximum width and alignment, the amount's and the owned count's own background, and whether the owned count counts the bags and bank or the bags only; for the rows, their height, width and gap. An Icons layout offers only the icon's size, the gap, the amount and the owned count. The feed follows every change at once.
+- **Row layouts** have names and are shared by every profile; each profile uses one of them. New layouts start from the Large, Compact, Minimal or Icons template, and layouts can be copied, renamed, reset to their template and deleted. The layout Default always exists.
+- **Low-space warnings**: while few general bag slots are free (2 or fewer by default), and if you want while few reagent bag slots are, a warning sits at the feed's edge where its oldest row is, then a kept item, and the rows stack after them. With icons it is a bag icon with the free slots, or, filling sideways, a line above the icons. Each kind has its own threshold.
 
 ### Junk
 
@@ -33,28 +35,11 @@ Lootoman is a World of Warcraft addon for loot, bags and getting rid of junk. It
 - **Junk list** in the options: every item marked as junk or as not junk, with a Remove button for each and *Clear list*. Marks belong to the profile.
 - Auction prices come from [Auctionator](https://www.curseforge.com/wow/addons/auctionator) when it is installed; without it, the merchant's price.
 
-### Free-slot bar
-
-- One line of text with your bags' free slots, placed with Edit Mode, in your own format: tokens in braces with an optional colour, and any text between them, such as `{free|33ff33} ({reagent|ffd100}) / {general}`. Tokens: `{free}`, `{total}`, `{used}` for all bags, and `{general}`, `{reagent}`, `{profession}` with their `.total`, such as `{reagent.total}`. On WoW Forever, also one pair per kind of special bag: `{herb}`, `{enchanting}`, `{soul}`, `{quiver}` and `{ammo}`, with their `.total`. A default colour applies to the text between tokens and to tokens without a colour; the text size is set too, and a background with its opacity.
-- Its tooltip lists the free and total slots of each kind of bag you have.
-- It sits above the bag buttons and the bags, so you can put the count right on them; a click goes through to what is under it.
-- The same text shows in broker displays (Titan Panel, ElvUI's data texts and others) when one is installed; a click there opens the bags.
-
-### Currency bars
-
-- Bars of currencies, of items in your bags and of your money, as many as you want, anywhere on the screen. Each entry shows its icon and count (money in gold, silver and copper coins, as in the bags), a gap apart, filling from the left edge or from the right; a capped currency shows its cap and turns red at it. What does not fit hides behind a double arrow at the other edge: click it for the rest.
-- In Edit Mode, place each bar, and in its dialog set its width (also with the grip on its far edge), gap, size, which edge it fills from, a background with its opacity, and the bags' coin-box border; add or remove bars there too.
-- Outside Edit Mode, drag an entry along the bar to move it: a copy follows the mouse and a line shows where it will go. Drag it off the bar to take it off (Lootoman asks first). Drop an item from your bags on a bar to add it there.
-- **Stacks**: several currencies or items in one spot, most important first, such as upgrade crests. The bar shows the most important one you have; hovering lists them all with their counts. When all are at zero, the stack hides, unless *Show when empty* is on: then it shows the least important one at 0.
-- **Bags, banks or both**: an item on a bar counts your bags, your banks (the bank and the warband bank) or both, and the same item can be on a bar once for each, so its count in the bags and in the banks show side by side. Counts of the banks are light blue, of both light green; the tooltip lists the bags, the bank and the warband bank apart.
-- **Bar editor** (`/lootoman bars`, the bar's Edit Mode dialog, or the options): on the left what is on the chosen bar, in its order (drag rows up and down, drop an item from your bags, or add one by its ID); on the right money and the currencies not on it, by name. Drag a row from one list to the other, or use the buttons between them for the chosen one; while you drag, a copy follows the mouse and a line shows where the row will go. Drop a row on another to stack them, or between a stack's rows to put it there; right-click a stack for *Show when empty* and *Break up the stack*, and an item for what it counts and *Show it again*. A bag item you take off a bar stays on the right while the editor is open, so a wrong click is easy to undo.
-- Bars come in **named sets** shared by every profile, like row layouts: each profile uses one, and sets can be copied, renamed, reset, deleted, shared and imported. The set Default starts with one bar of the currencies you show on the backpack.
-
 ### Options and profiles
 
 - One options page in the game's AddOns settings: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share), with a Reset button beside it; then a switch for each feature, with its main options under it and a button that opens its own page.
 - Every character can use its own profile; new characters use the Default profile.
-- **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's settings, the loot feed's position and the layout it uses, the bar set it uses, and any of your row layouts and bar sets. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one. When an imported layout's name is taken, choose for each one: keep both, replace yours, or keep yours. Row layouts can also be shared and imported on their own, from the designer.
+- **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's settings, the loot feed's position and the layout it uses, and any of your row layouts. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one. When an imported layout's name is taken, choose for each one: keep both, replace yours, or keep yours. Row layouts can also be shared and imported on their own, from the designer.
 - Changes apply at once, without `/reload`.
 
 ### Languages and clients
@@ -67,7 +52,6 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 - `/lootoman design`: open the loot feed's row designer.
 - `/lootoman toss`: open the toss window.
 - `/lootoman sales`: list what was sold this session.
-- `/lootoman bars`: open the currency bar editor.
 - `/lootoman debug on` or `off`: turn debug messages on or off for all characters.
 - `/lootoman selftest`: check the addon against the game client. Its output helps with bug reports.
 
