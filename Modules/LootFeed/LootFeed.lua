@@ -261,9 +261,30 @@ end
 -- hold it: a usable one comes in anyway.
 LootFeed.WAIT = 10
 
+-- Counts a kept row down as its items are used: by as much as the bags'
+-- count fell since the last check, so copies the bags held before the loot
+-- do not keep it; more of the item looted merges into the row (Model.lua).
+-- Returns false once the row's items are all used. A count of none while the
+-- bags' scan still holds the item waits for the scan.
+local function countDown(row)
+	local count = Compat.GetItemCount(row.id, true)
+	if count <= 0 then
+		return true
+	end
+	local last = row.lastCount or count
+	row.lastCount = count
+	local amount = math.min((row.amount or 1) - math.max(0, last - count), count)
+	if amount <= 0 then
+		return false
+	end
+	row.amount = amount
+	return true
+end
+
 -- Whether a looted item, once the bags hold it, is a usable one the feed
 -- keeps: its row sticks, or stops being sticky. A kept row counts down what
--- is left as each use takes one, and goes when its item has left the bags.
+-- is left as each use takes one, and goes when its items are used up or have
+-- left the bags.
 function LootFeed:CheckUsable(row, now)
 	if row.kind ~= "item" or not row.id then
 		return
@@ -277,8 +298,7 @@ function LootFeed:CheckUsable(row, now)
 	end
 	row.held = true
 	if kind and self:Keeps(kind) then
-		self.model:SetSticky(row, kind, now)
-		row.amount = math.max(1, math.min(row.amount or 1, Compat.GetItemCount(row.id, true)))
+		self.model:SetSticky(row, countDown(row) and kind or nil, now)
 	elseif row.sticky then
 		self.model:SetSticky(row, nil, now)
 	end
@@ -302,8 +322,7 @@ function LootFeed:CheckAll()
 			if held and kind and self:Keeps(kind) then
 				local row = self.model:Add(waiting.entry, now, true)
 				if row then
-					row.held = true
-					self.model:SetSticky(row, kind, now)
+					self:CheckUsable(row, now)
 				end
 			end
 		end

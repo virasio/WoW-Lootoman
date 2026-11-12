@@ -266,6 +266,35 @@ describe("loot feed module", function()
 			assert.same({}, module.model:Stuck())
 		end)
 
+		it("count down only the looted ones when the bags held some before", function()
+			-- Ten clams in the bags, three looted.
+			local clams = { itemID = 600, count = 10, use = { openable = true } }
+			Test.state.items[600].owned = 10
+			holding({ clams })
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. CLAM .. "x3", "Tester")
+			local row = rowOf(600)
+			assert.same({ "container", 3 }, { row.sticky, row.amount })
+			Test.state.items[600].owned, clams.count = 13, 13
+			holding({ clams })
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			module:CheckAll()
+			assert.same({ row }, module.model:Stuck())
+			-- Two opened: one left; more looted adds to it.
+			Test.state.items[600].owned, clams.count = 11, 11
+			holding({ clams })
+			assert.equals(1, row.amount)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. CLAM .. "x2", "Tester")
+			Test.state.items[600].owned, clams.count = 13, 13
+			holding({ clams })
+			assert.equals(3, row.amount)
+			-- The looted ones used: the row goes, with the ten from before still in the bags.
+			Test.state.items[600].owned, clams.count = 10, 10
+			holding({ clams })
+			assert.same({}, module.model:Stuck())
+			assert.is_nil(rowOf(600))
+		end)
+
 		it("keep only the kinds turned on, and nothing with the switch off", function()
 			module:Set("keepQuest", false)
 			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
