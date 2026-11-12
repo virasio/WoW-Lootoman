@@ -1,5 +1,17 @@
 # Lootoman changelog
 
+## 0.4
+
+A compact loot feed, and usable items that wait for you. Lootoman is now only about loot.
+
+- **Compact view**: the new Icons layout shows square icons only, filling up, down, left or right, with the amount and the owned count on each icon or beside it. Big numbers are short (1.23K, 12.34K, 1.23M), and money is a number with a coin.
+- **Usable items stay**: an item this character can use right now stays in the feed until you click it: left to dismiss it, right to use it. That covers items that start a quest (on WoW Forever, fast autoloot no longer takes them unnoticed), recipes to learn, containers to open, and pets, mounts, toys, appearance sets and heirlooms not in your collection yet. Turn off *Keep usable items*, or any of its kinds, if you don't want it.
+- **Owned count**: now part of each row layout, shown or hidden there, counting your bags and bank or only your bags. If you had it turned off, it stays hidden.
+- **Tooltips** for money, experience and reputation show the full numbers.
+- **Low-space warnings** work with icons too, and sit at the feed's edge.
+- The feed shows at least 3 rows.
+- **The currency bars and the free-slot bar are gone.** Your bar settings stay in your saved variables, untouched.
+
 ## 0.3.5
 
 Stacks and banks on the currency bars.
