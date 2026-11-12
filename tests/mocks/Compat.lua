@@ -272,18 +272,6 @@ function Compat.GetItemFamily(item)
 	return info and info.family or 0
 end
 
--- An item's kind is info.kind = { type, subType, classID, subClassID }, its
--- family info.family.
-function Compat.GetItemKind(item)
-	local info = findItem(item)
-	if not info or not info.kind then
-		return nil
-	end
-	local kind = copy(info.kind)
-	kind.family = info.family
-	return kind
-end
-
 function Compat.GetItemInfo(item)
 	local info = findItem(item)
 	if not info then

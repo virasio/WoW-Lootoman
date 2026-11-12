@@ -282,26 +282,4 @@ ns.Locales.AddTranslation("ruRU", {
 	["Free bag slots: %d"] = "Свободных ячеек в сумках: %d",
 	["No free reagent bag slots"] = "Нет свободных ячеек в сумке для реагентов",
 	["Free reagent bag slots: %d"] = "Свободных ячеек в сумке для реагентов: %d",
-
-	-- Modules/FreeSlots/FreeSlots.lua
-	["Free slots"] = "Свободные ячейки",
-	["Enable the free-slot bar"] = "Включить полосу свободных ячеек",
-	["Shows the free slots of your bags as text, in your own format and colours."] = "Показывает свободные ячейки сумок текстом в вашем формате и цветах.",
-
-	-- Modules/FreeSlots/FreeSlots.lua
-	["Look"] = "Вид",
-	["Default colour"] = "Цвет по умолчанию",
-	["For the text between the tokens, and for tokens without a colour of their own."] = "Для текста между метками и для меток без своего цвета.",
-	["Also in broker panels"] = "Также на панелях брокеров",
-	["Offers the text to broker displays such as Titan Panel or ElvUI's data texts."] = "Передаёт текст панелям вроде Titan Panel или текстам данных ElvUI.",
-	["All bags: %d free of %d"] = "Все сумки: свободно %d из %d",
-	["General bags: %d free of %d"] = "Обычные сумки: свободно %d из %d",
-	["Reagent bag: %d free of %d"] = "Сумка для реагентов: свободно %d из %d",
-	["Profession bags: %d free of %d"] = "Сумки для профессий: свободно %d из %d",
-	["%s: %d free of %d"] = "%s: свободно %d из %d",
-	["Edit the text"] = "Изменить текст",
-	["The free-slot bar's text. Tokens: %s"] = "Текст полосы свободных ячеек. Метки: %s",
-	["Text"] = "Текст",
-	["Background"] = "Фон",
-	["Tokens in braces show the free slots, each with a colour if you like: {free||33ff33}. Tokens: %s"] = "Метки в фигурных скобках показывают свободные ячейки, при желании каждая своим цветом: {free||33ff33}. Метки: %s",
 })

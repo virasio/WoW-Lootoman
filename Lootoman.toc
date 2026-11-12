@@ -56,7 +56,6 @@ Providers\Bags.lua
 Providers\Prices.lua
 
 Integrations\Auctionator.lua
-Integrations\Broker.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua
@@ -71,9 +70,6 @@ Modules\LootFeed\Layouts.lua
 Modules\LootFeed\Frames.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\Designer.lua
-
-Modules\FreeSlots\FreeSlots.lua
-Modules\FreeSlots\Template.lua
 
 Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua
@@ -91,5 +87,4 @@ Settings\JunkList.lua
 
 #@debug@
 Dev\LootDump.lua
-Dev\BagFamilies.lua
 #@end-debug@

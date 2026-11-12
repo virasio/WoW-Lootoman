@@ -26,7 +26,7 @@ describe("profile texts", function()
 		assert.same({
 			"module:AutoLoot=Fast autoloot settings", "module:LootFeed=Loot feed settings",
 			"module:LootFeed > positions:LootFeed=Position", "module:LootFeed > layout:LootFeed=Use layout “Raid”",
-			"module:FreeSlots=Free slots settings", "module:Junk=Junk settings",
+			"module:Junk=Junk settings",
 		}, list)
 		assert.same({ "layouts", "Loot feed layouts" }, { Share.Collections()[1].name, Share.Collections()[1].label })
 		assert.same({ "layouts", "Raid" }, { Share.Needs("layout:LootFeed", { layout = "Raid" }) })

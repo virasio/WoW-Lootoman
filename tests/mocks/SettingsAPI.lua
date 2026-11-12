@@ -110,10 +110,6 @@ function SettingsAPI.Install()
 		return addInitializer(category, { kind = "dropdown", setting = setting, options = options, tooltip = tooltip })
 	end
 
-	function Settings.CreateColorSwatch(category, setting, tooltip)
-		return addInitializer(category, { kind = "color", setting = setting, tooltip = tooltip })
-	end
-
 	function Settings.CreateControlTextContainer()
 		local container = { data = {} }
 		function container:Add(value, label, tooltip)

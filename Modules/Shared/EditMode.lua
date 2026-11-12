@@ -183,9 +183,6 @@ local function store(name, key, value)
 	fromTheDialog(Storage.Set, Storage, name, key, value)
 end
 
--- Kinds of module settings that only the options page shows.
-local PAGE_ONLY = { color = true }
-
 -- A module setting as a LibEditMode setting object. Settings are per profile,
 -- so the layout name that LibEditMode passes is not used. A header becomes a
 -- divider with its title, or nothing where LibEditMode has no dividers.
@@ -193,8 +190,6 @@ local function toLibSetting(module, setting)
 	local name = module.name
 	if setting.kind == "header" then
 		return lib.SettingType.Divider and { kind = lib.SettingType.Divider, name = setting.label } or nil
-	elseif PAGE_ONLY[setting.kind] then
-		return nil
 	end
 	local function save(value)
 		store(name, setting.key, value)

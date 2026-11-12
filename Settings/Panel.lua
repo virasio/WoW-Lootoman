@@ -99,13 +99,6 @@ function Panel.AddDropdown(category, module, key, label, tooltip, choices)
 	return Settings.CreateDropdown(category, setting, options, tooltip)
 end
 
--- A colour swatch bound to a string module setting holding AARRGGBB, the
--- format Blizzard's swatch reads and writes.
-function Panel.AddColor(category, module, key, label, tooltip)
-	local setting = register(category, module, key, label, Settings.VarType.String)
-	return Settings.CreateColorSwatch(category, setting, tooltip)
-end
-
 -- A button on a page, for BuildSettings(category, layout).
 function Panel.AddButton(layout, label, buttonText, onClick, tooltip)
 	local initializer = CreateSettingsButtonInitializer(label, buttonText, onClick, tooltip, true)
@@ -121,8 +114,7 @@ function Panel.AddHeader(layout, label, tooltip)
 end
 
 -- A module's settings from the list the Edit Mode dialog also takes
--- (EditMode.Register): headers, checkboxes, sliders, dropdowns and colours, in
--- order.
+-- (EditMode.Register): headers, checkboxes, sliders and dropdowns, in order.
 function Panel.AddSettings(category, layout, module, settings)
 	for _, setting in ipairs(settings) do
 		if setting.kind == "header" then
@@ -134,8 +126,6 @@ function Panel.AddSettings(category, layout, module, settings)
 				setting.min, setting.max, setting.step, setting.format)
 		elseif setting.kind == "dropdown" then
 			Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices)
-		elseif setting.kind == "color" then
-			Panel.AddColor(category, module, setting.key, setting.label, setting.tooltip)
 		else
 			error(("%s: unknown setting kind %s"):format(module, tostring(setting.kind)))
 		end

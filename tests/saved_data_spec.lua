@@ -59,13 +59,12 @@ describe("saved data of version 0.3", function()
 	end)
 
 	it("keeps the 0.3 settings", function()
-		assert.same({ "{free|33ff33} / {general}", 4 },
-			{ ns.Storage:Get("FreeSlots", "template"), ns.Storage:Get("LootFeed", "warnGeneralAt") })
+		assert.equals(4, ns.Storage:Get("LootFeed", "warnGeneralAt"))
 	end)
 
-	-- The currency bars left Lootoman: their sets stay as 0.3 saved them, for
-	-- an addon that may take them over.
-	it("is saved again with nothing lost or changed, the bar sets too", function()
+	-- The bars left Lootoman: their sets and settings stay as 0.3 saved them,
+	-- for an addon that may take them over.
+	it("is saved again with nothing lost or changed, the bars' data too", function()
 		holds(ns.Compat.Test.state.saved, fixture(), "saved")
 	end)
 end)
