@@ -57,7 +57,7 @@ describe("loot feed module", function()
 			"header:What the feed shows", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
 			"checkbox:Experience", "dropdown:Minimum quality",
 			"header:Rows and timing", "slider:Rows", "dropdown:Fill direction", "slider:Time on screen", "slider:Fade-out time",
-			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Owned count", "checkbox:Glow for rare items",
+			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Glow for rare items",
 			"header:Low-space warnings", "checkbox:Warn when few bag slots are free", "slider:Bag slots",
 			"checkbox:Warn when few reagent bag slots are free", "slider:Reagent bag slots",
 			"button:Row design",
@@ -163,7 +163,7 @@ describe("loot feed module", function()
 			end
 		end
 		assert.same({ "What the feed shows", "Rows and timing", "Appearance", "Low-space warnings" }, names)
-		assert.equals(22, #lib.settings[frame])
+		assert.equals(21, #lib.settings[frame])
 		assert.same({ "divider", "Items" }, { lib.settings[frame][1].kind, lib.settings[frame][2].name })
 		lib.Fire("enter")
 		assert.is_true(frame.shown)

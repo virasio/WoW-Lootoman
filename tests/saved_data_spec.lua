@@ -44,9 +44,10 @@ describe("saved data of version 0.1", function()
 		assert.same({ 80, 14 }, { design.parts.icon.size, design.parts.name.fontSize })
 	end)
 
-	it("is saved again with nothing lost or changed", function()
-		local saved = ns.Compat.Test.state.saved
-		holds(saved, fixture(), "saved")
+	it("is saved again with nothing lost or changed, at the current schema", function()
+		local expected = fixture()
+		expected.LootomanDB.schema = #ns.Migrations.account
+		holds(ns.Compat.Test.state.saved, expected, "saved")
 	end)
 end)
 
@@ -65,7 +66,9 @@ describe("saved data of version 0.3", function()
 	-- The bars left Lootoman: their sets and settings stay as 0.3 saved them,
 	-- for an addon that may take them over.
 	it("is saved again with nothing lost or changed, the bars' data too", function()
-		holds(ns.Compat.Test.state.saved, fixture(), "saved")
+		local expected = fixture()
+		expected.LootomanDB.schema = #ns.Migrations.account
+		holds(ns.Compat.Test.state.saved, expected, "saved")
 	end)
 end)
 
@@ -85,7 +88,12 @@ describe("saved data of version 0.3.5", function()
 	-- The bars left Lootoman: their sets, settings and positions stay as 0.3.5
 	-- saved them, for an addon that may take them over.
 	it("is saved again with nothing lost or changed, the bars' data too", function()
-		holds(ns.Compat.Test.state.saved, fixture(), "saved")
+		local expected = fixture()
+		expected.LootomanDB.schema = #ns.Migrations.account
+		-- The layout's owned part leaves its switch to the profile, which had it off already.
+		expected.LootomanDB.sections.feedLayouts.Quiet.changes.owned = nil
+		holds(ns.Compat.Test.state.saved, expected, "saved")
+		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned)
 	end)
 
 	it("makes profile texts without the bars", function()

@@ -71,6 +71,11 @@ describe("loot feed designs", function()
 			assert.same({ "name", "row" }, { design.parts.icon.anchor, design.parts.name.anchor })
 		end)
 
+		it("keeps whether the owned count shows as its template has it: the profile's switch decides", function()
+			assert.has_error(function() Design.Set(section, "owned", "shown", false) end)
+			assert.is_true(Design.Current({ schema = Design.SCHEMA, changes = { owned = { shown = false } } }).parts.owned.shown)
+		end)
+
 		it("ignores saved changes it does not know, or of the wrong type", function()
 			section.schema = 1
 			section.changes = { name = { x = "far", colour = 3, point = "MIDDLE" }, tail = { x = 1 }, row = { parts = {} },

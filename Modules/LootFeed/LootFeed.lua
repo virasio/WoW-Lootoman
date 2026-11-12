@@ -59,8 +59,6 @@ local function settings()
 		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
 			min = 10, max = 16, step = 1, format = "%d" },
 		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
-		{ kind = "checkbox", key = "owned", label = L["Owned count"],
-			tooltip = L["Shows on the icon how many of the item you have in your bags and bank, and the total of a currency."] },
 		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
 		{ kind = "header", label = L["Low-space warnings"] },
 		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when few bag slots are free"],
@@ -96,6 +94,7 @@ local LootFeed = ns.Modules:Register({
 		fade = 1,
 		size = 13,
 		backgroundOpacity = 50,
+		-- Set in the row designer ("Hide the owned count"), the same for every layout.
 		owned = true,
 		glow = true,
 		-- The named layout of the rows (Layouts.lua).

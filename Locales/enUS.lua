@@ -82,7 +82,6 @@ ns.Locales.AddEnglish({
 	"Background opacity",
 	"%d %%",
 	"Owned count",
-	"Shows on the icon how many of the item you have in your bags and bank, and the total of a currency.",
 	"Glow for rare items",
 	"Rare and better items glow in their quality colour.",
 
@@ -116,6 +115,8 @@ ns.Locales.AddEnglish({
 	"Icons",
 	"Background",
 	"Icon size",
+	"Hide the owned count",
+	"The number on an item's icon of how many you have in your bags and bank, and a currency's total. For every layout.",
 	"Gap between icons",
 	"Reset",
 	"Part:",

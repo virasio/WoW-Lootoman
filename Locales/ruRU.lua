@@ -78,7 +78,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Background opacity"] = "Непрозрачность фона",
 	["%d %%"] = "%d %%",
 	["Owned count"] = "Сколько у вас есть",
-	["Shows on the icon how many of the item you have in your bags and bank, and the total of a currency."] = "Показывает на значке, сколько таких предметов у вас в сумках и банке и сколько всего у вас валюты.",
 	["Glow for rare items"] = "Свечение редких предметов",
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
@@ -112,6 +111,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Icons"] = "Только иконки",
 	["Background"] = "Фон",
 	["Icon size"] = "Размер иконки",
+	["Hide the owned count"] = "Скрывать количество в сумках",
+	["The number on an item's icon of how many you have in your bags and bank, and a currency's total. For every layout."] = "Число на иконке предмета — сколько их у вас в сумках и банке, а у валюты — всего. Для всех раскладок.",
 	["Gap between icons"] = "Промежуток между иконками",
 	["Part:"] = "Часть:",
 	["Row"] = "Строка",

@@ -73,8 +73,22 @@ describe("loot feed designer", function()
 			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
 				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
 			Designer.Select("owned")
-			assert.same({ "Shown: true", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
+			-- Whether it shows is the switch on top, for every layout.
+			assert.same({ "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
 				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23" }, inspector())
+		end)
+
+		it("hides the owned count for every layout from its switch on top", function()
+			assert.is_false(window.hideOwned.checked)
+			window.hideOwned.checked = true
+			window.hideOwned.scripts.OnClick(window.hideOwned)
+			assert.same({ false, false }, { module:Get("owned"), module.feed.options.showOwned })
+			ns.Feed.Layouts.Create("Strip", "icons")
+			Designer.Use("Strip")
+			assert.same({ true, false }, { window.hideOwned.checked, module.feed.options.showOwned })
+			-- Set elsewhere too (a profile, an import), the switch follows.
+			module:Set("owned", true)
+			assert.is_false(window.hideOwned.checked)
 		end)
 
 		it("sets the amount's own background and its opacity", function()

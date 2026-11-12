@@ -85,10 +85,14 @@ local CONTROLS = {
 	},
 	name = TEXT_CONTROLS,
 	amount = {},
-	owned = TEXT_CONTROLS,
+	-- Whether it shows is the profile's switch on top, "Hide the owned count".
+	owned = {},
 }
 for index, control in ipairs(TEXT_CONTROLS) do
 	CONTROLS.amount[index] = control
+	if control.key ~= "shown" then
+		CONTROLS.owned[#CONTROLS.owned + 1] = control
+	end
 end
 table.insert(CONTROLS.amount, { key = "background", label = L["Background"] })
 table.insert(CONTROLS.amount, { key = "opacity", label = L["Background opacity"] })
@@ -242,6 +246,7 @@ function Designer.Refresh()
 		end
 	end
 	Designer.UpdateInspector()
+	window.hideOwned:SetChecked(not LootFeed:Get("owned"))
 	window.layouts:GenerateMenu()
 	window.parts:GenerateMenu()
 	if LootFeed:IsActive() then
@@ -591,6 +596,26 @@ local function build()
 	frame.reset:SetScript("OnClick", function()
 		Designer.Reset()
 	end)
+	-- The profile's switch for every layout, so always here, beside the layout.
+	frame.hideOwned = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	frame.hideOwned:SetSize(26, 26)
+	frame.hideOwned:SetPoint("LEFT", frame.reset, "RIGHT", 16, 0)
+	frame.hideOwned.label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	frame.hideOwned.label:SetPoint("LEFT", frame.hideOwned, "RIGHT", 2, 0)
+	frame.hideOwned.label:SetText(L["Hide the owned count"])
+	frame.hideOwned:SetScript("OnClick", function(button)
+		LootFeed:Set("owned", not button:GetChecked())
+		Designer.Refresh()
+	end)
+	frame.hideOwned:SetScript("OnEnter", function(button)
+		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+		GameTooltip_SetTitle(GameTooltip, L["Hide the owned count"])
+		GameTooltip:AddLine(L["The number on an item's icon of how many you have in your bags and bank, and a currency's total. For every layout."], 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	frame.hideOwned:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
 	-- Layouts change elsewhere too: an import, another profile.
 	local function refreshShown()
 		if frame:IsShown() then
@@ -600,7 +625,7 @@ local function build()
 	Bus:On("FeedLayoutChanged", Designer, refreshShown)
 	Bus:On("ProfileChanged", Designer, refreshShown)
 	Bus:On("SettingChanged", Designer, function(_, module, key)
-		if module == LootFeed.name and key == "layout" then
+		if module == LootFeed.name and (key == "layout" or key == "owned") then
 			refreshShown()
 		end
 	end)

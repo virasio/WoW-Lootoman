@@ -22,6 +22,41 @@ Migrations.account = {
 		ensureTable(db, "profileKeys")
 		ensureTable(db, "global")
 	end,
+	-- 2 (0.4): one switch for the loot feed's owned count, the profile's. A row
+	-- layout that hid its owned part turns the owned count off in every profile
+	-- that uses it, and layouts no longer keep that part's switch.
+	function(db)
+		local sections = type(db.sections) == "table" and db.sections or {}
+		local layouts = type(sections.feedLayouts) == "table" and sections.feedLayouts or {}
+		local function ownedChanges(layout)
+			local changes = type(layout) == "table" and type(layout.changes) == "table" and layout.changes or nil
+			return changes and type(changes.owned) == "table" and changes.owned or nil, changes
+		end
+		for _, profile in pairs(type(db.profiles) == "table" and db.profiles or {}) do
+			if type(profile) == "table" then
+				local modules = type(profile.modules) == "table" and profile.modules or nil
+				local feed = modules and type(modules.LootFeed) == "table" and modules.LootFeed or nil
+				local owned = ownedChanges(layouts[feed and type(feed.layout) == "string" and feed.layout or "Default"])
+				if owned and owned.shown == false then
+					profile.modules = modules or {}
+					profile.modules.LootFeed = feed or {}
+					profile.modules.LootFeed.owned = false
+				end
+			end
+		end
+		for _, layout in pairs(layouts) do
+			local owned, changes = ownedChanges(layout)
+			if owned and changes then
+				owned.shown = nil
+				if next(owned) == nil then
+					changes.owned = nil
+				end
+				if next(changes) == nil then
+					layout.changes = nil
+				end
+			end
+		end
+	end,
 }
 
 -- LootomanCharDB

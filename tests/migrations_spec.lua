@@ -10,11 +10,11 @@ describe("migrations", function()
 	it("creates the current schema for a fresh install", function()
 		local db, status = Migrations.Run(Migrations.account, nil)
 		assert.equals("new", status)
-		assert.same({ schema = 1, profiles = { Default = {} }, profileKeys = {}, global = {} }, db)
+		assert.same({ schema = 2, profiles = { Default = {} }, profileKeys = {}, global = {} }, db)
 	end)
 
 	it("leaves data at the current schema alone", function()
-		local saved = { schema = 1, profiles = { Default = {}, Main = { x = 1 } }, profileKeys = {}, global = {} }
+		local saved = { schema = 2, profiles = { Default = {}, Main = { x = 1 } }, profileKeys = {}, global = {} }
 		local db, status = Migrations.Run(Migrations.account, saved)
 		assert.equals("current", status)
 		assert.equals(saved, db)
@@ -24,7 +24,32 @@ describe("migrations", function()
 	it("treats data without a schema as schema 0 and repairs it", function()
 		local db, status = Migrations.Run(Migrations.account, { profiles = "broken", global = { debug = true } })
 		assert.equals("upgraded", status)
-		assert.same({ schema = 1, profiles = { Default = {} }, profileKeys = {}, global = { debug = true } }, db)
+		assert.same({ schema = 2, profiles = { Default = {} }, profileKeys = {}, global = { debug = true } }, db)
+	end)
+
+	it("turns the owned count off in the profiles of a layout that hid it, and drops that switch from layouts", function()
+		local saved = {
+			schema = 1,
+			profileKeys = {},
+			global = {},
+			profiles = {
+				Default = { modules = { LootFeed = { layout = "Quiet" } } },
+				Raid = { modules = { LootFeed = { layout = "Shown" }, AutoLoot = { confirmBind = false } } },
+				-- On the Default layout, which hides it too.
+				Alt = {},
+			},
+			sections = { feedLayouts = {
+				Default = { schema = 1, base = "large", changes = { owned = { shown = false } } },
+				Quiet = { schema = 1, base = "compact", changes = { owned = { shown = false, x = 2 }, row = { gap = 2 } } },
+				Shown = { schema = 1, base = "minimal", changes = { owned = { shown = true } } },
+			} },
+		}
+		local db = Migrations.Run(Migrations.account, saved)
+		assert.same({ layout = "Quiet", owned = false }, db.profiles.Default.modules.LootFeed)
+		assert.same({ LootFeed = { layout = "Shown" }, AutoLoot = { confirmBind = false } }, db.profiles.Raid.modules)
+		assert.same({ modules = { LootFeed = { owned = false } } }, db.profiles.Alt)
+		assert.same({ owned = { x = 2 }, row = { gap = 2 } }, db.sections.feedLayouts.Quiet.changes)
+		assert.same({ nil, nil }, { db.sections.feedLayouts.Shown.changes, db.sections.feedLayouts.Default.changes })
 	end)
 
 	it("runs every missing step in order", function()

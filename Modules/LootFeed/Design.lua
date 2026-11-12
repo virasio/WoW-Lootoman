@@ -380,12 +380,17 @@ local function valuesOf(design, part)
 	return design.parts[part]
 end
 
+-- Values a design keeps as its template has them: whether the owned count
+-- shows is the profile's switch, the same for every layout.
+local FIXED = { owned = { shown = true } }
+
 -- Whether a value may be set: a known key, not a table, of the same type, and
 -- for the anchor, point and align one of their choices (an anchor without
 -- loops).
 local function valid(design, part, key, value)
 	local values = valuesOf(design, part)
-	if not values or values[key] == nil or type(value) == "table" or type(values[key]) ~= type(value) then
+	if not values or values[key] == nil or type(value) == "table" or type(values[key]) ~= type(value)
+		or (FIXED[part] and FIXED[part][key]) then
 		return false
 	end
 	if key == "anchor" then
