@@ -52,6 +52,14 @@ describe("loot feed frames", function()
 			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" }, owned).owned)
 			assert.equals(120, Frames.Describe({ kind = "currency", name = "Valorstones", total = 120 }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "item", id = 7, name = "Gone" }, owned).owned)
+			-- In the bags only, when the layout's owned count says so.
+			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42, inBags = 12 } })
+			local Design = ns.Feed.Design
+			local bags = Design.Current({ schema = Design.SCHEMA, changes = { owned = { count = "bags" } } })
+			assert.equals(12, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
+				{ showOwned = true, layout = Design.Layout(bags, 13) }).owned)
+			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
+				{ showOwned = true, layout = Design.Layout(Design.LARGE, 13) }).owned)
 			-- An item the client is not told of (a sample) has no count, and no error.
 			assert.is_nil(Frames.Describe({ kind = "item", name = "Sample" }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "money", amount = 5 }, owned).owned)

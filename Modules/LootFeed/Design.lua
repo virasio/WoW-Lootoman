@@ -13,7 +13,8 @@ local _, ns = ...
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
 --                         align, LEFT or RIGHT; the amount and the owned count
 --                         also a background of their own (background, and
---                         its opacity in percent)
+--                         its opacity in percent); the owned count what it
+--                         counts (count: "all", bags and bank, or "bags")
 -- Every part but the glow is anchored to an element (anchor: "row", "icon",
 -- "name", "amount" or "owned") at one of its points (point: TOPLEFT …
 -- BOTTOMRIGHT), and moved from there by x, y. The part's own point follows
@@ -49,6 +50,8 @@ Design.POINTS = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTT
 Design.ELEMENTS = { "row", "icon", "name", "amount", "owned" }
 Design.ALIGNS = { "LEFT", "RIGHT" }
 Design.TEXTS = { name = true, amount = true, owned = true }
+-- What the owned count counts: bags and bank, or the bags only.
+Design.COUNTS = { "all", "bags" }
 -- The parts that are anchored, in the order they are listed.
 Design.PLACED = { "icon", "name", "amount", "owned" }
 
@@ -65,7 +68,7 @@ Design.LARGE = {
 		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
 			background = false, opacity = 60 },
 		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
-			background = false, opacity = 60 },
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
@@ -81,7 +84,7 @@ Design.COMPACT = {
 		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, opacity = 60 },
 		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60 },
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
@@ -97,7 +100,7 @@ Design.MINIMAL = {
 		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, opacity = 60 },
 		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60 },
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
@@ -115,7 +118,7 @@ Design.ICONS = {
 		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, opacity = 60 },
 		owned = { shown = true, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
-			background = false, opacity = 60 },
+			background = false, opacity = 60, count = "all" },
 	},
 }
 
@@ -394,6 +397,8 @@ local function valid(design, part, key, value)
 		return contains(Design.POINTS, value)
 	elseif key == "align" then
 		return contains(Design.ALIGNS, value)
+	elseif key == "count" then
+		return contains(Design.COUNTS, value)
 	end
 	return true
 end

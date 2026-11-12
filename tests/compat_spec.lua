@@ -363,6 +363,13 @@ describe("Compat", function()
 		end)
 	end)
 
+	it("counts an item in the bags and bank, or in the bags only", function()
+		local asked = {}
+		stub({ C_Item = { GetItemCount = function(...) asked[#asked + 1] = { ... } return 7 end } })
+		assert.same({ 7, 7 }, { Compat.GetItemCount(2589), Compat.GetItemCount(2589, true) })
+		assert.same({ { 2589, true, false, true, false }, { 2589, false, false, false, false } }, asked)
+	end)
+
 	it("registers slash commands the way the game expects", function()
 		local handler = function() end
 		stub({ SlashCmdList = {} })

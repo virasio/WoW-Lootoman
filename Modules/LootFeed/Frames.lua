@@ -116,9 +116,11 @@ function Frames.Describe(row, options)
 			if options.showGlow and (row.quality or 0) >= Frames.GLOW_QUALITY then
 				look.glow = ColorManager.GetAtlasDataForNewItemQuality(row.quality)
 			end
-			-- The client counts only an item it is told of.
+			-- The client counts only an item it is told of: in the bags and the bank,
+			-- or as the layout says, in the bags only.
 			if options.showOwned and (row.owned or row.link or row.id) then
-				look.owned = row.owned or Compat.GetItemCount(row.link or row.id)
+				local bagsOnly = options.layout ~= nil and options.layout.parts.owned.count == "bags"
+				look.owned = row.owned or Compat.GetItemCount(row.link or row.id, bagsOnly)
 			end
 		end
 		-- Right after looting the bags may not have caught up; none is not shown.

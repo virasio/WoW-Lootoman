@@ -56,6 +56,7 @@ local POINT_NAMES = {
 	BOTTOMRIGHT = L["Bottom right"],
 }
 local ALIGN_NAMES = { LEFT = L["Left"], RIGHT = L["Right"] }
+local COUNT_NAMES = { all = L["Bags and bank"], bags = L["Bags only"] }
 
 local TEXT_CONTROLS = {
 	{ key = "shown", label = L["Shown"] },
@@ -87,7 +88,9 @@ local CONTROLS = {
 	amount = {},
 	owned = {},
 }
--- The amount and the owned count also have a background of their own.
+-- The amount and the owned count also have a background of their own; the
+-- owned count also says what it counts.
+local COUNTS = { key = "count", label = L["Counts"] }
 for _, part in ipairs({ "amount", "owned" }) do
 	for index, control in ipairs(TEXT_CONTROLS) do
 		CONTROLS[part][index] = control
@@ -95,6 +98,7 @@ for _, part in ipairs({ "amount", "owned" }) do
 	table.insert(CONTROLS[part], { key = "background", label = L["Background"] })
 	table.insert(CONTROLS[part], { key = "opacity", label = L["Background opacity"] })
 end
+table.insert(CONTROLS.owned, 2, COUNTS)
 -- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
 -- The amount and the owned count sit on the icon, each set alike.
 local ICON_PARTS = { "row", "amount", "owned" }
@@ -114,10 +118,13 @@ local ICON_CONTROLS = {
 		{ key = "gap", label = L["Gap between icons"] },
 	},
 	amount = ON_THE_ICON,
-	owned = ON_THE_ICON,
+	owned = { ON_THE_ICON[1], COUNTS },
 }
+for index = 2, #ON_THE_ICON do
+	table.insert(ICON_CONTROLS.owned, ON_THE_ICON[index])
+end
 -- A checkbox for a switch, a dropdown for a choice, else a slider with a field.
-local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice" }
+local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice", count = "choice" }
 local CONTROL_COUNT = 0
 for _, list in pairs(CONTROLS) do
 	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
@@ -163,6 +170,10 @@ local function choices(key, design, part)
 	elseif key == "point" then
 		for _, point in ipairs(Design.POINTS) do
 			list[#list + 1] = { point, POINT_NAMES[point] }
+		end
+	elseif key == "count" then
+		for _, count in ipairs(Design.COUNTS) do
+			list[#list + 1] = { count, COUNT_NAMES[count] }
 		end
 	else
 		for _, align in ipairs(Design.ALIGNS) do

@@ -75,9 +75,15 @@ describe("loot feed designer", function()
 			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
 				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
 			Designer.Select("owned")
-			assert.same({ "Shown: true", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
+			assert.same({ "Shown: true", "Counts: all", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
 				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
+		end)
+
+		it("counts bags and bank, or the bags only, as the layout's owned count says", function()
+			Designer.Select("owned")
+			assert.same({ "Bags and bank*", "Bags only" }, menu(window.controls[2].choice, "bags"))
+			assert.same({ "bags", "bags" }, { design().parts.owned.count, module.feed.options.layout.parts.owned.count })
 		end)
 
 		it("shows or hides the owned count per layout, like any part", function()
@@ -210,7 +216,7 @@ describe("loot feed designer", function()
 			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
 			Designer.Select("owned")
-			assert.same({ "Shown: true", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
+			assert.same({ "Shown: true", "Counts: all", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
 				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
 			Designer.Select("amount")

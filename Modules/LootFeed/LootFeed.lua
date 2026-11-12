@@ -262,7 +262,7 @@ function LootFeed:CheckUsable(row, now)
 	row.held = true
 	if kind and self:Keeps(kind) then
 		self.model:SetSticky(row, kind, now)
-		row.amount = math.max(1, math.min(row.amount or 1, Compat.GetItemCount(row.id)))
+		row.amount = math.max(1, math.min(row.amount or 1, Compat.GetItemCount(row.id, true)))
 	elseif row.sticky then
 		self.model:SetSticky(row, nil, now)
 	end

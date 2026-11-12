@@ -196,6 +196,13 @@ describe("loot feed designs", function()
 			assert.equals(36, Design.Set(icons, "amount", "x", 500))
 		end)
 
+		it("counts the owned items in the bags and bank, or in the bags only", function()
+			assert.equals("all", Design.Current(icons).parts.owned.count)
+			assert.equals("bags", Design.Set(icons, "owned", "count", "bags"))
+			assert.has_error(function() Design.Set(icons, "owned", "count", "bank") end)
+			assert.equals("bags", Design.Current(icons).parts.owned.count)
+		end)
+
 		it("gives the amount a background of its own, off until asked, with its opacity", function()
 			assert.same({ false, 60 }, { Design.Current(icons).parts.amount.background, Design.Current(icons).parts.amount.opacity })
 			Design.Set(icons, "amount", "background", true)

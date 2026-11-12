@@ -388,8 +388,12 @@ function Compat.GetItemInfo(item)
 	}
 end
 
--- How many of an item the character has in bags, bank and reagent bank.
-function Compat.GetItemCount(item)
+-- How many of an item the character has in bags, bank and reagent bank, or
+-- with bagsOnly in the bags (with the reagent bag) only.
+function Compat.GetItemCount(item, bagsOnly)
+	if bagsOnly then
+		return C_Item.GetItemCount(item, false, false, false, false)
+	end
 	return C_Item.GetItemCount(item, true, false, true, false)
 end
 

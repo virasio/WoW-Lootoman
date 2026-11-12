@@ -326,11 +326,15 @@ function Compat.GetItemInfo(item)
 	}
 end
 
--- Like the client, which raises an error for no item at all.
-function Compat.GetItemCount(item)
+-- Like the client, which raises an error for no item at all. Items own
+-- info.owned in all, info.inBags of them in the bags (all, unless given).
+function Compat.GetItemCount(item, bagsOnly)
 	assert(item ~= nil, "bad argument #1 to 'GetItemCount' (Usage: local count = C_Item.GetItemCount(itemInfo))")
 	local info = findItem(item)
-	return info and info.owned or 0
+	if not info then
+		return 0
+	end
+	return bagsOnly and (info.inBags or info.owned or 0) or (info.owned or 0)
 end
 
 function Compat.GetItemLook(item)
