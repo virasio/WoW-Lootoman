@@ -87,6 +87,16 @@ describe("saved data of version 0.3.5", function()
 			Feed.Design.Current(Feed.Layouts.Get("Quiet")).parts.owned.shown })
 	end)
 
+	it("hides the owned count in the layout of a profile that had it off, when the layout showed it", function()
+		-- The same data with a layout that shows the owned count, as 0.3.5 could save it too.
+		local saved = fixture()
+		saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned = nil
+		ns = Loader.Start(Loader.LoadAddon(), saved)
+		local Feed = ns.Feed
+		assert.same({ "Quiet", false }, { Feed.Layouts.Current(), Feed.Design.Current(Feed.Layouts.Get("Quiet")).parts.owned.shown })
+		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.profiles.Raid.modules.LootFeed.owned)
+	end)
+
 	-- The bars left Lootoman: their sets, settings and positions stay as 0.3.5
 	-- saved them, for an addon that may take them over.
 	it("is saved again with nothing lost or changed, the bars' data too", function()
