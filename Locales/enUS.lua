@@ -76,7 +76,7 @@ ns.Locales.AddEnglish({
 	"Appearance sets",
 	"Heirlooms",
 	"Rows and timing",
-	"Rows",
+	"Number of rows",
 	"How many rows are shown at once. When there are more, the oldest ones fade out at once.",
 	"Fill direction",
 	"Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts.",
@@ -106,8 +106,14 @@ ns.Locales.AddEnglish({
 	"Loot feed looks",
 
 	-- Modules/LootFeed/Designer.lua
-	"Loot feed design",
-	"Look:",
+	"Feed look: %s",
+	"Feed",
+	"Rows",
+	"Icons",
+	"Change",
+	"Make look “%s” a look of icons? Its row design starts afresh.",
+	"Make look “%s” a look of rows? Its row design starts afresh.",
+	"View:",
 	"Enter a look name.",
 	"The look name is too long.",
 	"A look with this name already exists.",
@@ -156,8 +162,8 @@ ns.Locales.AddEnglish({
 	"Gap between rows",
 	"Size, percent of the row height",
 	"Click a part to choose it, drag it to move it.",
-	"The designer opens out of combat.",
-	"/lootoman design: open the loot feed's row designer",
+	"The look window opens out of combat.",
+	"/lootoman design: open the window of the loot feed's look",
 
 	-- Settings/Panel.lua
 	"Enabled",

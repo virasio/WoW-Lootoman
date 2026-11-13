@@ -72,7 +72,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Appearance sets"] = "Комплекты облика",
 	["Heirlooms"] = "Наследуемые предметы",
 	["Rows and timing"] = "Строки и время",
-	["Rows"] = "Число строк",
+	["Number of rows"] = "Число строк",
 	["How many rows are shown at once. When there are more, the oldest ones fade out at once."] = "Сколько строк видно одновременно. Когда их больше, самые старые сразу исчезают.",
 	["Fill direction"] = "Направление заполнения",
 	["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."] = "Куда добавляются новые записи. Снизу вверх: самая старая остаётся у нижнего края, а новые встают над ней; остальные направления так же. Слева направо и справа налево — для раскладок «Только иконки».",
@@ -102,8 +102,14 @@ ns.Locales.AddTranslation("ruRU", {
 	["Loot feed looks"] = "Виды ленты лута",
 
 	-- Modules/LootFeed/Designer.lua
-	["Loot feed design"] = "Конструктор ленты лута",
-	["Look:"] = "Вид:",
+	["Feed look: %s"] = "Вид ленты: %s",
+	["Feed"] = "Лента",
+	["Rows"] = "Строки",
+	["Icons"] = "Только иконки",
+	["Change"] = "Изменить",
+	["Make look “%s” a look of icons? Its row design starts afresh."] = "Сделать вид «%s» видом из иконок? Вид строк начнётся заново.",
+	["Make look “%s” a look of rows? Its row design starts afresh."] = "Сделать вид «%s» видом из строк? Вид строк начнётся заново.",
+	["View:"] = "Отображение:",
 	["Enter a look name."] = "Введите название вида.",
 	["The look name is too long."] = "Слишком длинное название вида.",
 	["A look with this name already exists."] = "Вид с таким названием уже есть.",
@@ -151,8 +157,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Gap between rows"] = "Расстояние между строками",
 	["Size, percent of the row height"] = "Размер в процентах от высоты строки",
 	["Click a part to choose it, drag it to move it."] = "Щёлкните часть, чтобы выбрать её, и перетащите, чтобы сдвинуть.",
-	["The designer opens out of combat."] = "Конструктор открывается только вне боя.",
-	["/lootoman design: open the loot feed's row designer"] = "/lootoman design: открыть конструктор строк ленты лута",
+	["The look window opens out of combat."] = "Окно вида открывается вне боя.",
+	["/lootoman design: open the window of the loot feed's look"] = "/lootoman design: открыть окно вида ленты лута",
 
 	-- Settings/Panel.lua
 	["Enabled"] = "Включено",

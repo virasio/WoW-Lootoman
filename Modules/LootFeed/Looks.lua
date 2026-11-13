@@ -22,7 +22,8 @@ local Bus, Compat, L, Storage, Text = ns.Bus, ns.Compat, ns.L, ns.Storage, ns.Te
 -- Functions that can fail return nil and an error code, as Profiles do:
 -- "empty", "too_long", "exists", "missing", "default", "view" or "value".
 -- FeedLookChanged(name, key) is sent when a look's setting (key) or its design
--- (key nil) changes here.
+-- (key nil) changes here, or it is deleted; FeedLookRenamed(old, new) when it
+-- is renamed.
 ns.Feed = ns.Feed or {}
 local Looks = {
 	DEFAULT = "Default",
@@ -142,7 +143,7 @@ function Looks.Settings(view)
 	end
 	local rest = {
 		{ kind = "header", key = "timing", label = L["Rows and timing"] },
-		{ kind = "slider", key = "maxRows", label = L["Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
+		{ kind = "slider", key = "maxRows", label = L["Number of rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
 			min = 3, max = 20, step = 1, format = "%d" },
 		{ kind = "dropdown", key = "direction", label = L["Fill direction"],
 			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
@@ -321,6 +322,20 @@ function Looks.SetDesign(name, part, key, value)
 	return stored
 end
 
+-- Moving a part of a look's design with the mouse (Design.Drag): move(dx,
+-- dy) puts it there, and says so.
+function Looks.Drag(name, part, scale)
+	local look = Looks.Get(name)
+	if not look then
+		return function() end
+	end
+	local move = Design.Drag(look, part, scale)
+	return function(dx, dy)
+		move(dx, dy)
+		Bus:Send("FeedLookChanged", name, nil)
+	end
+end
+
 -- Turns a look into the other view: its design starts afresh from that
 -- view's built-in design, and its fill direction from that view's.
 function Looks.SetView(name, view)
@@ -426,6 +441,7 @@ function Looks.Rename(old, name)
 			values.look = valid
 		end
 	end)
+	Bus:Send("FeedLookRenamed", old, valid)
 	if current == old then
 		Bus:Send("SettingChanged", "LootFeed", "look", valid)
 	end
@@ -458,6 +474,7 @@ function Looks.Delete(name)
 			values.look = nil
 		end
 	end)
+	Bus:Send("FeedLookChanged", name, nil)
 	if current == name then
 		Bus:Send("SettingChanged", "LootFeed", "look", Looks.DEFAULT)
 	end

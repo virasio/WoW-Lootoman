@@ -477,7 +477,7 @@ local function ready()
 end
 
 -- mode: "profile", or the name of a collection to share only its items.
-function Dialogs.OpenShare(mode)
+function Dialogs.OpenShare(mode, item)
 	if not ready() then
 		return
 	end
@@ -503,7 +503,9 @@ function Dialogs.OpenShare(mode)
 			itemLines(lines, collection, collection.list())
 		end
 	end
-	if mode ~= "profile" then
+	if mode ~= "profile" and item then
+		share.checked[itemKey(mode, item)] = true
+	elseif mode ~= "profile" then
 		for _, line in ipairs(partLines(nil, Share.Get)) do
 			if line.needs then
 				share.checked[line.needs] = true
@@ -530,8 +532,8 @@ function Dialogs.OpenImport(mode)
 end
 
 -- From the menus of named items in modules (the look menu).
-Bus:On("OpenShareDialog", Dialogs, function(_, mode)
-	Dialogs.OpenShare(mode)
+Bus:On("OpenShareDialog", Dialogs, function(_, mode, item)
+	Dialogs.OpenShare(mode, item)
 end)
 Bus:On("OpenImportDialog", Dialogs, function(_, mode)
 	Dialogs.OpenImport(mode)

@@ -38,6 +38,8 @@
     "MerchantFrame",
     "MerchantSellAllJunkButton",
     "MinimalSliderWithSteppersMixin",
+    "PanelTemplates_SetNumTabs",
+    "PanelTemplates_SetTab",
     "Settings",
     "SettingsPanel",
     "SettingsTooltip",

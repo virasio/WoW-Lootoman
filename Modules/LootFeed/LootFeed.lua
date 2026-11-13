@@ -259,7 +259,7 @@ function LootFeed:OnEnable()
 			onEditMode = function(active)
 				self.feed:SetPreview(active)
 			end,
-			buttons = { { text = L["Design rows"], click = function() self.Designer.Open() end } },
+			buttons = { { text = L["Design rows"], click = function() self.LookWindow.Open() end } },
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
 	end
@@ -324,6 +324,6 @@ end
 function LootFeed:BuildSettings(_, layout)
 	local Panel = ns.SettingsPanel
 	Panel.AddButton(layout, L["Row design"], L["Open the designer"], function()
-		self.Designer.Open()
+		self.LookWindow.Open()
 	end, L["Change how the feed's rows look: move and resize their parts."])
 end

@@ -119,6 +119,8 @@ function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
+-- A panel template's title (DefaultPanelFlatTemplate's SetTitle).
+function methods:SetTitle(text) self.title = text end
 function methods:IsEnabled() return self.enabled ~= false end
 function methods:SetFontObject(font) self.fontObject = font end
 function methods:HookScript(name, fn)
@@ -368,6 +370,9 @@ function UI.Install()
 		Event = { OnValueChanged = "OnValueChanged" },
 	})
 	rawset(_G, "CreateMinimalSliderFormatter", function(_, formatter) return formatter or tostring end)
+	-- The tabs of a frame (SharedUIPanelTemplates.lua): the chosen one.
+	rawset(_G, "PanelTemplates_SetNumTabs", function(frame, count) frame.numTabs = count end)
+	rawset(_G, "PanelTemplates_SetTab", function(frame, id) frame.selectedTab = id end)
 	rawset(_G, "GameFontNormal", { GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end })
 	rawset(_G, "NumberFontNormal", { GetFont = function() return "Fonts\\ARIALN.TTF", 14, "OUTLINE" end })
 	return api

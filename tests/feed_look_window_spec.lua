@@ -1,8 +1,8 @@
 local Loader = require("tests.helpers.loader")
 local SettingsAPI = require("tests.mocks.SettingsAPI")
 
-describe("loot feed designer", function()
-	local ns, Test, ui, module, Designer, window
+describe("loot feed look window", function()
+	local ns, Test, ui, module, LookWindow, window
 
 	-- The inspector's visible controls as "label: value", with a number's range
 	-- (its slider and its field show the same value).
@@ -50,15 +50,15 @@ describe("loot feed designer", function()
 		Loader.Start(ns)
 		Test, ui = ns.Compat.Test, Loader.ui
 		module = ns.Modules:Get("LootFeed")
-		Designer = module.Designer
+		LookWindow = module.LookWindow
 	end)
 
 	describe("window", function()
 		before_each(function()
 			-- At the size the designs were drawn for.
 			ns.Feed.Looks.Set("Default", "size", 13)
-			assert.is_true(Designer.Open())
-			window = Designer.window
+			assert.is_true(LookWindow.Open())
+			window = LookWindow.window
 		end)
 
 		it("shows the sample rows, each in its box, and the row in the inspector", function()
@@ -72,24 +72,24 @@ describe("loot feed designer", function()
 		end)
 
 		it("shows the chosen part's values, within the row's box", function()
-			Designer.Select("icon")
+			LookWindow.Select("icon")
 			assert.equals("Icon", window.inspectorTitle.text)
 			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
 				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
-			Designer.Select("owned")
+			LookWindow.Select("owned")
 			assert.same({ "Shown: false", "Counts: bags", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
 				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
 		end)
 
 		it("counts the bags only, or bags and bank, as the look's owned count says", function()
-			Designer.Select("owned")
+			LookWindow.Select("owned")
 			assert.same({ "Bags and bank", "Bags only*" }, menu(window.controls[2].choice, "all"))
 			assert.same({ "all", "all" }, { design().parts.owned.count, module.feed.options.layout.parts.owned.count })
 		end)
 
 		it("shows or hides the owned count per look, like any part", function()
-			Designer.Select("owned")
+			LookWindow.Select("owned")
 			window.controls[1].check.checked = true
 			window.controls[1].check.scripts.OnClick(window.controls[1].check)
 			assert.same({ true, true }, { design().parts.owned.shown, module.feed.options.showOwned })
@@ -99,7 +99,7 @@ describe("loot feed designer", function()
 		end)
 
 		it("sets the amount's own background and its opacity", function()
-			Designer.Select("amount")
+			LookWindow.Select("amount")
 			local list = inspector()
 			assert.same({ "Background: false", "Background opacity: 60 in 0..100" }, { list[9], list[10] })
 			window.controls[9].check.checked = true
@@ -110,16 +110,16 @@ describe("loot feed designer", function()
 		it("marks the row, the chosen icon, or the most room the chosen text may take, with a frame", function()
 			local row = window.rows[1]
 			assert.same({ true, { "TOPLEFT", row, "TOPLEFT", -2, 2 } }, { row.Selected.shown, row.Selected.points[1] })
-			Designer.Select("icon")
+			LookWindow.Select("icon")
 			assert.same({ "TOPLEFT", row.Icon, "TOPLEFT", -2, 2 }, row.Selected.points[1])
 			assert.equals(0.5, row.Box.alpha)
 			-- The name's maximum width of 200, not the width of its text.
-			Designer.Select("name")
+			LookWindow.Select("name")
 			assert.same({ { "TOPLEFT", row.Label, "TOPLEFT", -2, 2 }, 204 }, { row.Selected.points[1], row.Selected.width })
-			Designer.Change("name", "align", "RIGHT")
+			LookWindow.Change("name", "align", "RIGHT")
 			assert.same({ "TOPRIGHT", row.Label, "TOPRIGHT", 2, 2 }, row.Selected.points[1])
 			-- Money has no amount to mark.
-			Designer.Select("amount")
+			LookWindow.Select("amount")
 			assert.same({ true, false }, { row.Selected.shown, window.rows[3].Selected.shown })
 		end)
 
@@ -127,7 +127,7 @@ describe("loot feed designer", function()
 			window.controls[1].slider.callbacks.OnValueChanged[1](nil, 40.4)
 			assert.equals(40, module.feed.options.layout.height)
 			assert.same({ row = { height = 40 } }, module:DesignSection().changes)
-			Designer.Select("icon")
+			LookWindow.Select("icon")
 			window.controls[1].check.checked = false
 			window.controls[1].check.scripts.OnClick(window.controls[1].check)
 			assert.is_false(design().parts.icon.shown)
@@ -147,13 +147,13 @@ describe("loot feed designer", function()
 			width.text = "200"
 			width.scripts.OnEscapePressed(width)
 			assert.same({ 600, "600" }, { design().width, width.text })
-			Designer.Select("name")
+			LookWindow.Select("name")
 			local x = window.controls[7].input
 			x.text = "-12.6"
 			x.scripts.OnEnterPressed(x)
 			assert.equals(-13, design().parts.name.x)
 			-- Only as wide as the row.
-			Designer.Change("row", "width", 320)
+			LookWindow.Change("row", "width", 320)
 			local nameWidth = window.controls[6].input
 			nameWidth.text = "9999"
 			nameWidth.scripts.OnEnterPressed(nameWidth)
@@ -161,7 +161,7 @@ describe("loot feed designer", function()
 		end)
 
 		it("anchors a part to the element and point chosen in its dropdowns, and aligns a text", function()
-			Designer.Select("name")
+			LookWindow.Select("name")
 			assert.same({ "Row", "Icon*", "Owned count" }, menu(window.controls[2].choice, "row"))
 			assert.equals("row", design().parts.name.anchor)
 			assert.equals(9, #menu(window.controls[3].choice, "TOPRIGHT"))
@@ -173,7 +173,7 @@ describe("loot feed designer", function()
 		end)
 
 		it("does not take the values it shows as changes", function()
-			Designer.Select("name")
+			LookWindow.Select("name")
 			window.updating = true
 			window.controls[5].slider.callbacks.OnValueChanged[1](nil, 20)
 			window.updating = false
@@ -186,11 +186,11 @@ describe("loot feed designer", function()
 			hit.scripts.OnDragStart(hit)
 			assert.equals("Name", window.inspectorTitle.text)
 			ui.cursor = { 110, 95 }
-			Designer.OnUpdate()
+			LookWindow.OnUpdate()
 			assert.same({ 21, -6 }, { design().parts.name.x, design().parts.name.y })
 			hit.scripts.OnDragStop(hit)
 			ui.cursor = { 200, 200 }
-			Designer.OnUpdate()
+			LookWindow.OnUpdate()
 			assert.same({ 21, -6 }, { design().parts.name.x, design().parts.name.y })
 		end)
 
@@ -214,16 +214,16 @@ describe("loot feed designer", function()
 			ns.Feed.Looks.Create("Strip")
 			ns.Feed.Looks.SetView("Strip", "icons")
 			ns.Feed.Looks.Set("Strip", "size", 13)
-			ns.Feed.LookMenu.Use("Strip")
+			LookWindow.Open("Strip")
 			assert.equals("Icon", window.inspectorTitle.text)
 			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
 			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
-			Designer.Select("owned")
+			LookWindow.Select("owned")
 			assert.same({ "Shown: false", "Counts: bags", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
 				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
-			Designer.Select("amount")
+			LookWindow.Select("amount")
 			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
 				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
@@ -237,7 +237,7 @@ describe("loot feed designer", function()
 			rowFrame.hits.icon.scripts.OnClick(rowFrame.hits.icon)
 			assert.equals("Icon", window.inspectorTitle.text)
 			-- Back on rows, every part again.
-			ns.Feed.LookMenu.Use("Default")
+			LookWindow.Open("Default")
 			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts))
 		end)
 
@@ -252,153 +252,102 @@ describe("loot feed designer", function()
 		end)
 	end)
 
+	describe("Feed tab", function()
+		local function settingOf(key)
+			for _, control in ipairs(window.settings) do
+				if control.setting.key == key then
+					return control
+				end
+			end
+		end
+
+		before_each(function()
+			assert.is_true(LookWindow.Open())
+			window = LookWindow.window
+		end)
+
+		it("comes up first, with every setting of the look in its groups; a part chosen brings up Row design", function()
+			assert.same({ 1, true, false }, { window.selectedTab, window.feedTab.shown, window.designTab.shown })
+			local headers = {}
+			for _, control in ipairs(window.settings) do
+				if control.setting.kind == "header" then
+					headers[#headers + 1] = control.text.text
+				end
+			end
+			assert.same({ "What the feed shows", "Kept usable items", "Rows and timing", "Appearance", "Low-space warnings" }, headers)
+			window.rows[1].hits.name.scripts.OnClick(window.rows[1].hits.name)
+			assert.same({ 2, false, true, "Name" }, { window.selectedTab, window.feedTab.shown, window.designTab.shown, window.inspectorTitle.text })
+			window.tab1.scripts.OnClick(window.tab1)
+			assert.equals(1, window.selectedTab)
+		end)
+
+		it("sets the look's settings, and the feed follows at once", function()
+			local xp = settingOf("xp")
+			assert.same({ "Experience", true }, { xp.label.text, xp.check.checked })
+			xp.check.checked = false
+			xp.check.scripts.OnClick(xp.check)
+			assert.same({ false, false }, { ns.Feed.Looks.Value("Default", "xp"), module.model.options.kinds.xp })
+			local rows = settingOf("maxRows")
+			rows.slider.callbacks.OnValueChanged[1](nil, 7.4)
+			assert.same({ 7, 7, "7" }, { ns.Feed.Looks.Value("Default", "maxRows"), module.feed.options.maxRows, rows.value.text })
+			settingOf("fade").slider.callbacks.OnValueChanged[1](nil, 1.53)
+			assert.same({ 1.5, "1.5 s" }, { ns.Feed.Looks.Value("Default", "fade"), settingOf("fade").value.text })
+			assert.same({ "Bottom to top*", "Top to bottom" }, menu(settingOf("direction").choice, "down"))
+			assert.equals("down", module.feed.options.direction)
+		end)
+
+		it("lets a setting under another change only while that one is on", function()
+			local recipes = settingOf("keepRecipes")
+			assert.is_true(recipes.check.enabled ~= false)
+			ns.Feed.Looks.Set("Default", "keepUsable", false)
+			assert.is_false(recipes.check.enabled)
+			ns.Feed.Looks.Set("Default", "warnGeneral", false)
+			assert.is_false(settingOf("warnGeneralAt").slider.enabled)
+		end)
+
+		it("does not take the values it shows as changes", function()
+			window.updating = true
+			settingOf("maxRows").slider.callbacks.OnValueChanged[1](nil, 9)
+			window.updating = false
+			assert.is_nil(ns.Feed.Looks.Get("Default").values)
+		end)
+	end)
+
+	describe("on a look the profile does not use", function()
+		before_each(function()
+			ns.Feed.Looks.Create("Raid")
+			ns.Feed.Looks.Set("Raid", "size", 13)
+			assert.is_true(LookWindow.Open("Raid"))
+			window = LookWindow.window
+		end)
+
+		it("names it in its title and changes it, leaving the feed alone", function()
+			assert.same({ "Feed look: Raid", "Raid" }, { window.title, LookWindow.Edited() })
+			LookWindow.Change("row", "height", 40)
+			LookWindow.Set("maxRows", 9)
+			assert.same({ { row = { height = 40 } }, 9 }, { ns.Feed.Looks.Get("Raid").changes, ns.Feed.Looks.Value("Raid", "maxRows") })
+			assert.same({ 5, nil }, { module.feed.options.maxRows, ns.Feed.Looks.Get("Default").changes })
+		end)
+
+		it("follows it when it is renamed, and closes when it is deleted", function()
+			ns.Feed.Looks.Rename("Raid", "Party")
+			assert.same({ "Feed look: Party", "Party" }, { window.title, LookWindow.Edited() })
+			ns.Feed.Looks.Delete("Party")
+			assert.is_false(window.shown)
+		end)
+	end)
+
 	it("is built only out of combat", function()
 		Test.SetCombat(true)
-		assert.is_false(Designer.Open())
-		assert.is_nil(Designer.window)
+		assert.is_false(LookWindow.Open())
+		assert.is_nil(LookWindow.window)
 		assert.matches("out of combat", Test.state.printed[#Test.state.printed])
 		Test.SetCombat(false)
-		assert.is_true(Designer.Open())
+		assert.is_true(LookWindow.Open())
 	end)
 end)
 
-describe("loot feed designer's look menu", function()
-	local ns, api, Designer, Looks, module
-
-	local function openMenu()
-		return api.OpenMenu(Designer.window.layouts)
-	end
-
-	-- "kind:text", with a star on the chosen one.
-	local function texts(entries)
-		local list = {}
-		for index, entry in ipairs(entries) do
-			list[index] = entry.kind .. ":" .. (entry.text or "") .. (entry.isSelected and entry.isSelected(entry.data) and "*" or "")
-		end
-		return list
-	end
-
-	-- The menu's entry whose text has this in it.
-	local function find(text)
-		for _, entry in ipairs(openMenu().entries) do
-			if entry.text and entry.text:find(text, 1, true) then
-				return entry
-			end
-		end
-	end
-
-	local function lookEntry(name)
-		for _, entry in ipairs(openMenu().entries) do
-			if entry.kind == "radio" and entry.data == name then
-				return entry
-			end
-		end
-	end
-
-	local function act(name, text)
-		for _, entry in ipairs(lookEntry(name).entries) do
-			if entry.text == text then
-				return entry.callback()
-			end
-		end
-		error("no action " .. text)
-	end
-
-	before_each(function()
-		api = SettingsAPI.Install()
-		ns = Loader.LoadAddon()
-		Loader.Start(ns)
-		module = ns.Modules:Get("LootFeed")
-		Designer, Looks = module.Designer, ns.Feed.Looks
-		assert.is_true(Designer.Open())
-	end)
-
-	it("lists the looks, the profile's one chosen, then New look, Import and Share", function()
-		Looks.Create("Raid")
-		local root = openMenu()
-		assert.same({
-			"radio:Default*", "radio:Raid", "divider:",
-			"button:|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New look|r", "button:Import", "button:Share",
-		}, texts(root.entries))
-		assert.same({ 2, 1 }, root.grid)
-	end)
-
-	it("starts a new look, named by the player, and the profile uses it", function()
-		local generated = Designer.window.layouts.generated
-		find("New look").callback()
-		api.AcceptPopup("Raid")
-		assert.same({ "Raid", { schema = 1, base = "large" } }, { Looks.Current(), Looks.Get("Raid") })
-		assert.is_true(Designer.window.layouts.generated > generated)
-		find("New look").callback()
-		api.AcceptPopup("raid")
-		assert.matches("already exists", ns.Compat.Test.state.printed[#ns.Compat.Test.state.printed])
-	end)
-
-	it("uses the look chosen in it", function()
-		Looks.Create("Raid")
-		local raid = lookEntry("Raid")
-		raid.setSelected(raid.data)
-		assert.equals("Raid", Looks.Current())
-	end)
-
-	it("copies and renames a look from its gear, and deletes it after a confirmation", function()
-		Looks.Create("Raid")
-		Looks.Set("Raid", "maxRows", 9)
-		local buttons = lookEntry("Raid"):Hover()
-		assert.same({ "gear", "Copy, rename or reset", "cancel", "Delete look" }, { buttons[1].kind, buttons[1].tooltip, buttons[2].kind, buttons[2].tooltip })
-		assert.same({ "button:Copy", "button:Rename", "button:Reset" }, texts(lookEntry("Raid").entries))
-		act("Raid", "Copy")
-		api.AcceptPopup("Solo")
-		assert.same({ "Solo", 9 }, { Looks.Current(), module.feed.options.maxRows })
-		act("Solo", "Rename")
-		assert.equals("Solo", api.popups[#api.popups].editBox:GetText())
-		api.AcceptPopup("Dungeon")
-		assert.equals("Dungeon", Looks.Current())
-		local hovered, menu = lookEntry("Dungeon"):Hover()
-		hovered[2].click()
-		assert.is_true(menu.closed)
-		assert.equals("Dungeon", api.popups[#api.popups].data.text_arg1)
-		api.AcceptPopup()
-		assert.same({ "Default", { "Default", "Raid" } }, { Looks.Current(), Looks.List() })
-	end)
-
-	it("can neither rename nor delete Default", function()
-		assert.same({ "button:Copy", "button:Reset" }, texts(lookEntry("Default").entries))
-		local buttons = lookEntry("Default"):Hover()
-		assert.same({ 1, "Copy or reset" }, { #buttons, buttons[1].tooltip })
-	end)
-
-	it("returns the look to its defaults, from its gear or with Reset beside it, after a confirmation", function()
-		Looks.SetDesign("Default", "row", "height", 40)
-		Looks.Set("Default", "maxRows", 9)
-		Designer.window.reset.scripts.OnClick(Designer.window.reset)
-		assert.equals(9, module.feed.options.maxRows)
-		api.AcceptPopup()
-		assert.same({ 5, { schema = 1, base = "large" } }, { module.feed.options.maxRows, Looks.Get("Default") })
-		Looks.SetDesign("Default", "row", "height", 40)
-		act("Default", "Reset")
-		api.AcceptPopup()
-		assert.is_nil(Looks.Get("Default").changes)
-	end)
-
-	it("opens the dialogs of look texts with Import and Share", function()
-		local opened = {}
-		ns.Bus:On("OpenImportDialog", "test", function(name, mode) opened[#opened + 1] = name .. ":" .. mode end)
-		ns.Bus:On("OpenShareDialog", "test", function(name, mode) opened[#opened + 1] = name .. ":" .. mode end)
-		find("Import").callback()
-		find("Share").callback()
-		assert.same({ "OpenImportDialog:looks", "OpenShareDialog:looks" }, opened)
-	end)
-
-	it("follows a look changed elsewhere", function()
-		local generated = Designer.window.layouts.generated
-		Looks.Put("Default", { schema = 1, base = "icons" })
-		assert.is_true(Designer.window.layouts.generated > generated)
-		assert.equals("icons", ns.Feed.Design.View(module.feed.options.layout))
-	end)
-end)
-
-describe("loot feed designer, opened from", function()
+describe("loot feed look window, opened from", function()
 	it("a button on the feed's options page and in its Edit Mode dialog", function()
 		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 } }
 		function lib:AddFrame() end
@@ -411,15 +360,57 @@ describe("loot feed designer, opened from", function()
 		local api = SettingsAPI.Install()
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
-		local Designer = ns.Modules:Get("LootFeed").Designer
+		local LookWindow = ns.Modules:Get("LootFeed").LookWindow
 		local feedButtons = lib.buttons[ns.Modules:Get("LootFeed").feed.frame]
 
 		local button = api.FindButton(api.FindCategory("Loot feed"), "Row design")
 		button.onClick()
-		assert.is_true(Designer.window.shown)
-		Designer.window:Hide()
+		assert.is_true(LookWindow.window.shown)
+		LookWindow.window:Hide()
 		assert.equals("Design rows", feedButtons[1].text)
 		feedButtons[1].click()
-		assert.is_true(Designer.window.shown)
+		assert.is_true(LookWindow.window.shown)
+	end)
+end)
+
+describe("loot feed look window's buttons and view", function()
+	local ns, api, LookWindow, window, Looks
+
+	before_each(function()
+		api = SettingsAPI.Install()
+		ns = Loader.LoadAddon()
+		Loader.Start(ns)
+		LookWindow, Looks = ns.Modules:Get("LootFeed").LookWindow, ns.Feed.Looks
+		assert.is_true(LookWindow.Open())
+		window = LookWindow.window
+	end)
+
+	it("returns the look to its defaults with Reset, after a confirmation", function()
+		Looks.SetDesign("Default", "row", "height", 40)
+		Looks.Set("Default", "maxRows", 9)
+		window.reset.scripts.OnClick(window.reset)
+		assert.equals("Default", api.popups[#api.popups].data.text_arg1)
+		api.AcceptPopup()
+		assert.same({ schema = 1, base = "large" }, Looks.Get("Default"))
+	end)
+
+	it("opens the dialog of look texts with Share, this look ticked", function()
+		local opened = {}
+		ns.Bus:On("OpenShareDialog", "test", function(_, mode, item) opened[#opened + 1] = mode .. ":" .. tostring(item) end)
+		window.share.scripts.OnClick(window.share)
+		assert.same({ "looks:Default" }, opened)
+	end)
+
+	it("turns the look into the other view after a confirmation, its design afresh", function()
+		Looks.SetDesign("Default", "row", "height", 40)
+		LookWindow.SetView("icons")
+		assert.equals("rows", Looks.View("Default"))
+		api.AcceptPopup()
+		assert.same({ "icons", { schema = 1, base = "icons" } }, { Looks.View("Default"), Looks.Get("Default") })
+		assert.equals("Icon", window.inspectorTitle.text)
+		-- The same view again asks nothing.
+		local asked = #api.popups
+		LookWindow.SetView("icons")
+		assert.equals(asked, #api.popups)
 	end)
 end)

@@ -103,6 +103,8 @@ files["Modules/"] = {
 		"MerchantSellAllJunkButton",
 		"MinimalSliderWithSteppersMixin",
 		"NumberFontNormal",
+		"PanelTemplates_SetNumTabs",
+		"PanelTemplates_SetTab",
 		"UISpecialFrames",
 		"StaticPopup_Hide",
 		"SecureHandlerWrapScript",

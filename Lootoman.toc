@@ -72,7 +72,7 @@ Modules\LootFeed\LookMenu.lua
 Modules\LootFeed\Frames.lua
 Modules\LootFeed\UseButton.lua
 Modules\LootFeed\LootFeed.lua
-Modules\LootFeed\Designer.lua
+Modules\LootFeed\LookWindow.lua
 
 Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua
