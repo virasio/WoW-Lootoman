@@ -28,8 +28,10 @@ end
 Panel.LEFT = 20
 Panel.INDENT = 24
 Panel.CONTROL_X = 260
--- The width of a choice's dropdown: room for the longest choice, in Russian too.
+-- The size of the page's dropdowns but the profile's: room for the longest
+-- choice, in Russian too.
 Panel.DROPDOWN_WIDTH = 260
+Panel.DROPDOWN_HEIGHT = 30
 local GAP = 6
 
 -- The main page, built from top to bottom: every Add puts an item under the
@@ -192,14 +194,21 @@ function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, ena
 	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true })
 end
 
--- A choice of a module setting: its label, then a dropdown in the options
--- panel's own style with a radio for each choice ({ value, label }).
--- options: indent, requires, enabledWhen, tooltip. Returns the dropdown.
+-- A dropdown for the page, as the Edit Mode dialogs show them (the feed look's
+-- is in both); only the profile's has the options panel's own style.
+function MainPage:NewDropdown(parent)
+	local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+	dropdown:SetSize(Panel.DROPDOWN_WIDTH, Panel.DROPDOWN_HEIGHT)
+	return dropdown
+end
+
+-- A choice of a module setting: its label, then a dropdown (NewDropdown)
+-- with a radio for each choice ({ value, label }). options: indent, requires,
+-- enabledWhen, tooltip. Returns the dropdown.
 function MainPage:AddChoice(module, key, label, choices, options)
 	options = options or {}
 	local row = self:NewRow()
-	local dropdown = CreateFrame("DropdownButton", nil, row, "WowStyle2DropdownTemplate")
-	dropdown:SetWidth(Panel.DROPDOWN_WIDTH)
+	local dropdown = self:NewDropdown(row)
 	dropdown:SetupMenu(function(_, root)
 		for _, choice in ipairs(choices) do
 			root:CreateRadio(choice[2], function(value)
@@ -209,7 +218,7 @@ function MainPage:AddChoice(module, key, label, choices, options)
 			end, choice[1])
 		end
 	end)
-	self:AddRow(label, dropdown, { indent = options.indent, height = 28, tooltip = options.tooltip, kind = "choice" })
+	self:AddRow(label, dropdown, { indent = options.indent, height = Panel.DROPDOWN_HEIGHT, tooltip = options.tooltip, kind = "choice" })
 	self:OnRefresh(function()
 		local isEnabled = enabled(options.requires, options.enabledWhen)
 		setTextEnabled(row.label, isEnabled)

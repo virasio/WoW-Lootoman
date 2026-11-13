@@ -22,10 +22,9 @@ local LootFeed = ns.Modules:Register({
 	-- dropdown looks as it does in the feed's Edit Mode dialog, with the same menu.
 	mainSettings = { { kind = "custom", build = function(page, indent)
 		local row = page:NewRow()
-		local dropdown = CreateFrame("DropdownButton", nil, row, "WowStyle1DropdownTemplate")
-		dropdown:SetSize(200, 30)
+		local dropdown = page:NewDropdown(row)
 		dropdown:SetupMenu(Feed.LookMenu.Build)
-		page:AddRow(L["Feed look"], dropdown, { indent = indent, height = 28,
+		page:AddRow(L["Feed look"], dropdown, { indent = indent, height = 30,
 			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
 		page.look = dropdown
 		page:OnRefresh(function()

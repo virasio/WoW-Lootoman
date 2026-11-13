@@ -449,8 +449,11 @@ describe("loot feed look window, opened from", function()
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
 		local LookWindow = ns.Modules:Get("LootFeed").LookWindow
-		-- On the options page the dropdown looks as it does in the Edit Mode dialog.
-		assert.equals("WowStyle1DropdownTemplate", ns.SettingsPanel.main.look.template)
+		-- On the options page the dropdown looks as it does in the Edit Mode dialog, as every dropdown
+		-- there does but the profile's.
+		local look, profile = ns.SettingsPanel.main.look, ns.SettingsPanel.main.profile
+		assert.same({ "WowStyle1DropdownTemplate", 260, 30 }, { look.template, look.width, look.height })
+		assert.equals("WowStyle2DropdownTemplate", profile.template)
 		api.OpenMenu(ns.SettingsPanel.main.look).entries[1].entries[1].callback()
 		assert.is_true(LookWindow.window.shown)
 		LookWindow.window:Hide()

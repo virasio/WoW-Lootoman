@@ -200,9 +200,10 @@ describe("settings panel main page controls", function()
 		return list
 	end
 
-	it("bind a choice's dropdown to its setting, in the options panel's style, at the rows' control column", function()
+	it("bind a choice's dropdown to its setting, in the Edit Mode dialogs' style, at the rows' control column", function()
 		local button = dropdownOf("Button")
-		assert.same({ "WowStyle2DropdownTemplate", "Button" }, { button.template, itemOf("Button").region.label.text })
+		assert.same({ "WowStyle1DropdownTemplate", "Button", 260, 30 }, { button.template, itemOf("Button").region.label.text,
+			button.width, button.height })
 		assert.equals(ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 24, button.points[1][4])
 		assert.same({ "Never", "Always", "Full*" }, radios(button))
 		require("tests.mocks.UI").OpenMenu(button).entries[1].setSelected("never")
