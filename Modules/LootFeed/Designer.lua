@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Compat, L, NameMenu = ns.Bus, ns.Compat, ns.L, ns.NameMenu
+local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 local Feed = ns.Feed
 
 -- The row designer, in the spirit of Platynator's
@@ -17,17 +17,13 @@ local Feed = ns.Feed
 -- and the gap between icons (as the row), and the amount; its samples stand
 -- side by side.
 --
--- On top, the layout the profile uses (Layouts.lua), with a menu like the
--- profile menu (NameMenu): every layout, with Copy, Rename and Reset under its
--- gear and a delete button; + New layout, whose submenu has the built-in
--- designs to start from; Import and Share, which open the dialogs of profile
--- texts for layouts (OpenImportDialog, OpenShareDialog). Reset beside it
--- returns the layout to its template.
+-- On top, the feed look the profile uses (Looks.lua), with the look menu
+-- (LookMenu.lua). Reset beside it returns the look to its defaults.
 --
 -- The window is the player's own frame, built the first time it opens, never
 -- in combat; Escape and its close button hide it.
 local LootFeed = ns.Modules:Get("LootFeed")
-local Design, Frames, Layouts = Feed.Design, Feed.Frames, Feed.Layouts
+local Design, Frames, Looks, LookMenu = Feed.Design, Feed.Frames, Feed.Looks, Feed.LookMenu
 
 local Designer = {}
 LootFeed.Designer = Designer
@@ -41,7 +37,6 @@ Designer.CONTROL_HEIGHT = 46
 -- The window's global name, for UISpecialFrames.
 Designer.NAME = "LootomanDesigner"
 
-local NAMES = { large = L["Large"], compact = L["Compact"], minimal = L["Minimal"], icons = L["Icons"] }
 local TITLES = { row = L["Row"], icon = L["Icon"], name = L["Name"], amount = L["Amount"], owned = L["Owned count"] }
 local PART_ORDER = { "row", "icon", "name", "amount", "owned" }
 local POINT_NAMES = {
@@ -269,7 +264,7 @@ end
 
 -- Changes one value of a part (from the inspector).
 function Designer.Change(part, key, value)
-	Design.Set(section(), part, key, value)
+	Looks.SetDesign(Looks.Current(), part, key, value)
 	Designer.Refresh()
 end
 
@@ -278,121 +273,9 @@ function Designer.Select(part)
 	Designer.Refresh()
 end
 
-local ERRORS = {
-	empty = L["Enter a layout name."],
-	too_long = L["The layout name is too long."],
-	exists = L["A layout with this name already exists."],
-	missing = L["This layout no longer exists."],
-}
-
-local function report(result, err)
-	if not result then
-		ns.Print(ERRORS[err] or tostring(err))
-	end
-	Designer.Refresh()
-	return result
-end
-
-local function askName(text, textArg, initial, callback)
-	NameMenu.AskName(text, textArg, initial, Layouts.MAX_NAME_LENGTH, callback)
-end
-
--- The profile uses this layout from now on.
-function Designer.Use(name)
-	report(Layouts.Use(name))
-end
-
--- Starts a layout from a built-in design, and the profile uses it.
-function Designer.New(template)
-	askName(L["Name of the new layout:"], nil, nil, function(name)
-		local created = report(Layouts.Create(name, template))
-		if created then
-			Designer.Use(created)
-		end
-	end)
-end
-
-function Designer.Copy(source)
-	askName(L["Name of the copy of “%s”:"], Layouts.DisplayName(source), nil, function(name)
-		local copied = report(Layouts.Copy(source, name))
-		if copied then
-			Designer.Use(copied)
-		end
-	end)
-end
-
-function Designer.Rename(name)
-	askName(L["New name of “%s”:"], name, name, function(newName)
-		report(Layouts.Rename(name, newName))
-	end)
-end
-
--- Back to its template, after a confirmation.
+-- The look back to its defaults, after a confirmation.
 function Designer.Reset(name)
-	name = name or Layouts.Current()
-	NameMenu.Confirm(L["Return layout “%s” to its template?"], Layouts.DisplayName(name), L["Reset"], function()
-		report(Layouts.Reset(name))
-	end)
-end
-
-function Designer.Delete(name)
-	NameMenu.Confirm(L["Delete layout “%s”? Profiles that use it switch to the Default layout."], name, L["Delete"], function()
-		report(Layouts.Delete(name))
-	end)
-end
-
-local function addLayout(root, name)
-	local isDefault = name == Layouts.DEFAULT
-	local actions = {
-		{ text = L["Copy"], tooltip = L["Creates a copy of this layout, and this profile uses it."], run = function()
-			Designer.Copy(name)
-		end },
-	}
-	if not isDefault then
-		actions[#actions + 1] = { text = L["Rename"], tooltip = L["Renames this layout in every profile that uses it."], run = function()
-			Designer.Rename(name)
-		end }
-	end
-	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Returns this layout to its template."], run = function()
-		Designer.Reset(name)
-	end }
-	NameMenu.AddName(root, {
-		text = Layouts.DisplayName(name),
-		data = name,
-		isSelected = function()
-			return Layouts.Current() == name
-		end,
-		select = function()
-			Designer.Use(name)
-		end,
-		actions = actions,
-		gearTooltip = isDefault and L["Copy or reset"] or L["Copy, rename or reset"],
-		deleteTooltip = L["Delete layout"],
-		delete = not isDefault and function()
-			Designer.Delete(name)
-		end or nil,
-	})
-end
-
--- The layout menu: the layouts, then + New layout with the built-in designs,
--- Import and Share.
-local function buildLayoutMenu(_, root)
-	NameMenu.OneColumn(root)
-	for _, name in ipairs(Layouts.List()) do
-		addLayout(root, name)
-	end
-	root:CreateDivider()
-	local new = NameMenu.AddNew(root, L["New layout"], L["Starts a layout from a built-in design, and this profile uses it."])
-	for _, template in ipairs(Design.ORDER) do
-		new:CreateButton(NAMES[template], function()
-			Designer.New(template)
-		end)
-	end
-	NameMenu.AddShareEntries(root, function()
-		Bus:Send("OpenImportDialog", "layouts")
-	end, function()
-		Bus:Send("OpenShareDialog", "layouts")
-	end, L["Makes a text of your layouts to copy and give to another character or player."])
+	LookMenu.Reset(name or Looks.Current())
 end
 
 -- The inspector's title and controls for the chosen part, with its values.
@@ -597,11 +480,11 @@ local function build()
 
 	local layoutLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	layoutLabel:SetPoint("TOPLEFT", 20, -36)
-	layoutLabel:SetText(L["Layout:"])
+	layoutLabel:SetText(L["Look:"])
 	frame.layouts = CreateFrame("DropdownButton", nil, frame, "WowStyle1DropdownTemplate")
 	frame.layouts:SetPoint("LEFT", layoutLabel, "RIGHT", 8, 0)
 	frame.layouts:SetWidth(200)
-	frame.layouts:SetupMenu(buildLayoutMenu)
+	frame.layouts:SetupMenu(LookMenu.Build)
 	frame.reset = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	frame.reset:SetPoint("LEFT", frame.layouts, "RIGHT", 8, 0)
 	frame.reset:SetSize(100, 22)
@@ -609,16 +492,16 @@ local function build()
 	frame.reset:SetScript("OnClick", function()
 		Designer.Reset()
 	end)
-	-- Layouts change elsewhere too: an import, another profile.
+	-- Looks change elsewhere too: an import, another profile.
 	local function refreshShown()
 		if frame:IsShown() then
 			Designer.Refresh()
 		end
 	end
-	Bus:On("FeedLayoutChanged", Designer, refreshShown)
+	Bus:On("FeedLookChanged", Designer, refreshShown)
 	Bus:On("ProfileChanged", Designer, refreshShown)
 	Bus:On("SettingChanged", Designer, function(_, module, key)
-		if module == LootFeed.name and key == "layout" then
+		if module == LootFeed.name and key == "look" then
 			refreshShown()
 		end
 	end)

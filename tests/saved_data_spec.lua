@@ -24,24 +24,11 @@ describe("saved data of version 0.1", function()
 	end)
 
 	it("keeps the character's profile, its settings and the account's switches", function()
-		local Storage = ns.Storage
-		assert.same({ "Raid", "down", 1.5, 2, 8, false, true }, {
+		assert.same({ "Raid", false, true }, {
 			ns.Profiles.GetCurrent(),
-			Storage:Get("LootFeed", "direction"),
-			Storage:Get("LootFeed", "fade"),
-			Storage:Get("LootFeed", "minQuality"),
-			Storage:Get("LootFeed", "maxRows"),
-			Storage:Get("AutoLoot", "confirmBind"),
-			Storage:GetGlobal("debug"),
+			ns.Storage:Get("AutoLoot", "confirmBind"),
+			ns.Storage:GetGlobal("debug"),
 		})
-	end)
-
-	it("keeps the row layouts and the one the profile uses, with its changes", function()
-		local Layouts, Design = ns.Feed.Layouts, ns.Feed.Design
-		assert.same({ "Default", "Raid rows" }, Layouts.List())
-		assert.equals("Raid rows", Layouts.Current())
-		local design = Design.Current(Layouts.Get("Raid rows"))
-		assert.same({ 80, 14 }, { design.parts.icon.size, design.parts.name.fontSize })
 	end)
 
 	it("is saved again with nothing lost or changed, at the current schema", function()
@@ -57,10 +44,6 @@ describe("saved data of version 0.3", function()
 
 	before_each(function()
 		ns = Loader.Start(Loader.LoadAddon(), fixture())
-	end)
-
-	it("keeps the 0.3 settings", function()
-		assert.equals(4, ns.Storage:Get("LootFeed", "warnGeneralAt"))
 	end)
 
 	-- The bars left Lootoman: their sets and settings stay as 0.3 saved them,
@@ -80,11 +63,9 @@ describe("saved data of version 0.3.5", function()
 		ns = Loader.Start(Loader.LoadAddon(), fixture())
 	end)
 
-	it("loads without errors, with the profile, its feed settings and its layout", function()
+	it("loads without errors, with the profile", function()
 		assert.same({}, ns.Compat.Test.state.errors)
-		local Feed = ns.Feed
-		assert.same({ "Raid", "Quiet", false }, { ns.Profiles.GetCurrent(), Feed.Layouts.Current(),
-			Feed.Design.Current(Feed.Layouts.Get("Quiet")).parts.owned.shown })
+		assert.equals("Raid", ns.Profiles.GetCurrent())
 	end)
 
 	it("hides the owned count in the layout of a profile that had it off, when the layout showed it", function()
@@ -92,8 +73,7 @@ describe("saved data of version 0.3.5", function()
 		local saved = fixture()
 		saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned = nil
 		ns = Loader.Start(Loader.LoadAddon(), saved)
-		local Feed = ns.Feed
-		assert.same({ "Quiet", false }, { Feed.Layouts.Current(), Feed.Design.Current(Feed.Layouts.Get("Quiet")).parts.owned.shown })
+		assert.is_false(ns.Compat.Test.state.saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned.shown)
 		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.profiles.Raid.modules.LootFeed.owned)
 	end)
 
@@ -119,10 +99,10 @@ describe("saved data of version 0.3.5", function()
 		for _, collection in ipairs(ns.Share.Collections()) do
 			names[#names + 1] = collection.name
 		end
-		assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "layout:LootFeed", "module:Junk", "layouts" }, names)
+		assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "look:LootFeed", "module:Junk", "looks" }, names)
 	end)
 
-	it("reads a 0.3.5 profile text with bars: the feed's parts come in, the bars' are left out and counted", function()
+	it("reads a 0.3.5 profile text with bars: the bars' parts are left out and counted", function()
 		local saved = fixture().LootomanDB
 		local text = "LTM1:" .. ns.Compat.Encode({
 			format = 1,
@@ -137,9 +117,8 @@ describe("saved data of version 0.3.5", function()
 			collections = { layouts = { Quiet = saved.sections.feedLayouts.Quiet }, barSets = { Raid = saved.sections.barSets.Raid } },
 		})
 		local read = assert(ns.Share.Read(text))
-		assert.same({ "module:LootFeed", "layout:LootFeed" }, read.names)
-		assert.same({ "Quiet" }, read.collections.layouts.names)
-		-- module:Bars, set:Bars and module:FreeSlots; the barSets collection.
-		assert.equals(4, read.skipped)
+		assert.same({ "module:LootFeed" }, read.names)
+		-- fade, layout:LootFeed, module:Bars, set:Bars and module:FreeSlots; the layouts and barSets collections.
+		assert.equals(7, read.skipped)
 	end)
 end)

@@ -55,6 +55,8 @@ describe("loot feed designer", function()
 
 	describe("window", function()
 		before_each(function()
+			-- At the size the designs were drawn for.
+			ns.Feed.Looks.Set("Default", "size", 13)
 			assert.is_true(Designer.Open())
 			window = Designer.window
 		end)
@@ -91,8 +93,9 @@ describe("loot feed designer", function()
 			window.controls[1].check.checked = false
 			window.controls[1].check.scripts.OnClick(window.controls[1].check)
 			assert.same({ false, false }, { design().parts.owned.shown, module.feed.options.showOwned })
-			ns.Feed.Layouts.Create("Strip", "icons")
-			Designer.Use("Strip")
+			ns.Feed.Looks.Create("Strip")
+			ns.Feed.Looks.SetView("Strip", "icons")
+			ns.Feed.LookMenu.Use("Strip")
 			assert.is_true(module.feed.options.showOwned)
 		end)
 
@@ -209,8 +212,10 @@ describe("loot feed designer", function()
 		end)
 
 		it("lists only what an Icons layout lets change, with its samples side by side", function()
-			ns.Feed.Layouts.Create("Strip", "icons")
-			Designer.Use("Strip")
+			ns.Feed.Looks.Create("Strip")
+			ns.Feed.Looks.SetView("Strip", "icons")
+			ns.Feed.Looks.Set("Strip", "size", 13)
+			ns.Feed.LookMenu.Use("Strip")
 			assert.equals("Icon", window.inspectorTitle.text)
 			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
 			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
@@ -232,7 +237,7 @@ describe("loot feed designer", function()
 			rowFrame.hits.icon.scripts.OnClick(rowFrame.hits.icon)
 			assert.equals("Icon", window.inspectorTitle.text)
 			-- Back on rows, every part again.
-			Designer.Use("Default")
+			ns.Feed.LookMenu.Use("Default")
 			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts))
 		end)
 
@@ -257,8 +262,8 @@ describe("loot feed designer", function()
 	end)
 end)
 
-describe("loot feed designer's layout menu", function()
-	local ns, api, Designer, Layouts, module
+describe("loot feed designer's look menu", function()
+	local ns, api, Designer, Looks, module
 
 	local function openMenu()
 		return api.OpenMenu(Designer.window.layouts)
@@ -282,7 +287,7 @@ describe("loot feed designer's layout menu", function()
 		end
 	end
 
-	local function layoutEntry(name)
+	local function lookEntry(name)
 		for _, entry in ipairs(openMenu().entries) do
 			if entry.kind == "radio" and entry.data == name then
 				return entry
@@ -291,7 +296,7 @@ describe("loot feed designer's layout menu", function()
 	end
 
 	local function act(name, text)
-		for _, entry in ipairs(layoutEntry(name).entries) do
+		for _, entry in ipairs(lookEntry(name).entries) do
 			if entry.text == text then
 				return entry.callback()
 			end
@@ -299,101 +304,97 @@ describe("loot feed designer's layout menu", function()
 		error("no action " .. text)
 	end
 
-	local function height()
-		return module.feed.options.layout.height
-	end
-
 	before_each(function()
 		api = SettingsAPI.Install()
 		ns = Loader.LoadAddon()
 		Loader.Start(ns)
 		module = ns.Modules:Get("LootFeed")
-		Designer, Layouts = module.Designer, ns.Feed.Layouts
+		Designer, Looks = module.Designer, ns.Feed.Looks
 		assert.is_true(Designer.Open())
 	end)
 
-	it("lists the layouts, the profile's one chosen, then New layout with the built-in designs, Import and Share", function()
-		Layouts.Create("Raid", "compact")
+	it("lists the looks, the profile's one chosen, then New look, Import and Share", function()
+		Looks.Create("Raid")
 		local root = openMenu()
 		assert.same({
 			"radio:Default*", "radio:Raid", "divider:",
-			"button:|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New layout|r", "button:Import", "button:Share",
+			"button:|A:editmode-new-layout-plus|a |cnPURE_GREEN_COLOR:New look|r", "button:Import", "button:Share",
 		}, texts(root.entries))
-		assert.same({ "button:Large", "button:Compact", "button:Minimal", "button:Icons" }, texts(root.entries[4].entries))
 		assert.same({ 2, 1 }, root.grid)
 	end)
 
-	it("starts a layout from a built-in design, named by the player, and the profile uses it", function()
+	it("starts a new look, named by the player, and the profile uses it", function()
 		local generated = Designer.window.layouts.generated
-		find("New layout").entries[2].callback()
+		find("New look").callback()
 		api.AcceptPopup("Raid")
-		assert.same({ "Raid", 24 }, { Layouts.Current(), height() })
+		assert.same({ "Raid", { schema = 1, base = "large" } }, { Looks.Current(), Looks.Get("Raid") })
 		assert.is_true(Designer.window.layouts.generated > generated)
-		find("New layout").entries[1].callback()
+		find("New look").callback()
 		api.AcceptPopup("raid")
 		assert.matches("already exists", ns.Compat.Test.state.printed[#ns.Compat.Test.state.printed])
 	end)
 
-	it("uses the layout chosen in it", function()
-		Layouts.Create("Raid", "compact")
-		local raid = layoutEntry("Raid")
+	it("uses the look chosen in it", function()
+		Looks.Create("Raid")
+		local raid = lookEntry("Raid")
 		raid.setSelected(raid.data)
-		assert.same({ "Raid", 24 }, { Layouts.Current(), height() })
+		assert.equals("Raid", Looks.Current())
 	end)
 
-	it("copies and renames a layout from its gear, and deletes it after a confirmation", function()
-		Layouts.Create("Raid", "compact")
-		local buttons = layoutEntry("Raid"):Hover()
-		assert.same({ "gear", "Copy, rename or reset", "cancel", "Delete layout" }, { buttons[1].kind, buttons[1].tooltip, buttons[2].kind, buttons[2].tooltip })
-		assert.same({ "button:Copy", "button:Rename", "button:Reset" }, texts(layoutEntry("Raid").entries))
+	it("copies and renames a look from its gear, and deletes it after a confirmation", function()
+		Looks.Create("Raid")
+		Looks.Set("Raid", "maxRows", 9)
+		local buttons = lookEntry("Raid"):Hover()
+		assert.same({ "gear", "Copy, rename or reset", "cancel", "Delete look" }, { buttons[1].kind, buttons[1].tooltip, buttons[2].kind, buttons[2].tooltip })
+		assert.same({ "button:Copy", "button:Rename", "button:Reset" }, texts(lookEntry("Raid").entries))
 		act("Raid", "Copy")
 		api.AcceptPopup("Solo")
-		assert.same({ "Solo", 24 }, { Layouts.Current(), height() })
+		assert.same({ "Solo", 9 }, { Looks.Current(), module.feed.options.maxRows })
 		act("Solo", "Rename")
 		assert.equals("Solo", api.popups[#api.popups].editBox:GetText())
 		api.AcceptPopup("Dungeon")
-		assert.equals("Dungeon", Layouts.Current())
-		local hovered, menu = layoutEntry("Dungeon"):Hover()
+		assert.equals("Dungeon", Looks.Current())
+		local hovered, menu = lookEntry("Dungeon"):Hover()
 		hovered[2].click()
 		assert.is_true(menu.closed)
 		assert.equals("Dungeon", api.popups[#api.popups].data.text_arg1)
 		api.AcceptPopup()
-		assert.same({ "Default", { "Default", "Raid" } }, { Layouts.Current(), Layouts.List() })
+		assert.same({ "Default", { "Default", "Raid" } }, { Looks.Current(), Looks.List() })
 	end)
 
 	it("can neither rename nor delete Default", function()
-		assert.same({ "button:Copy", "button:Reset" }, texts(layoutEntry("Default").entries))
-		local buttons = layoutEntry("Default"):Hover()
+		assert.same({ "button:Copy", "button:Reset" }, texts(lookEntry("Default").entries))
+		local buttons = lookEntry("Default"):Hover()
 		assert.same({ 1, "Copy or reset" }, { #buttons, buttons[1].tooltip })
 	end)
 
-	it("returns the layout to its template, from its gear or with Reset beside it, after a confirmation", function()
-		ns.Feed.Design.Set(Layouts.CurrentDesign(), "row", "height", 40)
-		module:Apply()
+	it("returns the look to its defaults, from its gear or with Reset beside it, after a confirmation", function()
+		Looks.SetDesign("Default", "row", "height", 40)
+		Looks.Set("Default", "maxRows", 9)
 		Designer.window.reset.scripts.OnClick(Designer.window.reset)
-		assert.equals(40, height())
+		assert.equals(9, module.feed.options.maxRows)
 		api.AcceptPopup()
-		assert.same({ 35, { schema = 1, base = "large" } }, { height(), Layouts.Get("Default") })
-		ns.Feed.Design.Set(Layouts.CurrentDesign(), "row", "height", 40)
+		assert.same({ 5, { schema = 1, base = "large" } }, { module.feed.options.maxRows, Looks.Get("Default") })
+		Looks.SetDesign("Default", "row", "height", 40)
 		act("Default", "Reset")
 		api.AcceptPopup()
-		assert.is_nil(Layouts.Get("Default").changes)
+		assert.is_nil(Looks.Get("Default").changes)
 	end)
 
-	it("opens the dialogs of layout texts with Import and Share", function()
+	it("opens the dialogs of look texts with Import and Share", function()
 		local opened = {}
 		ns.Bus:On("OpenImportDialog", "test", function(name, mode) opened[#opened + 1] = name .. ":" .. mode end)
 		ns.Bus:On("OpenShareDialog", "test", function(name, mode) opened[#opened + 1] = name .. ":" .. mode end)
 		find("Import").callback()
 		find("Share").callback()
-		assert.same({ "OpenImportDialog:layouts", "OpenShareDialog:layouts" }, opened)
+		assert.same({ "OpenImportDialog:looks", "OpenShareDialog:looks" }, opened)
 	end)
 
-	it("follows a layout changed elsewhere", function()
+	it("follows a look changed elsewhere", function()
 		local generated = Designer.window.layouts.generated
-		Layouts.Put("Default", { schema = 1, base = "minimal" })
+		Looks.Put("Default", { schema = 1, base = "icons" })
 		assert.is_true(Designer.window.layouts.generated > generated)
-		assert.equals(16, height())
+		assert.equals("icons", ns.Feed.Design.View(module.feed.options.layout))
 	end)
 end)
 

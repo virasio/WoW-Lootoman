@@ -4,13 +4,13 @@ local Panel = ns.SettingsPanel
 
 -- The Share and Import dialogs of profile texts. They
 -- open from the profile menu for a whole profile ("profile"), or from a
--- menu of named items, such as the loot feed's layouts, for the items only
--- ("layouts", the name of the collection).
+-- menu of named items, such as the loot feed's looks, for the items only
+-- ("looks", the name of the collection).
 --
 -- Both list what a text can hold, with a checkbox each: every module's
 -- settings, and indented under them the parts of the module, which can be
 -- ticked only while the module's settings are; a part that needs an item
--- (Use layout “Name”) needs that item ticked too. Then each collection under
+-- (Use look “Name”) needs that item ticked too. Then each collection under
 -- its header, an item per row.
 --
 -- Share: everything ticked but the items, of which only those the profile
@@ -529,7 +529,7 @@ function Dialogs.OpenImport(mode)
 	import.box.EditBox:SetFocus()
 end
 
--- From the menus of named items in modules (the designer's layout menu).
+-- From the menus of named items in modules (the look menu).
 Bus:On("OpenShareDialog", Dialogs, function(_, mode)
 	Dialogs.OpenShare(mode)
 end)

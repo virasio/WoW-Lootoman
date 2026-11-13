@@ -30,7 +30,7 @@ local _, ns = ...
 -- is never shown, and the amount and the owned count are anchored to the icon,
 -- inside it or beside it: their box is the icon and one icon's size around it.
 --
--- A player's design is a named layout (Layouts.lua):
+-- A player's design is part of a feed look (Looks.lua):
 --   { schema = 1, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
 -- It keeps only the values that differ from its built-in base design, its
 -- template, so later improvements to a built-in design reach every value the
