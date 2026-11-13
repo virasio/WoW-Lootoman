@@ -214,7 +214,7 @@ describe("loot feed module", function()
 			end
 		end
 
-		it("keep an item that starts a quest once the bags hold it, and let it go when the quest is taken", function()
+		it("keep an item that starts a quest once the bags hold it, and let it fade when the quest is taken", function()
 			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
 			-- Not in the bags yet.
 			assert.is_nil(rowOf(500).sticky)
@@ -227,6 +227,31 @@ describe("loot feed module", function()
 			letter.use.questTaken = true
 			Test.FireEvent("QUEST_ACCEPTED", 9)
 			assert.same({}, module.model:Stuck())
+			-- Still in the bags: it fades out as any row.
+			assert.is_true(rowOf(500).fadeEnd > Test.state.time)
+		end)
+
+		it("keep an item again that becomes usable before its row is gone, and let one that left the bags go at once", function()
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			local letter = { itemID = 500, count = 1, use = { questID = 9, questTaken = true } }
+			holding({ letter })
+			assert.is_nil(rowOf(500).sticky)
+			letter.use.questTaken = false
+			module:CheckAll()
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			-- Not usable for a moment: it fades, and sticks again before it is gone.
+			letter.use.questTaken = true
+			module:CheckAll()
+			assert.same({}, module.model:Stuck())
+			letter.use.questTaken = false
+			module:CheckAll()
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			-- Gone from the bags: the row goes at once.
+			holding({})
+			assert.is_nil(rowOf(500))
 		end)
 
 		it("keep a usable item below the minimum quality, and count down what is left as it is used", function()

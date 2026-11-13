@@ -200,8 +200,10 @@ end
 
 -- Whether a looted item, once the bags hold it, is a usable one the feed
 -- keeps: its row sticks, or stops being sticky. A kept row counts down what
--- is left as each use takes one, and goes when its items are used up or have
--- left the bags.
+-- is left as each use takes one, and goes at once when its items are used up
+-- or have left the bags. One still in the bags that cannot be used right now
+-- (or is no longer kept) fades out as any row, and sticks again if it becomes
+-- usable before it is gone.
 function LootFeed:CheckUsable(row, now)
 	if row.kind ~= "item" or not row.id then
 		return
@@ -221,7 +223,7 @@ function LootFeed:CheckUsable(row, now)
 	if kind and self:Keeps(kind) then
 		self.model:SetSticky(row, countDown(row) and kind or nil, now)
 	elseif row.sticky then
-		self.model:SetSticky(row, nil, now)
+		self.model:Unstick(row, now)
 	end
 end
 
