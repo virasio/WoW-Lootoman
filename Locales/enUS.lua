@@ -55,6 +55,7 @@ ns.Locales.AddEnglish({
 
 	-- Modules/LootFeed/LootFeed.lua
 	"Loot feed",
+	"Loot Feed",
 	"Show the loot feed",
 	"Shows what you pick up: items, currencies, money, reputation and, if you want, experience.",
 	"What the feed shows",

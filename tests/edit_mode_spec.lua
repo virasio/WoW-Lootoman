@@ -50,6 +50,12 @@ local function newLibEditMode()
 		frame:SetPoint(point, x, y)
 		lib.frames[frame].callback(frame, lib.layout, point, x, y)
 	end
+	-- The library's own dialog (lib.internal.dialog), made with the first frame.
+	local reset = { shown = true }
+	function reset:SetShown(shown) self.shown = shown end
+	lib.internal = { dialog = { Settings = { ResetButton = reset }, laidOut = 0 } }
+	function lib.internal.dialog:Update(selection) self.selection = selection end
+	function lib.internal.dialog:Layout() self.laidOut = self.laidOut + 1 end
 	return lib
 end
 
@@ -225,6 +231,20 @@ describe("Edit Mode", function()
 			ns.EditMode.Register(module, newFrame(), { default = { point = "CENTER", x = 0, y = 0 },
 				settings = { { kind = "radio", key = "rows", label = "Rows" } } })
 		end, "TestFeed.rows: unknown Edit Mode setting kind radio")
+	end)
+	it("hides the dialog's Reset To Default button for a frame that asks, and only while the dialog shows it", function()
+		local other = newFrame()
+		local quiet = newFrame()
+		ns.EditMode.Register(module, quiet, { default = { point = "CENTER", x = 0, y = 0 }, noReset = true })
+		local dialog = lib.internal.dialog
+		dialog:Update({ parent = quiet })
+		assert.same({ false, 1 }, { dialog.Settings.ResetButton.shown, dialog.laidOut })
+		dialog:Update({ parent = other })
+		assert.is_true(dialog.Settings.ResetButton.shown)
+		-- A second frame that asks hooks the dialog once.
+		ns.EditMode.Register(module, newFrame(), { default = { point = "CENTER", x = 0, y = 0 }, noReset = true })
+		dialog:Update({ parent = quiet })
+		assert.equals(2, dialog.laidOut)
 	end)
 end)
 

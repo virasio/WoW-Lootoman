@@ -92,6 +92,7 @@ files["Modules/"] = {
 		"GameTooltip_ShowCompareItem",
 		"GetCursorPosition",
 		"GetMoneyString",
+		"hooksecurefunc",
 		"IsShiftKeyDown",
 		"LibStub",
 		"LootFrame",

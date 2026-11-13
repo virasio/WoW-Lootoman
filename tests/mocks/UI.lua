@@ -370,6 +370,15 @@ function UI.Install()
 		Event = { OnValueChanged = "OnValueChanged" },
 	})
 	rawset(_G, "CreateMinimalSliderFormatter", function(_, formatter) return formatter or tostring end)
+	-- Runs hook after the table's function, with the same arguments.
+	rawset(_G, "hooksecurefunc", function(object, name, hook)
+		local original = object[name]
+		object[name] = function(...)
+			local results = { original(...) }
+			hook(...)
+			return unpack(results)
+		end
+	end)
 	-- The tabs of a frame (SharedUIPanelTemplates.lua): the chosen one.
 	rawset(_G, "PanelTemplates_SetNumTabs", function(frame, count) frame.numTabs = count end)
 	rawset(_G, "PanelTemplates_SetTab", function(frame, id) frame.selectedTab = id end)

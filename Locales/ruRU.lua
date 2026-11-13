@@ -51,6 +51,7 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/LootFeed/LootFeed.lua
 	["Loot feed"] = "Лента лута",
+	["Loot Feed"] = "Лента лута",
 	["Show the loot feed"] = "Показывать ленту лута",
 	["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."] = "Показывает, что вы подбираете: предметы, валюту, деньги, репутацию и, по желанию, опыт.",
 	["What the feed shows"] = "Что показывает лента",

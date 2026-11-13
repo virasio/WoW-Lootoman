@@ -269,7 +269,11 @@ function LootFeed:OnEnable()
 		self.model = Feed.Model.New(self:ModelOptions(), Compat.GetTime())
 		self.feed = Feed.Frames.Create(self.model)
 		ns.EditMode.Register(self, self.feed.frame, {
+			-- In Edit Mode's title case, as its own frames are named.
+			name = L["Loot Feed"],
 			default = self.DEFAULT_POSITION,
+			-- Its look resets in the look's menu.
+			noReset = true,
 			-- Only the look: it holds every other setting, and its menu edits it.
 			settings = { { kind = "dropdown", key = "look", label = L["Feed look"],
 				tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."],

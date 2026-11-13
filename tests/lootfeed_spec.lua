@@ -165,7 +165,7 @@ describe("loot feed module", function()
 
 	it("puts the feed in Edit Mode right of the screen centre, with only its look's menu in its dialog", function()
 		local frame = module.feed.frame
-		assert.same({ "Loot feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
+		assert.same({ "Loot Feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
 		local settings = lib.settings[frame]
 		assert.same({ 1, 0, "Feed look", ns.Feed.LookMenu.Build }, { #settings, settings[1].kind, settings[1].name, settings[1].generator })
 		assert.is_nil(lib.buttons and lib.buttons[frame])
