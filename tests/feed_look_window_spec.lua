@@ -68,9 +68,11 @@ describe("loot feed look window", function()
 
 		it("shows the sample rows, each in its box, and the row in the inspector", function()
 			assert.is_true(window.shown)
-			assert.equals(7, #window.rows)
+			assert.equals(8, #window.rows)
 			-- Each row takes clicks on its free space, the stuck sample too.
 			assert.same({ true, true }, { window.rows[1].mouseClicks, window.rows[7].mouseClicks })
+			-- Last, the low-space warning, drawn by the design too.
+			assert.same({ "Few free bag slots", "|cffffffff2|r+|cff1eff001|r" }, { window.rows[8].Label.text, window.rows[8].Amount.text })
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })

@@ -140,8 +140,10 @@ describe("loot feed module", function()
 			assert.same({ "Free reagent bag slots: 1" }, shown())
 			bags(1, 0)
 			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
-			-- With their counts, for the icons that show them in an Icons layout.
-			assert.same({ 1, 0 }, { module.feed.warnings[1].count, module.feed.warnings[2].count })
+			-- Each with its bag kind and count, for the warning row's amount; one row for both.
+			assert.same({ "general", 1, "reagent", 0 }, { module.feed.warnings[1].kind, module.feed.warnings[1].count,
+				module.feed.warnings[2].kind, module.feed.warnings[2].count })
+			assert.equals("|cffffffff1|r+|cff1eff000|r", module.feed.warningRow.Amount.text)
 			bags(5)
 			assert.same({}, shown())
 		end)

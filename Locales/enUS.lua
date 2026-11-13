@@ -315,4 +315,5 @@ ns.Locales.AddEnglish({
 	"Free bag slots: %d",
 	"No free reagent bag slots",
 	"Free reagent bag slots: %d",
+	"Few free bag slots",
 })

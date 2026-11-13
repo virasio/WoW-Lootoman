@@ -151,18 +151,18 @@ function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
 end
 
--- The low-space warnings that hold now, each { text, count }: few free
+-- The low-space warnings that hold now, each { kind, count, text }: few free
 -- general slots, few free reagent bag slots (only with a reagent bag), each
 -- by its own threshold. Nothing before the client has told the bags (no
 -- slots at all).
 function LootFeed:Warnings()
 	local slots, warnings = ns.Bags.FreeSlots(), {}
 	if self:Get("warnGeneral") and slots.generalTotal > 0 and slots.general <= self:Get("warnGeneralAt") then
-		warnings[#warnings + 1] = { count = slots.general,
+		warnings[#warnings + 1] = { kind = "general", count = slots.general,
 			text = slots.general == 0 and L["No free bag slots"] or L["Free bag slots: %d"]:format(slots.general) }
 	end
 	if self:Get("warnReagent") and slots.reagentTotal > 0 and slots.reagent <= self:Get("warnReagentAt") then
-		warnings[#warnings + 1] = { count = slots.reagent,
+		warnings[#warnings + 1] = { kind = "reagent", count = slots.reagent,
 			text = slots.reagent == 0 and L["No free reagent bag slots"] or L["Free reagent bag slots: %d"]:format(slots.reagent) }
 	end
 	return warnings

@@ -184,59 +184,63 @@ describe("loot feed frames", function()
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, frameWith("100 copper").points[1])
 		end)
 
-		it("puts warnings in lines above a sideways strip, which keeps its places", function()
-			feed:SetOptions(options({ direction = "right", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
-			feed:SetWarnings({ "Free bag slots: 2", "No free reagent bag slots" })
+		local GENERAL = { kind = "general", count = 3, text = "Free bag slots: 3" }
+		local REAGENT = { kind = "reagent", count = 2, text = "Free reagent bag slots: 2" }
+
+		it("draws the warning as a row of the design: a bag with a red border, the warning as its name, each bag kind's free slots as its amount", function()
+			feed:SetWarnings({ GENERAL, REAGENT })
+			local warning = feed.warningRow
+			-- At the Large design's size: the icon as big as any row's.
+			assert.same({ true, Frames.WARNING_ICON, 35, 35 }, { warning.shown, warning.Icon.texture, warning.Icon.width, warning.Icon.height })
+			assert.same({ true, "loottoast-itemborder-white", { 1, 0.25, 0.25 } }, { warning.IconBorder.shown, warning.IconBorder.atlas,
+				warning.IconBorder.vertex })
+			assert.same({ "Few free bag slots", { 1, 0.25, 0.25 } }, { warning.Label.text, warning.Label.color })
+			-- General slots white, reagent ones green, joined by "+".
+			assert.same({ true, "|cffffffff3|r+|cff1eff002|r" }, { warning.Amount.shown, warning.Amount.text })
+			-- The tooltip names each kind in its colour.
+			warning.scripts.OnEnter(warning)
+			assert.same({ "Few free bag slots", "Free bag slots: 3", "Free reagent bag slots: 2" }, tooltip.lines)
+			feed:SetWarnings({ REAGENT })
+			assert.equals("|cff1eff002|r", warning.Amount.text)
+			-- An item's border keeps its own colour.
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
+			feed:Draw(1)
+			assert.same({ 1, 1, 1 }, frameWith("Linen Cloth").IconBorder.vertex)
+		end)
+
+		it("puts the warning in the first place of icons too, sideways or not, with its amount on the icon", function()
+			local Design = ns.Feed.Design
+			local icons = Design.Layout(Design.ICONS, 13)
+			feed:SetOptions(options({ direction = "right", layout = icons }))
+			feed:SetWarnings({ GENERAL, REAGENT })
 			model:Add({ kind = "money", amount = 100 }, 0)
 			feed:Draw(1)
-			assert.same({ "100 copper@0" }, layout())
-			-- Lines as high as their text and a little room, the first one nearest to the strip,
-			-- 4 apart from it.
-			local first, second = feed.warningLines[1], feed.warningLines[2]
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 40 }, first.points[1])
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 59 }, second.points[1])
-			assert.same({ 116, 19 }, { first.width, first.height })
-			-- The background spans the strip, the gap and the lines, evenly behind icons.
+			local warning = feed.warningRow
+			-- Icons 36 wide, 4 apart: the warning first, then the row.
+			assert.same({ "100 copper@40" }, layout())
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, warning.points[1])
+			assert.same({ false, true, 36 }, { warning.Label.shown, warning.Amount.shown, warning.Icon.width })
+			-- The background spans both, evenly behind icons.
 			local background = feed.frame.Background
-			assert.same({ 124, 86 }, { background.width, background.height })
+			assert.same({ 84, 44 }, { background.width, background.height })
 			assert.same({ 0.5, 0.5 }, { background.gradient[2].a, background.gradient[3].a })
-			feed:SetOptions(options({ direction = "left", layout = ns.Feed.Design.Layout(ns.Feed.Design.ICONS, 13) }))
-			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 40 }, first.points[1])
-			-- A stuck icon still takes the strip's first place.
+			feed:SetOptions(options({ direction = "left", layout = icons }))
+			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, warning.points[1])
+			-- A stuck icon comes after the warning.
 			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 1)
 			model:SetSticky(quest, "quest", 1)
 			model:Add({ kind = "money", amount = 5 }, 7.5)
 			feed:Draw(7.5)
-			assert.same({ "Letter@0", "5 copper@40" }, layout())
-			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 40 }, first.points[1])
-		end)
-
-		it("shows warnings as bag icons with the free slots in an Icons layout filling up or down", function()
-			local Design = ns.Feed.Design
-			feed:SetOptions(options({ layout = Design.Layout(Design.ICONS, 13) }))
-			feed:SetWarnings({ { text = "Free bag slots: 2", count = 2 }, { text = "No free reagent bag slots", count = 0 } })
-			model:Add({ kind = "money", amount = 100 }, 0)
-			feed:Draw(1)
-			-- The icons take the first places, 40 apart, and the row comes after them.
-			local first, second = feed.warningIcons[1], feed.warningIcons[2]
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, first.points[1])
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 40 }, second.points[1])
-			assert.same({ "2", "0", { 1, 0.25, 0.25 } }, { first.Count.text, second.Count.text, first.Count.color })
-			assert.same({ "100 copper@80" }, layout())
-			assert.is_nil(feed.warningLines[1])
-			first.scripts.OnEnter(first)
-			assert.same({ true, "Free bag slots: 2" }, { tooltip.shown, tooltip.lines[1] })
-			-- Sideways they are lines again; with rows too.
-			feed:SetOptions(options({ direction = "right", layout = Design.Layout(Design.ICONS, 13) }))
-			assert.same({ false, true, "Free bag slots: 2" }, { first.shown, feed.warningLines[1].shown, feed.warningLines[1].Text.text })
-			feed:SetOptions(options())
-			assert.same({ false, true }, { first.shown, feed.warningLines[1].shown })
-			feed:SetWarnings({})
-			assert.is_false(feed.warningLines[1].shown)
+			assert.same({ "Letter@40", "5 copper@80" }, layout())
+			-- Filling up, the same.
+			feed:SetOptions(options({ layout = icons }))
+			feed:Draw(7.6)
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, warning.points[1])
+			assert.same({ "Letter@40", "5 copper@80" }, layout())
 		end)
 
 		it("puts the stuck row after the warnings, before the other rows, with its marks and its clicks", function()
-			feed:SetWarnings({ "Free bag slots: 2" })
+			feed:SetWarnings({ GENERAL })
 			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
 			model:SetSticky(quest, "quest", 0)
 			local clam = model:Add({ kind = "item", id = 2, name = "Clam", link = LINK, icon = 2, amount = 1 }, 0)
@@ -245,7 +249,7 @@ describe("loot feed frames", function()
 			feed:Draw(6.5)
 			-- The warning at the edge, then the letter, stuck first, then the rest.
 			assert.same({ "Letter@42", "100 copper@84" }, layout())
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningRow.points[1])
 			local letter = frameWith("Letter")
 			assert.same({ true, false, true, "+1", true }, { letter.QuestMark.shown, letter.Pin.shown, letter.Waiting.shown,
 				letter.Waiting.text, letter.mouseClicks })
@@ -267,7 +271,7 @@ describe("loot feed frames", function()
 			-- With no stuck row, the warning stays at the edge and the rows come after it.
 			feed:Dismiss(clam)
 			feed:Draw(6.7)
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningRow.points[1])
 			-- Without the warning, the stuck row takes the edge.
 			local letter2 = model:Add({ kind = "item", id = 3, name = "Note", link = LINK, icon = 3, amount = 1 }, 6.7)
 			model:SetSticky(letter2, "quest", 6.7)
@@ -308,16 +312,16 @@ describe("loot feed frames", function()
 			feed:Draw(6.5)
 			assert.same({ "Letter@0" }, layout())
 			ns.Compat.Test.SetCombat(true)
-			feed:SetWarnings({ "Free bag slots: 2" })
+			feed:SetWarnings({ GENERAL })
 			model:Add({ kind = "money", amount = 100 }, 6.6)
 			feed:Draw(6.7)
 			assert.same({ "Letter@0", "100 copper@84" }, layout())
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 42 }, feed.warningLines[1].points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 42 }, feed.warningRow.points[1])
 			-- After the fight they swap.
 			ns.Compat.Test.SetCombat(false)
 			feed:Draw(7)
 			assert.same({ "Letter@42", "100 copper@84" }, layout())
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningLines[1].points[1])
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningRow.points[1])
 			-- A warning that goes in a fight leaves its place empty until it ends.
 			ns.Compat.Test.SetCombat(true)
 			feed:SetWarnings({})
@@ -328,11 +332,11 @@ describe("loot feed frames", function()
 			assert.same({ "Letter@0", "100 copper@42" }, layout())
 		end)
 
-		it("puts warnings at the anchor edge, the rows after them, and stays shown for them", function()
-			feed:SetWarnings({ "Free bag slots: 2" })
+		it("puts the warning at the anchor edge, the rows after it, and stays shown for it", function()
+			feed:SetWarnings({ GENERAL })
 			assert.is_true(feed.frame.shown)
-			local warning = feed.warningLines[1]
-			assert.same({ "Free bag slots: 2", { "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 } }, { warning.Text.text, warning.points[1] })
+			local warning = feed.warningRow
+			assert.same({ "Few free bag slots", { "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 } }, { warning.Label.text, warning.points[1] })
 			model:Add({ kind = "money", amount = 100 }, 0)
 			feed:Draw(1)
 			assert.same({ "100 copper@42" }, layout())

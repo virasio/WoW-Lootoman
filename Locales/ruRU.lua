@@ -310,4 +310,5 @@ ns.Locales.AddTranslation("ruRU", {
 	["Free bag slots: %d"] = "Свободных ячеек в сумках: %d",
 	["No free reagent bag slots"] = "Нет свободных ячеек в сумке для реагентов",
 	["Free reagent bag slots: %d"] = "Свободных ячеек в сумке для реагентов: %d",
+	["Few free bag slots"] = "Мало свободных ячеек",
 })

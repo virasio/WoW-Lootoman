@@ -782,7 +782,9 @@ local function build()
 	frame.preview:SetScript("OnMouseDown", function()
 		LookWindow.Select("row")
 	end)
+	-- The feed's samples, and last, at the anchor edge, the low-space warning.
 	frame.samples = Frames.PreviewRows()
+	frame.samples[#frame.samples + 1] = { row = Frames.SampleWarning(), alpha = 1 }
 	frame.rows = {}
 	for index = 1, #frame.samples do
 		local rowFrame = Frames.CreateRow(frame.preview)

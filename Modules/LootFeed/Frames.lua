@@ -16,14 +16,14 @@ local Compat, L = ns.Compat, ns.L
 -- leaves, the others slide to their new places. Rows pushed out when the feed
 -- is full slide past the anchor edge as they fade.
 --
--- Warnings (few free bag slots) take the first places at the anchor edge, one
--- row's height each: lines of text, or with an Icons layout a bag icon with
--- the free slots in red and the text in its tooltip. Filling sideways, they are
--- lines above the strip of icons instead. While there is a warning the feed
--- stays shown.
+-- Few free bag slots: one warning row takes the first place at the anchor
+-- edge, drawn by the design as any row: a bag icon with a red border, the
+-- warning as its name, and as its amount the free slots of each kind of bag
+-- that is low, each in its colour, joined by "+" (general white, reagent
+-- green: "3+2"). Its tooltip names each. While it shows the feed stays shown.
 --
 -- A stuck row (Model.lua: an item the character can use) comes next, after the
--- warnings, and the fading rows stack after it. It shows a pin, or the bags'
+-- warning, and the fading rows stack after it. It shows a pin, or the bags'
 -- quest mark for an item that starts a quest, and a badge with how many more
 -- wait under it; a left click lets it go. In a fight the use button over it
 -- cannot move (UseButton.lua), so the stuck row keeps its place: a warning that
@@ -40,7 +40,7 @@ local Compat, L = ns.Compat, ns.L
 --   feed:Wake()                              -- after model:Add
 --   feed:RefreshOwned()                      -- after the bags change
 --   feed:SetPreview(true)                    -- in Edit Mode
---   feed:SetWarnings({ { text = "Free bag slots: 2", count = 2 } }) -- or {} for none
+--   feed:SetWarnings({ { kind = "general", count = 2, text = "Free bag slots: 2" } }) -- or {} for none
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
@@ -153,6 +153,17 @@ function Frames.Describe(row, options)
 			amount, color = (icons and short or signed)(row.amount)
 		end
 		return { icon = ICONS.reputation, label = phrase:format(row.name), labelColor = WHITE, amount = amount, amountColor = color }
+	elseif kind == "warning" then
+		local counts = {}
+		for _, warning in ipairs(row.warnings) do
+			local color = Frames.WARNING_KINDS[warning.kind] or WHITE
+			local function byte(value)
+				return math.floor(value * 255 + 0.5)
+			end
+			counts[#counts + 1] = ("|cff%02x%02x%02x%d|r"):format(byte(color[1]), byte(color[2]), byte(color[3]), warning.count or 0)
+		end
+		return { icon = Frames.WARNING_ICON, label = L["Few free bag slots"], labelColor = Frames.WARNING_COLOR,
+			amount = table.concat(counts, "+"), amountColor = WHITE, border = Frames.WARNING_BORDER, borderColor = Frames.WARNING_COLOR }
 	end
 	return { label = tostring(row.name or kind), labelColor = WHITE }
 end
@@ -185,6 +196,14 @@ local function showTooltip(rowFrame)
 	elseif row.kind == "currency" and row.id then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip:SetCurrencyByID(row.id)
+		GameTooltip:Show()
+	elseif row.kind == "warning" then
+		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
+		GameTooltip_SetTitle(GameTooltip, L["Few free bag slots"])
+		for _, warning in ipairs(row.warnings) do
+			local color = Frames.WARNING_KINDS[warning.kind] or WHITE
+			GameTooltip:AddLine(warning.text, color[1], color[2], color[3])
+		end
 		GameTooltip:Show()
 	elseif row.kind == "money" or row.kind == "xp" or row.kind == "reputation" then
 		local look = Frames.Describe(row)
@@ -338,6 +357,8 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil)
 	if look.border then
 		rowFrame.IconBorder:SetAtlas(look.border)
+		local tint = look.borderColor or WHITE
+		rowFrame.IconBorder:SetVertexColor(tint[1], tint[2], tint[3])
 	end
 	rowFrame.Glow:SetShown(iconShown and parts.glow.shown and look.glow ~= nil)
 	if look.glow then
@@ -413,9 +434,23 @@ function Frames.PreviewRows()
 	}
 end
 
--- The warnings' text colour: the default UI's red for errors.
+-- The warning's text and border colour: the default UI's red for errors.
 Frames.WARNING_COLOR = { 1, 0.25, 0.25 }
 Frames.WARNING_ICON = [[Interface\Icons\INV_Misc_Bag_08]]
+-- The loot window's white quality border, tinted.
+Frames.WARNING_BORDER = "loottoast-itemborder-white"
+-- Each kind of bag's colour in the warning's amount: general white, reagent
+-- the green of uncommon items (#1eff00).
+Frames.WARNING_KINDS = { general = { 1, 1, 1 }, reagent = { 30 / 255, 1, 0 } }
+
+-- The look window's sample of the warning: two general slots and one reagent
+-- slot left.
+function Frames.SampleWarning()
+	return { kind = "warning", warnings = {
+		{ kind = "general", count = 2, text = L["Free bag slots: %d"]:format(2) },
+		{ kind = "reagent", count = 1, text = L["Free reagent bag slots: %d"]:format(1) },
+	} }
+end
 
 local SIDEWAYS = { left = true, right = true }
 
@@ -423,30 +458,31 @@ local function sideways(feed)
 	return SIDEWAYS[feed.options.direction] == true
 end
 
--- How many warning places come before the stuck row's place: all the
--- warnings, but in a fight the number when it began (above). None sideways,
--- where the warnings are lines above the strip.
-local function stuckSlot(feed)
-	if sideways(feed) then
-		return 0
-	end
-	return feed.stuckAfter or #feed.warnings
+-- The places the warning takes: one while it shows.
+local function warningPlaces(feed)
+	return feed.warning and 1 or 0
 end
 
--- Out of combat the stuck row's place follows the warnings.
+-- How many places come before the stuck row's: the warning's, but in a fight
+-- as many as when it began (above).
+local function stuckSlot(feed)
+	return feed.stuckAfter or warningPlaces(feed)
+end
+
+-- Out of combat the stuck row's place follows the warning.
 local function settle(feed)
 	if not Compat.InCombat() or feed.stuckAfter == nil then
-		feed.stuckAfter = #feed.warnings
+		feed.stuckAfter = warningPlaces(feed)
 	end
 end
 
--- A warning's distance from the anchor edge: in the first places, but for
--- those that came in a fight, after the stuck row.
-local function warningOffset(feed, index)
-	if feed.hasStuck and index > stuckSlot(feed) then
-		return index * feed.step
+-- The warning's distance from the anchor edge: the first place, but after the
+-- stuck row when it came in a fight.
+local function warningOffset(feed)
+	if feed.hasStuck and stuckSlot(feed) < 1 then
+		return feed.step
 	end
-	return (index - 1) * feed.step
+	return 0
 end
 
 -- The stuck row's distance from the anchor edge.
@@ -454,16 +490,13 @@ local function stuckOffset(feed)
 	return stuckSlot(feed) * feed.step
 end
 
--- How far the fading rows start from the anchor edge: past the warnings and
--- the stuck row, if any; warnings above a sideways strip take no place in it.
+-- How far the fading rows start from the anchor edge: past the warning and
+-- the stuck row, if any.
 local function base(feed)
-	if sideways(feed) then
-		return feed.hasStuck and feed.step or 0
-	end
 	if feed.hasStuck then
-		return (math.max(#feed.warnings, stuckSlot(feed)) + 1) * feed.step
+		return (math.max(warningPlaces(feed), stuckSlot(feed)) + 1) * feed.step
 	end
-	return #feed.warnings * feed.step
+	return warningPlaces(feed) * feed.step
 end
 
 -- Puts a row at a distance from the anchor edge.
@@ -480,22 +513,6 @@ local function place(feed, rowFrame, offset)
 	else
 		rowFrame:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, offset)
 	end
-end
-
--- A warning line's height above a sideways strip: its text and a little room.
-local function lineHeight(feed)
-	return feed.options.layout.parts.name.fontSize + 6
-end
-
--- The room between a sideways strip and the warning lines above it.
-Frames.LINE_GAP = 4
-
--- How high the warning lines above a sideways strip reach, with their gap.
-local function linesHeight(feed)
-	if #feed.warnings == 0 then
-		return 0
-	end
-	return Frames.LINE_GAP + #feed.warnings * lineHeight(feed)
 end
 
 -- The stuck row's place on the screen, { left, bottom, width, height }, or
@@ -526,20 +543,19 @@ local function release(feed, row, rowFrame)
 	feed.free[#feed.free + 1] = rowFrame
 end
 
--- The shared background spans the rows on screen, from the anchor edge to the
--- farthest row, with the gap as a margin; it fades out to the right, but for
--- icons. Filling sideways, it also spans the warning lines above the strip.
+-- The shared background spans the rows on screen and the warning, from the
+-- anchor edge to the farthest one, with the gap as a margin; it fades out to
+-- the right, but for icons.
 local function placeBackground(feed)
 	local layout = feed.options.layout
 	local length = sideways(feed) and layout.width or layout.height
-	local far = (#feed.warnings > 0 and not sideways(feed)) and (base(feed) - layout.gap) or 0
+	local far = feed.warning and (warningOffset(feed) + length) or 0
 	for _, rowFrame in pairs(feed.frameOf) do
 		far = math.max(far, rowFrame.offset + length)
 	end
 	local background = feed.frame.Background
-	local lines = sideways(feed) and linesHeight(feed) or 0
-	background:SetShown(far > 0 or lines > 0)
-	if far > 0 or lines > 0 then
+	background:SetShown(far > 0)
+	if far > 0 then
 		local margin = layout.gap
 		local direction = feed.options.direction
 		background:ClearAllPoints()
@@ -551,9 +567,7 @@ local function placeBackground(feed)
 			background:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -margin, -margin)
 		end
 		if sideways(feed) then
-			-- Under warning lines, as wide as the strip they may take.
-			local span = lines > 0 and (feed.options.maxRows * feed.step - layout.gap) or math.max(far, layout.width)
-			background:SetSize(span + 2 * margin, layout.height + lines + 2 * margin)
+			background:SetSize(math.max(far, layout.width) + 2 * margin, layout.height + 2 * margin)
 		else
 			background:SetSize(layout.width + 2 * margin, far + 2 * margin)
 		end
@@ -582,14 +596,15 @@ function Frames.Create(model)
 		seen = setmetatable({}, { __mode = "k" }),
 		version = 0,
 		warnings = {},
-		warningLines = {},
-		warningIcons = {},
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
 		feed.rows[index] = Frames.CreateRow(frame)
 		feed.rows[index].feed = feed
 		feed.free[index] = feed.rows[index]
 	end
+	-- The warning's own row, outside the pool.
+	feed.warningRow = Frames.CreateRow(frame)
+	feed.warningRow.feed = feed
 	frame:SetScript("OnUpdate", function()
 		feed:Draw(Compat.GetTime())
 	end)
@@ -598,109 +613,26 @@ function Frames.Create(model)
 	return feed
 end
 
-local function showWarningTooltip(icon)
-	GameTooltip:SetOwner(icon, "ANCHOR_LEFT")
-	GameTooltip_SetTitle(GameTooltip, icon.text)
-	GameTooltip:Show()
-end
-
--- Warnings as icons, in an Icons layout filling up or down: a bag icon with
--- the free slots in red where the amount sits, in the places of rows.
-local function placeWarningIcons(feed)
-	local layout = feed.options.layout
-	local amount = layout.parts.amount
-	local font = getFonts().number
-	for index, warning in ipairs(feed.warnings) do
-		local icon = feed.warningIcons[index]
-		if not icon then
-			icon = CreateFrame("Frame", nil, feed.frame)
-			icon:SetMouseClickEnabled(false)
-			icon:SetMouseMotionEnabled(true)
-			icon.Icon = icon:CreateTexture(nil, "ARTWORK")
-			icon.Icon:SetAllPoints()
-			icon.Icon:SetTexture(Frames.WARNING_ICON)
-			icon.Count = icon:CreateFontString(nil, "OVERLAY")
-			icon.Count:SetWordWrap(false)
-			icon:SetScript("OnEnter", showWarningTooltip)
-			icon:SetScript("OnLeave", hideTooltip)
-			feed.warningIcons[index] = icon
-		end
-		icon:SetSize(layout.width, layout.height)
-		icon.Count:SetFont(font[1], amount.fontSize, font[3])
-		icon.Count:SetTextColor(unpack(Frames.WARNING_COLOR))
-		icon.Count:ClearAllPoints()
-		icon.Count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -2, 2)
-		icon.Count:SetText(tostring(warning.count or 0))
-		icon.text = warning.text
-		place(feed, icon, warningOffset(feed, index))
-		icon:Show()
-	end
-	for index = #feed.warnings + 1, #feed.warningIcons do
-		feed.warningIcons[index]:Hide()
-	end
-end
-
--- The warnings, at the anchor edge in the order given, or above a sideways
--- strip, the first one nearest to it: lines of text, or icons (above).
+-- The warning row, drawn by the design, in its place; hidden without warnings.
 local function placeWarnings(feed)
-	local layout = feed.options.layout
-	local across = sideways(feed)
-	local asIcons = Design.View(layout) == "icons" and not across
-	for index = 1, #feed.warningIcons do
-		feed.warningIcons[index]:SetShown(asIcons and index <= #feed.warnings)
-	end
-	if asIcons then
-		for index = 1, #feed.warningLines do
-			feed.warningLines[index]:Hide()
-		end
-		placeWarningIcons(feed)
+	local rowFrame = feed.warningRow
+	if not feed.warning then
+		hideTooltip(rowFrame)
+		rowFrame:Hide()
 		return
 	end
-	local font = getFonts().text
-	local height = across and lineHeight(feed) or layout.height
-	local width = across and (feed.options.maxRows * feed.step - layout.gap) or layout.width
-	for index, warning in ipairs(feed.warnings) do
-		local line = feed.warningLines[index]
-		if not line then
-			line = CreateFrame("Frame", nil, feed.frame)
-			line.Icon = line:CreateTexture(nil, "ARTWORK")
-			line.Icon:SetTexture(Frames.WARNING_ICON)
-			line.Text = line:CreateFontString(nil, "OVERLAY")
-			line.Text:SetWordWrap(false)
-			line.Text:SetJustifyH("LEFT")
-			feed.warningLines[index] = line
-		end
-		line:SetSize(width, height)
-		line.Icon:SetSize(height * 0.6, height * 0.6)
-		line.Icon:ClearAllPoints()
-		line.Icon:SetPoint("LEFT", line, "LEFT", 0, 0)
-		line.Text:SetFont(font[1], layout.parts.name.fontSize, font[3])
-		line.Text:SetTextColor(unpack(Frames.WARNING_COLOR))
-		line.Text:ClearAllPoints()
-		line.Text:SetPoint("LEFT", line.Icon, "RIGHT", 6, 0)
-		line.Text:SetText(warning.text)
-		if across then
-			local edge = feed.options.direction == "left" and "BOTTOMRIGHT" or "BOTTOMLEFT"
-			line.offset = nil
-			line:ClearAllPoints()
-			line:SetPoint(edge, feed.frame, edge, 0, layout.height + Frames.LINE_GAP + (index - 1) * height)
-		else
-			place(feed, line, warningOffset(feed, index))
-		end
-		line:Show()
-	end
-	for index = #feed.warnings + 1, #feed.warningLines do
-		feed.warningLines[index]:Hide()
-	end
+	Frames.Fill(rowFrame, feed.warning, feed.options)
+	place(feed, rowFrame, warningOffset(feed))
+	rowFrame:SetAlpha(1)
+	rowFrame:Show()
 end
 
--- Shows these warnings at the anchor edge, each { text, count } (a text alone
--- will do); the rows move past them.
+-- Shows these warnings in one row at the anchor edge, each { kind, count,
+-- text }: kind "general" or "reagent", count the free slots, text for the
+-- tooltip. The rows move past it.
 function FeedMixin:SetWarnings(warnings)
-	self.warnings = {}
-	for index, warning in ipairs(warnings) do
-		self.warnings[index] = type(warning) == "table" and warning or { text = warning }
-	end
+	self.warnings = warnings
+	self.warning = #warnings > 0 and { kind = "warning", warnings = warnings } or nil
 	settle(self)
 	placeWarnings(self)
 	self.version = self.version + 1
@@ -719,6 +651,7 @@ function FeedMixin:SetOptions(options)
 		self.step = layout.height + layout.gap
 		self.frame:SetSize(layout.width, options.maxRows * self.step - layout.gap)
 	end
+	Frames.ApplyLayout(self.warningRow, layout)
 	placeWarnings(self)
 	-- Behind icons the background is even; behind rows it fades out to the right.
 	local fadeTo = Design.View(layout) == "icons" and options.opacity or 0

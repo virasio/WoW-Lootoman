@@ -213,20 +213,19 @@ The Default look and default options unless a check says otherwise.
 ### Low-space warnings
 
 - [ ] **General slots.** Default options.
-  - Fill the general bags down to 3 free slots: no warning.
-  - Down to 2: "Free bag slots: 2" at the feed's bottom edge, the rows above it.
-  - Down to 0: "No free bag slots".
+  - Fill the general bags down to 4 free slots: no warning.
+  - Down to 3: a warning row at the feed's bottom edge, the rows above it: the bag icon as big as the rows' icons, with a red border, "Few free bag slots" in red as its name, and a white "3" as its amount.
+  - Down to 0: "0"; its tooltip says "No free bag slots".
 
   *Expected:* the warning stays while it holds, also with no rows, and goes when slots are freed. With *Fill direction: Top to bottom* it sits at the top edge.
 - [ ] **Before a kept item.** A kept item while a warning holds, with rows and with icons filling up or down. *Expected:*
   - the warning at the edge, the kept item after it, then the fading rows;
   - when the warning goes, the kept item moves to the edge, and right clicks still hit it;
   - when a warning comes in a fight, the kept item stays where it is and the warning comes after it until the fight ends; then they swap.
-- [ ] **Reagent bag.** Turn on *Warn when few reagent bag slots are free*; fill the reagent bag. *Expected:* its own warning, under its own threshold; without a reagent bag, none.
+- [ ] **Reagent bag.** Fill the reagent bag down to 2 free slots. *Expected:* a green "2" as the amount; with few general slots too, one row with both: "3+2", white and green, and a tooltip with a line for each. Without a reagent bag, no reagent part.
 - [ ] **Thresholds.** Set each to 0 and to 5. *Expected:* the warnings follow at once.
-- [ ] **With icons.** With a look of icons. *Expected:*
-  - filling up or down, a bag icon with the free slots in red, its text in the tooltip;
-  - filling sideways, a line of text above the icons, a little apart from them, and the background behind both.
+- [ ] **Following the design.** Change the look's design (icon size and place, the name's and the amount's place and size, their backgrounds, the row's background), and check the warning sample in the look window. *Expected:* the warning row follows like any row.
+- [ ] **With icons.** With a look of icons, filling up, down and sideways. *Expected:* the warning is a bag icon in the first place, like the other icons, with a red border and the free slots as its amount; no name; the tooltip names each kind.
 
 ## Junk
 
