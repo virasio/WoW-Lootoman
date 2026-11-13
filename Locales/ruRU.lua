@@ -164,8 +164,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["/lootoman design: open the window of the loot feed's look"] = "/lootoman design: открыть окно вида ленты лута",
 
 	-- Settings/Panel.lua
-	["Enabled"] = "Включено",
-	["Configure"] = "Настроить",
+	["The junk list opens out of combat."] = "Список хлама открывается вне боя.",
 
 	-- Settings/Profiles.lua
 	["Profile"] = "Профиль",
@@ -289,7 +288,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Junk list"] = "Список хлама",
 	["Clear list"] = "Очистить список",
 	["Remove every mark of profile “%s” from the junk list?"] = "Убрать из списка хлама все пометки профиля «%s»?",
-	["Open the list"] = "Открыть список",
+	["Set up the junk list"] = "Настроить список хлама",
 	["Every item you marked as junk or as not junk, to remove marks."] = "Все предметы, помеченные как хлам или как не хлам, — чтобы снять пометки.",
 
 	-- Modules/LootFeed/LootFeed.lua

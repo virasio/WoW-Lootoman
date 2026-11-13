@@ -86,13 +86,13 @@ describe("profile control", function()
 		assert.is_nil(ns.SettingsPanel.main.reset)
 	end)
 
-	it("hides Blizzard's Defaults button on Lootoman's pages, and only there", function()
+	it("hides Blizzard's Defaults button on Lootoman's page, and only there", function()
 		local defaults = api.defaultsButton
 		api.SelectCategory(main)
 		assert.is_false(defaults.shown)
 		api.SelectCategory({ GetParentCategory = function() return nil end })
 		assert.is_true(defaults.shown)
-		api.SelectCategory(assert(api.FindCategory("Junk")))
+		api.SelectCategory(main)
 		assert.is_false(defaults.shown)
 		-- Blizzard shows it again when a search is cleared.
 		defaults:Show()

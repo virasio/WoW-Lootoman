@@ -1,150 +1,22 @@
 local _, ns = ...
-local Bus, Compat, L, Modules, Storage = ns.Bus, ns.Compat, ns.L, ns.Modules, ns.Storage
+local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 
--- The addon's pages in the game options, built with Blizzard's
--- Settings API on Ready, so they look like the game's own options.
+-- The addon's page in the game options, registered with Blizzard's Settings
+-- API on Ready. It has no subpages: what does not fit is in the addon's own
+-- windows (a feed look's, the junk list).
 --
--- The main page is the addon's own frame (a canvas page), laid out the way a
+-- The page is the addon's own frame (a canvas page), laid out the way a
 -- player reads it: the title, what other Settings files put on top with
--- Panel.AddToMain (the profile), a divider, then every module's switch, a
--- checkbox with its label after it. Under a switch, indented: the module's
--- main settings (module.mainSettings), which can be changed only while the
--- module is on, and a Configure button that opens the module's own page, if it
--- has one (module.BuildSettings). The main page reads Storage again when it is
--- shown and whenever a value or the profile changes.
---
--- A module's page has the same switch on top and the module's own controls.
--- Its controls are proxy settings that read and write Storage; they are
--- refreshed when the value changes elsewhere or the profile changes.
+-- Panel.AddToMain (the profile), a divider, then every module's block: its
+-- switch, a checkbox with its label after it, or its title for a module
+-- without one. Under it, indented: the module's main settings
+-- (module.mainSettings), which can be changed only while the module is on.
+-- The page reads Storage again when it is shown and whenever a value or the
+-- profile changes.
 local Panel = {
 	mainBuilders = {},
 }
 ns.SettingsPanel = Panel
-
-local tracked = {}
-
--- Keeps a setting's control in step with Storage. With module and key, it is
--- refreshed when that value changes; every setting is refreshed on a profile change.
-function Panel.Track(setting, module, key)
-	tracked[#tracked + 1] = { setting = setting, module = module, key = key }
-end
-
-local function refresh(module, key)
-	for _, item in ipairs(tracked) do
-		-- A locked setting is the one being changed; it updates its own control.
-		if (module == nil or (item.module == module and item.key == key)) and not item.setting:IsLocked() then
-			item.setting:NotifyUpdate()
-		end
-	end
-end
-
--- A proxy setting bound to a module setting, named LOOTOMAN_<MODULE>_<KEY>.
--- convert, if given, turns a value from the control into the value to store.
-local function register(category, module, key, label, varType, convert)
-	local variable = ("LOOTOMAN_%s_%s"):format(module, key):upper()
-	local setting = Settings.RegisterProxySetting(category, variable, varType, label,
-		Storage:GetDefault(module, key),
-		function()
-			return Storage:Get(module, key)
-		end,
-		function(value)
-			Storage:Set(module, key, convert and convert(value) or value)
-		end)
-	Panel.Track(setting, module, key)
-	return setting
-end
-
--- A checkbox bound to a boolean module setting, for BuildSettings.
-function Panel.AddCheckbox(category, module, key, label, tooltip)
-	local setting = register(category, module, key, label, Settings.VarType.Boolean)
-	return Settings.CreateCheckbox(category, setting, tooltip)
-end
-
--- A slider bound to a number module setting, from min to max in steps. format
--- shows the value next to the slider: a format string such as "%d s", or a
--- function(value) that returns the text.
-function Panel.AddSlider(category, module, key, label, tooltip, min, max, step, format)
-	assert(type(Storage:GetDefault(module, key)) == "number", ("%s.%s: a slider needs a number setting"):format(module, key))
-	local setting = register(category, module, key, label, Settings.VarType.Number, function(value)
-		return Storage.OnStep(value, min, max, step)
-	end)
-	local options = Settings.CreateSliderOptions(min, max, step)
-	if format then
-		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, type(format) == "function" and format
-			or function(value)
-				return format:format(value)
-			end)
-	end
-	return Settings.CreateSlider(category, setting, options, tooltip)
-end
-
--- A dropdown bound to a string or number module setting. choices lists
--- { value, label } pairs in the order shown; the default must be one of them.
--- offered(), when given, gives the choices to show now, of all the choices.
-function Panel.AddDropdown(category, module, key, label, tooltip, choices, offered)
-	local default = Storage:GetDefault(module, key)
-	local found = false
-	for _, choice in ipairs(choices) do
-		found = found or choice[1] == default
-	end
-	assert(found, ("%s.%s: the default is not one of the choices"):format(module, key))
-	local varType = type(default) == "number" and Settings.VarType.Number or Settings.VarType.String
-	local setting = register(category, module, key, label, varType)
-	local function options()
-		local container = Settings.CreateControlTextContainer()
-		for _, choice in ipairs(offered and offered() or choices) do
-			container:Add(choice[1], choice[2])
-		end
-		return container:GetData()
-	end
-	return Settings.CreateDropdown(category, setting, options, tooltip)
-end
-
--- A button on a page, for BuildSettings(category, layout).
-function Panel.AddButton(layout, label, buttonText, onClick, tooltip)
-	local initializer = CreateSettingsButtonInitializer(label, buttonText, onClick, tooltip, true)
-	layout:AddInitializer(initializer)
-	return initializer
-end
-
--- A section header that starts a group of settings on a page.
-function Panel.AddHeader(layout, label, tooltip)
-	local initializer = CreateSettingsListSectionHeaderInitializer(label, tooltip)
-	layout:AddInitializer(initializer)
-	return initializer
-end
-
--- A module's settings from the list the Edit Mode dialog also takes
--- (EditMode.Register): headers, checkboxes, sliders and dropdowns, in order.
--- A setting with a parent (the key of a checkbox before it) sits indented
--- under it, usable only while that one is on.
-function Panel.AddSettings(category, layout, module, settings)
-	local made = {}
-	for _, setting in ipairs(settings) do
-		local initializer
-		if setting.kind == "header" then
-			Panel.AddHeader(layout, setting.label, setting.tooltip)
-		elseif setting.kind == "checkbox" then
-			initializer = Panel.AddCheckbox(category, module, setting.key, setting.label, setting.tooltip)
-		elseif setting.kind == "slider" then
-			initializer = Panel.AddSlider(category, module, setting.key, setting.label, setting.tooltip,
-				setting.min, setting.max, setting.step, setting.format)
-		elseif setting.kind == "dropdown" then
-			initializer = Panel.AddDropdown(category, module, setting.key, setting.label, setting.tooltip, setting.choices, setting.offered)
-		else
-			error(("%s: unknown setting kind %s"):format(module, tostring(setting.kind)))
-		end
-		if setting.key then
-			made[setting.key] = initializer
-		end
-		local parent = setting.parent and made[setting.parent]
-		if parent and initializer then
-			initializer:SetParentInitializer(parent, function()
-				return Storage:Get(module, setting.parent) == true
-			end)
-		end
-	end
-end
 
 -- builder(page) adds controls to the top of the main page (MainPage below).
 function Panel.AddToMain(builder)
@@ -372,13 +244,6 @@ function MainPage:AddButton(text, onClick, options)
 	return self:Add("button", button, 22, { indent = options.indent, text = text, gap = options.gap or 4 })
 end
 
--- A button that opens another options page.
-function MainPage:AddPageButton(text, category, indent)
-	return self:AddButton(text, function()
-		Settings.OpenToCategory(category:GetID())
-	end, { indent = indent, gap = 2 })
-end
-
 -- A row with a label on the left and a control (made by the caller, a child
 -- of the row) at CONTROL_X. options: indent, height, tooltip, visible.
 -- Returns the row; control is placed in it.
@@ -415,11 +280,10 @@ end
 
 -- A module's block on the main page: its switch, or its title for a module
 -- that has none (switchLabel = false); then what goes under it, indented:
--- the module's main settings, which can be changed only while it is on; and a
--- Configure button that opens the module's own page, if it has one.
+-- the module's main settings, which can be changed only while it is on.
 -- A main setting is a checkbox, a choice (radio buttons), a button, or a
 -- custom builder(page, indent, module), each with an optional enabledWhen().
-local function addModule(page, category, module)
+local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
 		local title = page.frame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
@@ -445,16 +309,6 @@ local function addModule(page, category, module)
 			error(("%s.%s: the main page takes checkboxes, choices, buttons and custom blocks"):format(module.name, tostring(setting.key)))
 		end
 	end
-	if module.BuildSettings then
-		local subpage, layout = Settings.RegisterVerticalLayoutSubcategory(category, module.title)
-		if module.switchLabel ~= false then
-			Panel.AddCheckbox(subpage, module.name, "enabled", L["Enabled"], module.description)
-		end
-		xpcall(function()
-			module:BuildSettings(subpage, layout)
-		end, Compat.ReportError)
-		page:AddPageButton(L["Configure"], subpage, Panel.INDENT)
-	end
 end
 
 local function build()
@@ -471,7 +325,7 @@ local function build()
 	page:AddDivider()
 	for _, module in ipairs(Modules:List()) do
 		xpcall(function()
-			addModule(page, category, module)
+			addModule(page, module)
 		end, Compat.ReportError)
 	end
 
@@ -487,15 +341,13 @@ Bus:On("OpenSettings", Panel, function()
 	end
 end)
 
-Bus:On("SettingChanged", Panel, function(_, module, key)
-	refresh(module, key)
+Bus:On("SettingChanged", Panel, function()
 	if Panel.main then
 		Panel.main:Refresh()
 	end
 end)
 
 Bus:On("ProfileChanged", Panel, function()
-	refresh()
 	if Panel.main then
 		Panel.main:Refresh()
 	end

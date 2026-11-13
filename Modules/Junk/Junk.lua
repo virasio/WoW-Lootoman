@@ -33,6 +33,11 @@ local Junk = ns.Modules:Register({
 		{ kind = "choice", key = "selling", label = L["At merchants"], vertical = true,
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
 				{ "window", L["The sell button opens the sort window"] } } },
+		{ kind = "button", label = L["Set up the junk list"],
+			tooltip = L["Every item you marked as junk or as not junk, to remove marks."],
+			click = function()
+				ns.JunkList.Open()
+			end },
 	},
 })
 
@@ -106,16 +111,4 @@ function Junk:OnDisable()
 		xpcall(parts[index].Disable, Compat.ReportError)
 	end
 	listeners = { events = {}, messages = {} }
-end
-
-function Junk:BuildSettings(category, layout)
-	for _, builder in ipairs(Junk.pageBuilders or {}) do
-		builder(category, layout)
-	end
-end
-
--- builder(category, layout) adds to the module's page, after its settings.
-function Junk.AddToPage(builder)
-	Junk.pageBuilders = Junk.pageBuilders or {}
-	Junk.pageBuilders[#Junk.pageBuilders + 1] = builder
 end

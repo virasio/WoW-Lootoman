@@ -135,6 +135,11 @@ describe("profile texts", function()
 		assert.same({ { columns = 12, sort = "price", gap = 1.5 }, 0 }, { read.sections["module:Bags"], read.skipped })
 	end)
 
+	it("leave out a choice that is not one of its choices", function()
+		local read = assert(Share.Read(text({ format = 2, sections = { ["module:Junk"] = { tossButton = "sometimes", selling = "auto" } } })))
+		assert.same({ { selling = "auto" }, 1 }, { read.sections["module:Junk"], read.skipped })
+	end)
+
 	it("leave out a look from a newer version, and say so", function()
 		local read = assert(Share.Read(text({ format = 2, collections = { looks = { Future = { schema = 99 }, Now = { base = "huge", extra = 1 } } } })))
 		assert.same({ { "Now" }, { "Future" } }, { read.collections.looks.names, read.newer })

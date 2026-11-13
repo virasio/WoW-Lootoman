@@ -169,8 +169,7 @@ ns.Locales.AddEnglish({
 	"/lootoman design: open the window of the loot feed's look",
 
 	-- Settings/Panel.lua
-	"Enabled",
-	"Configure",
+	"The junk list opens out of combat.",
 
 	-- Settings/Profiles.lua
 	"Profile",
@@ -294,7 +293,7 @@ ns.Locales.AddEnglish({
 	"Junk list",
 	"Clear list",
 	"Remove every mark of profile “%s” from the junk list?",
-	"Open the list",
+	"Set up the junk list",
 	"Every item you marked as junk or as not junk, to remove marks.",
 
 	-- Modules/LootFeed/LootFeed.lua
