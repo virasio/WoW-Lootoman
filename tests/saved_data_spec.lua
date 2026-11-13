@@ -24,17 +24,37 @@ describe("saved data of version 0.1", function()
 	end)
 
 	it("keeps the character's profile, its settings and the account's switches", function()
-		assert.same({ "Raid", false, true }, {
+		local feed = ns.Modules:Get("LootFeed")
+		assert.same({ "Raid", "down", 1.5, 2, 8, false, true }, {
 			ns.Profiles.GetCurrent(),
+			feed:Get("direction"),
+			feed:Get("fade"),
+			feed:Get("minQuality"),
+			feed:Get("maxRows"),
 			ns.Storage:Get("AutoLoot", "confirmBind"),
 			ns.Storage:GetGlobal("debug"),
 		})
 	end)
 
+	it("turns the row layouts into looks, the profile's one with its changes", function()
+		local Looks, Design = ns.Feed.Looks, ns.Feed.Design
+		assert.same({ "Default", "Raid rows" }, Looks.List())
+		assert.equals("Raid rows", Looks.Current())
+		local design = Design.Current(Looks.Get("Raid rows"))
+		assert.same({ 80, 14, true, "all" }, { design.parts.icon.size, design.parts.name.fontSize, design.parts.owned.shown, design.parts.owned.count })
+		-- The other profile's settings went into Default, as 0.4 showed them.
+		ns.Profiles.Switch("Default")
+		assert.same({ 5, true, 13 }, { ns.Modules:Get("LootFeed"):Get("maxRows"), ns.Modules:Get("LootFeed"):Get("xp"), ns.Modules:Get("LootFeed"):Get("size") })
+	end)
+
 	it("is saved again with nothing lost or changed, at the current schema", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
+		-- The loot feed's settings moved into looks.
+		expected.LootomanDB.profiles.Default.modules.LootFeed = nil
+		expected.LootomanDB.profiles.Raid.modules.LootFeed = { look = "Raid rows" }
 		holds(ns.Compat.Test.state.saved, expected, "saved")
+		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.profiles.Default.modules.LootFeed)
 	end)
 end)
 
@@ -46,11 +66,16 @@ describe("saved data of version 0.3", function()
 		ns = Loader.Start(Loader.LoadAddon(), fixture())
 	end)
 
+	it("keeps the 0.3 settings, in the look", function()
+		assert.equals(4, ns.Modules:Get("LootFeed"):Get("warnGeneralAt"))
+	end)
+
 	-- The bars left Lootoman: their sets and settings stay as 0.3 saved them,
 	-- for an addon that may take them over.
 	it("is saved again with nothing lost or changed, the bars' data too", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
+		expected.LootomanDB.profiles.Default.modules.LootFeed = nil
 		holds(ns.Compat.Test.state.saved, expected, "saved")
 	end)
 end)
@@ -63,9 +88,11 @@ describe("saved data of version 0.3.5", function()
 		ns = Loader.Start(Loader.LoadAddon(), fixture())
 	end)
 
-	it("loads without errors, with the profile", function()
+	it("loads without errors, with the profile, its feed settings and its look", function()
 		assert.same({}, ns.Compat.Test.state.errors)
-		assert.equals("Raid", ns.Profiles.GetCurrent())
+		local Feed = ns.Feed
+		assert.same({ "Raid", "Quiet", false, 3 }, { ns.Profiles.GetCurrent(), Feed.Looks.Current(),
+			Feed.Design.Current(Feed.Looks.Get("Quiet")).parts.owned.shown, ns.Modules:Get("LootFeed"):Get("maxRows") })
 	end)
 
 	it("hides the owned count in the layout of a profile that had it off, when the layout showed it", function()
@@ -73,7 +100,8 @@ describe("saved data of version 0.3.5", function()
 		local saved = fixture()
 		saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned = nil
 		ns = Loader.Start(Loader.LoadAddon(), saved)
-		assert.is_false(ns.Compat.Test.state.saved.LootomanDB.sections.feedLayouts.Quiet.changes.owned.shown)
+		local Feed = ns.Feed
+		assert.same({ "Quiet", false }, { Feed.Looks.Current(), Feed.Design.Current(Feed.Looks.Get("Quiet")).parts.owned.shown })
 		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.profiles.Raid.modules.LootFeed.owned)
 	end)
 
@@ -82,12 +110,13 @@ describe("saved data of version 0.3.5", function()
 	it("is saved again with nothing lost or changed, the bars' data too", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
-		-- The profile's owned count switch goes; its layout hid the count already.
-		expected.LootomanDB.profiles.Raid.modules.LootFeed.owned = nil
-		-- The feed shows at least 3 rows.
-		expected.LootomanDB.profiles.Default.modules.LootFeed.maxRows = 3
-		expected.LootomanDB.profiles.Raid.modules.LootFeed.maxRows = 3
+		-- The loot feed's settings moved into looks: at least 3 rows, the owned
+		-- count hidden in the look, as its layout hid it already.
+		expected.LootomanDB.profiles.Default.modules.LootFeed = nil
+		expected.LootomanDB.profiles.Raid.modules.LootFeed = { look = "Quiet" }
 		holds(ns.Compat.Test.state.saved, expected, "saved")
+		local looks = ns.Compat.Test.state.saved.LootomanDB.sections.feedLooks
+		assert.same({ 3, 3 }, { looks.Default.values.maxRows, looks.Quiet.values.maxRows })
 		assert.is_nil(ns.Compat.Test.state.saved.LootomanDB.profiles.Raid.modules.LootFeed.owned)
 	end)
 
@@ -120,5 +149,31 @@ describe("saved data of version 0.3.5", function()
 		assert.same({ "module:LootFeed" }, read.names)
 		-- fade, layout:LootFeed, module:Bars, set:Bars and module:FreeSlots; the layouts and barSets collections.
 		assert.equals(7, read.skipped)
+	end)
+end)
+
+describe("saved data of version 0.4", function()
+	local fixture = dofile("tests/fixtures/saved_0_4.lua")
+	local ns
+
+	before_each(function()
+		ns = Loader.Start(Loader.LoadAddon(), fixture())
+	end)
+
+	it("loads without errors, the feed as 0.4 drew it from its look", function()
+		assert.same({}, ns.Compat.Test.state.errors)
+		local feed = ns.Modules:Get("LootFeed")
+		assert.same({ "Default", "Strip", "left", 6, 13, false, true }, { ns.Profiles.GetCurrent(), ns.Feed.Looks.Current(),
+			feed.feed.options.direction, feed.feed.options.maxRows, feed:Get("size"), feed:Get("xp"), feed.feed.options.showOwned })
+		assert.same({ "Default", "Quiet", "Spare", "Strip" }, ns.Feed.Looks.List())
+	end)
+
+	it("is saved again with nothing else lost or changed, the bars' data too", function()
+		local expected = fixture()
+		expected.LootomanDB.schema = #ns.Migrations.account
+		expected.LootomanDB.profiles.Default.modules.LootFeed = { look = "Strip" }
+		expected.LootomanDB.profiles.Raid.modules.LootFeed = { look = "Quiet" }
+		expected.LootomanDB.profiles.Alt.modules.LootFeed = { look = "Quiet" }
+		holds(ns.Compat.Test.state.saved, expected, "saved")
 	end)
 end)

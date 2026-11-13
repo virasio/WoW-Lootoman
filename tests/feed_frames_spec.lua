@@ -20,6 +20,12 @@ describe("loot feed frames", function()
 		tooltip = Loader.ui.tooltip
 	end)
 
+	-- The Large design with its owned count shown, counting bags and bank.
+	local function withOwned()
+		local Design = ns.Feed.Design
+		return Design.Layout(Design.Current({ schema = Design.SCHEMA, base = "large", changes = { owned = { shown = true, count = "all" } } }), 13)
+	end
+
 	-- Feed options with the "Large" design at the default size: rows 35 high
 	-- with a gap of 7, so 42 apart.
 	local function options(extra)
@@ -55,11 +61,11 @@ describe("loot feed frames", function()
 			-- In the bags only, when the layout's owned count says so.
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42, inBags = 12 } })
 			local Design = ns.Feed.Design
-			local bags = Design.Current({ schema = Design.SCHEMA, changes = { owned = { count = "bags" } } })
+			local all = Design.Current({ schema = Design.SCHEMA, changes = { owned = { count = "all" } } })
 			assert.equals(12, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
-				{ showOwned = true, layout = Design.Layout(bags, 13) }).owned)
-			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
 				{ showOwned = true, layout = Design.Layout(Design.LARGE, 13) }).owned)
+			assert.equals(42, Frames.Describe({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth" },
+				{ showOwned = true, layout = Design.Layout(all, 13) }).owned)
 			-- An item the client is not told of (a sample) has no count, and no error.
 			assert.is_nil(Frames.Describe({ kind = "item", name = "Sample" }, owned).owned)
 			assert.is_nil(Frames.Describe({ kind = "money", amount = 5 }, owned).owned)
@@ -430,6 +436,7 @@ describe("loot feed frames", function()
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", amount = 1, quality = 1 }, 0)
 			local Design = ns.Feed.Design
 			local section = {}
+			Design.Set(section, "owned", "shown", true)
 			Design.Set(section, "icon", "shown", false)
 			feed:SetOptions(options({ showOwned = true, layout = Design.Layout(Design.Current(section), 13) }))
 			feed:Draw(1)
@@ -449,10 +456,10 @@ describe("loot feed frames", function()
 			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, withBackground)
 			assert.same({ true, 0.3 }, { rowFrame.AmountBackground.shown, rowFrame.AmountBackground.colorTexture[4] })
 			-- The owned count's own, alike.
-			local owned = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { owned = { background = true, opacity = 40 } } })
-			local withOwned = { layout = Design.Layout(owned, 13), showOwned = true }
-			Frames.ApplyLayout(rowFrame, withOwned.layout)
-			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", icon = 1, quality = 1, amount = 20, owned = 30 }, withOwned)
+			local owned = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { owned = { shown = true, background = true, opacity = 40 } } })
+			local ownedOptions = { layout = Design.Layout(owned, 13), showOwned = true }
+			Frames.ApplyLayout(rowFrame, ownedOptions.layout)
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", icon = 1, quality = 1, amount = 20, owned = 30 }, ownedOptions)
 			assert.same({ true, 0.4, false }, { rowFrame.OwnedBackground.shown, rowFrame.OwnedBackground.colorTexture[4],
 				rowFrame.AmountBackground.shown })
 			Frames.ApplyLayout(rowFrame, withBackground.layout)
@@ -466,7 +473,7 @@ describe("loot feed frames", function()
 		it("shows the owned count and the glow, and hides them when turned off", function()
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42 } })
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 4 }, 0)
-			feed:SetOptions(options({ showOwned = true, showGlow = true }))
+			feed:SetOptions(options({ showOwned = true, showGlow = true, layout = withOwned() }))
 			feed:Draw(1)
 			local row = frameWith("Linen Cloth")
 			assert.same({ true, "42", true, "bags-glow-4" }, { row.Owned.shown, row.Owned.text, row.Glow.shown, row.Glow.atlas })
@@ -479,7 +486,7 @@ describe("loot feed frames", function()
 		it("reads owned counts again when asked", function()
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 0 } })
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 1 }, 0)
-			feed:SetOptions(options({ showOwned = true }))
+			feed:SetOptions(options({ showOwned = true, layout = withOwned() }))
 			feed:Draw(1)
 			assert.is_false(frameWith("Linen Cloth").Owned.shown)
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 5 } })

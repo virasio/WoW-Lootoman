@@ -67,8 +67,8 @@ Design.LARGE = {
 		name = { shown = true, fontSize = 13, width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
 			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
-			background = false, opacity = 60, count = "all" },
+		owned = { shown = false, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
+			background = false, opacity = 60, count = "bags" },
 	},
 }
 
@@ -83,8 +83,8 @@ Design.COMPACT = {
 		name = { shown = true, fontSize = 12, width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
 		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60, count = "all" },
+		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, opacity = 60, count = "bags" },
 	},
 }
 
@@ -100,7 +100,7 @@ Design.MINIMAL = {
 		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, opacity = 60 },
 		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60, count = "all" },
+			background = false, opacity = 60, count = "bags" },
 	},
 }
 
@@ -117,8 +117,8 @@ Design.ICONS = {
 		name = { shown = false, fontSize = 13, width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
-			background = false, opacity = 60, count = "all" },
+		owned = { shown = false, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
+			background = false, opacity = 60, count = "bags" },
 	},
 }
 

@@ -77,26 +77,25 @@ describe("loot feed designer", function()
 			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
 				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
 			Designer.Select("owned")
-			assert.same({ "Shown: true", "Counts: all", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
+			assert.same({ "Shown: false", "Counts: bags", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
 				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
 		end)
 
-		it("counts bags and bank, or the bags only, as the layout's owned count says", function()
+		it("counts the bags only, or bags and bank, as the look's owned count says", function()
 			Designer.Select("owned")
-			assert.same({ "Bags and bank*", "Bags only" }, menu(window.controls[2].choice, "bags"))
-			assert.same({ "bags", "bags" }, { design().parts.owned.count, module.feed.options.layout.parts.owned.count })
+			assert.same({ "Bags and bank", "Bags only*" }, menu(window.controls[2].choice, "all"))
+			assert.same({ "all", "all" }, { design().parts.owned.count, module.feed.options.layout.parts.owned.count })
 		end)
 
-		it("shows or hides the owned count per layout, like any part", function()
+		it("shows or hides the owned count per look, like any part", function()
 			Designer.Select("owned")
-			window.controls[1].check.checked = false
+			window.controls[1].check.checked = true
 			window.controls[1].check.scripts.OnClick(window.controls[1].check)
-			assert.same({ false, false }, { design().parts.owned.shown, module.feed.options.showOwned })
+			assert.same({ true, true }, { design().parts.owned.shown, module.feed.options.showOwned })
 			ns.Feed.Looks.Create("Strip")
-			ns.Feed.Looks.SetView("Strip", "icons")
 			ns.Feed.LookMenu.Use("Strip")
-			assert.is_true(module.feed.options.showOwned)
+			assert.is_false(module.feed.options.showOwned)
 		end)
 
 		it("sets the amount's own background and its opacity", function()
@@ -221,7 +220,7 @@ describe("loot feed designer", function()
 			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
 			Designer.Select("owned")
-			assert.same({ "Shown: true", "Counts: all", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
+			assert.same({ "Shown: false", "Counts: bags", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
 				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "Background: false",
 				"Background opacity: 60 in 0..100" }, inspector())
 			Designer.Select("amount")
@@ -232,7 +231,8 @@ describe("loot feed designer", function()
 			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
 			-- The icon stands for the row; the name cannot be chosen.
 			local rowFrame = window.rows[1]
-			assert.same({ true, false, true, true }, { rowFrame.hits.icon.shown, rowFrame.hits.name.shown, rowFrame.hits.owned.shown,
+			-- The owned count is hidden at first, and so is its hit area.
+			assert.same({ true, false, false, true }, { rowFrame.hits.icon.shown, rowFrame.hits.name.shown, rowFrame.hits.owned.shown,
 				rowFrame.hits.amount.shown })
 			rowFrame.hits.icon.scripts.OnClick(rowFrame.hits.icon)
 			assert.equals("Icon", window.inspectorTitle.text)
