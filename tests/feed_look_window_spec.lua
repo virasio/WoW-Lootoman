@@ -348,7 +348,7 @@ describe("loot feed look window", function()
 end)
 
 describe("loot feed look window, opened from", function()
-	it("a button on the feed's options page, and Edit in the look menu of its Edit Mode dialog", function()
+	it("Edit in the look menu, on the options page and in its Edit Mode dialog", function()
 		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 }, settings = {} }
 		function lib:AddFrame() end
 		function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
@@ -360,8 +360,7 @@ describe("loot feed look window, opened from", function()
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
 		local LookWindow = ns.Modules:Get("LootFeed").LookWindow
-		local button = api.FindButton(api.FindCategory("Loot feed"), "Row design")
-		button.onClick()
+		api.OpenMenu(ns.SettingsPanel.main.look).entries[1].entries[1].callback()
 		assert.is_true(LookWindow.window.shown)
 		LookWindow.window:Hide()
 		-- The dialog's dropdown builds the look menu; Edit opens the window.

@@ -55,7 +55,7 @@ ns.Locales.AddEnglish({
 
 	-- Modules/LootFeed/LootFeed.lua
 	"Loot feed",
-	"Enable loot feed",
+	"Show the loot feed",
 	"Shows what you pick up: items, currencies, money, reputation and, if you want, experience.",
 	"What the feed shows",
 	"Items",
@@ -99,8 +99,6 @@ ns.Locales.AddEnglish({
 	"Rare and better items glow in their quality colour.",
 
 	"Row design",
-	"Open the designer",
-	"Change how the feed's rows look: move and resize their parts.",
 	"Feed look",
 	"The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit.",
 	"Use look “%s”",
@@ -190,7 +188,6 @@ ns.Locales.AddEnglish({
 	"Reset",
 	"Returns every setting of this profile to its default.",
 	"Reset profile “%s” to the default settings?",
-	"Resets the current profile to the default settings.",
 	"Copy or reset",
 	"Copy, rename or reset",
 	"Delete profile",

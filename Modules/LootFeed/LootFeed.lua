@@ -11,13 +11,27 @@ local Looks = Feed.Looks
 local LootFeed = ns.Modules:Register({
 	name = "LootFeed",
 	title = L["Loot feed"],
-	switchLabel = L["Enable loot feed"],
+	switchLabel = L["Show the loot feed"],
 	description = L["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."],
 	defaults = {
 		enabled = true,
 		-- The feed look the profile uses (Looks.lua).
 		look = "Default",
 	},
+	-- Under the switch, the look the profile uses, with the look menu.
+	mainSettings = { { kind = "custom", build = function(page, indent)
+		local row = page:NewRow()
+		local dropdown = CreateFrame("DropdownButton", nil, row, "WowStyle2DropdownTemplate")
+		dropdown:SetWidth(220)
+		dropdown:SetupMenu(Feed.LookMenu.Build)
+		page:AddRow(L["Feed look"], dropdown, { indent = indent, height = 28,
+			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
+		page.look = dropdown
+		page:OnRefresh(function()
+			dropdown:GenerateMenu()
+			dropdown:SetEnabled(ns.Storage:Get("LootFeed", "enabled"))
+		end)
+	end } },
 })
 
 -- Right of the screen centre.
@@ -328,11 +342,4 @@ function LootFeed:OnDisable()
 		self.feed.disabled = true
 		self.feed:SyncUse()
 	end
-end
-
-function LootFeed:BuildSettings(_, layout)
-	local Panel = ns.SettingsPanel
-	Panel.AddButton(layout, L["Row design"], L["Open the designer"], function()
-		self.LookWindow.Open()
-	end, L["Change how the feed's rows look: move and resize their parts."])
 end

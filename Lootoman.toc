@@ -64,6 +64,15 @@ Modules\Shared\NameMenu.lua
 Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua
 
+Modules\Junk\Junk.lua
+Modules\Junk\Sections.lua
+Modules\Junk\ItemGrid.lua
+Modules\Junk\TossButton.lua
+Modules\Junk\Toss.lua
+Modules\Junk\SellQueue.lua
+Modules\Junk\SellButton.lua
+Modules\Junk\SellWindow.lua
+
 Modules\LootFeed\Sources.lua
 Modules\LootFeed\Model.lua
 Modules\LootFeed\Design.lua
@@ -73,15 +82,6 @@ Modules\LootFeed\Frames.lua
 Modules\LootFeed\UseButton.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\LookWindow.lua
-
-Modules\Junk\Junk.lua
-Modules\Junk\Sections.lua
-Modules\Junk\ItemGrid.lua
-Modules\Junk\TossButton.lua
-Modules\Junk\Toss.lua
-Modules\Junk\SellQueue.lua
-Modules\Junk\SellButton.lua
-Modules\Junk\SellWindow.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua

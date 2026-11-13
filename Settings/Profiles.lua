@@ -169,32 +169,21 @@ local function addTooltip(frame, title, text)
 	end)
 end
 
+-- The profile on top of the main page: its label on the left, the menu on
+-- the right; Reset is in each profile's own menu.
 Panel.AddToMain(function(page)
-	local label = page.frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	label:SetText(L["Profile"])
-	page:Add("label", label, 14, { text = L["Profile"] })
-
+	local row = page:NewRow()
 	-- The options panel's own dropdown style.
-	local dropdown = CreateFrame("DropdownButton", nil, page.frame, "WowStyle2DropdownTemplate")
+	local dropdown = CreateFrame("DropdownButton", nil, row, "WowStyle2DropdownTemplate")
 	dropdown:SetWidth(220)
 	dropdown:SetupMenu(buildMenu)
 	addTooltip(dropdown, L["Profile"], L["The profile this character uses. Every character can use its own profile."])
-	page:Add("dropdown", dropdown, 25, { gap = 4 })
+	page:AddRow(L["Profile"], dropdown, { height = 28 })
 	page.profile = dropdown
 	-- The shown name follows a switch made anywhere.
 	page:OnRefresh(function()
 		dropdown:GenerateMenu()
 	end)
-
-	local resetButton = CreateFrame("Button", nil, page.frame, "UIPanelButtonTemplate")
-	resetButton:SetSize(96, 22)
-	resetButton:SetText(L["Reset"])
-	resetButton:SetPoint("LEFT", dropdown, "RIGHT", 8, 0)
-	resetButton:SetScript("OnClick", function()
-		reset(Profiles.GetCurrent())
-	end)
-	addTooltip(resetButton, L["Reset"], L["Resets the current profile to the default settings."])
-	page.reset = resetButton
 
 	hideDefaultsButton(page.category)
 end)

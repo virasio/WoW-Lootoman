@@ -70,29 +70,20 @@ describe("profile control", function()
 		end
 	end
 
-	it("sits on top of the main page: the label, the dropdown under it, then the module switches", function()
+	it("sits on top of the main page: the label on the left, the dropdown on the right, then the modules", function()
 		local page = ns.SettingsPanel.main
-		assert.same({ "label", "Profile" }, { page.items[1].kind, page.items[1].text })
-		assert.same({ "dropdown", dropdown, "divider" }, { page.items[2].kind, page.items[2].region, page.items[3].kind })
-		assert.same({ "checkbox", 0 }, { page.items[4].kind, page.items[4].indent })
+		assert.same({ "row", "Profile", dropdown:GetParent() }, { page.items[1].kind, page.items[1].text, page.items[1].region })
+		assert.same({ "LEFT", dropdown:GetParent(), "LEFT", 240, 0 }, dropdown.points[1])
+		assert.equals("divider", page.items[2].kind)
+		assert.same({ "checkbox", 0 }, { page.items[3].kind, page.items[3].indent })
 		assert.is_nil(api.FindCategory("Profiles"))
 		hover(dropdown)
 		assert.same({ dropdown, true, "Profile", "The profile this character uses. Every character can use its own profile." },
 			{ api.tooltip.owner, api.tooltip.shown, api.tooltip.lines[1], api.tooltip.lines[2] })
 	end)
 
-	it("has Reset right of the dropdown, for the current profile", function()
-		local reset = ns.SettingsPanel.main.reset
-		assert.same({ "Reset", { "LEFT", dropdown, "RIGHT", 8, 0 } }, { reset.text, reset.points[1] })
-		hover(reset)
-		assert.same({ "Reset", "Resets the current profile to the default settings." }, api.tooltip.lines)
-		Profiles.Create("Main")
-		Profiles.Switch("Main")
-		ns.Storage:Set("Feed", "rows", 8)
-		reset.scripts.OnClick(reset)
-		assert.equals("Main", api.popups[1].data.text_arg1)
-		api.AcceptPopup()
-		assert.equals(5, ns.Storage:Get("Feed", "rows"))
+	it("has no Reset button of its own: Reset is in each profile's menu", function()
+		assert.is_nil(ns.SettingsPanel.main.reset)
 	end)
 
 	it("hides Blizzard's Defaults button on Lootoman's pages, and only there", function()
@@ -101,7 +92,7 @@ describe("profile control", function()
 		assert.is_false(defaults.shown)
 		api.SelectCategory({ GetParentCategory = function() return nil end })
 		assert.is_true(defaults.shown)
-		api.SelectCategory(assert(api.FindCategory("Loot feed")))
+		api.SelectCategory(assert(api.FindCategory("Junk")))
 		assert.is_false(defaults.shown)
 		-- Blizzard shows it again when a search is cleared.
 		defaults:Show()

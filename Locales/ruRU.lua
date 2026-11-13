@@ -51,7 +51,7 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/LootFeed/LootFeed.lua
 	["Loot feed"] = "Лента лута",
-	["Enable loot feed"] = "Включить ленту лута",
+	["Show the loot feed"] = "Показывать ленту лута",
 	["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."] = "Показывает, что вы подбираете: предметы, валюту, деньги, репутацию и, по желанию, опыт.",
 	["What the feed shows"] = "Что показывает лента",
 	["Items"] = "Предметы",
@@ -95,8 +95,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
 	["Row design"] = "Вид строк",
-	["Open the designer"] = "Открыть конструктор",
-	["Change how the feed's rows look: move and resize their parts."] = "Меняйте вид строк ленты: двигайте части строки и меняйте их размер.",
 	["Feed look"] = "Вид ленты",
 	["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
 	["Use look “%s”"] = "Использовать вид «%s»",
@@ -185,7 +183,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Reset"] = "Сбросить",
 	["Returns every setting of this profile to its default."] = "Возвращает все настройки этого профиля к значениям по умолчанию.",
 	["Reset profile “%s” to the default settings?"] = "Сбросить профиль «%s» к настройкам по умолчанию?",
-	["Resets the current profile to the default settings."] = "Сбрасывает текущий профиль к настройкам по умолчанию.",
 	["Copy or reset"] = "Копировать или сбросить",
 	["Copy, rename or reset"] = "Копировать, переименовать или сбросить",
 	["Delete profile"] = "Удалить профиль",

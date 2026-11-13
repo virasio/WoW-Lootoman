@@ -50,10 +50,24 @@ describe("loot feed module", function()
 		module = ns.Modules:Get("LootFeed")
 	end)
 
-	it("is on by default; its settings belong to its look, and its page opens the row designer", function()
+	it("is on by default, its look under its switch on the main page; its settings belong to its look", function()
 		assert.is_true(module:IsActive())
-		assert.same({ "checkbox:Enabled", "button:Row design" }, api.Kinds(api.FindCategory("Loot feed")))
+		assert.is_nil(api.FindCategory("Loot feed"))
+		local page = ns.SettingsPanel.main
+		local switch, look = page.items[#page.items - 1], page.items[#page.items]
+		assert.same({ "checkbox", "Show the loot feed", "row", "Feed look", 24 }, { switch.kind, switch.text, look.kind, look.text, look.indent })
+		assert.equals(ns.Feed.LookMenu.Build, page.look.menu)
 		assert.same({ "Default", 5, true, 3 }, { ns.Storage:Get("LootFeed", "look"), module:Get("maxRows"), module:Get("xp"), module:Get("warnGeneralAt") })
+		-- It follows the look renamed elsewhere.
+		local generated = page.look.generated
+		ns.Feed.Looks.Create("Raid")
+		ns.Feed.Looks.Use("Raid")
+		ns.Feed.Looks.Rename("Raid", "Party")
+		assert.is_true(page.look.generated > generated)
+		-- Greyed out while the feed is off.
+		ns.Modules:SetEnabled("LootFeed", false)
+		page:Refresh()
+		assert.is_false(page.look.enabled)
 	end)
 
 	it("follows the look the profile uses, and its view's fill directions", function()

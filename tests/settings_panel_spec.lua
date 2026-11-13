@@ -60,7 +60,7 @@ describe("settings panel", function()
 
 	it("lists every module's switch after the profile and a divider, with what belongs to it indented under it", function()
 		assert.same({
-			"label:Profile", "dropdown", "divider",
+			"row:Profile", "divider",
 			"checkbox:Enable loot feed", "  button:Configure",
 			"checkbox:Bags", "  checkbox:Sort bags",
 		}, items())
@@ -202,7 +202,7 @@ describe("settings panel main page controls", function()
 		for index, entry in ipairs(page.items) do
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
-		assert.same({ "label:Profile:0", "dropdown:nil:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
+		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
 			"box:Watch out:24", "checkbox:Show the feed:0" }, list)
 	end)
 

@@ -124,14 +124,13 @@ describe("share and import dialogs", function()
 
 		it("lists each module's settings with its parts under them, then the looks, with only the profile's own ticked", function()
 			assert.same({
-				"Fast autoloot settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” [x]",
-				"Junk settings [x]",
+				"Fast autoloot settings [x]", "Junk settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” [x]",
 				"# Loot feed looks", "  Default [x]", "  Raid [ ]",
 			}, shown(frame))
 		end)
 
 		it("shows the text of the ticked lines, selected", function()
-			assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "look:LootFeed", "module:Junk" }, read().names)
+			assert.same({ "module:AutoLoot", "module:Junk", "module:LootFeed", "positions:LootFeed", "look:LootFeed" }, read().names)
 			assert.same({ "Default" }, read().collections.looks.names)
 			assert.is_false(read().sections["module:AutoLoot"].confirmBind)
 			tick(frame, "Raid", true)
@@ -140,16 +139,15 @@ describe("share and import dialogs", function()
 
 		it("leaves the parts under the loot feed's settings out without them, and Use look without its look", function()
 			tick(frame, "Default", false)
-			assert.same({ "Fast autoloot settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” (off)",
-				"Junk settings [x]",
+			assert.same({ "Fast autoloot settings [x]", "Junk settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” (off)",
 				"# Loot feed looks", "  Default [ ]", "  Raid [ ]" }, shown(frame))
-			assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "module:Junk" }, read().names)
+			assert.same({ "module:AutoLoot", "module:Junk", "module:LootFeed", "positions:LootFeed" }, read().names)
 			tick(frame, "Default", true)
 			tick(frame, "Loot feed settings", false)
-			assert.same({ "Loot feed settings [ ]", "  Position (off)", "  Use look “Default” (off)" }, { unpack(shown(frame), 2, 4) })
+			assert.same({ "Loot feed settings [ ]", "  Position (off)", "  Use look “Default” (off)" }, { unpack(shown(frame), 3, 5) })
 			assert.same({ "module:AutoLoot", "module:Junk" }, read().names)
 			tick(frame, "Loot feed settings", true)
-			assert.same({ "  Position [x]", "  Use look “Default” [x]" }, { unpack(shown(frame), 3, 4) })
+			assert.same({ "  Position [x]", "  Use look “Default” [x]" }, { unpack(shown(frame), 4, 5) })
 		end)
 
 		it("keeps its text as it was made", function()

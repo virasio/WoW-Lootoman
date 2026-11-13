@@ -128,7 +128,7 @@ describe("saved data of version 0.3.5", function()
 		for _, collection in ipairs(ns.Share.Collections()) do
 			names[#names + 1] = collection.name
 		end
-		assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "look:LootFeed", "module:Junk", "looks" }, names)
+		assert.same({ "module:AutoLoot", "module:Junk", "module:LootFeed", "positions:LootFeed", "look:LootFeed", "looks" }, names)
 	end)
 
 	it("reads a 0.3.5 profile text with bars: the feed's parts come in as a look, the bars' are left out and counted", function()
