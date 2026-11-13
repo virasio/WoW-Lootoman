@@ -5,7 +5,7 @@ describe("profile texts", function()
 
 	-- A text with this table in it, as another version or a broken copy could have it.
 	local function text(data)
-		return "LTM1:" .. ns.Compat.Encode(data)
+		return ("LTM%d:"):format(data.format or 2) .. ns.Compat.Encode(data)
 	end
 
 	-- A module of the tests' own, whose slider and dropdown values are checked.
@@ -53,7 +53,7 @@ describe("profile texts", function()
 			parts = { "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "look:LootFeed" },
 			collections = { looks = { "Raid" } },
 		}))
-		assert.matches("^LTM1:", exported)
+		assert.matches("^LTM2:", exported)
 		local read = assert(Share.Read(exported))
 		assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "look:LootFeed" }, read.names)
 		-- The look it uses goes with its own part, not with the settings.
@@ -83,8 +83,8 @@ describe("profile texts", function()
 		end
 		assert.same({ "empty", "empty" }, { why("  "), why(nil) })
 		assert.equals("prefix", why("Hello there"))
-		assert.equals("newer", why("LTM2:whatever"))
-		assert.equals("newer", why(text({ format = 2, sections = {} })))
+		assert.equals("newer", why("LTM3:whatever"))
+		assert.equals("newer", why(text({ format = 3, sections = {} })))
 		assert.equals("broken", why("LTM1:garbage"))
 		assert.equals("broken", why("LTM1:" .. ns.Compat.Encode("a string")))
 		assert.equals("broken", why("LTM1:" .. ("A"):rep(Share.MAX_LENGTH)))
@@ -95,22 +95,22 @@ describe("profile texts", function()
 			level.next = {}
 			level = level.next
 		end
-		assert.equals("broken", why(text({ format = 1, collections = { looks = { Deep = deep } } })))
+		assert.equals("broken", why(text({ format = 2, collections = { looks = { Deep = deep } } })))
 		local many = {}
 		for index = 1, Share.MAX_VALUES do
 			many[index] = index
 		end
-		assert.equals("broken", why(text({ format = 1, collections = { looks = { Many = { changes = many } } } })))
-		assert.equals("broken", why(text({ format = 1, sections = { ["module:AutoLoot"] = { confirmBind = 0 / 0 } } })))
-		assert.equals("nothing", why(text({ format = 1, sections = "none", collections = { bags = {} } })))
-		local good = text({ format = 1, sections = {} })
+		assert.equals("broken", why(text({ format = 2, collections = { looks = { Many = { changes = many } } } })))
+		assert.equals("broken", why(text({ format = 2, sections = { ["module:AutoLoot"] = { confirmBind = 0 / 0 } } })))
+		assert.equals("nothing", why(text({ format = 2, sections = "none", collections = { bags = {} } })))
+		local good = text({ format = 2, sections = {} })
 		Test.state.encoder = false
 		assert.equals("encoder", why(good))
 	end)
 
 	it("leave out what this version does not know or cannot use, and count it", function()
 		local read = assert(Share.Read(text({
-			format = 1,
+			format = 2,
 			sections = {
 				["module:AutoLoot"] = { confirmBind = false, colour = 1, [1] = true, enabled = "yes" },
 				["positions:LootFeed"] = { Modern = { point = "MIDDLE", x = 1, y = 2 }, Classic = { point = "TOP", x = "far", y = 0 },
@@ -130,16 +130,59 @@ describe("profile texts", function()
 
 	it("check every module's values against the settings it declares, slider steps too", function()
 		registerBags()
-		local read = assert(Share.Read(text({ format = 1, sections = { ["module:Bags"] = { columns = 7, sort = "size", gap = 1.3 } } })))
+		local read = assert(Share.Read(text({ format = 2, sections = { ["module:Bags"] = { columns = 7, sort = "size", gap = 1.3 } } })))
 		assert.same({ {}, 3 }, { read.sections["module:Bags"], read.skipped })
-		read = assert(Share.Read(text({ format = 1, sections = { ["module:Bags"] = { columns = 12, sort = "price", gap = 1.5 } } })))
+		read = assert(Share.Read(text({ format = 2, sections = { ["module:Bags"] = { columns = 12, sort = "price", gap = 1.5 } } })))
 		assert.same({ { columns = 12, sort = "price", gap = 1.5 }, 0 }, { read.sections["module:Bags"], read.skipped })
 	end)
 
 	it("leave out a look from a newer version, and say so", function()
-		local read = assert(Share.Read(text({ format = 1, collections = { looks = { Future = { schema = 99 }, Now = { base = "huge", extra = 1 } } } })))
+		local read = assert(Share.Read(text({ format = 2, collections = { looks = { Future = { schema = 99 }, Now = { base = "huge", extra = 1 } } } })))
 		assert.same({ { "Now" }, { "Future" } }, { read.collections.looks.names, read.newer })
 		assert.same({}, read.collections.looks.items.Now)
+	end)
+
+	describe("of 0.1 to 0.4 (format 1)", function()
+		it("turn the feed's settings and the layout it used into a look the profile uses, kept as 0.4 showed them", function()
+			local read = assert(Share.Read(text({
+				format = 1,
+				sections = {
+					["module:LootFeed"] = { maxRows = 12, direction = "left", enabled = false },
+					["layout:LootFeed"] = { layout = "Strip" },
+				},
+				collections = { layouts = { Strip = { schema = 1, base = "icons" }, Spare = { schema = 1, base = "compact" } } },
+			})))
+			assert.same({ "module:LootFeed", "look:LootFeed" }, read.names)
+			assert.same({ { enabled = false }, { look = "Strip" } }, { read.sections["module:LootFeed"], read.sections["look:LootFeed"] })
+			assert.same({ "Spare", "Strip" }, read.collections.looks.names)
+			local strip, spare = read.collections.looks.items.Strip, read.collections.looks.items.Spare
+			assert.same({ "icons", 12, "left", false, 13, true, "all" }, { strip.base, strip.values.maxRows, strip.values.direction,
+				strip.values.xp, strip.values.size, strip.changes.owned.shown, strip.changes.owned.count })
+			-- Every other layout becomes a look with 0.4's defaults.
+			assert.same({ "compact", 8 }, { spare.base, spare.values.maxRows })
+			assert.equals(0, read.skipped)
+		end)
+
+		it("hide the owned count and show at least 3 rows when a 0.3.5 text said so", function()
+			local read = assert(Share.Read(text({ format = 1, sections = { ["module:LootFeed"] = { owned = false, maxRows = 2 } } })))
+			local look = read.collections.looks.items.Default
+			assert.same({ false, 3 }, { look.changes.owned.shown, look.values.maxRows })
+			assert.same({ look = "Default" }, read.sections["look:LootFeed"])
+		end)
+
+		it("turn layouts shared alone into looks", function()
+			local read = assert(Share.Read(text({ format = 1, collections = { layouts = { Raid = { schema = 1, base = "minimal" } } } })))
+			assert.same({ {}, { "Raid" } }, { read.names, read.collections.looks.names })
+		end)
+
+		it("take odd layouts as they can, and come in broken when an upgrade fails", function()
+			local read = assert(Share.Read(text({ format = 1, collections = { layouts = { Raid = { base = "large", changes = "flat" } } } })))
+			assert.same({ "Raid" }, read.collections.looks.names)
+			Share.RegisterUpgrade(1, function() error("cannot") end)
+			assert.same({ nil, "broken" }, { Share.Read(text({ format = 1, sections = {} })) })
+			-- A text of the current format needs no upgrade.
+			assert.same({ nil, "nothing" }, { Share.Read(text({ format = 2, sections = {} })) })
+		end)
 	end)
 
 	describe("imported", function()
@@ -149,7 +192,7 @@ describe("profile texts", function()
 		-- feed using their look Raid (icons), also their Solo.
 		before_each(function()
 			read = assert(Share.Read(text({
-				format = 1,
+				format = 2,
 				sections = {
 					["module:AutoLoot"] = { confirmBind = false },
 					["module:LootFeed"] = {},
@@ -241,7 +284,7 @@ describe("profile texts", function()
 		end)
 
 		it("with the position as a part of the profile", function()
-			read = assert(Share.Read(text({ format = 1, sections = {
+			read = assert(Share.Read(text({ format = 2, sections = {
 				["module:LootFeed"] = {}, ["positions:LootFeed"] = { Modern = { point = "TOP", x = 1, y = 2 } },
 			} })))
 			Share.Import(read, { parts = read.names })
@@ -249,7 +292,7 @@ describe("profile texts", function()
 		end)
 
 		it("as the look Default too, kept as both under a name in the client language", function()
-			read = assert(Share.Read(text({ format = 1, collections = { looks = { Default = { schema = 1, base = "icons" } } } })))
+			read = assert(Share.Read(text({ format = 2, collections = { looks = { Default = { schema = 1, base = "icons" } } } })))
 			assert.equals("Default", read.collections.looks.taken.Default)
 			local _, renamed = Share.Import(read, { collections = { looks = { Default = "both" } } })
 			assert.same({ "Default 2", "icons", "rows" }, { renamed.looks.Default, Looks.View("Default 2"), Looks.View("Default") })

@@ -131,7 +131,7 @@ describe("saved data of version 0.3.5", function()
 		assert.same({ "module:AutoLoot", "module:LootFeed", "positions:LootFeed", "look:LootFeed", "module:Junk", "looks" }, names)
 	end)
 
-	it("reads a 0.3.5 profile text with bars: the bars' parts are left out and counted", function()
+	it("reads a 0.3.5 profile text with bars: the feed's parts come in as a look, the bars' are left out and counted", function()
 		local saved = fixture().LootomanDB
 		local text = "LTM1:" .. ns.Compat.Encode({
 			format = 1,
@@ -146,9 +146,12 @@ describe("saved data of version 0.3.5", function()
 			collections = { layouts = { Quiet = saved.sections.feedLayouts.Quiet }, barSets = { Raid = saved.sections.barSets.Raid } },
 		})
 		local read = assert(ns.Share.Read(text))
-		assert.same({ "module:LootFeed" }, read.names)
-		-- fade, layout:LootFeed, module:Bars, set:Bars and module:FreeSlots; the layouts and barSets collections.
-		assert.equals(7, read.skipped)
+		assert.same({ "module:LootFeed", "look:LootFeed" }, read.names)
+		assert.same({ look = "Quiet" }, read.sections["look:LootFeed"])
+		assert.same({ "Quiet" }, read.collections.looks.names)
+		assert.equals(2, read.collections.looks.items.Quiet.values.fade)
+		-- module:Bars, set:Bars and module:FreeSlots; the barSets collection.
+		assert.equals(4, read.skipped)
 	end)
 end)
 

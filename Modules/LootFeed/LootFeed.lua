@@ -81,6 +81,40 @@ ns.Share.RegisterCollection({
 	clean = Looks.Clean,
 })
 
+-- Texts of 0.1 to 0.4 (format 1) held the feed's settings in its own part,
+-- the layout it used in another, and row layouts: they become looks, as saved
+-- data did (Migrations.FeedLookFrom). The look of the feed's settings is
+-- named after the layout it used, Default without one; every other layout
+-- becomes a look too.
+ns.Share.RegisterUpgrade(1, function(data)
+	local sections = type(data.sections) == "table" and data.sections or {}
+	local collections = type(data.collections) == "table" and data.collections or {}
+	local layouts = type(collections.layouts) == "table" and collections.layouts or {}
+	local feed = type(sections["module:LootFeed"]) == "table" and sections["module:LootFeed"] or nil
+	local usePart = type(sections["layout:LootFeed"]) == "table" and sections["layout:LootFeed"] or nil
+	local used = usePart and type(usePart.layout) == "string" and usePart.layout or nil
+	local looks = type(collections.looks) == "table" and collections.looks or {}
+	for name, layout in pairs(layouts) do
+		if type(name) == "string" and type(layout) == "table" then
+			looks[name] = ns.Migrations.FeedLookFrom(name == used and feed or nil, layout)
+		end
+	end
+	if feed then
+		local name = used or Looks.DEFAULT
+		if not looks[name] then
+			looks[name] = ns.Migrations.FeedLookFrom(feed, nil)
+		end
+		sections["module:LootFeed"] = { enabled = feed.enabled }
+		sections["look:LootFeed"] = { look = name }
+	end
+	sections["layout:LootFeed"] = nil
+	collections.layouts = nil
+	if next(looks) then
+		collections.looks = looks
+	end
+	data.sections, data.collections = sections, collections
+end)
+
 function LootFeed:ModelOptions()
 	return {
 		maxRows = self:Get("maxRows"),

@@ -159,6 +159,29 @@ local function lookValues(feed, view)
 	return values
 end
 
+-- A feed look from a loot feed's settings and the row layout it used, as
+-- 0.4 kept them in a profile or a profile text: the layout's design with 0.4's
+-- owned count (hidden when the settings turned it off, as 0.3.5 did), and the
+-- settings it showed, under 0.4's defaults, where they differ from a look's
+-- defaults; at least 3 rows.
+function Migrations.FeedLookFrom(feed, layout)
+	feed = type(feed) == "table" and feed or {}
+	layout = type(layout) == "table" and layout or { schema = 1, base = "large" }
+	if feed.owned == false then
+		layout = copy(layout)
+		layout.changes = type(layout.changes) == "table" and layout.changes or {}
+		layout.changes.owned = type(layout.changes.owned) == "table" and layout.changes.owned or {}
+		layout.changes.owned.shown = false
+	end
+	local look = designOf(layout)
+	local values = lookValues(feed, layout.base == "icons" and "icons" or "rows")
+	if type(values.maxRows) == "number" and values.maxRows < 3 then
+		values.maxRows = 3
+	end
+	look.values = next(values) and values or nil
+	return look
+end
+
 -- 3: every profile's loot feed settings with the layout it used (Default
 -- when its layout is gone) become a feed look. Profiles that used one
 -- layout with the same settings share a look named after it; others get
