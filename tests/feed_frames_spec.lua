@@ -276,6 +276,32 @@ describe("loot feed frames", function()
 			assert.same({ "Note@0", "100 copper@42" }, layout())
 		end)
 
+		it("puts a stuck row's marks at its edges when it has no icon", function()
+			local Design = ns.Feed.Design
+			feed:SetOptions(options({ layout = Design.Layout(Design.MINIMAL, 13) }))
+			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
+			model:SetSticky(quest, "quest", 0)
+			local clam = model:Add({ kind = "item", id = 2, name = "Clam", link = LINK, icon = 2, amount = 1 }, 0)
+			model:SetSticky(clam, "container", 0)
+			feed:Draw(6.5)
+			local letter = frameWith("Letter")
+			-- The quest mark just before the row, where the icon would be, as high as the row; how many wait inside its right edge.
+			assert.same({ false, true, false, true, "+1" }, { letter.Icon.shown, letter.QuestMark.shown, letter.Pin.shown, letter.Waiting.shown,
+				letter.Waiting.text })
+			assert.same({ { "RIGHT", letter, "LEFT", -2, 0 }, 16 }, { letter.QuestMark.points[1], letter.QuestMark.height })
+			assert.same({ "RIGHT", letter, "RIGHT", -2, 0 }, letter.Waiting.points[1])
+			-- The clam's pin, once it takes the place.
+			feed:Dismiss(quest)
+			feed:Draw(6.6)
+			local clamFrame = frameWith("Clam")
+			assert.same({ false, true }, { clamFrame.QuestMark.shown, clamFrame.Pin.shown })
+			assert.same({ "RIGHT", clamFrame, "LEFT", -2, 0 }, clamFrame.Pin.points[1])
+			-- Back on a design with the icon, the marks go back on it.
+			feed:SetOptions(options())
+			feed:Draw(6.7)
+			assert.same({ "CENTER", clamFrame.Icon, "TOPLEFT", 2, -2 }, clamFrame.Pin.points[1])
+		end)
+
 		it("keeps the stuck row's place in a fight, the warnings that come meanwhile after it", function()
 			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
 			model:SetSticky(quest, "quest", 0)

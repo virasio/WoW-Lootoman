@@ -250,17 +250,15 @@ function Frames.CreateRow(parent)
 	rowFrame.Owned:SetDrawLayer("OVERLAY", 4)
 	-- A stuck row's marks: the bags' quest mark over the icon of an item that
 	-- starts a quest, else a pin at the icon's top left; and how many wait.
+	-- Without the icon they go to the row's edges (placeMarks).
 	rowFrame.QuestMark = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
-	rowFrame.QuestMark:SetAllPoints(rowFrame.Icon)
 	rowFrame.QuestMark:SetTexture(TEXTURE_ITEM_QUEST_BANG)
 	rowFrame.QuestMark:Hide()
 	rowFrame.Pin = rowFrame:CreateTexture(nil, "OVERLAY", nil, 5)
 	rowFrame.Pin:SetAtlas(Frames.PIN)
-	rowFrame.Pin:SetPoint("CENTER", rowFrame.Icon, "TOPLEFT", 2, -2)
 	rowFrame.Pin:Hide()
 	rowFrame.Waiting = rowFrame:CreateFontString(nil, "OVERLAY")
 	rowFrame.Waiting:SetDrawLayer("OVERLAY", 5)
-	rowFrame.Waiting:SetPoint("BOTTOMLEFT", rowFrame.Icon, "BOTTOMLEFT", 2, 2)
 	rowFrame.Waiting:Hide()
 	rowFrame:SetScript("OnMouseUp", function(self, button)
 		-- A left click lets the stuck item go (its right click is the use button's).
@@ -307,6 +305,25 @@ function Frames.ApplyLayout(rowFrame, layout)
 			region:SetFont(face[1], part.fontSize, face[3])
 			region:SetJustifyH(part.align)
 		end
+	end
+end
+
+-- A kept row's marks: on the icon, or without it at the row's edges, the
+-- quest mark or the pin just before its left edge (where the icon would be)
+-- and the count of waiting rows inside its right edge.
+local function placeMarks(rowFrame, iconShown, height)
+	rowFrame.QuestMark:ClearAllPoints()
+	rowFrame.Pin:ClearAllPoints()
+	rowFrame.Waiting:ClearAllPoints()
+	if iconShown then
+		rowFrame.QuestMark:SetAllPoints(rowFrame.Icon)
+		rowFrame.Pin:SetPoint("CENTER", rowFrame.Icon, "TOPLEFT", 2, -2)
+		rowFrame.Waiting:SetPoint("BOTTOMLEFT", rowFrame.Icon, "BOTTOMLEFT", 2, 2)
+	else
+		rowFrame.QuestMark:SetSize(height, height)
+		rowFrame.QuestMark:SetPoint("RIGHT", rowFrame, "LEFT", -2, 0)
+		rowFrame.Pin:SetPoint("RIGHT", rowFrame, "LEFT", -2, 0)
+		rowFrame.Waiting:SetPoint("RIGHT", rowFrame, "RIGHT", -2, 0)
 	end
 end
 
@@ -359,15 +376,16 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	end
 	-- The quest mark as soon as the item is known to start a quest; the pin and
 	-- the clicks for the stuck row.
-	rowFrame.QuestMark:SetShown(iconShown and row.sticky == "quest")
-	rowFrame.Pin:SetShown(iconShown and stuck ~= nil and row.sticky ~= "quest")
+	placeMarks(rowFrame, iconShown, options.layout.height)
+	rowFrame.QuestMark:SetShown(row.sticky == "quest")
+	rowFrame.Pin:SetShown(stuck ~= nil and row.sticky ~= "quest")
 	local size = math.max(8, math.floor(parts.icon.pixels * 0.4 + 0.5))
 	rowFrame.Pin:SetSize(size, size)
 	local waiting = stuck and stuck.waiting or 0
 	local font = getFonts().number
 	rowFrame.Waiting:SetFont(font[1], parts.owned.fontSize, font[3])
 	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
-	rowFrame.Waiting:SetShown(iconShown and waiting > 0)
+	rowFrame.Waiting:SetShown(waiting > 0)
 	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting
 	-- In the feed only the stuck row takes clicks; the designer's rows take
 	-- them all (they choose the row).
