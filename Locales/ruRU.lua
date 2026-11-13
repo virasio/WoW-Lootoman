@@ -225,6 +225,8 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/Junk/Junk.lua
 	["Junk"] = "Хлам",
+	["Enable junk management"] = "Включить управление хламом",
+	["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."] = "Хлам выбрасывается из окна добычи и продаётся у торговцев через окно сортировки Lootoman. Если выключить, вернётся кнопка продажи хлама самой игры.",
 	["Sort junk"] = "Сортировка хлама",
 	["Sort window button"] = "Кнопка окна сортировки",
 	["The button by the loot window opens a window of your bags with the junk on top, to throw things away."] = "Кнопка у окна добычи открывает окно с содержимым сумок, хлам сверху, — чтобы выбросить лишнее.",

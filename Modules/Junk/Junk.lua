@@ -5,13 +5,13 @@ local Compat, L = ns.Compat, ns.L
 -- loot window opens the sort window, a bag-like window with the junk on top,
 -- to delete things; at a merchant, Lootoman's sell-junk button sells the junk
 -- or opens the same window to pick what to sell. Dragging an item between the
--- sections of either window marks it.
--- No switch of its own: the sort window's button can be turned off (Never),
--- and the sell button always takes the place of the game's.
+-- sections of either window marks it. Turned off, the game's own sell-junk
+-- button is back.
 local Junk = ns.Modules:Register({
 	name = "Junk",
 	title = L["Junk"],
-	switchLabel = false,
+	switchLabel = L["Enable junk management"],
+	description = L["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."],
 	defaults = {
 		enabled = true,
 		-- The sort window's button on the loot window: "never", "always" or "full".
@@ -21,7 +21,13 @@ local Junk = ns.Modules:Register({
 		-- At merchants (SellButton.lua): "auto", "button" or "window".
 		selling = "window",
 	},
+	-- Under the switch the junk list first, then how the sort window opens.
 	mainSettings = {
+		{ kind = "button", label = L["Set up the junk list"],
+			tooltip = L["Every item you marked as junk or as not junk, to remove marks."],
+			click = function()
+				ns.JunkList.Open()
+			end },
 		{ kind = "choice", key = "tossButton", label = L["Sort window button"],
 			tooltip = L["The button by the loot window opens a window of your bags with the junk on top, to throw things away."],
 			choices = { { "never", L["Never"] }, { "always", L["Always"] }, { "full", L["When the bags are full"] } } },
@@ -33,11 +39,6 @@ local Junk = ns.Modules:Register({
 		{ kind = "choice", key = "selling", label = L["At merchants"],
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
 				{ "window", L["The sell button opens the sort window"] } } },
-		{ kind = "button", label = L["Set up the junk list"],
-			tooltip = L["Every item you marked as junk or as not junk, to remove marks."],
-			click = function()
-				ns.JunkList.Open()
-			end },
 	},
 })
 

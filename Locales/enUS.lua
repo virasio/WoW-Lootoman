@@ -230,6 +230,8 @@ ns.Locales.AddEnglish({
 
 	-- Modules/Junk/Junk.lua
 	"Junk",
+	"Enable junk management",
+	"Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back.",
 	"Sort junk",
 	"Sort window button",
 	"The button by the loot window opens a window of your bags with the junk on top, to throw things away.",

@@ -82,19 +82,13 @@ Migrations.account = {
 -- 0.4.5 on, keeping what 0.4 did where the defaults changed: selling at
 -- once when a merchant opened (sellOnOpen, on in 0.4) becomes "auto", else
 -- swapped clicks "window", else "button"; the button's style stays small, as
--- 0.4 drew it; turned off, the button is never shown and the sell button
--- opens the sort window. The large button's size and place go.
+-- 0.4 drew it; turned off, it stays off. The large button's size and place go.
 function Migrations.JunkFrom(junk)
 	local values = {}
 	for key, value in pairs(junk) do
 		values[key] = value
 	end
 	values.sellOnOpen, values.swapClicks, values.tossSize, values.tossSide, values.tossOffset = nil, nil, nil, nil, nil
-	values.enabled = nil
-	if junk.enabled == false then
-		values.tossButton, values.selling = "never", nil
-		return values
-	end
 	local selling
 	if junk.sellOnOpen ~= false then
 		selling = "auto"

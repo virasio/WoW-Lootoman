@@ -180,8 +180,8 @@ describe("migrations", function()
 		assert.same({ selling = "button", tossStyle = "small" }, JunkFrom({ sellOnOpen = false }))
 		assert.same({ tossStyle = "small" }, JunkFrom({ sellOnOpen = false, swapClicks = true }))
 		assert.same({ selling = "auto", tossButton = "always" }, JunkFrom({ tossStyle = "large", tossSize = 48, tossSide = "left", tossOffset = 10, tossButton = "always" }))
-		-- Turned off: no loot window button, the sell button opens the sort window.
-		assert.same({ tossButton = "never" }, JunkFrom({ enabled = false, sellOnOpen = true }))
+		-- Turned off, it stays off.
+		assert.same({ enabled = false, selling = "auto", tossStyle = "small" }, JunkFrom({ enabled = false, sellOnOpen = true }))
 	end)
 
 	it("moves junk's settings in every profile of 0.4's data, not in a fresh install's", function()
