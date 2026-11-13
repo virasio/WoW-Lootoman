@@ -99,7 +99,7 @@ ns.Locales.AddEnglish({
 	"Glow for rare items",
 	"Rare and better items glow in their quality colour.",
 
-	"Row design",
+	"Design",
 	"Feed look",
 	"The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit.",
 	"Use look “%s”",
@@ -113,7 +113,7 @@ ns.Locales.AddEnglish({
 	"Change",
 	"Make look “%s” a look of icons? Its row design starts afresh.",
 	"Make look “%s” a look of rows? Its row design starts afresh.",
-	"View:",
+	"View",
 	"Enter a look name.",
 	"The look name is too long.",
 	"A look with this name already exists.",

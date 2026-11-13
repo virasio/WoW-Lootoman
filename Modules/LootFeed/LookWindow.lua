@@ -7,16 +7,16 @@ local Feed = ns.Feed
 -- /lootoman design for the profile's look. On the left, sample rows of every
 -- kind, drawn by the feed's own code in the look's design and size, each in
 -- its box. On the right, two tabs:
--- - Feed: the look's settings in their groups (Looks.Settings), scrolled.
--- - Row design: the look's view, rows or icons, and the chosen part, in the
---   spirit of Platynator's nameplate designer: what it is anchored to and
---   where, its size, alignment and offsets. Numbers have a slider and a field
---   to type them in; both only go as far as the row's box allows
---   (Design.Range). An Icons look lists only what it lets the player change:
---   the icon's size and the gap between icons (as the row), the amount and the
---   owned count; its samples stand side by side.
--- Click a part in the samples to choose it, which brings up the Row design
--- tab; drag it to move it on the grid. A gold frame marks the chosen part (for
+-- - Feed: the look's settings in their groups (Looks.Settings), scrolled,
+--   with the look's view, rows or icons, before the fill direction.
+-- - Design: the chosen part, in the spirit of Platynator's nameplate
+--   designer: whether it is shown, what it is anchored to and where, its size,
+--   alignment and offsets. Numbers have a slider and a field to type them in;
+--   both only go as far as the row's box allows (Design.Range). An Icons look
+--   lists only what it lets the player change: the icon's size and the gap
+--   between icons (as the row), the amount and the owned count; its samples
+--   stand side by side.
+-- Click a part in the samples to choose it, which brings up the Design tab; drag it to move it on the grid. A gold frame marks the chosen part (for
 -- a text, the most room it may take), or the row when no part is chosen.
 -- Every change is saved in the look, and the feed follows at once when the
 -- profile uses it.
@@ -37,9 +37,6 @@ LootFeed.LookWindow = LookWindow
 LookWindow.WIDTH = 900
 LookWindow.HEIGHT = 640
 LookWindow.PREVIEW_WIDTH = 440
--- The inspector's controls are this far apart; each one's label is nearer to
--- it than to the one before.
-LookWindow.CONTROL_HEIGHT = 46
 -- The window's global name, for UISpecialFrames.
 LookWindow.NAME = "LootomanLookWindow"
 -- The tabs.
@@ -61,8 +58,8 @@ local POINT_NAMES = {
 local ALIGN_NAMES = { LEFT = L["Left"], RIGHT = L["Right"] }
 local COUNT_NAMES = { all = L["Bags and bank"], bags = L["Bags only"] }
 
+-- Whether a part is shown is the checkbox beside the part's name, above these.
 local TEXT_CONTROLS = {
-	{ key = "shown", label = L["Shown"] },
 	{ key = "anchor", label = L["Anchor to"] },
 	{ key = "point", label = L["Anchor point"] },
 	{ key = "align", label = L["Text alignment"] },
@@ -80,7 +77,6 @@ local CONTROLS = {
 		{ key = "gap", label = L["Gap between rows"] },
 	},
 	icon = {
-		{ key = "shown", label = L["Shown"] },
 		{ key = "anchor", label = L["Anchor to"] },
 		{ key = "point", label = L["Anchor point"] },
 		{ key = "size", label = L["Size, percent of the row height"] },
@@ -101,12 +97,11 @@ for _, part in ipairs({ "amount", "owned" }) do
 	table.insert(CONTROLS[part], { key = "background", label = L["Background"] })
 	table.insert(CONTROLS[part], { key = "opacity", label = L["Background opacity"] })
 end
-table.insert(CONTROLS.owned, 2, COUNTS)
+table.insert(CONTROLS.owned, 1, COUNTS)
 -- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
 -- The amount and the owned count sit on the icon, each set alike.
 local ICON_PARTS = { "row", "amount", "owned" }
 local ON_THE_ICON = {
-	{ key = "shown", label = L["Shown"] },
 	{ key = "point", label = L["Anchor point"] },
 	{ key = "align", label = L["Text alignment"] },
 	{ key = "fontSize", label = L["Text size"] },
@@ -121,10 +116,10 @@ local ICON_CONTROLS = {
 		{ key = "gap", label = L["Gap between icons"] },
 	},
 	amount = ON_THE_ICON,
-	owned = { ON_THE_ICON[1], COUNTS },
+	owned = { COUNTS },
 }
-for index = 2, #ON_THE_ICON do
-	table.insert(ICON_CONTROLS.owned, ON_THE_ICON[index])
+for _, control in ipairs(ON_THE_ICON) do
+	table.insert(ICON_CONTROLS.owned, control)
 end
 -- A checkbox for a switch, a dropdown for a choice, else a slider with a field.
 local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice", count = "choice" }
@@ -272,7 +267,6 @@ function LookWindow.Refresh()
 	end
 	LookWindow.UpdateInspector()
 	window.parts:GenerateMenu()
-	window.view:GenerateMenu()
 	LookWindow.UpdateFeed()
 end
 
@@ -282,7 +276,7 @@ function LookWindow.Change(part, key, value)
 	LookWindow.Refresh()
 end
 
--- Chooses a part, on the Row design tab.
+-- Chooses a part, on the Design tab.
 function LookWindow.Select(part)
 	selected = part
 	LookWindow.ShowTab(LookWindow.DESIGN)
@@ -314,7 +308,7 @@ function LookWindow.SetView(view)
 	end)
 end
 
--- Shows a tab: the Feed tab's settings or the Row design tab's inspector.
+-- Shows a tab: the Feed tab's settings or the Design tab's inspector.
 function LookWindow.ShowTab(id)
 	if not window then
 		return
@@ -325,14 +319,41 @@ function LookWindow.ShowTab(id)
 	window.designTab:SetShown(id == LookWindow.DESIGN)
 end
 
--- The inspector's title and controls for the chosen part, with its values.
+-- The inspector's controls, placed from the top under the part's line: a
+-- checkbox with its label after it, or a label over a slider with a field or
+-- over a dropdown.
+local CONTROL_HEIGHT = { check = 30, number = 46, choice = 50 }
+LookWindow.CONTROLS_TOP = -60
+
+local function place(control, kind, y)
+	control.label:ClearAllPoints()
+	if kind == "check" then
+		control.check:ClearAllPoints()
+		control.check:SetPoint("TOPLEFT", 8, y)
+		control.label:SetPoint("LEFT", control.check, "RIGHT", 4, 0)
+	else
+		control.label:SetPoint("TOPLEFT", 12, y)
+		control.slider:ClearAllPoints()
+		control.slider:SetPoint("TOPLEFT", 12, y - 16)
+		control.choice:ClearAllPoints()
+		control.choice:SetPoint("TOPLEFT", 12, y - 16)
+	end
+end
+
+-- The part's line (its Shown checkbox, for a part that can be hidden) and its
+-- controls with its values; a hidden part shows none of them.
 function LookWindow.UpdateInspector()
 	local design = Design.Current(section())
 	local values = selected == "row" and design or design.parts[selected]
-	window.inspectorTitle:SetText(titleOf(design, selected))
+	local canHide = values.shown ~= nil and controlsOf(design)[selected] ~= nil and selected ~= "row"
+	window.partShown:SetShown(canHide)
+	window.partShown:SetChecked(values.shown == true)
+	local open = not canHide or values.shown == true
 	window.updating = true
+	local y = LookWindow.CONTROLS_TOP
+	local specs = open and controlsOf(design)[selected] or {}
 	for index, control in ipairs(window.controls) do
-		local spec = controlsOf(design)[selected][index]
+		local spec = specs[index]
 		local kind = spec and (KINDS[spec.key] or "number")
 		control.spec, control.part, control.kind = spec, selected, kind
 		control.value = spec and values[spec.key]
@@ -345,6 +366,8 @@ function LookWindow.UpdateInspector()
 		control.choice:SetShown(kind == "choice")
 		if spec then
 			control.label:SetText(spec.label)
+			place(control, kind, y)
+			y = y - CONTROL_HEIGHT[kind]
 		end
 		if kind == "check" then
 			control.check:SetChecked(control.value)
@@ -357,6 +380,11 @@ function LookWindow.UpdateInspector()
 		end
 	end
 	window.updating = false
+end
+
+-- The part chosen in the inspector: "row", "icon", "name", "amount" or "owned".
+function LookWindow.Selected()
+	return selected
 end
 
 -- A number typed into a control's field: taken within its range, or the value
@@ -438,23 +466,20 @@ local function createHit(rowFrame, part)
 	return hit
 end
 
--- One line of the inspector: a label, and below it a checkbox, a dropdown or a
--- slider with a field; UpdateInspector shows the one the chosen part needs.
-local function createControl(parent, index)
+-- One control of the inspector: a label with a checkbox, a dropdown or a
+-- slider with a field; UpdateInspector shows and places the one the chosen
+-- part needs.
+local function createControl(parent)
 	local control = {}
-	local y = -64 - (index - 1) * LookWindow.CONTROL_HEIGHT
 	control.label = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	control.label:SetPoint("TOPLEFT", 12, y)
 
 	control.check = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	control.check:SetSize(26, 26)
-	control.check:SetPoint("TOPLEFT", 8, y - 14)
 	control.check:SetScript("OnClick", function(button)
 		LookWindow.Change(control.part, control.spec.key, button:GetChecked() and true or false)
 	end)
 
 	control.slider = CreateFrame("Frame", nil, parent, "MinimalSliderWithSteppersTemplate")
-	control.slider:SetPoint("TOPLEFT", 12, y - 16)
 	-- The template is 40 high with its bar in the middle; as high as the bar,
 	-- it sits right under its label.
 	control.slider:SetSize(180, 20)
@@ -482,7 +507,6 @@ local function createControl(parent, index)
 	end)
 
 	control.choice = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-	control.choice:SetPoint("TOPLEFT", 12, y - 16)
 	control.choice:SetWidth(180)
 	control.choice:SetupMenu(function(_, root)
 		if control.kind == "choice" then
@@ -521,6 +545,20 @@ local function formatValue(setting, value)
 	return format:format(value)
 end
 
+-- The view is the design's, not one of the look's values: on the Feed tab
+-- before the fill direction, whose choices follow it. Changing it starts the
+-- design afresh, so SetView asks first.
+local VIEW_SETTING = {
+	kind = "dropdown", key = "view", label = L["View"],
+	choices = { { "rows", L["Rows"] }, { "icons", L["Icons"] } },
+	get = function()
+		return Looks.View(edited)
+	end,
+	set = function(value)
+		LookWindow.SetView(value)
+	end,
+}
+
 local function createSetting(parent, setting, y)
 	local control = { setting = setting }
 	local x = setting.parent and INDENT or 0
@@ -558,18 +596,25 @@ local function createSetting(parent, setting, y)
 		control.choice:SetPoint("TOPLEFT", x + 4, y - 16)
 		control.choice:SetWidth(220)
 		control.choice:SetupMenu(function(_, root)
-			for _, choice in ipairs(settingChoices(setting.key)) do
+			for _, choice in ipairs(setting.get and setting.choices or settingChoices(setting.key)) do
 				root:CreateRadio(choice[2], function(value)
+					if setting.get then
+						return setting.get() == value
+					end
 					return Looks.Value(edited, setting.key) == value
 				end, function(value)
-					LookWindow.Set(setting.key, value)
+					if setting.set then
+						setting.set(value)
+					else
+						LookWindow.Set(setting.key, value)
+					end
 				end, choice[1])
 			end
 		end)
 	end
 	control.label:SetText(setting.label)
 	control.update = function()
-		local value = Looks.Value(edited, setting.key)
+		local value = setting.get and setting.get() or Looks.Value(edited, setting.key)
 		local enabled = not setting.parent or Looks.Value(edited, setting.parent) == true
 		control.label:SetFontObject(enabled and "GameFontHighlight" or "GameFontDisable")
 		if control.check then
@@ -598,6 +643,10 @@ local function buildFeedTab(tab)
 	scroll:SetScrollChild(content)
 	local controls, y = {}, -4
 	for _, setting in ipairs(Looks.Settings("icons")) do
+		if setting.key == "direction" then
+			controls[#controls + 1] = createSetting(content, VIEW_SETTING, y)
+			y = y - SETTING_HEIGHT.dropdown
+		end
 		controls[#controls + 1] = createSetting(content, setting, y)
 		y = y - SETTING_HEIGHT[setting.kind]
 	end
@@ -695,7 +744,7 @@ local function build()
 	end
 
 	-- The tabs, over the right side.
-	for id, text in ipairs({ L["Feed"], L["Row design"] }) do
+	for id, text in ipairs({ L["Feed"], L["Design"] }) do
 		local tab = CreateFrame("Button", nil, frame, "PanelTopTabButtonTemplate")
 		tab:SetID(id)
 		tab:SetText(text)
@@ -716,25 +765,12 @@ local function build()
 	inspector:SetPoint("TOPLEFT", frame.preview, "TOPRIGHT", 16, 0)
 	inspector:SetPoint("BOTTOMRIGHT", -16, 36)
 	frame.designTab = inspector
-	local viewLabel = inspector:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	viewLabel:SetPoint("TOPLEFT", 12, -2)
-	viewLabel:SetText(L["View:"])
-	frame.view = CreateFrame("DropdownButton", nil, inspector, "WowStyle1DropdownTemplate")
-	frame.view:SetPoint("LEFT", viewLabel, "RIGHT", 8, 0)
-	frame.view:SetWidth(120)
-	frame.view:SetupMenu(function(_, root)
-		for _, view in ipairs({ { "rows", L["Rows"] }, { "icons", L["Icons"] } }) do
-			root:CreateRadio(view[2], function(value)
-				return Looks.View(edited) == value
-			end, LookWindow.SetView, view[1])
-		end
-	end)
 	local partLabel = inspector:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	partLabel:SetPoint("LEFT", frame.view, "RIGHT", 16, 0)
+	partLabel:SetPoint("TOPLEFT", 12, -16)
 	partLabel:SetText(L["Part:"])
 	frame.parts = CreateFrame("DropdownButton", nil, inspector, "WowStyle1DropdownTemplate")
 	frame.parts:SetPoint("LEFT", partLabel, "RIGHT", 8, 0)
-	frame.parts:SetWidth(130)
+	frame.parts:SetWidth(150)
 	frame.parts:SetupMenu(function(_, root)
 		local design = Design.Current(section())
 		for _, part in ipairs(partsOf(design)) do
@@ -743,11 +779,25 @@ local function build()
 			end, LookWindow.Select, part)
 		end
 	end)
-	frame.inspectorTitle = inspector:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	frame.inspectorTitle:SetPoint("TOPRIGHT", -12, -36)
+	-- Whether the chosen part is shown: its other controls show only while it is.
+	frame.partShown = CreateFrame("CheckButton", nil, inspector, "UICheckButtonTemplate")
+	frame.partShown:SetSize(26, 26)
+	frame.partShown:SetPoint("LEFT", frame.parts, "RIGHT", 16, 0)
+	frame.partShown.label = inspector:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	frame.partShown.label:SetPoint("LEFT", frame.partShown, "RIGHT", 4, 0)
+	frame.partShown.label:SetText(L["Shown"])
+	frame.partShown:SetScript("OnClick", function(button)
+		LookWindow.Change(selected, "shown", button:GetChecked() and true or false)
+	end)
+	frame.partShown:HookScript("OnShow", function() frame.partShown.label:Show() end)
+	frame.partShown:HookScript("OnHide", function() frame.partShown.label:Hide() end)
+	frame.divider = inspector:CreateTexture(nil, "ARTWORK")
+	frame.divider:SetAtlas("Options_HorizontalDivider", true)
+	frame.divider:SetPoint("TOPLEFT", 4, -40)
+	frame.divider:SetPoint("TOPRIGHT", -4, -40)
 	frame.controls = {}
 	for index = 1, CONTROL_COUNT do
-		frame.controls[index] = createControl(inspector, index)
+		frame.controls[index] = createControl(inspector)
 	end
 
 	-- The look changes elsewhere too: in a menu, an import, a rename.

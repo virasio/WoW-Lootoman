@@ -95,7 +95,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Glow for rare items"] = "Свечение редких предметов",
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
-	["Row design"] = "Вид строк",
+	["Design"] = "Оформление",
 	["Feed look"] = "Вид ленты",
 	["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
 	["Use look “%s”"] = "Использовать вид «%s»",
@@ -109,7 +109,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Change"] = "Изменить",
 	["Make look “%s” a look of icons? Its row design starts afresh."] = "Сделать вид «%s» видом из иконок? Вид строк начнётся заново.",
 	["Make look “%s” a look of rows? Its row design starts afresh."] = "Сделать вид «%s» видом из строк? Вид строк начнётся заново.",
-	["View:"] = "Отображение:",
+	["View"] = "Отображение",
 	["Enter a look name."] = "Введите название вида.",
 	["The look name is too long."] = "Слишком длинное название вида.",
 	["A look with this name already exists."] = "Вид с таким названием уже есть.",
