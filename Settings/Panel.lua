@@ -152,13 +152,16 @@ function Panel.AddToMain(builder)
 end
 
 -- The main page's layout: everything starts this far from the left edge;
--- options under a switch start further in.
+-- options under a switch start further in; a row's control starts at CONTROL_X.
 Panel.LEFT = 20
 Panel.INDENT = 24
+Panel.CONTROL_X = 260
 local GAP = 6
 
--- The main page, built from top to bottom: every Add puts a region under the
--- last one. items lists what was added, in order, for tests.
+-- The main page, built from top to bottom: every Add puts an item under the
+-- last one. An item can be hidden (options.visible): the page lays its items
+-- out again whenever it refreshes. items lists what was added, in order, for
+-- tests.
 local MainPage = {}
 MainPage.__index = MainPage
 
@@ -174,7 +177,7 @@ local function newMainPage()
 	local divider = frame:CreateTexture(nil, "ARTWORK")
 	divider:SetAtlas("Options_HorizontalDivider", true)
 	divider:SetPoint("TOP", frame, "TOP", 0, -50)
-	page.y = -56
+	page.top = -56
 	-- The options panel calls it when it shows the page.
 	function frame.OnRefresh()
 		page:Refresh()
@@ -182,32 +185,61 @@ local function newMainPage()
 	return page
 end
 
--- Puts a region gap pixels under the last one, indent pixels further in.
+-- Places every shown item under the one before it.
+function MainPage:Layout()
+	local y = self.top
+	for _, item in ipairs(self.items) do
+		local frame = item.frame
+		local shown = item.visible == nil or item.visible()
+		item.hidden = not shown
+		if not shown then
+			frame:Hide()
+		elseif item.kind == "divider" then
+			y = y - 12
+			frame:ClearAllPoints()
+			frame:SetPoint("TOP", self.frame, "TOP", 0, y)
+			frame:Show()
+			y = y - 6
+		else
+			y = y - item.gap
+			frame:ClearAllPoints()
+			frame:SetPoint("TOPLEFT", self.frame, "TOPLEFT", Panel.LEFT + item.indent, y)
+			if item.wide then
+				frame:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -Panel.LEFT, y)
+				frame:SetHeight(item.height)
+			end
+			frame:Show()
+			y = y - item.height
+		end
+	end
+	self.y = y
+end
+
+-- Puts a region gap pixels under the last item, indent pixels further in.
 -- options.frame is placed instead of the region when it holds the region; a
--- wide one reaches to the page's right edge.
+-- wide one reaches to the page's right edge; visible(), when given, says
+-- whether it shows now.
 function MainPage:Add(kind, region, height, options)
 	options = options or {}
-	local indent = options.indent or 0
-	local frame = options.frame or region
-	self.y = self.y - (options.gap or GAP)
-	frame:SetPoint("TOPLEFT", self.frame, "TOPLEFT", Panel.LEFT + indent, self.y)
-	if options.wide then
-		frame:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -Panel.LEFT, self.y)
-		frame:SetHeight(height)
-	end
-	self.y = self.y - height
-	self.items[#self.items + 1] = { kind = kind, region = region, text = options.text, indent = indent }
+	self.items[#self.items + 1] = {
+		kind = kind,
+		region = region,
+		frame = options.frame or region,
+		height = height,
+		gap = options.gap or GAP,
+		indent = options.indent or 0,
+		wide = options.wide,
+		text = options.text,
+		visible = options.visible,
+	}
+	self:Layout()
 	return region
 end
 
 function MainPage:AddDivider()
 	local divider = self.frame:CreateTexture(nil, "ARTWORK")
 	divider:SetAtlas("Options_HorizontalDivider", true)
-	self.y = self.y - 12
-	divider:SetPoint("TOP", self.frame, "TOP", 0, self.y)
-	self.y = self.y - 6
-	self.items[#self.items + 1] = { kind = "divider", region = divider, indent = 0 }
-	return divider
+	return self:Add("divider", divider, 0, { gap = 0 })
 end
 
 -- update() runs whenever the page should show the stored values again.
@@ -219,14 +251,41 @@ function MainPage:Refresh()
 	for _, update in ipairs(self.refreshers) do
 		xpcall(update, Compat.ReportError)
 	end
+	self:Layout()
+end
+
+-- Whether a control can be changed now: while its module is on (requires),
+-- and while its own condition holds (enabledWhen).
+local function enabled(requires, enabledWhen)
+	return (requires == nil or Storage:Get(requires, "enabled")) and (enabledWhen == nil or enabledWhen())
+end
+
+local function setTextEnabled(text, isEnabled, font)
+	text:SetFontObject(isEnabled and (font or "GameFontNormal") or "GameFontDisable")
+end
+
+-- A tooltip in the options panel's own style while the pointer is over a frame.
+local function addTooltip(frame, title, text)
+	if not text then
+		return
+	end
+	frame:HookScript("OnEnter", function(owner)
+		SettingsTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+		Settings.InitTooltip(title, text)
+		SettingsTooltip:Show()
+	end)
+	frame:HookScript("OnLeave", function()
+		SettingsTooltip:Hide()
+	end)
 end
 
 -- A checkbox in the options panel's own style with its label after it, bound
 -- to a boolean module setting; a click on the label toggles it too. With
--- requires, it can be changed only while that module is on. It sits in a row
--- of its own, as on the panel's list pages: the template's hover background
--- fills the checkbox's parent's parent, so only that row lights up.
-function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires)
+-- requires, it can be changed only while that module is on; with enabledWhen,
+-- only while that says so. It sits in a row of its own, as on the panel's list
+-- pages: the template's hover background fills the checkbox's parent's
+-- parent, so only that row lights up.
+function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, enabledWhen)
 	local row = CreateFrame("Frame", nil, self.frame)
 	local checkbox = CreateFrame("CheckButton", nil, row, "SettingsCheckboxTemplate")
 	checkbox:SetPoint("LEFT", row, "LEFT", 0, 0)
@@ -243,30 +302,148 @@ function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires)
 	end)
 	self:OnRefresh(function()
 		checkbox:SetChecked(Storage:Get(module, key))
-		local enabled = requires == nil or Storage:Get(requires, "enabled")
-		checkbox:SetEnabled(enabled)
-		text:SetFontObject(enabled and "GameFontNormal" or "GameFontDisable")
+		local isEnabled = enabled(requires, enabledWhen)
+		checkbox:SetEnabled(isEnabled)
+		setTextEnabled(text, isEnabled)
 	end)
 	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true })
 end
 
--- A button that opens another options page.
-function MainPage:AddPageButton(text, category, indent)
-	local button = CreateFrame("Button", nil, self.frame, "UIPanelButtonTemplate")
-	button:SetSize(120, 22)
-	button:SetText(text)
-	button:SetScript("OnClick", function()
-		Settings.OpenToCategory(category:GetID())
+-- A choice of a module setting: its label, then a radio button for each
+-- choice ({ value, label }), side by side or, with options.vertical, one under
+-- another. options: indent, requires, enabledWhen, tooltip.
+function MainPage:AddChoice(module, key, label, choices, options)
+	options = options or {}
+	local row = CreateFrame("Frame", nil, self.frame)
+	local text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	text:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -4)
+	text:SetText(label)
+	addTooltip(row, label, options.tooltip)
+	local radios = {}
+	local x, y = Panel.CONTROL_X - Panel.LEFT - (options.indent or 0), 0
+	for index, choice in ipairs(choices) do
+		local radio = CreateFrame("CheckButton", nil, row, "UIRadioButtonTemplate")
+		radio:SetPoint("TOPLEFT", row, "TOPLEFT", x, y - 4)
+		radio.label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+		radio.label:SetPoint("LEFT", radio, "RIGHT", 5, 0)
+		radio.label:SetText(choice[2])
+		radio.value = choice[1]
+		radio:SetHitRectInsets(0, -(radio.label:GetUnboundedStringWidth() + 5), 0, 0)
+		radio:SetScript("OnClick", function()
+			Storage:Set(module, key, choice[1])
+		end)
+		radios[index] = radio
+		if options.vertical then
+			y = y - 22
+		else
+			x = x + 26 + radio.label:GetUnboundedStringWidth() + 16
+		end
+	end
+	row.radios = radios
+	self:OnRefresh(function()
+		local value = Storage:Get(module, key)
+		local isEnabled = enabled(options.requires, options.enabledWhen)
+		setTextEnabled(text, isEnabled)
+		for _, radio in ipairs(radios) do
+			radio:SetChecked(radio.value == value)
+			radio:SetEnabled(isEnabled)
+			setTextEnabled(radio.label, isEnabled, "GameFontHighlight")
+		end
 	end)
-	return self:Add("button", button, 22, { indent = indent, text = text, gap = 2 })
+	local height = options.vertical and (#choices * 22 + 2) or 24
+	return self:Add("choice", row, height, { indent = options.indent, text = label, wide = true })
 end
 
--- A module's switch on the main page, what goes under it, and its own page.
+-- A button with text, which runs onClick. options: indent, requires,
+-- enabledWhen, tooltip.
+function MainPage:AddButton(text, onClick, options)
+	options = options or {}
+	local button = CreateFrame("Button", nil, self.frame, "UIPanelButtonTemplate")
+	button:SetText(text)
+	-- As wide as its text, and at least as wide as the options' own buttons.
+	button:SetSize(math.max(120, (button.GetTextWidth and button:GetTextWidth() or 0) + 24), 22)
+	button:SetScript("OnClick", onClick)
+	addTooltip(button, text, options.tooltip)
+	if options.requires or options.enabledWhen then
+		self:OnRefresh(function()
+			button:SetEnabled(enabled(options.requires, options.enabledWhen))
+		end)
+	end
+	return self:Add("button", button, 22, { indent = options.indent, text = text, gap = options.gap or 4 })
+end
+
+-- A button that opens another options page.
+function MainPage:AddPageButton(text, category, indent)
+	return self:AddButton(text, function()
+		Settings.OpenToCategory(category:GetID())
+	end, { indent = indent, gap = 2 })
+end
+
+-- A row with a label on the left and a control (made by the caller, a child
+-- of the row) at CONTROL_X. options: indent, height, tooltip, visible.
+-- Returns the row; control is placed in it.
+function MainPage:AddRow(label, control, options)
+	options = options or {}
+	local row = control:GetParent()
+	local text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	text:SetPoint("LEFT", row, "LEFT", 0, 0)
+	text:SetText(label)
+	row.label = text
+	control:ClearAllPoints()
+	control:SetPoint("LEFT", row, "LEFT", Panel.CONTROL_X - Panel.LEFT - (options.indent or 0), 0)
+	addTooltip(control, label, options.tooltip)
+	return self:Add("row", row, options.height or 26, { indent = options.indent, text = label, wide = true, visible = options.visible })
+end
+
+-- A frame for a row's control: make the control a child of it, then AddRow.
+function MainPage:NewRow()
+	return CreateFrame("Frame", nil, self.frame)
+end
+
+-- A framed group with a header on top, height high in all: the caller puts
+-- its content inside, under box.header. options: indent, visible, headerFont.
+function MainPage:AddBox(header, height, options)
+	options = options or {}
+	local box = CreateFrame("Frame", nil, self.frame, "InsetFrameTemplate")
+	box.header = box:CreateFontString(nil, "ARTWORK", options.headerFont or "GameFontNormal")
+	box.header:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -8)
+	box.header:SetPoint("TOPRIGHT", box, "TOPRIGHT", -10, -8)
+	box.header:SetJustifyH("LEFT")
+	box.header:SetText(header)
+	return self:Add("box", box, height, { indent = options.indent, text = header, wide = true, visible = options.visible, gap = 8 })
+end
+
+-- A module's block on the main page: its switch, or its title for a module
+-- that has none (switchLabel = false); then what goes under it, indented:
+-- the module's main settings, which can be changed only while it is on; and a
+-- Configure button that opens the module's own page, if it has one.
+-- A main setting is a checkbox, a choice (radio buttons), a button, or a
+-- custom builder(page, indent, module), each with an optional enabledWhen().
 local function addModule(page, category, module)
-	page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0)
+	local requires
+	if module.switchLabel == false then
+		local title = page.frame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+		title:SetText(module.title)
+		page:Add("title", title, 20, { text = module.title, gap = 10 })
+	else
+		page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0)
+		requires = module.name
+	end
 	for _, setting in ipairs(module.mainSettings or {}) do
-		assert(setting.kind == "checkbox", ("%s.%s: the main page takes only checkboxes"):format(module.name, setting.key))
-		page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, Panel.INDENT, module.name)
+		local indent = Panel.INDENT * (setting.level or 1)
+		if setting.kind == "checkbox" then
+			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen)
+		elseif setting.kind == "choice" then
+			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = indent, requires = requires,
+				enabledWhen = setting.enabledWhen, vertical = setting.vertical, tooltip = setting.tooltip })
+		elseif setting.kind == "button" then
+			page:AddButton(setting.label, setting.click, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
+				tooltip = setting.tooltip })
+		elseif setting.kind == "custom" then
+			setting.build(page, indent, module)
+		else
+			error(("%s.%s: the main page takes checkboxes, choices, buttons and custom blocks"):format(module.name, tostring(setting.key)))
+		end
 	end
 	if module.BuildSettings then
 		local subpage, layout = Settings.RegisterVerticalLayoutSubcategory(category, module.title)
