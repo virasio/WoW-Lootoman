@@ -61,6 +61,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Minimum quality"] = "Минимальное качество",
 	["Items of a lower quality are not shown."] = "Предметы более низкого качества не показываются.",
 	["Keep usable items"] = "Не скрывать используемые предметы",
+	["Kept usable items"] = "Используемые предметы",
 	["Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use."] = "Предметы, которые этот персонаж может использовать прямо сейчас, остаются в начале ленты, после предупреждений, даже ниже минимального качества, пока вы не щёлкнете по ним: левой кнопкой — убрать, правой — использовать.",
 	["Items that start a quest"] = "Предметы, дающие задания",
 	["Recipes"] = "Рецепты",

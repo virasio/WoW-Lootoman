@@ -68,6 +68,7 @@ Modules\LootFeed\Sources.lua
 Modules\LootFeed\Model.lua
 Modules\LootFeed\Design.lua
 Modules\LootFeed\Layouts.lua
+Modules\LootFeed\Looks.lua
 Modules\LootFeed\Frames.lua
 Modules\LootFeed\UseButton.lua
 Modules\LootFeed\LootFeed.lua

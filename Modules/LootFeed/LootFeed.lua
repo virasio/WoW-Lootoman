@@ -142,6 +142,8 @@ local LootFeed = ns.Modules:Register({
 		glow = true,
 		-- The named layout of the rows (Layouts.lua).
 		layout = "Default",
+		-- The feed look the profile uses (Looks.lua).
+		look = "Default",
 		-- Low-space warnings at the feed's anchor edge.
 		warnGeneral = true,
 		warnGeneralAt = 2,
