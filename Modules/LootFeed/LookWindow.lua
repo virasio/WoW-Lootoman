@@ -87,15 +87,24 @@ local CONTROLS = {
 	amount = {},
 	owned = {},
 }
--- The amount and the owned count also have a background of their own; the
--- owned count also says what it counts.
+-- The row, the amount and the owned count also have a background of their
+-- own: a checkbox with the color's swatch beside it, and under it the
+-- opacity, which can be changed only while the background is on. The owned
+-- count also says what it counts.
+local BACKGROUND = {
+	{ key = "background", label = L["With background"] },
+	{ key = "opacity", label = L["Opacity"], parent = "background" },
+}
 local COUNTS = { key = "count", label = L["Counts"] }
 for _, part in ipairs({ "amount", "owned" }) do
 	for index, control in ipairs(TEXT_CONTROLS) do
 		CONTROLS[part][index] = control
 	end
-	table.insert(CONTROLS[part], { key = "background", label = L["Background"] })
-	table.insert(CONTROLS[part], { key = "opacity", label = L["Background opacity"] })
+end
+for _, part in ipairs({ "row", "amount", "owned" }) do
+	for _, control in ipairs(BACKGROUND) do
+		table.insert(CONTROLS[part], control)
+	end
 end
 table.insert(CONTROLS.owned, 1, COUNTS)
 -- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
@@ -107,8 +116,8 @@ local ON_THE_ICON = {
 	{ key = "fontSize", label = L["Text size"] },
 	{ key = "x", label = L["Horizontal offset"] },
 	{ key = "y", label = L["Vertical offset"] },
-	{ key = "background", label = L["Background"] },
-	{ key = "opacity", label = L["Background opacity"] },
+	BACKGROUND[1],
+	BACKGROUND[2],
 }
 local ICON_CONTROLS = {
 	row = {
@@ -121,8 +130,9 @@ local ICON_CONTROLS = {
 for _, control in ipairs(ON_THE_ICON) do
 	table.insert(ICON_CONTROLS.owned, control)
 end
--- A checkbox for a switch, a dropdown for a choice, else a slider with a field.
-local KINDS = { shown = "check", background = "check", anchor = "choice", point = "choice", align = "choice", count = "choice" }
+-- A checkbox for a switch (with a color swatch for a background), a dropdown
+-- for a choice, else a slider with a field.
+local KINDS = { shown = "check", background = "background", anchor = "choice", point = "choice", align = "choice", count = "choice" }
 local CONTROL_COUNT = 0
 for _, list in pairs(CONTROLS) do
 	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
@@ -320,31 +330,63 @@ function LookWindow.ShowTab(id)
 end
 
 -- The inspector's controls, placed from the top under the part's line: a
--- checkbox with its label after it, or a label over a slider with a field or
--- over a dropdown.
-local CONTROL_HEIGHT = { check = 30, number = 46, choice = 50 }
+-- checkbox with its label after it (and a background's color swatch after
+-- that), or a label over a slider with a field or over a dropdown. A control
+-- under another (spec.parent) sits further in.
+local CONTROL_HEIGHT = { check = 30, background = 30, number = 46, choice = 50 }
 LookWindow.CONTROLS_TOP = -60
+local CONTROL_INDENT = 20
 
-local function place(control, kind, y)
+local function place(control, kind, y, x)
 	control.label:ClearAllPoints()
-	if kind == "check" then
+	if kind == "check" or kind == "background" then
 		control.check:ClearAllPoints()
-		control.check:SetPoint("TOPLEFT", 8, y)
+		control.check:SetPoint("TOPLEFT", x + 8, y)
 		control.label:SetPoint("LEFT", control.check, "RIGHT", 4, 0)
+		control.swatch:ClearAllPoints()
+		control.swatch:SetPoint("LEFT", control.label, "RIGHT", 10, 0)
 	else
-		control.label:SetPoint("TOPLEFT", 12, y)
+		control.label:SetPoint("TOPLEFT", x + 12, y)
 		control.slider:ClearAllPoints()
-		control.slider:SetPoint("TOPLEFT", 12, y - 16)
+		control.slider:SetPoint("TOPLEFT", x + 12, y - 16)
 		control.choice:ClearAllPoints()
-		control.choice:SetPoint("TOPLEFT", 12, y - 16)
+		control.choice:SetPoint("TOPLEFT", x + 12, y - 16)
 	end
+end
+
+-- The values of the chosen part, or the row's.
+local function valuesOf(design, part)
+	return part == "row" and design or design.parts[part]
+end
+
+-- The game's color picker for the background of a part: each color picked
+-- is saved at once, and Cancel puts the one before back.
+function LookWindow.PickColor(part)
+	if not ColorPickerFrame then
+		return
+	end
+	local r, g, b = Design.RGB(valuesOf(Design.Current(section()), part).color)
+	local function save(red, green, blue)
+		LookWindow.Change(part, "color", Design.Hex(red, green, blue))
+	end
+	ColorPickerFrame:SetupColorPickerAndShow({
+		r = r,
+		g = g,
+		b = b,
+		swatchFunc = function()
+			save(ColorPickerFrame:GetColorRGB())
+		end,
+		cancelFunc = function(previous)
+			save(previous.r, previous.g, previous.b)
+		end,
+	})
 end
 
 -- The part's line (its Shown checkbox, for a part that can be hidden) and its
 -- controls with its values; a hidden part shows none of them.
 function LookWindow.UpdateInspector()
 	local design = Design.Current(section())
-	local values = selected == "row" and design or design.parts[selected]
+	local values = valuesOf(design, selected)
 	local canHide = values.shown ~= nil and controlsOf(design)[selected] ~= nil and selected ~= "row"
 	window.partShown:SetShown(canHide)
 	window.partShown:SetChecked(values.shown == true)
@@ -360,21 +402,34 @@ function LookWindow.UpdateInspector()
 		-- Before the dropdown is shown: showing it builds its menu from them.
 		control.choices = kind == "choice" and choices(spec.key, design, selected) or nil
 		control.label:SetShown(spec ~= nil)
-		control.check:SetShown(kind == "check")
+		control.check:SetShown(kind == "check" or kind == "background")
+		control.swatch:SetShown(kind == "background")
 		control.slider:SetShown(kind == "number")
 		control.input:SetShown(kind == "number")
 		control.choice:SetShown(kind == "choice")
+		-- Under another control: only while that one is on.
+		local enabled = not (spec and spec.parent) or values[spec.parent] == true
 		if spec then
 			control.label:SetText(spec.label)
-			place(control, kind, y)
+			control.label:SetFontObject(enabled and "GameFontHighlight" or "GameFontDisable")
+			place(control, kind, y, spec.parent and CONTROL_INDENT or 0)
 			y = y - CONTROL_HEIGHT[kind]
 		end
-		if kind == "check" then
+		if kind == "check" or kind == "background" then
 			control.check:SetChecked(control.value)
+		end
+		if kind == "background" then
+			-- The color can be picked only while the background is on.
+			local on = control.value == true and ColorPickerFrame ~= nil
+			control.swatch:SetColorRGB(Design.RGB(values.color))
+			control.swatch:SetEnabled(on)
+			control.swatch:SetAlpha(on and 1 or 0.4)
 		elseif kind == "number" then
 			control.low, control.high = Design.Range(design, selected, spec.key)
 			control.slider:Init(control.value, control.low, control.high, math.max(1, control.high - control.low))
+			control.slider:SetEnabled(enabled)
 			control.input:SetText(tostring(control.value))
+			control.input:SetEnabled(enabled)
 		elseif kind == "choice" then
 			control.choice:GenerateMenu()
 		end
@@ -466,9 +521,9 @@ local function createHit(rowFrame, part)
 	return hit
 end
 
--- One control of the inspector: a label with a checkbox, a dropdown or a
--- slider with a field; UpdateInspector shows and places the one the chosen
--- part needs.
+-- One control of the inspector: a label with a checkbox (and a color
+-- swatch), a dropdown or a slider with a field; UpdateInspector shows and
+-- places the one the chosen part needs.
 local function createControl(parent)
 	local control = {}
 	control.label = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -477,6 +532,12 @@ local function createControl(parent)
 	control.check:SetSize(26, 26)
 	control.check:SetScript("OnClick", function(button)
 		LookWindow.Change(control.part, control.spec.key, button:GetChecked() and true or false)
+	end)
+	-- The background's color, as the game's options show one; a click opens
+	-- the color picker.
+	control.swatch = CreateFrame("Button", nil, parent, "ColorSwatchTemplate")
+	control.swatch:SetScript("OnClick", function()
+		LookWindow.PickColor(control.part)
 	end)
 
 	control.slider = CreateFrame("Frame", nil, parent, "MinimalSliderWithSteppersTemplate")

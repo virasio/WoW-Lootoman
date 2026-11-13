@@ -216,6 +216,10 @@ function Frames.CreateRow(parent)
 	local rowFrame = CreateFrame("Frame", nil, parent)
 	rowFrame:SetMouseClickEnabled(false)
 	rowFrame:SetMouseMotionEnabled(true)
+	-- The row's own background, when the design asks: behind all of it.
+	rowFrame.RowBackground = rowFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+	rowFrame.RowBackground:SetAllPoints()
+	rowFrame.RowBackground:Hide()
 	rowFrame.Icon = rowFrame:CreateTexture(nil, "ARTWORK")
 	rowFrame.Glow = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
 	rowFrame.Glow:SetBlendMode("ADD")
@@ -277,6 +281,9 @@ function Frames.ApplyLayout(rowFrame, layout)
 	local font = getFonts()
 	local parts = layout.parts
 	rowFrame:SetSize(layout.width, layout.height)
+	local r, g, b = Design.RGB(layout.color)
+	rowFrame.RowBackground:SetColorTexture(r, g, b, layout.opacity / 100)
+	rowFrame.RowBackground:SetShown(layout.background)
 	local size = parts.icon.pixels
 	rowFrame.Icon:SetSize(size, size)
 	local border = math.floor(size * Frames.BORDER_SCALE + 0.5)
@@ -338,10 +345,12 @@ function Frames.Fill(rowFrame, row, options, stuck)
 		region:SetWidth(math.max(1, width))
 		region:SetShown(region:IsShown() and width >= 1)
 	end
-	rowFrame.AmountBackground:SetColorTexture(0, 0, 0, parts.amount.opacity / 100)
-	rowFrame.AmountBackground:SetShown(parts.amount.background and rowFrame.Amount:IsShown())
-	rowFrame.OwnedBackground:SetColorTexture(0, 0, 0, parts.owned.opacity / 100)
-	rowFrame.OwnedBackground:SetShown(parts.owned.background and rowFrame.Owned:IsShown())
+	for name, texture in pairs({ amount = rowFrame.AmountBackground, owned = rowFrame.OwnedBackground }) do
+		local part = parts[name]
+		local r, g, b = Design.RGB(part.color)
+		texture:SetColorTexture(r, g, b, part.opacity / 100)
+		texture:SetShown(part.background and rowFrame[Frames.REGIONS[name]]:IsShown())
+	end
 	-- The quest mark as soon as the item is known to start a quest; the pin and
 	-- the clicks for the stuck row.
 	rowFrame.QuestMark:SetShown(iconShown and row.sticky == "quest")

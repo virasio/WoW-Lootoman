@@ -21,6 +21,7 @@
     "CANCEL",
     "CLOSE",
     "ColorManager",
+    "ColorPickerFrame",
     "CreateMinimalSliderFormatter",
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",

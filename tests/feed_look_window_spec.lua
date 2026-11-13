@@ -74,7 +74,8 @@ describe("loot feed look window", function()
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
-			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30" }, inspector())
+			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30", "With background: false",
+				"Opacity: 60 in 0..100" }, inspector())
 		end)
 
 		it("shows the chosen part's values, within the row's box, and nothing more of a hidden part", function()
@@ -86,8 +87,8 @@ describe("loot feed look window", function()
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
 			assert.same({ "Shown: true", "Counts: bags", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
-				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "Background: false",
-				"Background opacity: 60 in 0..100" }, inspector())
+				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "With background: false",
+				"Opacity: 60 in 0..100" }, inspector())
 		end)
 
 		it("places each control under the one before, from below the part's line", function()
@@ -126,10 +127,49 @@ describe("loot feed look window", function()
 		it("sets the amount's own background and its opacity", function()
 			LookWindow.Select("amount")
 			local list = inspector()
-			assert.same({ "Background: false", "Background opacity: 60 in 0..100" }, { list[9], list[10] })
+			assert.same({ "With background: false", "Opacity: 60 in 0..100" }, { list[9], list[10] })
 			window.controls[8].check.checked = true
 			window.controls[8].check.scripts.OnClick(window.controls[8].check)
 			assert.is_true(design().parts.amount.background)
+		end)
+
+		it("lets the color and the opacity of a background change only while it is on, the opacity under it", function()
+			LookWindow.Select("amount")
+			local background, opacity = window.controls[8], window.controls[9]
+			assert.same({ true, false, false, false, "GameFontDisable" }, { background.swatch.shown, background.swatch.enabled,
+				opacity.slider.enabled, opacity.input.enabled, opacity.label.fontObject })
+			assert.equals(32, opacity.label.points[1][2])
+			LookWindow.Change("amount", "background", true)
+			assert.same({ true, true, true, "GameFontHighlight" }, { background.swatch.enabled, opacity.slider.enabled,
+				opacity.input.enabled, opacity.label.fontObject })
+			assert.same({ 0, 0, 0 }, background.swatch.color)
+		end)
+
+		it("picks a background's color in the game's color picker, and puts the old one back on Cancel", function()
+			LookWindow.Select("amount")
+			LookWindow.Change("amount", "background", true)
+			local swatch, picker = window.controls[8].swatch, ui.colorPicker
+			swatch.scripts.OnClick(swatch)
+			assert.same({ true, 0, 0, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
+			picker:Pick(1, 0.5, 0)
+			assert.equals("ff8000", design().parts.amount.color)
+			assert.same({ 1, 128 / 255, 0 }, swatch.color)
+			-- The feed follows at once.
+			local texture = window.rows[1].AmountBackground.colorTexture
+			assert.same({ 1, 128 / 255, 0, 0.6 }, texture)
+			picker:Cancel()
+			assert.is_nil(module:DesignSection().changes.amount.color)
+		end)
+
+		it("gives the row a background of its own, behind all of it", function()
+			local row = window.rows[1]
+			assert.is_false(row.RowBackground.shown)
+			LookWindow.Change("row", "background", true)
+			LookWindow.Change("row", "color", "336699")
+			LookWindow.Change("row", "opacity", 40)
+			assert.same({ true, { 0.2, 0.4, 0.6, 0.4 } }, { row.RowBackground.shown, row.RowBackground.colorTexture })
+			-- The feed's own rows too.
+			assert.same({ true, { 0.2, 0.4, 0.6, 0.4 } }, { module.feed.rows[1].RowBackground.shown, module.feed.rows[1].RowBackground.colorTexture })
 		end)
 
 		it("marks the row, the chosen icon, or the most room the chosen text may take, with a frame", function()
@@ -248,12 +288,12 @@ describe("loot feed look window", function()
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
 			assert.same({ "Shown: true", "Counts: bags", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
-				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "Background: false",
-				"Background opacity: 60 in 0..100" }, inspector())
+				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "With background: false",
+				"Opacity: 60 in 0..100" }, inspector())
 			LookWindow.Select("amount")
 			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
-				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "Background: false",
-				"Background opacity: 60 in 0..100" }, inspector())
+				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "With background: false",
+				"Opacity: 60 in 0..100" }, inspector())
 			-- Icons 36 wide and 4 apart, side by side.
 			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
 			-- The icon stands for the row; the name cannot be chosen.

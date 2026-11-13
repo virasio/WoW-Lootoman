@@ -82,6 +82,7 @@ files["Modules/"] = {
 		"CANCEL",
 		"ColorManager",
 		"CreateAtlasMarkup",
+		"ColorPickerFrame",
 		"CreateColor",
 		"CreateFrame",
 		"CreateMinimalSliderFormatter",

@@ -59,6 +59,26 @@ describe("loot feed designs", function()
 			assert.error_matches(function() Design.Set(section, "name", "anchor", "name") end, "name.anchor cannot be name")
 		end)
 
+		it("keeps a background's color as six hex digits, for the row, the amount and the owned count", function()
+			assert.equals("FF8000", Design.Set(section, "amount", "color", "FF8000"))
+			Design.Set(section, "row", "color", "336699")
+			assert.same({ "FF8000", "336699", "000000" }, { Design.Current(section).parts.amount.color, Design.Current(section).color,
+				Design.Current(section).parts.owned.color })
+			assert.error_matches(function() Design.Set(section, "owned", "color", "red") end, "owned.color cannot be red")
+			assert.error_matches(function() Design.Set(section, "row", "color", "1234567") end, "row.color cannot be 1234567")
+			assert.error_matches(function() Design.Set(section, "name", "color", "000000") end, "name.color cannot be 000000")
+			assert.equals(0, Design.Set(section, "row", "opacity", -20))
+		end)
+
+		it("turns a color into the numbers the game takes, and back", function()
+			assert.same({ 1, 128 / 255, 0 }, { Design.RGB("ff8000") })
+			assert.same({ 1, 128 / 255, 0 }, { Design.RGB("FF8000") })
+			assert.same({ 0, 0, 0 }, { Design.RGB("nope") })
+			assert.equals("ff8000", Design.Hex(1, 0.5, 0))
+			assert.equals("00ff00", Design.Hex(-1, 2, 0))
+			assert.equals("336699", Design.Hex(Design.RGB("336699")))
+		end)
+
 		it("refuses an anchor that goes round in a loop", function()
 			-- The amount is anchored to the name, the name to the icon.
 			assert.error_matches(function() Design.Set(section, "icon", "anchor", "amount") end, "icon.anchor cannot be amount")

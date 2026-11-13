@@ -251,6 +251,9 @@ function UI.Install()
 			frame.ScrollBar = UI.NewFake(frame)
 		elseif template and template:match("DropdownTemplate$") then
 			frame.dropdown = true
+		elseif template == "ColorSwatchTemplate" then
+			-- ColorSwatchMixin.
+			function frame:SetColorRGB(r, g, b) self.color = { r, g, b } end
 		end
 		api.frames[#api.frames + 1] = frame
 		return frame
@@ -383,6 +386,23 @@ function UI.Install()
 	-- The tabs of a frame (SharedUIPanelTemplates.lua): the chosen one.
 	rawset(_G, "PanelTemplates_SetNumTabs", function(frame, count) frame.numTabs = count end)
 	rawset(_G, "PanelTemplates_SetTab", function(frame, id) frame.selectedTab = id end)
+	-- The game's color picker (Blizzard_ColorPickerFrame): what it was opened
+	-- with, and Pick(r, g, b) or Cancel() as the player does.
+	local picker = { shown = false }
+	function picker:SetupColorPickerAndShow(info)
+		self.info, self.shown, self.color = info, true, { info.r, info.g, info.b }
+	end
+	function picker:GetColorRGB() return self.color[1], self.color[2], self.color[3] end
+	function picker:Pick(r, g, b)
+		self.color = { r, g, b }
+		self.info.swatchFunc()
+	end
+	function picker:Cancel()
+		self.shown = false
+		self.info.cancelFunc({ r = self.info.r, g = self.info.g, b = self.info.b })
+	end
+	api.colorPicker = picker
+	rawset(_G, "ColorPickerFrame", picker)
 	rawset(_G, "GameFontNormal", { GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end })
 	rawset(_G, "NumberFontNormal", { GetFont = function() return "Fonts\\ARIALN.TTF", 14, "OUTLINE" end })
 	return api
