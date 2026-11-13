@@ -262,8 +262,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Deleted %s."] = "Удалено: %s.",
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",
-	["Junk tossing and selling is off. Turn it on in the options."] = "Выброс и продажа хлама выключены. Включите их в настройках.",
-	["/lootoman toss: open the toss window"] = "/lootoman toss: открыть окно выброса",
+	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
+	["/lootoman toss: open the sort window"] = "/lootoman toss: открыть окно сортировки",
 	["Drag it out of the window to delete it."] = "Перетащите за пределы окна, чтобы удалить.",
 
 	-- Modules/Junk/SellQueue.lua

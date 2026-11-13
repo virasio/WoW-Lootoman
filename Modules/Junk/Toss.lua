@@ -210,9 +210,9 @@ ns.Slash.Register("toss", function()
 	if active then
 		Toss.Open(false)
 	else
-		ns.Print(L["Junk tossing and selling is off. Turn it on in the options."])
+		ns.Print(L["Junk management is off. Turn it on in the options."])
 	end
-end, L["/lootoman toss: open the toss window"])
+end, L["/lootoman toss: open the sort window"])
 
 Junk.AddPart({
 	Enable = function()

@@ -35,7 +35,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 - [ ] **Saved data of 0.4.** Log in with saved variables of 0.4: two profiles on the same layout with the same feed settings, one on the same layout with other settings, a layout no profile uses, and junk set to sell on opening with click and Shift-click swapped.
   - *Expected:* no errors; each profile's feed looks and behaves as before (rows, direction, owned count, kept items, warnings).
   - The look menu lists a look named after each layout, "Layout (Profile)" for the profile whose settings differ, and the unused layout as a look of its own.
-  - Junk sells on opening; the sort window's button keeps its old style (small, unless it was large).
+  - Junk sells on opening; the sort window's button keeps its old style (small, unless it was large); a profile that had junk turned off keeps it off.
   - A new character's profile uses the new defaults.
 
 ## Options and profiles
@@ -43,9 +43,9 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 - [ ] **Main page.** Options → AddOns → Lootoman.
   - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
     - *Enable fast autoloot*, with its bind-on-pickup option under it (greyed out while autoloot is off);
-    - *Junk*, a title without a switch, with *Sort window button*, *Style* under it (greyed out while the button is *Never*), *At merchants* and *Set up the junk list*;
+    - *Enable junk management*, with *Set up the junk list* right under it, then *Sort window button*, *Style* under it (greyed out while the button is *Never*) and *At merchants*, all greyed out while junk is off;
     - *Show the loot feed*, with *Feed look* under it (greyed out while the feed is off).
-  - The choices are dropdowns in the options panel's style, lined up with the profile's; the feed look's dropdown looks like the one in its Edit Mode dialog.
+  - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
   - There are no subpages under Lootoman.
   - Hovering a checkbox highlights only its row.
   - The panel's *Defaults* button is hidden on Lootoman's page and back on others.
@@ -99,16 +99,16 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 ### The game's Auto Loot box (0.4.5)
 
 - [ ] **Shown when Auto Loot is off.** Turn the game's *Auto Loot* off (Options → Gameplay → Controls), then open Lootoman's page.
-  - *Expected:* under fast autoloot, a box with a red header: Auto Loot is off, where to turn it on (the game's own names for Options, Gameplay, Controls and Auto Loot), and the key to hold while looting.
+  - *Expected:* under fast autoloot, a box with a red header asking to tick Auto Loot below for easier looting, without saying where the game keeps it.
   - In it, *Auto Loot* and *Auto Loot Key* with the key the game has.
   - With *Auto Loot* on when the page opens, there is no box.
 - [ ] **Changing the game's settings.** Tick *Auto Loot* in the box, then choose another key.
-  - *Expected:* the box stays, the key's label becomes *Loot Key*, and the game's Controls page shows the same values.
-  - After closing and opening the options, the box is gone.
-  - Untick it on the game's page, pick the key *None*: the header no longer names a key.
+  - *Expected:* the box stays; its header turns green and says all is set, the box will be hidden next time, and where the settings are, in the game's own names (Options > Gameplay > Controls); the key's label becomes *Loot Key*; the game's Controls page shows the same values.
+  - Untick it in the box: the red header is back.
+  - After closing and opening the options with Auto Loot on, the box is gone.
 - [ ] **In combat.** Open the options in a fight and change the box's controls. *Expected:* nothing changes, a chat line says why; no errors.
 - [ ] **Taint.** After setting the key, press Escape in the world and cast. *Expected:* no `ADDON_ACTION_FORBIDDEN` or `ADDON_ACTION_BLOCKED`; key bindings still save from the game's own page.
-- [ ] **Where an addon may not change it.** If the client keeps *Auto Loot* from addons, the box shows *Open the game's setting* instead, which opens the Controls page at Auto Loot. (Note whether this ever happens.)
+- [ ] **Where an addon may not change it.** If the client keeps *Auto Loot* from addons, the box asks to turn it on with *Open the game's setting* instead, which opens the Controls page at Auto Loot. (Note whether this ever happens.)
 
 ## Loot feed
 
@@ -295,9 +295,9 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 - [ ] **Stopping.** Close the merchant's window in the middle of a sale. *Expected:* selling stops with a chat line, and no item is used, equipped or opened afterwards. Sell an item you can still trade to your group: the game's question shows and selling stops.
 - [ ] **Sales log.** `/lootoman sales`. *Expected:* every stack sold this session with its price and the total; the same after `/reload`; empty after logging out and in.
 
-### No switch
+### The switch
 
-- [ ] **Junk is always on.** *Expected:* the options page has no switch for junk; with *Sort window button: Never* no button shows at the loot window, and the sell-junk button still takes the place of the game's.
+- [ ] **Turning junk off.** Untick *Enable junk management*. *Expected:* the settings under it are greyed out; no button at the loot window; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/lootoman toss` says it is off. Tick it again: all is back.
 
 ## Taint
 

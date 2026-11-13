@@ -267,8 +267,8 @@ ns.Locales.AddEnglish({
 	"Deleted %s.",
 	"Delete %s? Type “%s” to confirm.",
 	"Delete %s?",
-	"Junk tossing and selling is off. Turn it on in the options.",
-	"/lootoman toss: open the toss window",
+	"Junk management is off. Turn it on in the options.",
+	"/lootoman toss: open the sort window",
 	"Drag it out of the window to delete it.",
 
 	-- Modules/Junk/SellQueue.lua

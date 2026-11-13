@@ -10,7 +10,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - Before taking an item it checks that there is room: a partial stack of the same item, a free slot in a general bag, a profession bag that takes the item, or the reagent bag for crafting reagents (on WoW Forever, a herb bag in the reagent bag's slot takes only herbs).
 - What does not fit stays in the loot window, which then opens with the items that are left. So does everything after an error, such as full bags or a roll that is still going on.
 - Items that bind when picked up are confirmed for you when you are not in a group (an option, on by default). In a group, the loot window opens and you decide.
-- If the game's own Auto Loot is off when you open the options, a red box under fast autoloot says where to turn it on and holds the game's Auto Loot checkbox and Auto Loot key, as on the game's Controls page (or, where the game does not let addons change them, a button that opens that page).
+- If the game's own Auto Loot is off when you open the options, a box under fast autoloot asks in red to turn it on, and holds the game's Auto Loot checkbox and Auto Loot key, as on the game's Controls page (or, where the game does not let addons change them, a button that opens that page). Once it is on, the box says in green that all is set and where the game keeps these settings, and next time it is not shown.
 
 ### Loot feed
 
@@ -26,6 +26,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 ### Junk
 
 - Junk is every gray item and every item you marked as junk, but not a gray item you marked "not junk" (to keep it for transmog, say).
+- *Enable junk management* turns all of it on or off; turned off, the game's own sell-junk button is back.
 - **Sort window button** on the loot window: only when your bags are full (something of the loot did not fit, or no general bag has a free slot; the default), always, or never. Large, next to the window's top right corner and as big as the loot window's items (the default); or small, on the window's title bar next to its close button. It follows the loot window wherever Edit Mode puts it.
 - **Sort window** (*Sort junk*): your bags like a bag window, in two sections: the junk on top, everything else below, each cheapest first, with each stack's price under it and each section's total. The price is what deleting loses: the better of the merchant's price and Auctionator's auction price after the auction house's cut (a bound item has only the merchant's). Quest items and items in equipment sets are never listed. It opens next to the loot window from its button, or anywhere with `/lootoman toss`.
 - **Marking**: right-click an item to move it between the junk and everything else, or drag it there. Moved into the junk, it is marked as junk; moved out, the mark goes, and a gray item is marked "not junk".
@@ -37,7 +38,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ### Options and profiles
 
-- One options page in the game's AddOns settings, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then fast autoloot, junk and the loot feed, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window and the junk list.
+- One options page in the game's AddOns settings, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk and the loot feed, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window and the junk list.
 - Every character can use its own profile; new characters use the Default profile.
 - **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's settings, the loot feed's position and the look it uses, and any of your feed looks. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one; texts from earlier versions are read too. When an imported look's name is taken, choose for each one: keep both, replace yours, or keep yours. Feed looks can also be shared and imported on their own, from the look menu.
 - Changes apply at once, without `/reload`.
