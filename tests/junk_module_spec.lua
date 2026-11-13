@@ -64,7 +64,8 @@ describe("Junk module", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_true(table.concat(texts, "|"):find("Junk|Sort window button|Style|At merchants", 1, true) ~= nil)
-		assert.is_true(table.concat(texts, "|"):find("Confirm bind%-on%-pickup items when alone|Junk") ~= nil)
+		-- Fast autoloot's last item is the box of the game's Auto Loot settings.
+		assert.is_true(table.concat(texts, "|"):find("Confirm bind%-on%-pickup items when alone||Junk") ~= nil)
 		local junk = ns.Modules:Get("Junk")
 		assert.same({ "full", "large", "window", true }, { junk:Get("tossButton"), junk:Get("tossStyle"), junk:Get("selling"), junk:IsActive() })
 	end)

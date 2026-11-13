@@ -36,6 +36,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["Enable fast autoloot"] = "Включить быстрый автолут",
 	["When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up."] = "Когда игра забирает добычу автоматически, подбирает всё сразу. Окно лута открывается только для того, что подобрать нельзя.",
 	["Confirm bind-on-pickup items when alone"] = "Не спрашивать о персональных предметах вне группы",
+	["Auto Loot is off in the game's settings. For the best experience, turn it on: %s, or hold %s while looting."] = "Автоматический сбор добычи выключен в настройках игры. Для лучшей работы включите его: %s — или удерживайте %s при сборе добычи.",
+	["Auto Loot is off in the game's settings. For the best experience, turn it on: %s."] = "Автоматический сбор добычи выключен в настройках игры. Для лучшей работы включите его: %s.",
+	["Open the game's setting"] = "Открыть настройку игры",
+	["The game's Auto Loot settings can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
 	["Picks up items that bind when picked up without asking, unless you are in a group."] = "Подбирает предметы, которые становятся персональными при получении, без вопроса, если вы не в группе.",
 
 	-- Modules/LootFeed/Frames.lua

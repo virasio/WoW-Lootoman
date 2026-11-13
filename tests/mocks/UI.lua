@@ -107,6 +107,8 @@ function methods:SetText(text) self.text = text end
 function methods:SetFont(file, size, flags) self.font = { file, size, flags } end
 -- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
 function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
+-- A text wraps every 520 pixels, 14 pixels a line.
+function methods:GetStringHeight() return 14 * math.max(1, math.ceil(self:GetUnboundedStringWidth() / 520)) end
 function methods:SetGradient(orientation, from, to) self.gradient = { orientation, from, to } end
 function methods:GetText() return self.text end
 function methods:SetTextColor(r, g, b) self.color = { r, g, b } end
@@ -143,7 +145,12 @@ function methods:GenerateMenu()
 	end
 end
 function methods:CreateTexture() return UI.NewFake(self) end
-function methods:CreateFontString() return UI.NewFake(self) end
+-- A font string's template is its font object until SetFontObject changes it.
+function methods:CreateFontString(_, layer, template)
+	local text = UI.NewFake(self)
+	text.layer, text.fontObject = layer, template
+	return text
+end
 
 -- A fake frame, texture or font string; shown by default, like a new frame.
 function UI.NewFake(parent, strata)

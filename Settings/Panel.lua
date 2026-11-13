@@ -42,7 +42,7 @@ MainPage.__index = MainPage
 local function newMainPage()
 	local frame = CreateFrame("Frame")
 	frame:Hide()
-	local page = setmetatable({ frame = frame, items = {}, refreshers = {} }, MainPage)
+	local page = setmetatable({ frame = frame, items = {}, refreshers = {}, openers = {} }, MainPage)
 	-- The header of the options panel's own pages (Blizzard_SettingsList.xml).
 	page.title = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightHuge")
 	page.title:SetJustifyH("LEFT")
@@ -52,8 +52,12 @@ local function newMainPage()
 	divider:SetAtlas("Options_HorizontalDivider", true)
 	divider:SetPoint("TOP", frame, "TOP", 0, -50)
 	page.top = -56
-	-- The options panel calls it when it shows the page.
+	-- The options panel calls it when it shows the page (and when it opens on
+	-- another page).
 	function frame.OnRefresh()
+		for _, open in ipairs(page.openers) do
+			xpcall(open, Compat.ReportError)
+		end
 		page:Refresh()
 	end
 	return page
@@ -119,6 +123,11 @@ end
 -- update() runs whenever the page should show the stored values again.
 function MainPage:OnRefresh(update)
 	self.refreshers[#self.refreshers + 1] = update
+end
+
+-- open() runs when the options panel shows the page, before it refreshes.
+function MainPage:OnOpen(open)
+	self.openers[#self.openers + 1] = open
 end
 
 function MainPage:Refresh()

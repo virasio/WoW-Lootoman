@@ -153,6 +153,49 @@ function Compat.IsAutoLootOn()
 	return (C_CVar.GetCVarBool("autoLootDefault") == true) ~= (IsModifiedClick("AUTOLOOTTOGGLE") == true)
 end
 
+-- The game's Auto Loot option (Options, Gameplay, Controls): the CVar
+-- autoLootDefault.
+function Compat.GetAutoLoot()
+	return C_CVar.GetCVarBool("autoLootDefault") == true
+end
+
+-- Whether an addon may change it: the client lets addons set a CVar that is
+-- neither secure nor read-only.
+function Compat.CanSetAutoLoot()
+	local value, _, _, _, _, isSecure, isReadOnly = C_CVar.GetCVarInfo("autoLootDefault")
+	return value ~= nil and not isSecure and not isReadOnly
+end
+
+-- Turns it on or off, as the game's own options page does; not in combat.
+-- Returns whether it was changed.
+function Compat.SetAutoLoot(on)
+	if Compat.InCombat() or not Compat.CanSetAutoLoot() then
+		return false
+	end
+	return C_CVar.SetCVar("autoLootDefault", on and "1" or "0") == true
+end
+
+-- The Auto Loot key: the game's modified click AUTOLOOTTOGGLE, "ALT", "CTRL",
+-- "SHIFT" or "NONE". While Auto Loot is on, holding it loots by hand.
+function Compat.GetAutoLootKey()
+	return GetModifiedClick("AUTOLOOTTOGGLE")
+end
+
+function Compat.CanSetAutoLootKey()
+	return Compat.Has("SetModifiedClick") and Compat.Has("SaveBindings") and Compat.Has("GetCurrentBindingSet")
+end
+
+-- Sets the key and saves it with the key bindings, as the game's own options
+-- page does; not in combat. Returns whether it was changed.
+function Compat.SetAutoLootKey(key)
+	if Compat.InCombat() or not Compat.CanSetAutoLootKey() then
+		return false
+	end
+	SetModifiedClick("AUTOLOOTTOGGLE", key)
+	SaveBindings(GetCurrentBindingSet())
+	return true
+end
+
 function Compat.IsInGroup()
 	return IsInGroup() == true
 end

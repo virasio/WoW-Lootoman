@@ -87,6 +87,7 @@ Settings\Panel.lua
 Settings\Profiles.lua
 Settings\Share.lua
 Settings\JunkList.lua
+Settings\AutoLootBox.lua
 
 #@debug@
 Dev\LootDump.lua

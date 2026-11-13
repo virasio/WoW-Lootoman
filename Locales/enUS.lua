@@ -36,6 +36,10 @@ ns.Locales.AddEnglish({
 	"Enable fast autoloot",
 	"When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up.",
 	"Confirm bind-on-pickup items when alone",
+	"Auto Loot is off in the game's settings. For the best experience, turn it on: %s, or hold %s while looting.",
+	"Auto Loot is off in the game's settings. For the best experience, turn it on: %s.",
+	"Open the game's setting",
+	"The game's Auto Loot settings can be changed out of combat.",
 	"Picks up items that bind when picked up without asking, unless you are in a group.",
 
 	-- Modules/LootFeed/Frames.lua

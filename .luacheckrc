@@ -22,6 +22,10 @@ files["Locales/Locales.lua"] = {
 files["Compat/"] = {
 	globals = { "SlashCmdList" },
 	read_globals = {
+		"SetModifiedClick",
+		"SaveBindings",
+		"GetModifiedClick",
+		"GetCurrentBindingSet",
 		"BreakUpLargeNumbers",
 		"C_AddOns",
 		"C_CVar",
@@ -119,8 +123,18 @@ files["Modules/"] = {
 
 files["Settings/"] = {
 	read_globals = {
+		"ALT_KEY",
+		"AUTO_LOOT_DEFAULT_TEXT",
+		"AUTO_LOOT_KEY_TEXT",
 		"CANCEL",
 		"CLOSE",
+		"CONTROLS_LABEL",
+		"CTRL_KEY",
+		"LOOT_KEY_TEXT",
+		"NONE_KEY",
+		"SETTING_GROUP_GAMEPLAY",
+		"SETTINGS_TITLE",
+		"SHIFT_KEY",
 		"CreateAtlasMarkup",
 		"CreateFrame",
 		"CreateSettingsButtonInitializer",

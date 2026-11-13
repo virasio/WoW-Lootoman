@@ -79,8 +79,17 @@ function SettingsAPI.Install()
 		api.addOnCategories[#api.addOnCategories + 1] = category
 	end
 
-	function Settings.OpenToCategory(id)
-		api.opened = id
+	-- The page opened, and the setting it was scrolled to.
+	function Settings.OpenToCategory(id, scrollTo)
+		api.opened, api.scrolledTo = id, scrollTo
+	end
+
+	function Settings.GetCategory(name)
+		for _, category in ipairs(api.categories) do
+			if category.name == name then
+				return category
+			end
+		end
 	end
 
 	function Settings.RegisterProxySetting(category, variable, varType, name, default, getValue, setValue)
@@ -144,6 +153,16 @@ function SettingsAPI.Install()
 	-- EnumUtil.MakeEnum("Left", "Right", "Top", "Min", "Max") in MinimalSlider.lua.
 	rawset(_G, "MinimalSliderWithSteppersMixin", { Label = { Left = 1, Right = 2, Top = 3, Min = 4, Max = 5 } })
 	rawset(_G, "CANCEL", "Cancel")
+	-- The game's own strings for its Auto Loot settings, and its Controls page.
+	local strings = {
+		SETTINGS_TITLE = "Options", SETTING_GROUP_GAMEPLAY = "Gameplay", CONTROLS_LABEL = "Controls",
+		AUTO_LOOT_DEFAULT_TEXT = "Auto Loot", AUTO_LOOT_KEY_TEXT = "Auto Loot Key", LOOT_KEY_TEXT = "Loot Key",
+		ALT_KEY = "ALT key", CTRL_KEY = "CTRL key", SHIFT_KEY = "SHIFT key", NONE_KEY = "None",
+	}
+	for name, text in pairs(strings) do
+		rawset(_G, name, text)
+	end
+	api.controls = newCategory("Controls")
 
 	-- EventRegistry (CallbackRegistry): an owner's callback gets (owner, ...).
 	local callbacks = {}
