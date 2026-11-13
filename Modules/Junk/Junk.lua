@@ -30,7 +30,7 @@ local Junk = ns.Modules:Register({
 			enabledWhen = function()
 				return ns.Storage:Get("Junk", "tossButton") ~= "never"
 			end },
-		{ kind = "choice", key = "selling", label = L["At merchants"], vertical = true,
+		{ kind = "choice", key = "selling", label = L["At merchants"],
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
 				{ "window", L["The sell button opens the sort window"] } } },
 		{ kind = "button", label = L["Set up the junk list"],

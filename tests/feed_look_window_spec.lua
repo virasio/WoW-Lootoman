@@ -407,6 +407,8 @@ describe("loot feed look window, opened from", function()
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
 		local LookWindow = ns.Modules:Get("LootFeed").LookWindow
+		-- On the options page the dropdown looks as it does in the Edit Mode dialog.
+		assert.equals("WowStyle1DropdownTemplate", ns.SettingsPanel.main.look.template)
 		api.OpenMenu(ns.SettingsPanel.main.look).entries[1].entries[1].callback()
 		assert.is_true(LookWindow.window.shown)
 		LookWindow.window:Hide()

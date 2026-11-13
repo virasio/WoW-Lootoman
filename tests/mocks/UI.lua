@@ -236,6 +236,7 @@ function UI.Install()
 	rawset(_G, "UIParent", api.UIParent)
 	rawset(_G, "CreateFrame", function(_, name, parent, template)
 		local frame = UI.NewFake(parent)
+		frame.template = template
 		frame.protected = type(template) == "string" and template:find("Secure") ~= nil
 		-- A named frame is a global, as in the client.
 		if name then

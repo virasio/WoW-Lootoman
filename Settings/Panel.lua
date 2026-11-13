@@ -28,6 +28,8 @@ end
 Panel.LEFT = 20
 Panel.INDENT = 24
 Panel.CONTROL_X = 260
+-- The width of a choice's dropdown: room for the longest choice, in Russian too.
+Panel.DROPDOWN_WIDTH = 260
 local GAP = 6
 
 -- The main page, built from top to bottom: every Add puts an item under the
@@ -181,49 +183,31 @@ function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, ena
 	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true })
 end
 
--- A choice of a module setting: its label, then a radio button for each
--- choice ({ value, label }), side by side or, with options.vertical, one under
--- another. options: indent, requires, enabledWhen, tooltip.
+-- A choice of a module setting: its label, then a dropdown in the options
+-- panel's own style with a radio for each choice ({ value, label }).
+-- options: indent, requires, enabledWhen, tooltip. Returns the dropdown.
 function MainPage:AddChoice(module, key, label, choices, options)
 	options = options or {}
-	local row = CreateFrame("Frame", nil, self.frame)
-	local text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	text:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -4)
-	text:SetText(label)
-	addTooltip(row, label, options.tooltip)
-	local radios = {}
-	local x, y = Panel.CONTROL_X - Panel.LEFT - (options.indent or 0), 0
-	for index, choice in ipairs(choices) do
-		local radio = CreateFrame("CheckButton", nil, row, "UIRadioButtonTemplate")
-		radio:SetPoint("TOPLEFT", row, "TOPLEFT", x, y - 4)
-		radio.label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-		radio.label:SetPoint("LEFT", radio, "RIGHT", 5, 0)
-		radio.label:SetText(choice[2])
-		radio.value = choice[1]
-		radio:SetHitRectInsets(0, -(radio.label:GetUnboundedStringWidth() + 5), 0, 0)
-		radio:SetScript("OnClick", function()
-			Storage:Set(module, key, choice[1])
-		end)
-		radios[index] = radio
-		if options.vertical then
-			y = y - 22
-		else
-			x = x + 26 + radio.label:GetUnboundedStringWidth() + 16
-		end
-	end
-	row.radios = radios
-	self:OnRefresh(function()
-		local value = Storage:Get(module, key)
-		local isEnabled = enabled(options.requires, options.enabledWhen)
-		setTextEnabled(text, isEnabled)
-		for _, radio in ipairs(radios) do
-			radio:SetChecked(radio.value == value)
-			radio:SetEnabled(isEnabled)
-			setTextEnabled(radio.label, isEnabled, "GameFontHighlight")
+	local row = self:NewRow()
+	local dropdown = CreateFrame("DropdownButton", nil, row, "WowStyle2DropdownTemplate")
+	dropdown:SetWidth(Panel.DROPDOWN_WIDTH)
+	dropdown:SetupMenu(function(_, root)
+		for _, choice in ipairs(choices) do
+			root:CreateRadio(choice[2], function(value)
+				return Storage:Get(module, key) == value
+			end, function(value)
+				Storage:Set(module, key, value)
+			end, choice[1])
 		end
 	end)
-	local height = options.vertical and (#choices * 22 + 2) or 24
-	return self:Add("choice", row, height, { indent = options.indent, text = label, wide = true })
+	self:AddRow(label, dropdown, { indent = options.indent, height = 28, tooltip = options.tooltip, kind = "choice" })
+	self:OnRefresh(function()
+		local isEnabled = enabled(options.requires, options.enabledWhen)
+		setTextEnabled(row.label, isEnabled)
+		dropdown:SetEnabled(isEnabled)
+		dropdown:GenerateMenu()
+	end)
+	return dropdown
 end
 
 -- A button with text, which runs onClick. options: indent, requires,
@@ -245,8 +229,9 @@ function MainPage:AddButton(text, onClick, options)
 end
 
 -- A row with a label on the left and a control (made by the caller, a child
--- of the row) at CONTROL_X. options: indent, height, tooltip, visible.
--- Returns the row; control is placed in it.
+-- of the row) at CONTROL_X. options: indent, height, tooltip, visible, and
+-- kind for the page's list of items ("row" by default). Returns the row;
+-- control is placed in it.
 function MainPage:AddRow(label, control, options)
 	options = options or {}
 	local row = control:GetParent()
@@ -257,7 +242,8 @@ function MainPage:AddRow(label, control, options)
 	control:ClearAllPoints()
 	control:SetPoint("LEFT", row, "LEFT", Panel.CONTROL_X - Panel.LEFT - (options.indent or 0), 0)
 	addTooltip(control, label, options.tooltip)
-	return self:Add("row", row, options.height or 26, { indent = options.indent, text = label, wide = true, visible = options.visible })
+	return self:Add(options.kind or "row", row, options.height or 26, { indent = options.indent, text = label, wide = true,
+		visible = options.visible })
 end
 
 -- A frame for a row's control: make the control a child of it, then AddRow.
@@ -281,7 +267,7 @@ end
 -- A module's block on the main page: its switch, or its title for a module
 -- that has none (switchLabel = false); then what goes under it, indented:
 -- the module's main settings, which can be changed only while it is on.
--- A main setting is a checkbox, a choice (radio buttons), a button, or a
+-- A main setting is a checkbox, a choice (a dropdown), a button, or a
 -- custom builder(page, indent, module), each with an optional enabledWhen().
 local function addModule(page, module)
 	local requires
@@ -299,7 +285,7 @@ local function addModule(page, module)
 			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen)
 		elseif setting.kind == "choice" then
 			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = indent, requires = requires,
-				enabledWhen = setting.enabledWhen, vertical = setting.vertical, tooltip = setting.tooltip })
+				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
 		elseif setting.kind == "button" then
 			page:AddButton(setting.label, setting.click, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
 				tooltip = setting.tooltip })

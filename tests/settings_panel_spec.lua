@@ -158,7 +158,7 @@ describe("settings panel main page controls", function()
 				{ kind = "choice", key = "button", label = "Button", choices = { { "never", "Never" }, { "always", "Always" }, { "full", "Full" } } },
 				{ kind = "choice", key = "style", label = "Style", level = 2, choices = { { "small", "Small" }, { "large", "Large" } },
 					enabledWhen = function() return ns.Storage:Get("Bin", "button") ~= "never" end },
-				{ kind = "choice", key = "selling", label = "Selling", vertical = true,
+				{ kind = "choice", key = "selling", label = "Selling",
 					choices = { { "auto", "Auto" }, { "button", "Button" }, { "window", "Window" } } },
 				{ kind = "button", key = "list", label = "Junk list", click = function() ns.listOpened = true end },
 				{ kind = "custom", build = function(built, indent)
@@ -181,25 +181,42 @@ describe("settings panel main page controls", function()
 			"box:Watch out:24", "checkbox:Show the feed:0" }, list)
 	end)
 
-	it("bind a choice's radio buttons to its setting, side by side or one under another", function()
-		local radios = itemOf("Button").region.radios
-		assert.same({ "Never", "Always", "Full" }, { radios[1].label.text, radios[2].label.text, radios[3].label.text })
-		assert.same({ false, false, true }, { radios[1].checked, radios[2].checked, radios[3].checked })
-		radios[1].scripts.OnClick(radios[1])
+	-- The dropdown in a choice's row, and its menu's radios: "text" with a star
+	-- on the chosen one.
+	local function dropdownOf(text)
+		local row = itemOf(text).region
+		for _, frame in ipairs(Loader.ui.frames) do
+			if frame.parent == row and frame.dropdown then
+				return frame
+			end
+		end
+	end
+
+	local function radios(dropdown)
+		local list = {}
+		for _, entry in ipairs(require("tests.mocks.UI").OpenMenu(dropdown).entries) do
+			list[#list + 1] = entry.text .. (entry.isSelected(entry.data) and "*" or "")
+		end
+		return list
+	end
+
+	it("bind a choice's dropdown to its setting, in the options panel's style, at the rows' control column", function()
+		local button = dropdownOf("Button")
+		assert.same({ "WowStyle2DropdownTemplate", "Button" }, { button.template, itemOf("Button").region.label.text })
+		assert.equals(ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 24, button.points[1][4])
+		assert.same({ "Never", "Always", "Full*" }, radios(button))
+		require("tests.mocks.UI").OpenMenu(button).entries[1].setSelected("never")
 		assert.equals("never", ns.Storage:Get("Bin", "button"))
-		page:Refresh()
-		assert.same({ true, false }, { radios[1].checked, radios[3].checked })
-		local selling = itemOf("Selling").region.radios
-		assert.same({ 0, -22 }, { selling[1].points[1][5] + 4, selling[2].points[1][5] + 4 })
-		assert.equals(itemOf("Button").region.radios[1].points[1][4] < itemOf("Button").region.radios[2].points[1][4], true)
+		assert.same({ "Never*", "Always", "Full" }, radios(button))
+		assert.same({ "Auto*", "Button", "Window" }, radios(dropdownOf("Selling")))
 	end)
 
 	it("grey out a control while its condition does not hold", function()
-		local style = itemOf("Style").region.radios
-		assert.is_true(style[1].enabled ~= false)
+		local style = dropdownOf("Style")
+		assert.is_true(style.enabled ~= false)
 		ns.Storage:Set("Bin", "button", "never")
 		page:Refresh()
-		assert.same({ false, false }, { style[1].enabled, style[2].enabled })
+		assert.same({ false, "GameFontDisable" }, { style.enabled, itemOf("Style").region.label.fontObject })
 	end)
 
 	it("run a button's action", function()
