@@ -24,6 +24,9 @@ local state = {
 	errors = {},
 	-- Auto loot is on in the fake client; no modifier keys are held.
 	cvars = { autoLootDefault = true },
+	secureCVars = {},
+	-- The keys of modified clicks, as the game's options set them.
+	modifiedClicks = { AUTOLOOTTOGGLE = "SHIFT" },
 	modifiers = {},
 	group = false,
 	-- The loot window: count stays the same while looted slots become false.
@@ -137,6 +140,41 @@ end
 
 function Compat.IsAutoLootOn()
 	return (state.cvars.autoLootDefault == true) ~= (state.modifiers.AUTOLOOTTOGGLE == true)
+end
+
+function Compat.GetAutoLoot()
+	return state.cvars.autoLootDefault == true
+end
+
+-- state.secureCVars: CVars the fake client keeps from addons.
+function Compat.CanSetAutoLoot()
+	return not state.secureCVars.autoLootDefault
+end
+
+function Compat.SetAutoLoot(on)
+	if state.combat or not Compat.CanSetAutoLoot() then
+		return false
+	end
+	state.cvars.autoLootDefault = on
+	return true
+end
+
+function Compat.GetAutoLootKey()
+	return state.modifiedClicks.AUTOLOOTTOGGLE
+end
+
+-- state.noBindings: a client without the functions that save key bindings.
+function Compat.CanSetAutoLootKey()
+	return not state.noBindings
+end
+
+function Compat.SetAutoLootKey(key)
+	if state.combat or not Compat.CanSetAutoLootKey() then
+		return false
+	end
+	state.modifiedClicks.AUTOLOOTTOGGLE = key
+	state.savedBindings = (state.savedBindings or 0) + 1
+	return true
 end
 
 function Compat.IsInGroup()

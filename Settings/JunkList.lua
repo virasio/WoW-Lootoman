@@ -1,16 +1,21 @@
 local _, ns = ...
 local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 
--- The junk list: a page of its own under the Junk module's page, with every
--- item the profile marks. Two lists, Marked as junk and Not junk (gray items
--- kept out of the junk), each item with its icon, its name and a Remove
--- button; Clear list removes them all after a question. The page follows the
--- marks and the profile while it is shown.
+-- The junk list: a window of its own with every item the profile marks,
+-- opened from the main page (Set up the junk list) and from the sort windows.
+-- Two lists, Marked as junk and Not junk (gray items kept out of the junk),
+-- each item with its icon, its name and a Remove button; Clear list removes
+-- them all after a question. The window follows the marks and the profile
+-- while it is shown; Escape and its close button hide it.
 local JunkList = {}
 ns.JunkList = JunkList
 
 JunkList.ROW_HEIGHT = 26
 JunkList.TOP = -60
+JunkList.WIDTH = 560
+JunkList.HEIGHT = 480
+-- The window's global name, for UISpecialFrames.
+JunkList.NAME = "LootomanJunkList"
 
 local GROUPS = {
 	{ mark = "junk", title = L["Marked as junk"] },
@@ -117,16 +122,32 @@ function JunkList.Refresh()
 	page.lines = lines
 end
 
-local function build(category, layout)
-	local frame = CreateFrame("Frame")
+local function build()
+	local frame = CreateFrame("Frame", JunkList.NAME, UIParent, "DefaultPanelFlatTemplate")
 	frame:Hide()
+	frame:SetSize(JunkList.WIDTH, JunkList.HEIGHT)
+	frame:SetPoint("CENTER")
+	frame:SetFrameStrata("DIALOG")
+	frame:SetToplevel(true)
+	frame:SetClampedToScreen(true)
+	frame:EnableMouse(true)
+	frame:SetMovable(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+	frame:SetTitle(L["Junk list"])
+	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")
+	close:SetPoint("TOPRIGHT", 1, 0)
+	close:SetScript("OnClick", function()
+		frame:Hide()
+	end)
+	-- Escape closes it as it closes the game's own windows (see the look window:
+	-- RegisterGameMenuEscHandler would taint the game menu).
+	table.insert(UISpecialFrames, JunkList.NAME)
 	page = { frame = frame, rows = {} }
-	local title = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightHuge")
-	title:SetPoint("TOPLEFT", 7, -22)
-	title:SetText(L["Junk list"])
 	page.clear = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	page.clear:SetSize(120, 22)
-	page.clear:SetPoint("TOPRIGHT", -20, -20)
+	page.clear:SetPoint("TOPRIGHT", -20, -30)
 	page.clear:SetText(L["Clear list"])
 	-- The question names the profile, and clears nothing if the profile changed
 	-- while it was open.
@@ -140,34 +161,36 @@ local function build(category, layout)
 	end)
 	local scroll = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 20, JunkList.TOP)
-	scroll:SetPoint("BOTTOMRIGHT", -30, 10)
+	scroll:SetPoint("BOTTOMRIGHT", -30, 14)
 	page.content = CreateFrame("Frame", nil, scroll)
-	page.content:SetSize(560, JunkList.ROW_HEIGHT)
+	page.content:SetSize(JunkList.WIDTH - 60, JunkList.ROW_HEIGHT)
 	scroll:SetScrollChild(page.content)
-	-- The options panel calls it when it shows the page.
-	function frame.OnRefresh()
-		JunkList.Refresh()
-	end
-	page.category = Settings.RegisterCanvasLayoutSubcategory(category, frame, L["Junk list"])
-	ns.SettingsPanel.AddButton(layout, L["Junk list"], L["Open the list"], function()
-		Settings.OpenToCategory(page.category:GetID())
-	end, L["Every item you marked as junk or as not junk, to remove marks."])
-	JunkList.Refresh()
+	frame:SetScript("OnShow", JunkList.Refresh)
 end
 
--- The page, for tests: { frame, rows, lines, clear, category }.
+-- Opens the window; it is built the first time, which waits for the end of combat.
+function JunkList.Open()
+	if not page then
+		if Compat.InCombat() then
+			ns.Print(L["The junk list opens out of combat."])
+			return false
+		end
+		build()
+	end
+	page.frame:Show()
+	JunkList.Refresh()
+	return true
+end
+
+-- The window, for tests: { frame, rows, lines, clear }.
 function JunkList.Page()
 	return page
 end
 
-local Junk = ns.Modules:Get("Junk")
-if Junk then
-	Junk.AddToPage(build)
-	local function refreshShown()
-		if page and page.frame:IsShown() then
-			JunkList.Refresh()
-		end
+local function refreshShown()
+	if page and page.frame:IsShown() then
+		JunkList.Refresh()
 	end
-	Bus:On("MarksChanged", JunkList, refreshShown)
-	Bus:On("ProfileChanged", JunkList, refreshShown)
 end
+Bus:On("MarksChanged", JunkList, refreshShown)
+Bus:On("ProfileChanged", JunkList, refreshShown)

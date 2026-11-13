@@ -306,9 +306,19 @@ function ItemGrid.Create(options)
 	close:SetScript("OnClick", function()
 		frame:Hide()
 	end)
-	-- Escape closes it as it closes the game's own windows (see the designer:
+	-- Escape closes it as it closes the game's own windows (see the look window:
 	-- RegisterGameMenuEscHandler would taint the game menu).
 	table.insert(UISpecialFrames, options.name)
+	-- The junk list (Settings/JunkList.lua), to remove marks.
+	grid.listButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	grid.listButton:SetSize(90, 20)
+	grid.listButton:SetPoint("TOPRIGHT", -24, -1)
+	grid.listButton:SetText(L["Junk list"])
+	grid.listButton:SetScript("OnClick", function()
+		if ns.JunkList then
+			ns.JunkList.Open()
+		end
+	end)
 
 	grid.sections.junk = createSection(grid, "junk", -ItemGrid.TOP)
 	grid.sections.rest = createSection(grid, "rest", -ItemGrid.TOP - sectionHeight(ItemGrid.ROWS.junk) - 8)

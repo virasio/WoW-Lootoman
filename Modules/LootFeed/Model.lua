@@ -19,7 +19,8 @@ local _, ns = ...
 -- first takes the first slot, at the anchor edge, and stays there; the others
 -- stuck after it wait under it, and the rest of the rows go on fading in the
 -- slots after it. Release lets a row go at once, and the next stuck row
--- takes the slot. Looting a stuck item again adds to its row in place.
+-- takes the slot; Unstick lets it fade out instead, and it may stick again
+-- before it is gone. Looting a stuck item again adds to its row in place.
 --
 --   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, minQuality = 0,
 --       kinds = { item = true, currency = true, money = true, reputation = true, xp = false } }, now)
@@ -202,6 +203,19 @@ function ModelMixin:SetSticky(row, kind, now)
 		self:Release(row)
 	else
 		row.sticky = nil
+	end
+end
+
+-- A row that is no longer sticky though its item is still there: a stuck row
+-- leaves its place and fades out as one whose time is up, and sticks again if
+-- it is made sticky before it is gone.
+function ModelMixin:Unstick(row, now)
+	now = clock(self, now)
+	row.sticky = nil
+	if row.stuck then
+		row.stuck, row.stuckOrder = nil, nil
+		row.fadeStart, row.fadeEnd = now, now + self.options.fade
+		pushOut(self, now)
 	end
 end
 

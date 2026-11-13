@@ -1,8 +1,8 @@
 local Loader = require("tests.helpers.loader")
 local SettingsAPI = require("tests.mocks.SettingsAPI")
 
--- The junk list page in the options.
-describe("junk list page", function()
+-- The junk list window.
+describe("junk list window", function()
 	local ns, api, JunkList, Marks
 
 	local function texts()
@@ -32,13 +32,36 @@ describe("junk list page", function()
 		})
 	end)
 
-	it("is a page of its own under the Junk page, opened from a button there", function()
-		local page = api.FindCategory("Junk list")
-		assert.equals(api.FindCategory("Junk"), page:GetParentCategory())
-		assert.equals(JunkList.Page().frame, page.frame)
-		local button = api.FindButton(api.FindCategory("Junk"), "Junk list")
-		button.onClick()
-		assert.equals(page:GetID(), api.opened)
+	local function mainButton()
+		for _, entry in ipairs(ns.SettingsPanel.main.items) do
+			if entry.text == "Set up the junk list" then
+				return entry.region
+			end
+		end
+	end
+
+	it("is a window of its own, opened from the options' main page and from the sort windows, closed with Escape", function()
+		assert.is_nil(api.FindCategory("Junk list"))
+		assert.is_nil(JunkList.Page())
+		local button = mainButton()
+		button.scripts.OnClick(button)
+		local frame = JunkList.Page().frame
+		assert.same({ true, "Junk list", "LootomanJunkList" }, { frame.shown, frame.title, frame.name })
+		assert.is_true(Loader.ui.PressEscape())
+		assert.is_false(frame.shown)
+		-- The sort window's own button opens it too.
+		local grid = ns.Modules:Get("Junk").ItemGrid.Create({ name = "LootomanTestGrid", title = "Sort junk", kind = "toss" })
+		assert.equals("Junk list", grid.listButton.text)
+		grid.listButton.scripts.OnClick(grid.listButton)
+		assert.is_true(frame.shown)
+	end)
+
+	it("opens only out of combat the first time", function()
+		ns.Compat.Test.SetCombat(true)
+		assert.is_false(JunkList.Open())
+		assert.matches("out of combat", ns.Compat.Test.state.printed[#ns.Compat.Test.state.printed])
+		ns.Compat.Test.SetCombat(false)
+		assert.is_true(JunkList.Open())
 	end)
 
 	it("lists the items marked junk and not junk, each by name", function()
@@ -53,10 +76,8 @@ describe("junk list page", function()
 	it("removes one mark, and clears them all after a question", function()
 		Marks.Set(10, "junk")
 		Marks.Set(30, "notJunk")
+		JunkList.Open()
 		local page = JunkList.Page()
-		-- What the options panel does when it shows the page.
-		page.frame:Show()
-		page.frame.OnRefresh()
 		local zebra = rowFor(10)
 		zebra.remove.scripts.OnClick(zebra.remove)
 		assert.same({ { itemID = 30, mark = "notJunk" } }, Marks.List())
@@ -70,9 +91,8 @@ describe("junk list page", function()
 
 	it("clears nothing when the profile changed while the question was open", function()
 		Marks.Set(10, "junk")
+		JunkList.Open()
 		local page = JunkList.Page()
-		page.frame:Show()
-		page.frame.OnRefresh()
 		page.clear.scripts.OnClick(page.clear)
 		ns.Profiles.Create("Alt")
 		ns.Profiles.Switch("Alt")
@@ -85,7 +105,7 @@ describe("junk list page", function()
 
 	it("follows the profile", function()
 		Marks.Set(10, "junk")
-		JunkList.Page().frame:Show()
+		JunkList.Open()
 		ns.Profiles.Create("Alt")
 		ns.Profiles.Switch("Alt")
 		assert.is_nil(rowFor(10))

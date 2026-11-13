@@ -56,18 +56,29 @@ describe("Junk module", function()
 		assert.matches("broken part", ns.Compat.Test.state.errors[1])
 	end)
 
-	it("has its switch and Sell junk at merchants on the main page, and its settings on its own page", function()
-		local api = SettingsAPI.Install()
+	it("has a switch on the main page after fast autoloot, the junk list's button under it, then its choices", function()
+		SettingsAPI.Install()
 		ns = Loader.Start(Loader.LoadAddon({ skip = {} }))
 		local texts = {}
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
-			texts[#texts + 1] = entry.text
+			texts[#texts + 1] = tostring(entry.text)
 		end
-		assert.is_true(table.concat(texts, "|"):find("Enable junk tossing and selling|Sell junk at merchants|Configure", 1, true) ~= nil)
-		assert.same({
-			"checkbox:Enabled", "header:Toss button", "dropdown:Show the toss button", "dropdown:Button style", "slider:Button size",
-			"dropdown:Side of the loot window", "slider:Offset along the side", "header:Selling", "checkbox:Sell junk at merchants",
-			"checkbox:Swap click and Shift-click",
-		}, { unpack(api.Kinds(api.FindCategory("Junk")), 1, 10) })
+		assert.is_true(table.concat(texts, "|"):find("Enable junk management|Set up the junk list|Sort window button|Style|At merchants", 1, true) ~= nil)
+		-- Fast autoloot's last item is the box of the game's Auto Loot settings.
+		assert.is_true(table.concat(texts, "|"):find("Confirm bind%-on%-pickup items when alone||Enable junk management") ~= nil)
+		local junk = ns.Modules:Get("Junk")
+		assert.same({ "full", "large", "window", true }, { junk:Get("tossButton"), junk:Get("tossStyle"), junk:Get("selling"), junk:IsActive() })
+		-- Turned off, everything under it is greyed out.
+		local page = ns.SettingsPanel.main
+		local function item(text)
+			for _, entry in ipairs(page.items) do
+				if entry.text == text then
+					return entry.region
+				end
+			end
+		end
+		ns.Modules:SetEnabled("Junk", false)
+		page:Refresh()
+		assert.same({ false, false }, { item("Set up the junk list").enabled, ns.Modules:Get("Junk"):IsActive() })
 	end)
 end)

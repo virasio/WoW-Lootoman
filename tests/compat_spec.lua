@@ -151,6 +151,53 @@ describe("Compat", function()
 				assert.equals(case[3], Compat.IsAutoLootOn(), ("setting %s, key %s"):format(tostring(cvar), tostring(held)))
 			end
 		end)
+
+		it("changes the game's Auto Loot only where the client lets addons, and out of combat", function()
+			local info, set, combat = { "0", "1", false, false, false, false, false }, {}, false
+			stub({
+				C_CVar = {
+					GetCVarBool = function() return false end,
+					GetCVarInfo = function(name)
+						if name == "autoLootDefault" then
+							return unpack(info)
+						end
+					end,
+					SetCVar = function(name, value) set[#set + 1] = name .. "=" .. value; return true end,
+				},
+				InCombatLockdown = function() return combat end,
+			})
+			assert.is_true(Compat.CanSetAutoLoot())
+			assert.is_true(Compat.SetAutoLoot(true))
+			assert.same({ "autoLootDefault=1" }, set)
+			combat = true
+			assert.is_false(Compat.SetAutoLoot(false))
+			combat = false
+			info[6] = true
+			assert.is_false(Compat.CanSetAutoLoot())
+			info[6], info[7] = false, true
+			assert.is_false(Compat.SetAutoLoot(false))
+			assert.same({ "autoLootDefault=1" }, set)
+		end)
+
+		it("sets the Auto Loot key and saves it with the current key bindings, out of combat", function()
+			local calls, combat = {}, false
+			stub({
+				GetModifiedClick = function(action) return action == "AUTOLOOTTOGGLE" and "SHIFT" or nil end,
+				SetModifiedClick = function(action, key) calls[#calls + 1] = action .. "=" .. key end,
+				GetCurrentBindingSet = function() return 2 end,
+				SaveBindings = function(set) calls[#calls + 1] = "save " .. set end,
+				InCombatLockdown = function() return combat end,
+			})
+			assert.equals("SHIFT", Compat.GetAutoLootKey())
+			assert.is_true(Compat.SetAutoLootKey("CTRL"))
+			assert.same({ "AUTOLOOTTOGGLE=CTRL", "save 2" }, calls)
+			combat = true
+			assert.is_false(Compat.SetAutoLootKey("ALT"))
+			assert.equals(2, #calls)
+			combat = false
+			rawset(_G, "SaveBindings", nil)
+			assert.same({ false, false }, { Compat.CanSetAutoLootKey(), Compat.SetAutoLootKey("ALT") })
+		end)
 	end)
 
 	describe("bags", function()

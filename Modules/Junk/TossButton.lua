@@ -11,16 +11,19 @@ local L = ns.L
 -- the general bags have no free slot; checked as the window opens, and the
 -- button stays while it is open); or never. Small, it sits on the window's
 -- title bar left of the close button (the title is centred, which leaves
--- room); large, it is a square outside the window, on the chosen side and
--- moved along it by the offset. In Edit Mode it shows where it will be, and
--- does nothing.
+-- room); large, it is a square as big as the window's item icons, right of
+-- the window, near its top. In Edit Mode it shows where it will be, and does
+-- nothing.
 local Junk = ns.Modules:Get("Junk")
 local TossButton = {}
 Junk.TossButton = TossButton
 
 TossButton.SMALL = 20
--- Between the large button and the window.
+-- The large button: as big as the loot window's item icons
+-- (LootFrameElementTemplate), this far right of the window and below its top.
+TossButton.LARGE = 37
 TossButton.GAP = 4
+TossButton.DROP = 3
 TossButton.ICON = "SpellIcon-256x256-SellJunk"
 
 local button
@@ -55,23 +58,14 @@ local function place()
 		end
 		return
 	end
-	local size, offset, gap = Junk:Get("tossSize"), Junk:Get("tossOffset"), TossButton.GAP
+	local size = TossButton.LARGE
 	button:SetSize(size, size)
 	-- Blizzard's 36 px slot button has a 64 px slot texture at -13, 14.
 	local k = size / 36
 	button.slot:ClearAllPoints()
 	button.slot:SetPoint("TOPLEFT", -13 * k, 14 * k)
 	button.slot:SetPoint("BOTTOMRIGHT", 15 * k, -14 * k)
-	local side = Junk:Get("tossSide")
-	if side == "left" then
-		button:SetPoint("TOPRIGHT", LootFrame, "TOPLEFT", -gap, -offset)
-	elseif side == "right" then
-		button:SetPoint("TOPLEFT", LootFrame, "TOPRIGHT", gap, -offset)
-	elseif side == "top" then
-		button:SetPoint("BOTTOMLEFT", LootFrame, "TOPLEFT", offset, gap)
-	else
-		button:SetPoint("TOPLEFT", LootFrame, "BOTTOMLEFT", offset, -gap)
-	end
+	button:SetPoint("TOPLEFT", LootFrame, "TOPRIGHT", TossButton.GAP, -TossButton.DROP)
 end
 
 local function update()

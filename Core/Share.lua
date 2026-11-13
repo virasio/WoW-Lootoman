@@ -15,9 +15,12 @@ local Bus, Compat, L, Modules, Profiles, Storage, Text = ns.Bus, ns.Compat, ns.L
 -- name is taken is kept as both, replaces the player's, or is left for the
 -- player's ("both", "replace", "keep").
 --
--- The text is "LTM1:" and the encoded table { format = 1, addon = <version>,
+-- The text is "LTM2:" and the encoded table { format = 2, addon = <version>,
 -- sections = { [part] = data }, collections = { [collection] = { [item] =
--- data } } } (Compat.Encode).
+-- data } } } (Compat.Encode). A text of an older format is turned into the
+-- current one as it is read, by the upgrades its parts' owners register
+-- (Share.RegisterUpgrade): format 1, of 0.1 to 0.4, held the loot feed's
+-- settings and row layouts, which became feed looks.
 --
 -- Reading never trusts the text: it must be plain data (no deeper than
 -- MAX_DEPTH, no more than MAX_VALUES values); a module setting must be known,
@@ -26,7 +29,7 @@ local Bus, Compat, L, Modules, Profiles, Storage, Text = ns.Bus, ns.Compat, ns.L
 -- clean function. What does not pass is left out and counted.
 local Share = {
 	PREFIX = "LTM",
-	FORMAT = 1,
+	FORMAT = 2,
 	MAX_LENGTH = 100000,
 	-- Texts of 0.3 and 0.3.5 can hold bar sets, whose stacks' members sit ten
 	-- levels down; such a text is still read for its other parts.
@@ -39,6 +42,7 @@ local MODULE_PREFIX = "module:"
 
 local parts, partsByName = {}, {}
 local collections, collectionsByName = {}, {}
+local upgrades = {}
 
 local function deepCopy(value)
 	if type(value) ~= "table" then
@@ -81,6 +85,13 @@ function Share.RegisterCollection(collection)
 	assert(not collectionsByName[collection.name], "collection " .. tostring(collection.name) .. " is already registered")
 	collections[#collections + 1] = collection
 	collectionsByName[collection.name] = collection
+end
+
+-- upgrade(data) turns the decoded table of a text of this format into the
+-- next format, in place, before it is read. It must expect any plain data.
+function Share.RegisterUpgrade(format, upgrade)
+	upgrades[format] = upgrades[format] or {}
+	table.insert(upgrades[format], upgrade)
 end
 
 function Share.GetCollection(name)
@@ -297,6 +308,13 @@ function Share.Read(text)
 	end
 	if not isNumber(data.format) or data.format > Share.FORMAT then
 		return nil, "newer"
+	end
+	for older = data.format, Share.FORMAT - 1 do
+		for _, upgrade in ipairs(upgrades[older] or {}) do
+			if not pcall(upgrade, data) then
+				return nil, "broken"
+			end
+		end
 	end
 	local result = { names = {}, sections = {}, collections = {}, skipped = 0, newer = {} }
 	local sections = type(data.sections) == "table" and data.sections or {}

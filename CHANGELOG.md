@@ -1,5 +1,16 @@
 # Lootoman changelog
 
+## 0.4.5
+
+One options page, feed looks you can share, and one window to sort your junk.
+
+- **One options page**, with no subpages, in the order loot flows: your profile, fast autoloot, junk and the loot feed. If the game's own Auto Loot is off, a box there asks you to turn it on, right from Lootoman's page.
+- **Feed looks**: every setting of the loot feed and the design of its rows now form a named look, shared by your profiles and chosen on the options page or in the feed's Edit Mode dialog. Edit a look in its own window, copy it, rename it, reset it, and share it as text. Your 0.4 settings and layouts became looks, keeping how your feed looked.
+- **Backgrounds in any colour** for the rows, the amount and the owned count, each with its own opacity.
+- **The low-space warning** now follows the look's design: a bag with a red border, and the free slots of each bag kind that is low ("3+2": general white, reagent green), its tooltip naming each.
+- **Kept usable items**: one you can't use right now fades out instead of vanishing, and comes back if you can use it again; in a fight, its tooltip says when a right click waits for the end of the fight; marks also show on rows without an icon.
+- **Junk**: one sort window at the loot window and at merchants. Its button by the loot window shows when your bags are full (or always, or never), large next to the window or small in its title. At merchants choose how junk is sold: automatically, with the sell button, or by picking it in the sort window. The junk list has a window of its own.
+
 ## 0.4
 
 A compact loot feed, and usable items that wait for you. Lootoman is now only about loot.

@@ -5,15 +5,16 @@ local _, ns = ...
 -- setting (10–16) scales a design, so one design fits every size. Frames draws
 -- any design; the row designer edits the player's one.
 --
--- The row: height, width and gap (between rows), and its view: "rows" (the
--- default), or "icons" for the compact view of icons only. Parts, each with
--- shown:
+-- The row: height, width and gap (between rows), its view: "rows" (the
+-- default), or "icons" for the compact view of icons only, and a background
+-- of its own behind each row (background, its color as "rrggbb" and its
+-- opacity in percent). Parts, each with shown:
 --   icon                  size, in percent of the row's height
 --   glow                  over the icon of rare and better items
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
 --                         align, LEFT or RIGHT; the amount and the owned count
---                         also a background of their own (background, and
---                         its opacity in percent); the owned count what it
+--                         also a background of their own (background, color
+--                         and opacity, as the row's); the owned count what it
 --                         counts (count: "all", bags and bank, or "bags")
 -- Every part but the glow is anchored to an element (anchor: "row", "icon",
 -- "name", "amount" or "owned") at one of its points (point: TOPLEFT …
@@ -30,7 +31,7 @@ local _, ns = ...
 -- is never shown, and the amount and the owned count are anchored to the icon,
 -- inside it or beside it: their box is the icon and one icon's size around it.
 --
--- A player's design is a named layout (Layouts.lua):
+-- A player's design is part of a feed look (Looks.lua):
 --   { schema = 1, base = "large", changes = { name = { x = 12 }, row = { height = 40 } } }
 -- It keeps only the values that differ from its built-in base design, its
 -- template, so later improvements to a built-in design reach every value the
@@ -61,14 +62,17 @@ Design.LARGE = {
 	height = 35,
 	gap = 7,
 	width = 300,
+	background = false,
+	color = "000000",
+	opacity = 60,
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = true, fontSize = 13, width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
-			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
-			background = false, opacity = 60, count = "all" },
+			background = false, color = "000000", opacity = 60 },
+		owned = { shown = false, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
+			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
 
@@ -77,14 +81,17 @@ Design.COMPACT = {
 	height = 24,
 	gap = 3,
 	width = 260,
+	background = false,
+	color = "000000",
+	opacity = 60,
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = true, fontSize = 12, width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
 		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
-			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60, count = "all" },
+			background = false, color = "000000", opacity = 60 },
+		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
 
@@ -93,14 +100,17 @@ Design.MINIMAL = {
 	height = 16,
 	gap = 2,
 	width = 220,
+	background = false,
+	color = "000000",
+	opacity = 60,
 	parts = {
 		icon = { shown = false, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = false },
 		name = { shown = true, fontSize = 13, width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
-			background = false, opacity = 60 },
+			background = false, color = "000000", opacity = 60 },
 		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60, count = "all" },
+			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
 
@@ -111,14 +121,17 @@ Design.ICONS = {
 	height = 36,
 	gap = 4,
 	width = 36,
+	background = false,
+	color = "000000",
+	opacity = 60,
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "CENTER", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = false, fontSize = 13, width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
-			background = false, opacity = 60 },
-		owned = { shown = true, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
-			background = false, opacity = 60, count = "all" },
+			background = false, color = "000000", opacity = 60 },
+		owned = { shown = false, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
+			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
 
@@ -131,7 +144,7 @@ local TEXT_LIMITS = { fontSize = { 8, 24 }, width = { 20, 600 } }
 -- The range of every number that is not a place; places keep a part inside
 -- the row (Range, Fit).
 Design.LIMITS = {
-	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 } },
+	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 }, opacity = { 0, 100 } },
 	icon = { size = { 20, 100 } },
 	name = TEXT_LIMITS,
 	amount = { fontSize = TEXT_LIMITS.fontSize, width = TEXT_LIMITS.width, opacity = { 0, 100 } },
@@ -399,8 +412,27 @@ local function valid(design, part, key, value)
 		return contains(Design.ALIGNS, value)
 	elseif key == "count" then
 		return contains(Design.COUNTS, value)
+	elseif key == "color" then
+		return value:match("^%x%x%x%x%x%x$") ~= nil
 	end
 	return true
+end
+
+-- A background's color, "rrggbb", as the numbers 0 to 1 the game takes.
+function Design.RGB(color)
+	local r, g, b = color:match("^(%x%x)(%x%x)(%x%x)$")
+	if not r then
+		return 0, 0, 0
+	end
+	return tonumber(r, 16) / 255, tonumber(g, 16) / 255, tonumber(b, 16) / 255
+end
+
+-- The numbers 0 to 1 of a color, as a design keeps it: "rrggbb".
+function Design.Hex(r, g, b)
+	local function byte(value)
+		return math.floor(math.min(math.max(value, 0), 1) * 255 + 0.5)
+	end
+	return ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
 end
 
 -- The player's design: its base with the player's changes, inside its row.

@@ -50,6 +50,12 @@ local function newLibEditMode()
 		frame:SetPoint(point, x, y)
 		lib.frames[frame].callback(frame, lib.layout, point, x, y)
 	end
+	-- The library's own dialog (lib.internal.dialog), made with the first frame.
+	local reset = { shown = true }
+	function reset:SetShown(shown) self.shown = shown end
+	lib.internal = { dialog = { Settings = { ResetButton = reset }, laidOut = 0 } }
+	function lib.internal.dialog:Update(selection) self.selection = selection end
+	function lib.internal.dialog:Layout() self.laidOut = self.laidOut + 1 end
 	return lib
 end
 
@@ -70,6 +76,7 @@ describe("Edit Mode", function()
 		{ kind = "slider", key = "fade", label = "Fade-out", min = 0.2, max = 3, step = 0.1 },
 		{ kind = "dropdown", key = "direction", label = "Direction", choices = { { "up", "Up" }, { "down", "Down" } } },
 		{ kind = "checkbox", key = "money", label = "Money" },
+		{ kind = "dropdown", key = "look", label = "Look", generator = function(_, root) root.built = true end },
 	}
 
 	local function saved()
@@ -84,7 +91,7 @@ describe("Edit Mode", function()
 		module = ns.Modules:Register({
 			name = "TestFeed",
 			title = "Test feed",
-			defaults = { enabled = true, rows = 8, fade = 1, direction = "up", money = true },
+			defaults = { enabled = true, rows = 8, fade = 1, direction = "up", money = true, look = "Default" },
 			OnEnable = function(self)
 				if not self.frame then
 					self.frame = newFrame()
@@ -172,6 +179,10 @@ describe("Edit Mode", function()
 		assert.equals(1, money.kind)
 		money.set("Modern", false)
 		assert.is_false(ns.Storage:Get("TestFeed", "money"))
+		-- A dropdown with a menu of its own hands it on; the menu stores what it chooses.
+		local look = lib.settings[frame][5]
+		assert.same({ 0, "Look", SETTINGS[5].generator }, { look.kind, look.name, look.generator })
+		assert.is_nil(look.values)
 	end)
 
 	it("refreshes an open Edit Mode dialog when a setting changes elsewhere", function()
@@ -220,6 +231,20 @@ describe("Edit Mode", function()
 			ns.EditMode.Register(module, newFrame(), { default = { point = "CENTER", x = 0, y = 0 },
 				settings = { { kind = "radio", key = "rows", label = "Rows" } } })
 		end, "TestFeed.rows: unknown Edit Mode setting kind radio")
+	end)
+	it("hides the dialog's Reset To Default button for a frame that asks, and only while the dialog shows it", function()
+		local other = newFrame()
+		local quiet = newFrame()
+		ns.EditMode.Register(module, quiet, { default = { point = "CENTER", x = 0, y = 0 }, noReset = true })
+		local dialog = lib.internal.dialog
+		dialog:Update({ parent = quiet })
+		assert.same({ false, 1 }, { dialog.Settings.ResetButton.shown, dialog.laidOut })
+		dialog:Update({ parent = other })
+		assert.is_true(dialog.Settings.ResetButton.shown)
+		-- A second frame that asks hooks the dialog once.
+		ns.EditMode.Register(module, newFrame(), { default = { point = "CENTER", x = 0, y = 0 }, noReset = true })
+		dialog:Update({ parent = quiet })
+		assert.equals(2, dialog.laidOut)
 	end)
 end)
 

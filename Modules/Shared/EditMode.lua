@@ -16,10 +16,13 @@ local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
 --           { kind = "header", label = … },  -- a divider with a title, starts a group
 --           { kind = "slider", key = "rows", label = …, tooltip = …, min = 1, max = 20, step = 1, format = "%d" },
 --           { kind = "dropdown", key = "direction", label = …, choices = { { "up", <label> }, … } },
+--           { kind = "dropdown", key = "look", label = …, generator = function(owner, root) end },
+--                                            -- a menu of its own (LibEditMode's generator)
 --           { kind = "checkbox", key = "money", label = … },
 --       },
 --       onEditMode = function(active) end,   -- show a preview while Edit Mode is on
 --       buttons = { { text = …, click = function() end } },   -- in the Edit Mode dialog
+--       noReset = true,                      -- no Reset To Default button in the dialog
 --   })
 --
 -- LibEditMode draws the selection on the frame itself, so a hidden frame
@@ -30,6 +33,10 @@ ns.EditMode = EditMode
 
 local entries = {}
 local lib
+-- Frames whose dialog has no Reset To Default button (options.noReset), and the
+-- dialog that hides it for them (see hideReset).
+local noReset = {}
+local hookedDialog
 local layoutName
 -- True while a value set in the Edit Mode dialog is being stored.
 local fromDialog = false
@@ -222,6 +229,10 @@ local function toLibSetting(module, setting)
 				return format:format(value)
 			end
 		end
+	elseif setting.kind == "dropdown" and setting.generator then
+		-- Its menu chooses and stores the value itself.
+		object.kind = lib.SettingType.Dropdown
+		object.generator = setting.generator
 	elseif setting.kind == "dropdown" then
 		object.kind = lib.SettingType.Dropdown
 		-- Built when the menu opens, so it offers the choices of that moment.
@@ -236,6 +247,31 @@ local function toLibSetting(module, setting)
 		error(("%s.%s: unknown Edit Mode setting kind %s"):format(name, setting.key, tostring(setting.kind)))
 	end
 	return object
+end
+
+-- LibEditMode's dialog always has a Reset To Default button, which sets every
+-- setting to the default it was given, and offers no option to leave it out.
+-- For a frame whose settings reset otherwise (the loot feed's look, reset in
+-- the look's menu) it is hidden while the dialog shows that frame, through the
+-- library's own dialog (lib.internal.dialog: there is no public way), and
+-- shown again for the frames of other addons, which share the dialog.
+local function hideReset(dialog, selection)
+	local reset = dialog.Settings and dialog.Settings.ResetButton
+	if reset and selection then
+		local hide = noReset[selection.parent] == true
+		reset:SetShown(not hide)
+		if hide and dialog.Layout then
+			dialog:Layout()
+		end
+	end
+end
+
+local function watchDialog()
+	local dialog = lib.internal and lib.internal.dialog
+	if type(dialog) == "table" and type(dialog.Update) == "function" and hookedDialog ~= dialog then
+		hookedDialog = dialog
+		hooksecurefunc(dialog, "Update", hideReset)
+	end
 end
 
 -- Registers a frame once, when the module creates it. Returns false on a
@@ -274,6 +310,10 @@ function EditMode.Register(module, frame, options)
 	end
 	if options.buttons then
 		lib:AddFrameSettingsButtons(frame, options.buttons)
+	end
+	if options.noReset then
+		noReset[frame] = true
+		watchDialog()
 	end
 	apply(entry)
 	if lib:IsInEditMode() then

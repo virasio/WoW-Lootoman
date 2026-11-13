@@ -90,6 +90,28 @@ describe("loot feed use button", function()
 		assert.same({ "BOTTOMLEFT", ui.UIParent, "BOTTOMLEFT", 100, 200 }, button.points[1])
 	end)
 
+	it("says in a fight when the stuck row's right click waits for the end of it", function()
+		local function tooltipOf(name)
+			for row, rowFrame in pairs(feed.frameOf) do
+				if row.name == name then
+					rowFrame.scripts.OnEnter(rowFrame)
+					return ui.tooltip.lines[#ui.tooltip.lines]
+				end
+			end
+		end
+		local clam = stick(77, "Clam")
+		feed:Draw(7)
+		Test.SetCombat(true)
+		assert.equals("Left-click: dismiss. Right-click: use.", tooltipOf("Clam"))
+		-- The clam used up in the fight: the letter takes its place, the button still holds the clam.
+		model:Release(clam)
+		stick(88, "Letter", 7)
+		feed:Draw(14)
+		assert.equals("Left-click: dismiss. Right-click: use, after the fight.", tooltipOf("Letter"))
+		Test.SetCombat(false)
+		assert.equals("Left-click: dismiss. Right-click: use.", tooltipOf("Letter"))
+	end)
+
 	it("stays as the fight found it: a left click lets the row go and turns the use off; it catches up after", function()
 		stick(77, "Clam")
 		feed:Draw(7)
@@ -99,6 +121,7 @@ describe("loot feed use button", function()
 		feed:Draw(14)
 		-- The letter is stuck now, but the button cannot change in the fight.
 		assert.same({ true, "item:77" }, { button.shown, button:GetAttribute("item") })
+
 		assert.is_nil(button:GetAttribute("type2"))
 		ui.SecureClick(button, "RightButton", false)
 		assert.same({}, ui.used)
