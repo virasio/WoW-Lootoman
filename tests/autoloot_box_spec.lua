@@ -55,7 +55,8 @@ describe("the game's Auto Loot box on the options page", function()
 		assert.same({ "checkbox:Enable fast autoloot", "checkbox:Confirm bind-on-pickup items when alone", "box:" },
 			{ kinds[3], kinds[4], kinds[5] })
 		assert.same({ false, true, "GameFontRed" }, { item().hidden, box.shown, box.header.fontObject })
-		assert.equals("Auto Loot is off in the game's settings. For the best experience, turn it on: Options > Gameplay > Controls > Auto Loot, or hold SHIFT key while looting.",
+		-- A call to tick it below, without where the game keeps it.
+		assert.equals("Auto Loot is off in the game. Tick it below for easier looting: fast autoloot then takes all the loot at once, without the loot window.",
 			box.header.text)
 		assert.same({ false, "Auto Loot", "Auto Loot Key" }, { box.check.checked, box.check.label.text, box.keyLabel.text })
 		assert.same({ "ALT key", "CTRL key", "SHIFT key*", "None" }, keys())
@@ -69,10 +70,15 @@ describe("the game's Auto Loot box on the options page", function()
 		assert.is_true(item().hidden)
 	end)
 
-	it("turns the game's Auto Loot on and stays until the page opens again", function()
+	it("turns the game's Auto Loot on, says in green that all is set and where the settings are, and stays until the page opens again", function()
 		click(box.check, true)
 		assert.is_true(Test.state.cvars.autoLootDefault)
 		assert.same({ false, true, "Loot Key" }, { item().hidden, box.check.checked, box.keyLabel.text })
+		assert.same({ "All set. Next time this box will be hidden; you can find these settings in Options > Gameplay > Controls.", "GameFontGreen" },
+			{ box.header.text, box.header.fontObject })
+		click(box.check, false)
+		assert.equals("GameFontRed", box.header.fontObject)
+		click(box.check, true)
 		open()
 		assert.is_true(item().hidden)
 	end)
@@ -80,10 +86,7 @@ describe("the game's Auto Loot box on the options page", function()
 	it("sets the Auto Loot key and saves it with the key bindings", function()
 		keys("CTRL")
 		assert.same({ "CTRL", 1 }, { Test.state.modifiedClicks.AUTOLOOTTOGGLE, Test.state.savedBindings })
-		assert.matches("hold CTRL key while looting", box.header.text, 1, true)
-		keys("NONE")
-		assert.equals("Auto Loot is off in the game's settings. For the best experience, turn it on: Options > Gameplay > Controls > Auto Loot.",
-			box.header.text)
+		assert.same({ "ALT key", "CTRL key*", "SHIFT key", "None" }, keys())
 	end)
 
 	it("changes nothing in combat, and says so", function()
@@ -99,6 +102,7 @@ describe("the game's Auto Loot box on the options page", function()
 		Test.state.secureCVars.autoLootDefault = true
 		open()
 		assert.same({ true, false }, { box.open.shown, box.check:GetParent().shown })
+		assert.matches("Turn it on with the button below", box.header.text, 1, true)
 		assert.is_true(item().height < full)
 		box.open.scripts.OnClick(box.open)
 		assert.same({ api.controls:GetID(), "Auto Loot" }, { api.opened, api.scrolledTo })

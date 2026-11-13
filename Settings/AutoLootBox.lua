@@ -3,11 +3,11 @@ local Compat, L = ns.Compat, ns.L
 
 -- Fast autoloot works only while the game loots automatically. When the
 -- game's own Auto Loot is off as the options page opens, a box under the fast
--- autoloot block says so in red and holds the game's Auto Loot settings: the
--- checkbox and the Auto Loot key, as on the game's Controls page, where an
--- addon may change them; else a button that opens that page. The box stays
--- until the page hides, also once Auto Loot is on: the player sees what
--- changed.
+-- autoloot block asks in red to turn it on, and holds the game's Auto Loot
+-- settings: the checkbox and the Auto Loot key, as on the game's Controls
+-- page, where an addon may change them; else a button that opens that page.
+-- Once Auto Loot is on, its header says in green that all is set, and where
+-- the game keeps these settings; the box stays until the page opens again.
 local AutoLootBox = {}
 ns.AutoLootBox = AutoLootBox
 
@@ -17,28 +17,22 @@ local KEYS = { { "ALT", ALT_KEY }, { "CTRL", CTRL_KEY }, { "SHIFT", SHIFT_KEY },
 -- The box's height before it is first laid out; it then fits what it holds.
 AutoLootBox.HEIGHT = 112
 
-local function keyName(key)
-	for _, choice in ipairs(KEYS) do
-		if choice[1] == key then
-			return choice[2]
-		end
-	end
-end
-
--- Where the game's setting is, in the game's own words: Options > Gameplay >
--- Controls > Auto Loot.
+-- Where the game keeps these settings, in its own words: Options > Gameplay >
+-- Controls.
 local function path()
-	return table.concat({ SETTINGS_TITLE, SETTING_GROUP_GAMEPLAY, CONTROLS_LABEL, AUTO_LOOT_DEFAULT_TEXT }, " > ")
+	return table.concat({ SETTINGS_TITLE, SETTING_GROUP_GAMEPLAY, CONTROLS_LABEL }, " > ")
 end
 
--- The box's header: where to turn Auto Loot on, and the key that loots
--- automatically while it is off.
-function AutoLootBox.Header()
-	local key = Compat.GetAutoLootKey()
-	if key and key ~= "NONE" and keyName(key) then
-		return L["Auto Loot is off in the game's settings. For the best experience, turn it on: %s, or hold %s while looting."]:format(path(), keyName(key))
+-- The box's header and its font: while Auto Loot is off, a call to turn it on
+-- with what the box holds (canSet: the checkbox, else the button); once it is
+-- on, that all is set and where the settings are.
+function AutoLootBox.Header(canSet)
+	if Compat.GetAutoLoot() then
+		return L["All set. Next time this box will be hidden; you can find these settings in %s."]:format(path()), "GameFontGreen"
+	elseif canSet then
+		return L["Auto Loot is off in the game. Tick it below for easier looting: fast autoloot then takes all the loot at once, without the loot window."], "GameFontRed"
 	end
-	return L["Auto Loot is off in the game's settings. For the best experience, turn it on: %s."]:format(path())
+	return L["Auto Loot is off in the game. Turn it on with the button below for easier looting: fast autoloot then takes all the loot at once, without the loot window."], "GameFontRed"
 end
 
 -- Opens the game's Controls page at its Auto Loot setting.
@@ -110,7 +104,9 @@ function AutoLootBox.Build(page, indent)
 
 	page:OnRefresh(function()
 		local canSet = Compat.CanSetAutoLoot() and Compat.CanSetAutoLootKey()
-		box.header:SetText(AutoLootBox.Header())
+		local text, font = AutoLootBox.Header(canSet)
+		box.header:SetFontObject(font)
+		box.header:SetText(text)
 		-- The controls under the header, however many lines it takes; the box
 		-- as high as what it holds.
 		local top = 8 + math.ceil(box.header:GetStringHeight()) + 8
