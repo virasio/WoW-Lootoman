@@ -70,6 +70,7 @@ describe("Edit Mode", function()
 		{ kind = "slider", key = "fade", label = "Fade-out", min = 0.2, max = 3, step = 0.1 },
 		{ kind = "dropdown", key = "direction", label = "Direction", choices = { { "up", "Up" }, { "down", "Down" } } },
 		{ kind = "checkbox", key = "money", label = "Money" },
+		{ kind = "dropdown", key = "look", label = "Look", generator = function(_, root) root.built = true end },
 	}
 
 	local function saved()
@@ -84,7 +85,7 @@ describe("Edit Mode", function()
 		module = ns.Modules:Register({
 			name = "TestFeed",
 			title = "Test feed",
-			defaults = { enabled = true, rows = 8, fade = 1, direction = "up", money = true },
+			defaults = { enabled = true, rows = 8, fade = 1, direction = "up", money = true, look = "Default" },
 			OnEnable = function(self)
 				if not self.frame then
 					self.frame = newFrame()
@@ -172,6 +173,10 @@ describe("Edit Mode", function()
 		assert.equals(1, money.kind)
 		money.set("Modern", false)
 		assert.is_false(ns.Storage:Get("TestFeed", "money"))
+		-- A dropdown with a menu of its own hands it on; the menu stores what it chooses.
+		local look = lib.settings[frame][5]
+		assert.same({ 0, "Look", SETTINGS[5].generator }, { look.kind, look.name, look.generator })
+		assert.is_nil(look.values)
 	end)
 
 	it("refreshes an open Edit Mode dialog when a setting changes elsewhere", function()

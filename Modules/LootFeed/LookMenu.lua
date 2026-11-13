@@ -2,10 +2,11 @@ local _, ns = ...
 local Bus, L, NameMenu = ns.Bus, ns.L, ns.NameMenu
 
 -- The menu of feed looks (Looks.lua), like the profile menu (NameMenu):
--- every look as a radio that the profile then uses, with Copy, Rename and
--- Reset under its gear and a delete button; + New look; Import and Share,
--- which open the dialogs of profile texts for looks. Names are typed in the
--- game's input dialog, and what cannot be undone is confirmed.
+-- every look as a radio that the profile then uses, with Edit (its window,
+-- LookWindow.lua), Copy, Rename and Reset under its gear and a delete button;
+-- + New look; Import and Share, which open the dialogs of profile texts for
+-- looks. Names are typed in the game's input dialog, and what cannot be
+-- undone is confirmed. The options page and Edit Mode show it alike.
 --
 --   dropdown:SetupMenu(LookMenu.Build)
 ns.Feed = ns.Feed or {}
@@ -74,9 +75,17 @@ function LookMenu.Delete(name)
 	end)
 end
 
+-- Opens the look's window, whichever look the profile uses.
+function LookMenu.Edit(name)
+	ns.Feed.LookWindow.Open(name)
+end
+
 local function addLook(root, name)
 	local isDefault = name == Looks.DEFAULT
 	local actions = {
+		{ text = L["Edit"], tooltip = L["Opens the window of this look, to change its settings and its row design."], run = function()
+			LookMenu.Edit(name)
+		end },
 		{ text = L["Copy"], tooltip = L["Creates a copy of this look, and this profile uses it."], run = function()
 			LookMenu.Copy(name)
 		end },
@@ -99,7 +108,7 @@ local function addLook(root, name)
 			LookMenu.Use(name)
 		end,
 		actions = actions,
-		gearTooltip = isDefault and L["Copy or reset"] or L["Copy, rename or reset"],
+		gearTooltip = isDefault and L["Edit, copy or reset"] or L["Edit, copy, rename or reset"],
 		deleteTooltip = L["Delete look"],
 		delete = not isDefault and function()
 			LookMenu.Delete(name)

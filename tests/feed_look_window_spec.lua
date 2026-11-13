@@ -348,12 +348,11 @@ describe("loot feed look window", function()
 end)
 
 describe("loot feed look window, opened from", function()
-	it("a button on the feed's options page and in its Edit Mode dialog", function()
-		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 } }
+	it("a button on the feed's options page, and Edit in the look menu of its Edit Mode dialog", function()
+		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 }, settings = {} }
 		function lib:AddFrame() end
-		function lib:AddFrameSettings() end
-		lib.buttons = {}
-		function lib:AddFrameSettingsButtons(frame, buttons) self.buttons[frame] = buttons end
+		function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
+		function lib:AddFrameSettingsButtons() end
 		function lib:RegisterCallback() end
 		function lib:IsInEditMode() return false end
 		rawset(_G, "LibStub", function(name) return name == "LibEditMode" and lib or nil end)
@@ -361,15 +360,15 @@ describe("loot feed look window, opened from", function()
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
 		local LookWindow = ns.Modules:Get("LootFeed").LookWindow
-		local feedButtons = lib.buttons[ns.Modules:Get("LootFeed").feed.frame]
-
 		local button = api.FindButton(api.FindCategory("Loot feed"), "Row design")
 		button.onClick()
 		assert.is_true(LookWindow.window.shown)
 		LookWindow.window:Hide()
-		assert.equals("Design rows", feedButtons[1].text)
-		feedButtons[1].click()
-		assert.is_true(LookWindow.window.shown)
+		-- The dialog's dropdown builds the look menu; Edit opens the window.
+		local dropdown = { menu = lib.settings[ns.Modules:Get("LootFeed").feed.frame][1].generator }
+		local root = api.OpenMenu(dropdown)
+		root.entries[1].entries[1].callback()
+		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
 	end)
 end)
 

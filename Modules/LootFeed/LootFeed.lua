@@ -256,10 +256,13 @@ function LootFeed:OnEnable()
 		self.feed = Feed.Frames.Create(self.model)
 		ns.EditMode.Register(self, self.feed.frame, {
 			default = self.DEFAULT_POSITION,
+			-- Only the look: it holds every other setting, and its menu edits it.
+			settings = { { kind = "dropdown", key = "look", label = L["Feed look"],
+				tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."],
+				generator = Feed.LookMenu.Build } },
 			onEditMode = function(active)
 				self.feed:SetPreview(active)
 			end,
-			buttons = { { text = L["Design rows"], click = function() self.LookWindow.Open() end } },
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
 	end
@@ -277,12 +280,18 @@ function LootFeed:OnEnable()
 			self.lowQuality[#self.lowQuality + 1] = { entry = entry, at = now }
 		end
 	end)
-	self:On("SettingChanged", function(_, module)
+	self:On("SettingChanged", function(_, module, key)
 		if module ~= self.name then
 			return
 		end
+		if key == "look" then
+			ns.EditMode.Refresh(self.feed.frame)
+		end
 		self:Apply()
 		self:CheckAll()
+	end)
+	self:On("FeedLookRenamed", function()
+		ns.EditMode.Refresh(self.feed.frame)
 	end)
 	self:On("ProfileChanged", function()
 		self:Apply()

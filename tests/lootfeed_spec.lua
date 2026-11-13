@@ -149,10 +149,12 @@ describe("loot feed module", function()
 		assert.same({ "0=Poor", "1=Common", "2=Uncommon", "3=Rare", "4=Epic", "5=Legendary" }, labels)
 	end)
 
-	it("puts the feed in Edit Mode right of the screen centre, with the row designer's button in its dialog", function()
+	it("puts the feed in Edit Mode right of the screen centre, with only its look's menu in its dialog", function()
 		local frame = module.feed.frame
 		assert.same({ "Loot feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
-		assert.same({ nil, "Design rows" }, { lib.settings[frame], lib.buttons[frame][1].text })
+		local settings = lib.settings[frame]
+		assert.same({ 1, 0, "Feed look", ns.Feed.LookMenu.Build }, { #settings, settings[1].kind, settings[1].name, settings[1].generator })
+		assert.is_nil(lib.buttons and lib.buttons[frame])
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
 		lib.Fire("exit")

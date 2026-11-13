@@ -16,6 +16,8 @@ local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
 --           { kind = "header", label = … },  -- a divider with a title, starts a group
 --           { kind = "slider", key = "rows", label = …, tooltip = …, min = 1, max = 20, step = 1, format = "%d" },
 --           { kind = "dropdown", key = "direction", label = …, choices = { { "up", <label> }, … } },
+--           { kind = "dropdown", key = "look", label = …, generator = function(owner, root) end },
+--                                            -- a menu of its own (LibEditMode's generator)
 --           { kind = "checkbox", key = "money", label = … },
 --       },
 --       onEditMode = function(active) end,   -- show a preview while Edit Mode is on
@@ -222,6 +224,10 @@ local function toLibSetting(module, setting)
 				return format:format(value)
 			end
 		end
+	elseif setting.kind == "dropdown" and setting.generator then
+		-- Its menu chooses and stores the value itself.
+		object.kind = lib.SettingType.Dropdown
+		object.generator = setting.generator
 	elseif setting.kind == "dropdown" then
 		object.kind = lib.SettingType.Dropdown
 		-- Built when the menu opens, so it offers the choices of that moment.
