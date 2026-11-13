@@ -41,10 +41,15 @@ local function sell()
 	return Junk.SellQueue.Start(Junk.Sections.SaleList())
 end
 
--- What a click does: with Shift (or without it, when swapped), the sell
--- window opens and nothing is sold; otherwise the junk is sold.
+-- Whether a plain click opens the sort window, by the selling choice: it
+-- does unless the button sells ("button"); Shift-click does the other.
+local function clickOpens()
+	return Junk:Get("selling") ~= "button"
+end
+
+-- What a click does: open the sort window and sell nothing, or sell the junk.
 function SellButton.Click(shift)
-	if shift ~= Junk:Get("swapClicks") then
+	if (not shift) == clickOpens() then
 		if Junk.SellWindow then
 			Junk.SellWindow.Open()
 		end
@@ -66,9 +71,9 @@ local function showTooltip(self)
 	else
 		GameTooltip_AddNormalLine(GameTooltip, L["No junk to sell."])
 	end
-	local swapped = Junk:Get("swapClicks")
-	GameTooltip_AddNormalLine(GameTooltip, swapped and L["Click: pick what to sell."] or L["Click: sell the junk."])
-	GameTooltip_AddNormalLine(GameTooltip, swapped and L["Shift-click: sell the junk."] or L["Shift-click: pick what to sell."])
+	local opens = clickOpens()
+	GameTooltip_AddNormalLine(GameTooltip, opens and L["Click: pick what to sell."] or L["Click: sell the junk."])
+	GameTooltip_AddNormalLine(GameTooltip, opens and L["Shift-click: sell the junk."] or L["Shift-click: pick what to sell."])
 	GameTooltip:Show()
 end
 
@@ -123,7 +128,7 @@ Junk.AddPart({
 			-- The merchant's window is set up in the same frame; sell after it.
 			ns.Compat.After(0, function()
 				update()
-				if active and Junk:Get("sellOnOpen") then
+				if active and Junk:Get("selling") == "auto" then
 					sell()
 				end
 			end)

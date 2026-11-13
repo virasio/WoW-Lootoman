@@ -173,6 +173,25 @@ describe("migrations", function()
 		end)
 	end)
 
+	it("turns junk's selling switches into one choice, keeping what 0.4 did", function()
+		local JunkFrom = Migrations.JunkFrom
+		-- 0.4's defaults: selling as a merchant opened, the small button.
+		assert.same({ selling = "auto", tossStyle = "small" }, JunkFrom({}))
+		assert.same({ selling = "button", tossStyle = "small" }, JunkFrom({ sellOnOpen = false }))
+		assert.same({ tossStyle = "small" }, JunkFrom({ sellOnOpen = false, swapClicks = true }))
+		assert.same({ selling = "auto", tossButton = "always" }, JunkFrom({ tossStyle = "large", tossSize = 48, tossSide = "left", tossOffset = 10, tossButton = "always" }))
+		-- Turned off: no loot window button, the sell button opens the sort window.
+		assert.same({ tossButton = "never" }, JunkFrom({ enabled = false, sellOnOpen = true }))
+	end)
+
+	it("moves junk's settings in every profile of 0.4's data, not in a fresh install's", function()
+		local db = dofile("tests/fixtures/saved_0_4.lua")().LootomanDB
+		db = Migrations.Run(Migrations.account, db)
+		assert.same({ { tossStyle = "small" }, { selling = "auto", tossStyle = "small" } }, { db.profiles.Default.modules.Junk, db.profiles.Solo.modules.Junk })
+		local fresh = Migrations.Run(Migrations.account, nil)
+		assert.same({ Default = {} }, fresh.profiles)
+	end)
+
 	it("runs every missing step in order", function()
 		local ran = {}
 		local steps = {

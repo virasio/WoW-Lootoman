@@ -77,25 +77,14 @@ describe("toss button", function()
 		assert.is_false(button():IsShown())
 	end)
 
-	it("sits small left of the close button, or large outside on the chosen side", function()
+	it("sits large right of the window, as big as its item icons, or small left of the close button", function()
 		start()
 		local frame = button()
+		assert.same({ { "TOPLEFT", LootFrame, "TOPRIGHT", 4, -3 } }, frame.points)
+		assert.same({ 37, 37, true }, { frame.width, frame.height, frame.slot.shown })
+		Junk:Set("tossStyle", "small")
 		assert.same({ { "RIGHT", LootFrame.ClosePanelButton, "LEFT", -2, 0 } }, frame.points)
 		assert.same({ 20, 20, false }, { frame.width, frame.height, frame.slot.shown })
-		Junk:Set("tossStyle", "large")
-		Junk:Set("tossSize", 48)
-		Junk:Set("tossOffset", 10)
-		assert.same({ { "TOPLEFT", LootFrame, "TOPRIGHT", 4, -10 } }, frame.points)
-		assert.same({ 48, 48, true }, { frame.width, frame.height, frame.slot.shown })
-		local expected = {
-			left = { "TOPRIGHT", LootFrame, "TOPLEFT", -4, -10 },
-			top = { "BOTTOMLEFT", LootFrame, "TOPLEFT", 10, 4 },
-			bottom = { "TOPLEFT", LootFrame, "BOTTOMLEFT", 10, -4 },
-		}
-		for side, point in pairs(expected) do
-			Junk:Set("tossSide", side)
-			assert.same({ point }, frame.points, side)
-		end
 	end)
 
 	it("opens the toss window, except in Edit Mode, where it only shows its place", function()
@@ -134,6 +123,7 @@ describe("toss button", function()
 		-- false, not nil: the UI fake answers an unset method name with a function.
 		LootFrame.ClosePanelButton = false
 		start()
+		ns.Storage:Set("Junk", "tossStyle", "small")
 		assert.same({ { "TOPRIGHT", LootFrame, "TOPRIGHT", -24, -2 } }, button().points)
 		assert.same({}, ns.Compat.Test.state.errors)
 	end)

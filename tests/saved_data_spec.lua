@@ -177,6 +177,11 @@ describe("saved data of version 0.4", function()
 		expected.LootomanDB.profiles.Default.modules.LootFeed = { look = "Strip" }
 		expected.LootomanDB.profiles.Raid.modules.LootFeed = { look = "Quiet" }
 		expected.LootomanDB.profiles.Alt.modules.LootFeed = { look = "Quiet" }
+		-- Selling with swapped clicks is the sort window on a click now, the default;
+		-- the button stays small, as 0.4 drew it.
+		expected.LootomanDB.profiles.Default.modules.Junk = { tossStyle = "small" }
 		holds(ns.Compat.Test.state.saved, expected, "saved")
+		local profiles = ns.Compat.Test.state.saved.LootomanDB.profiles
+		assert.same({ { tossStyle = "small" }, { selling = "auto", tossStyle = "small" } }, { profiles.Default.modules.Junk, profiles.Raid.modules.Junk })
 	end)
 end)

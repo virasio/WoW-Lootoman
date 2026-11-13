@@ -169,6 +169,12 @@ describe("profile texts", function()
 			assert.same({ look = "Default" }, read.sections["look:LootFeed"])
 		end)
 
+		it("turn junk's selling switches into one choice, keeping what 0.4 did", function()
+			local read = assert(Share.Read(text({ format = 1, sections = { ["module:Junk"] = { swapClicks = true, sellOnOpen = false, tossSize = 48 } } })))
+			assert.same({ tossStyle = "small" }, read.sections["module:Junk"])
+			assert.equals(0, read.skipped)
+		end)
+
 		it("turn layouts shared alone into looks", function()
 			local read = assert(Share.Read(text({ format = 1, collections = { layouts = { Raid = { schema = 1, base = "minimal" } } } })))
 			assert.same({ {}, { "Raid" } }, { read.names, read.collections.looks.names })

@@ -1,55 +1,51 @@
 local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
--- The settings, in groups, for the module's own page.
-local function settings()
-	return {
-		{ kind = "header", label = L["Toss button"] },
-		{ kind = "dropdown", key = "tossButton", label = L["Show the toss button"],
-			tooltip = L["The button by the loot window opens a window of your bags with the junk on top, to throw things away."],
-			choices = { { "always", L["Always"] }, { "full", L["When the bags are full"] }, { "never", L["Never"] } } },
-		{ kind = "dropdown", key = "tossStyle", label = L["Button style"],
-			choices = { { "small", L["Small, on the loot window"] }, { "large", L["Large, outside the loot window"] } } },
-		{ kind = "slider", key = "tossSize", label = L["Button size"], tooltip = L["For the large button."],
-			min = 32, max = 64, step = 2, format = "%d" },
-		{ kind = "dropdown", key = "tossSide", label = L["Side of the loot window"], tooltip = L["For the large button."],
-			choices = { { "left", L["Left"] }, { "right", L["Right"] }, { "top", L["Top"] }, { "bottom", L["Bottom"] } } },
-		{ kind = "slider", key = "tossOffset", label = L["Offset along the side"], tooltip = L["For the large button."],
-			min = -200, max = 200, step = 2, format = "%d" },
-		{ kind = "header", label = L["Selling"] },
-		{ kind = "checkbox", key = "sellOnOpen", label = L["Sell junk at merchants"],
-			tooltip = L["Sells the junk as soon as a merchant's window opens."] },
-		{ kind = "checkbox", key = "swapClicks", label = L["Swap click and Shift-click"],
-			tooltip = L["The sell-junk button then opens the sell window on a click, and sells the junk on Shift-click."] },
-	}
-end
-
--- Getting rid of junk (Rules/Junk.lua decides what it is): a toss button by
--- the loot window opens a bag-like window with the junk on top, to delete
--- things; at a merchant, Lootoman's sell-junk button sells the junk, and a sell
--- window like the toss window picks more. Dragging an item between the
+-- Getting rid of junk (Rules/Junk.lua decides what it is): a button by the
+-- loot window opens the sort window, a bag-like window with the junk on top,
+-- to delete things; at a merchant, Lootoman's sell-junk button sells the junk
+-- or opens the same window to pick what to sell. Dragging an item between the
 -- sections of either window marks it.
+-- No switch of its own: the sort window's button can be turned off (Never),
+-- and the sell button always takes the place of the game's.
 local Junk = ns.Modules:Register({
 	name = "Junk",
 	title = L["Junk"],
-	switchLabel = L["Enable junk tossing and selling"],
-	description = L["A button by the loot window opens your bags with the junk on top, to throw things away, and junk is sold at merchants."],
+	switchLabel = false,
 	defaults = {
 		enabled = true,
+		-- The sort window's button on the loot window: "never", "always" or "full".
 		tossButton = "full",
-		tossStyle = "small",
-		tossSize = 40,
-		tossSide = "right",
-		tossOffset = 0,
-		sellOnOpen = true,
-		swapClicks = false,
+		-- Small on the loot window's title bar, or large next to it.
+		tossStyle = "large",
+		-- At merchants (SellButton.lua): "auto", "button" or "window".
+		selling = "window",
 	},
 	mainSettings = {
-		{ kind = "checkbox", key = "sellOnOpen", label = L["Sell junk at merchants"],
-			tooltip = L["Sells the junk as soon as a merchant's window opens."] },
+		{ kind = "choice", key = "tossButton", label = L["Sort window button"],
+			tooltip = L["The button by the loot window opens a window of your bags with the junk on top, to throw things away."],
+			choices = { { "never", L["Never"] }, { "always", L["Always"] }, { "full", L["When the bags are full"] } } },
+		{ kind = "choice", key = "tossStyle", label = L["Style"], level = 2,
+			choices = { { "small", L["Small, in the window's title"] }, { "large", L["Large, next to the window"] } },
+			enabledWhen = function()
+				return ns.Storage:Get("Junk", "tossButton") ~= "never"
+			end },
+		{ kind = "choice", key = "selling", label = L["At merchants"], vertical = true,
+			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
+				{ "window", L["The sell button opens the sort window"] } } },
 	},
-	settings = settings,
 })
+
+-- Texts of 0.1 to 0.4 (format 1) held selling as two switches and the large
+-- button's size and place: they become the choices of now, as saved data did
+-- (Migrations.JunkFrom).
+ns.Share.RegisterUpgrade(1, function(data)
+	local sections = type(data.sections) == "table" and data.sections or nil
+	local junk = sections and sections["module:Junk"]
+	if type(junk) == "table" then
+		sections["module:Junk"] = ns.Migrations.JunkFrom(junk)
+	end
+end)
 
 -- The module's parts (the toss button and window, the sale, the sell button
 -- and window), started in order with the module and stopped in reverse:
@@ -113,7 +109,6 @@ function Junk:OnDisable()
 end
 
 function Junk:BuildSettings(category, layout)
-	ns.SettingsPanel.AddSettings(category, layout, self.name, self:Settings())
 	for _, builder in ipairs(Junk.pageBuilders or {}) do
 		builder(category, layout)
 	end

@@ -447,7 +447,9 @@ local function addModule(page, category, module)
 	end
 	if module.BuildSettings then
 		local subpage, layout = Settings.RegisterVerticalLayoutSubcategory(category, module.title)
-		Panel.AddCheckbox(subpage, module.name, "enabled", L["Enabled"], module.description)
+		if module.switchLabel ~= false then
+			Panel.AddCheckbox(subpage, module.name, "enabled", L["Enabled"], module.description)
+		end
 		xpcall(function()
 			module:BuildSettings(subpage, layout)
 		end, Compat.ReportError)

@@ -105,7 +105,7 @@ local function createConfirm()
 	frame:SetClampedToScreen(true)
 	frame:EnableMouse(true)
 	frame:SetTitle(L["Delete"])
-	-- Escape closes it as it closes the game's own windows (see the designer).
+	-- Escape closes it as it closes the game's own windows (see the look window).
 	table.insert(UISpecialFrames, Toss.CONFIRM_NAME)
 	frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.text:SetPoint("TOP", 0, -36)
@@ -218,7 +218,7 @@ Junk.AddPart({
 	Enable = function()
 		grid = grid or Junk.ItemGrid.Create({
 			name = Toss.NAME,
-			title = L["Throw away junk"],
+			title = L["Sort junk"],
 			kind = "toss",
 			dropOutside = L["Drag it out of the window to delete it."],
 			onDropOutside = Toss.Delete,

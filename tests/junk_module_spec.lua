@@ -56,18 +56,16 @@ describe("Junk module", function()
 		assert.matches("broken part", ns.Compat.Test.state.errors[1])
 	end)
 
-	it("has its switch and Sell junk at merchants on the main page, and its settings on its own page", function()
-		local api = SettingsAPI.Install()
+	it("has no switch: its title and its choices on the main page, after fast autoloot", function()
+		SettingsAPI.Install()
 		ns = Loader.Start(Loader.LoadAddon({ skip = {} }))
 		local texts = {}
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
-			texts[#texts + 1] = entry.text
+			texts[#texts + 1] = tostring(entry.text)
 		end
-		assert.is_true(table.concat(texts, "|"):find("Enable junk tossing and selling|Sell junk at merchants|Configure", 1, true) ~= nil)
-		assert.same({
-			"checkbox:Enabled", "header:Toss button", "dropdown:Show the toss button", "dropdown:Button style", "slider:Button size",
-			"dropdown:Side of the loot window", "slider:Offset along the side", "header:Selling", "checkbox:Sell junk at merchants",
-			"checkbox:Swap click and Shift-click",
-		}, { unpack(api.Kinds(api.FindCategory("Junk")), 1, 10) })
+		assert.is_true(table.concat(texts, "|"):find("Junk|Sort window button|Style|At merchants", 1, true) ~= nil)
+		assert.is_true(table.concat(texts, "|"):find("Confirm bind%-on%-pickup items when alone|Junk") ~= nil)
+		local junk = ns.Modules:Get("Junk")
+		assert.same({ "full", "large", "window", true }, { junk:Get("tossButton"), junk:Get("tossStyle"), junk:Get("selling"), junk:IsActive() })
 	end)
 end)

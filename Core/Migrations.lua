@@ -58,10 +58,59 @@ Migrations.account = {
 	end,
 	-- 3 (0.4.5): the loot feed's settings and its row layout become a feed
 	-- look, named and shared by profiles (Migrations.FeedLooks below).
+	-- Junk's selling becomes one choice of three, and its large button loses
+	-- its size and place (Migrations.JunkFrom below).
 	function(db)
-		Migrations.FeedLooks(db)
+		local old = Migrations.FeedLooks(db)
+		if old then
+			for _, profile in pairs(type(db.profiles) == "table" and db.profiles or {}) do
+				local modules = type(profile) == "table" and type(profile.modules) == "table" and profile.modules or nil
+				local junk = modules and type(modules.Junk) == "table" and modules.Junk or {}
+				local values = Migrations.JunkFrom(junk)
+				if next(values) then
+					profile.modules = modules or {}
+					profile.modules.Junk = values
+				elseif modules then
+					modules.Junk = nil
+				end
+			end
+		end
 	end,
 }
+
+-- Junk's settings as 0.4 saved them in a profile or a text, as they are from
+-- 0.4.5 on, keeping what 0.4 did where the defaults changed: selling at
+-- once when a merchant opened (sellOnOpen, on in 0.4) becomes "auto", else
+-- swapped clicks "window", else "button"; the button's style stays small, as
+-- 0.4 drew it; turned off, the button is never shown and the sell button
+-- opens the sort window. The large button's size and place go.
+function Migrations.JunkFrom(junk)
+	local values = {}
+	for key, value in pairs(junk) do
+		values[key] = value
+	end
+	values.sellOnOpen, values.swapClicks, values.tossSize, values.tossSide, values.tossOffset = nil, nil, nil, nil, nil
+	values.enabled = nil
+	if junk.enabled == false then
+		values.tossButton, values.selling = "never", nil
+		return values
+	end
+	local selling
+	if junk.sellOnOpen ~= false then
+		selling = "auto"
+	elseif junk.swapClicks == true then
+		selling = "window"
+	else
+		selling = "button"
+	end
+	values.selling = selling ~= "window" and selling or nil
+	if junk.tossStyle ~= "large" then
+		values.tossStyle = "small"
+	else
+		values.tossStyle = nil
+	end
+	return values
+end
 
 -- The loot feed's settings and their defaults as 0.4 saved them, and the
 -- defaults of a feed look from 0.4.5 on (Modules/LootFeed/Looks.lua). Kept here
@@ -196,7 +245,7 @@ function Migrations.FeedLooks(db)
 		hasFeed = hasFeed or (type(profile) == "table" and type(profile.modules) == "table" and type(profile.modules.LootFeed) == "table")
 	end
 	if not hasFeed then
-		return
+		return false
 	end
 	local sections = ensureTable(db, "sections")
 	local layouts = type(sections.feedLayouts) == "table" and sections.feedLayouts or {}
@@ -321,6 +370,7 @@ function Migrations.FeedLooks(db)
 		local values = lookValues({}, "rows")
 		looks.Default.values = next(values) and values or nil
 	end
+	return true
 end
 
 -- LootomanCharDB
