@@ -173,7 +173,13 @@ local function showTooltip(rowFrame)
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip:SetHyperlink(row.link)
 		if rowFrame.stuck then
-			GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use."], 0.5, 1, 0.5)
+			-- In a fight the use button may still hold the item of the row before.
+			local use = rowFrame.feed and rowFrame.feed.useButton
+			if use and Compat.InCombat() and not use:Uses(row) then
+				GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use, after the fight."], 0.5, 1, 0.5)
+			else
+				GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use."], 0.5, 1, 0.5)
+			end
 		end
 		GameTooltip:Show()
 	elseif row.kind == "currency" and row.id then

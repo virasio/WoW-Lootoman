@@ -16,8 +16,10 @@ local Bus, Compat = ns.Bus, ns.Compat
 -- - A left click still lets the row go; the button's own secure handler, which
 --   may change it in combat, also turns the right-click use off then, so the
 --   next row's click cannot use the item of the one before.
--- - A right click uses only what the button held when the fight began.
--- - A row that sticks during the fight has no right click until it ends.
+-- - A right click uses what the button held when the fight began, also when
+--   that row went another way (used up, or no longer usable) and another one
+--   has taken its place since: that row's tooltip says its right click waits
+--   for the end of the fight (Uses).
 -- After the fight it catches up.
 --
 --   local use = UseButton.Create(feed)       -- out of combat, with the feed
@@ -68,6 +70,14 @@ function UseButton.Create(feed)
 		end
 	end)
 	return use
+end
+
+-- Whether a right click on the button uses this row's item now: false in a
+-- fight while it still holds another item, or none.
+function ButtonMixin:Uses(row)
+	local button = self.button
+	return row ~= nil and row.id ~= nil and button:IsShown() and button:GetAttribute("type2") == "item"
+		and button:GetAttribute("item") == "item:" .. row.id
 end
 
 -- Brings the button in line after a fight, with the feed as it is then.
