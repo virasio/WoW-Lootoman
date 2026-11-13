@@ -50,75 +50,51 @@ describe("loot feed module", function()
 		module = ns.Modules:Get("LootFeed")
 	end)
 
-	it("is on by default, with a settings page for every option, in groups", function()
+	it("is on by default, its look under its switch on the main page; its settings belong to its look", function()
 		assert.is_true(module:IsActive())
-		assert.same({
-			"checkbox:Enabled",
-			"header:What the feed shows", "checkbox:Items", "checkbox:Currencies", "checkbox:Money", "checkbox:Reputation",
-			"checkbox:Experience", "dropdown:Minimum quality", "checkbox:Keep usable items",
-			"  checkbox:Items that start a quest", "  checkbox:Recipes", "  checkbox:Containers", "  checkbox:Pets", "  checkbox:Mounts",
-			"  checkbox:Toys", "  checkbox:Appearance sets", "  checkbox:Heirlooms",
-			"header:Rows and timing", "slider:Rows", "dropdown:Fill direction", "slider:Time on screen", "slider:Fade-out time",
-			"header:Appearance", "slider:Size", "slider:Background opacity", "checkbox:Glow for rare items",
-			"header:Low-space warnings", "checkbox:Warn when few bag slots are free", "slider:Bag slots",
-			"checkbox:Warn when few reagent bag slots are free", "slider:Reagent bag slots",
-			"button:Row design",
-		}, api.Kinds(api.FindCategory("Loot feed")))
+		assert.is_nil(api.FindCategory("Loot feed"))
+		local page = ns.SettingsPanel.main
+		local switch, look = page.items[#page.items - 1], page.items[#page.items]
+		assert.same({ "checkbox", "Show the loot feed", "row", "Feed look", 24 }, { switch.kind, switch.text, look.kind, look.text, look.indent })
+		assert.equals(ns.Feed.LookMenu.Build, page.look.menu)
+		assert.same({ "Default", 5, true, 3 }, { ns.Storage:Get("LootFeed", "look"), module:Get("maxRows"), module:Get("xp"), module:Get("warnGeneralAt") })
+		-- It follows the look renamed elsewhere.
+		local generated = page.look.generated
+		ns.Feed.Looks.Create("Raid")
+		ns.Feed.Looks.Use("Raid")
+		ns.Feed.Looks.Rename("Raid", "Party")
+		assert.is_true(page.look.generated > generated)
+		-- Greyed out while the feed is off.
+		ns.Modules:SetEnabled("LootFeed", false)
+		page:Refresh()
+		assert.is_false(page.look.enabled)
 	end)
 
-	it("fills sideways only with an Icons layout, and up or down with rows", function()
-		local direction
-		for _, setting in ipairs(module:Settings()) do
-			direction = setting.key == "direction" and setting or direction
-		end
-		local function offered()
-			local list = {}
-			for index, choice in ipairs(direction.offered()) do
-				list[index] = choice[1]
-			end
-			return table.concat(list, " ")
-		end
-		assert.equals("up down", offered())
-		local Layouts = ns.Feed.Layouts
-		Layouts.Create("Strip", "icons")
-		Layouts.Use("Strip")
-		assert.equals("up down right left", offered())
+	it("follows the look the profile uses, and its view's fill directions", function()
+		local Looks = ns.Feed.Looks
+		Looks.Create("Strip")
+		Looks.SetView("Strip", "icons")
+		Looks.Use("Strip")
+		assert.same({ "right", "icons" }, { module.feed.options.direction, ns.Feed.Design.View(module.feed.options.layout) })
 		module:Set("direction", "left")
 		assert.equals("left", module.feed.options.direction)
-		-- Back on rows, the rows' own direction comes back; then the icons' does.
-		Layouts.Use("Default")
-		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
+		Looks.Use("Default")
+		assert.equals("up", module.feed.options.direction)
+		assert.has_error(function() module:Set("direction", "left") end)
 		module:Set("direction", "down")
-		Layouts.Use("Strip")
-		assert.same({ "left", "left" }, { module:Get("direction"), module.feed.options.direction })
-		Layouts.Use("Default")
 		assert.same({ "down", "down" }, { module:Get("direction"), module.feed.options.direction })
-		-- Another layout of the same view keeps the direction.
-		Layouts.Create("Wide", "large")
-		Layouts.Use("Wide")
-		assert.equals("down", module:Get("direction"))
-		-- A sideways direction left for rows, say from a profile text, becomes bottom to top.
-		Layouts.Use("Strip")
-		module:Set("otherViewDirection", "right")
-		Layouts.Use("Default")
-		assert.same({ "up", "up" }, { module:Get("direction"), module.feed.options.direction })
-		-- Every direction may come in a profile text.
-		assert.is_true(module:Validate("direction", "right"))
 	end)
 
-	it("swaps the views' directions also when an import replaces the layout with one of the other view", function()
-		local Layouts, Design = ns.Feed.Layouts, ns.Feed.Design
-		Layouts.Create("Strip", "icons")
-		Layouts.Use("Strip")
-		module:Set("direction", "left")
-		Layouts.Create("Wide", "large")
-		Layouts.Use("Wide")
-		module:Set("direction", "down")
-		-- "Replace yours": Wide becomes an Icons layout, then a rows layout is chosen.
-		Layouts.Put("Wide", { schema = Design.SCHEMA, base = "icons" })
-		assert.same({ "left", "left" }, { module:Get("direction"), module.feed.options.direction })
-		Layouts.Use("Default")
-		assert.same({ "down", "down" }, { module:Get("direction"), module.feed.options.direction })
+	it("takes a change of its look at once, in every profile that uses it", function()
+		local Looks = ns.Feed.Looks
+		ns.Profiles.Create("Alt")
+		Looks.Set("Default", "maxRows", 7)
+		assert.equals(7, module.model.options.maxRows)
+		ns.Profiles.Switch("Alt")
+		assert.equals(7, module.model.options.maxRows)
+		-- Its design too.
+		Looks.SetDesign("Default", "row", "height", 40)
+		assert.equals(37, module.feed.options.layout.height)
 	end)
 
 	describe("low-space warnings", function()
@@ -143,11 +119,11 @@ describe("loot feed module", function()
 			return texts
 		end
 
-		it("warn when no more general slots are free than the threshold, 2 by default", function()
-			bags(3)
+		it("warn when no more general slots are free than the threshold, 3 by default", function()
+			bags(4)
 			assert.same({}, shown())
-			bags(2)
-			assert.same({ "Free bag slots: 2" }, shown())
+			bags(3)
+			assert.same({ "Free bag slots: 3" }, shown())
 			bags(0)
 			assert.same({ "No free bag slots" }, shown())
 			module:Set("warnGeneralAt", 0)
@@ -164,8 +140,10 @@ describe("loot feed module", function()
 			assert.same({ "Free reagent bag slots: 1" }, shown())
 			bags(1, 0)
 			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
-			-- With their counts, for the icons that show them in an Icons layout.
-			assert.same({ 1, 0 }, { module.feed.warnings[1].count, module.feed.warnings[2].count })
+			-- Each with its bag kind and count, for the warning row's amount; one row for both.
+			assert.same({ "general", 1, "reagent", 0 }, { module.feed.warnings[1].kind, module.feed.warnings[1].count,
+				module.feed.warnings[2].kind, module.feed.warnings[2].count })
+			assert.equals("|cffffffff1|r+|cff1eff000|r", module.feed.warningRow.Amount.text)
 			bags(5)
 			assert.same({}, shown())
 		end)
@@ -177,31 +155,22 @@ describe("loot feed module", function()
 
 	it("offers the client's item quality names", function()
 		local dropdown
-		for _, initializer in ipairs(api.FindCategory("Loot feed").initializers) do
-			if initializer.setting and initializer.setting.variable == "LOOTOMAN_LOOTFEED_MINQUALITY" then
-				dropdown = initializer
-			end
+		for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+			dropdown = setting.key == "minQuality" and setting or dropdown
 		end
 		local labels = {}
-		for _, data in ipairs(dropdown.options()) do
-			labels[#labels + 1] = data.value .. "=" .. data.label
+		for _, choice in ipairs(dropdown.choices) do
+			labels[#labels + 1] = choice[1] .. "=" .. choice[2]
 		end
 		assert.same({ "0=Poor", "1=Common", "2=Uncommon", "3=Rare", "4=Epic", "5=Legendary" }, labels)
 	end)
 
-	it("puts the feed in Edit Mode right of the screen centre, with the same settings in its dialog", function()
+	it("puts the feed in Edit Mode right of the screen centre, with only its look's menu in its dialog", function()
 		local frame = module.feed.frame
-		assert.same({ "Loot feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
-		-- The same groups, with a divider for each header.
-		local names = {}
-		for _, setting in ipairs(lib.settings[frame]) do
-			if setting.kind == "divider" then
-				names[#names + 1] = setting.name
-			end
-		end
-		assert.same({ "What the feed shows", "Rows and timing", "Appearance", "Low-space warnings" }, names)
-		assert.equals(22, #lib.settings[frame])
-		assert.same({ "divider", "Items" }, { lib.settings[frame][1].kind, lib.settings[frame][2].name })
+		assert.same({ "Loot Feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
+		local settings = lib.settings[frame]
+		assert.same({ 1, 0, "Feed look", ns.Feed.LookMenu.Build }, { #settings, settings[1].kind, settings[1].name, settings[1].generator })
+		assert.is_nil(lib.buttons and lib.buttons[frame])
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
 		lib.Fire("exit")
@@ -247,7 +216,7 @@ describe("loot feed module", function()
 			end
 		end
 
-		it("keep an item that starts a quest once the bags hold it, and let it go when the quest is taken", function()
+		it("keep an item that starts a quest once the bags hold it, and let it fade when the quest is taken", function()
 			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
 			-- Not in the bags yet.
 			assert.is_nil(rowOf(500).sticky)
@@ -260,6 +229,31 @@ describe("loot feed module", function()
 			letter.use.questTaken = true
 			Test.FireEvent("QUEST_ACCEPTED", 9)
 			assert.same({}, module.model:Stuck())
+			-- Still in the bags: it fades out as any row.
+			assert.is_true(rowOf(500).fadeEnd > Test.state.time)
+		end)
+
+		it("keep an item again that becomes usable before its row is gone, and let one that left the bags go at once", function()
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LETTER, "Tester")
+			local letter = { itemID = 500, count = 1, use = { questID = 9, questTaken = true } }
+			holding({ letter })
+			assert.is_nil(rowOf(500).sticky)
+			letter.use.questTaken = false
+			module:CheckAll()
+			Test.Advance(10)
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			-- Not usable for a moment: it fades, and sticks again before it is gone.
+			letter.use.questTaken = true
+			module:CheckAll()
+			assert.same({}, module.model:Stuck())
+			letter.use.questTaken = false
+			module:CheckAll()
+			module.model:Update(Test.state.time)
+			assert.equals(1, #module.model:Stuck())
+			-- Gone from the bags: the row goes at once.
+			holding({})
+			assert.is_nil(rowOf(500))
 		end)
 
 		it("keep a usable item below the minimum quality, and count down what is left as it is used", function()
@@ -340,13 +334,13 @@ describe("loot feed module", function()
 			assert.same({}, module.model:Stuck())
 		end)
 
-		it("puts the kinds under their switch, on the options page only", function()
+		it("puts the kinds under their switch, only those whose collections the client has", function()
 			local Usable = ns.Rules.Usable
 			Test.state.collections = { mount = true }
 			local keys = {}
-			for _, setting in ipairs(module:Settings()) do
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
 				if setting.parent == "keepUsable" then
-					keys[#keys + 1] = setting.key .. (setting.pageOnly and "" or "!")
+					keys[#keys + 1] = setting.key
 				end
 			end
 			assert.same({ "keepQuest", "keepRecipes", "keepContainers", "keepMounts" }, keys)
@@ -354,11 +348,12 @@ describe("loot feed module", function()
 		end)
 
 		it("shows at least 3 rows", function()
-			assert.same({ false, true }, { module:Validate("maxRows", 2), module:Validate("maxRows", 3) })
+			assert.same({ nil, true }, { ns.Feed.Looks.Set("Default", "maxRows", 2), ns.Feed.Looks.Set("Default", "maxRows", 3) })
 		end)
 	end)
 
-	it("reads owned counts again when the bags change", function()
+	it("reads owned counts again when the bags change, once the look shows them", function()
+		ns.Feed.Looks.SetDesign("Default", "owned", "shown", true)
 		Test.SetItems({ [2589] = { name = "Linen Cloth", icon = 132889, quality = 1, stackSize = 200, owned = 0 } })
 		Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LINK, "Tester")
 		module.feed:Draw(Test.state.time)
@@ -370,7 +365,8 @@ describe("loot feed module", function()
 		assert.same({ true, "7" }, { row.Owned.shown, row.Owned.text })
 	end)
 
-	it("leaves experience out until it is turned on", function()
+	it("shows experience, unless turned off", function()
+		module:Set("xp", false)
 		Test.SetXP(100)
 		assert.same({}, module.model:Visible(Test.state.time))
 		module:Set("xp", true)
@@ -379,6 +375,7 @@ describe("loot feed module", function()
 	end)
 
 	it("applies changed settings at once", function()
+		module:Set("size", 13)
 		module:Set("maxRows", 3)
 		assert.equals(119, module.feed.frame.height)
 		module:Set("size", 16)
@@ -393,9 +390,13 @@ describe("loot feed module", function()
 		assert.same({}, module.model:Visible(Test.state.time))
 	end)
 
-	it("applies the settings of a profile it switches to", function()
+	it("applies the look of a profile it switches to", function()
+		local Looks = ns.Feed.Looks
+		Looks.Create("Small")
+		Looks.Set("Small", "maxRows", 4)
+		Looks.Set("Small", "size", 13)
 		ns.Profiles.Create("Small")
-		ns.Storage.db.profiles.Small.modules = { LootFeed = { maxRows = 4 } }
+		ns.Storage.db.profiles.Small.modules = { LootFeed = { look = "Small" } }
 		ns.Profiles.Switch("Small")
 		assert.equals(161, module.feed.frame.height)
 	end)

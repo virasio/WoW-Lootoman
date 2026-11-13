@@ -107,6 +107,8 @@ function methods:SetText(text) self.text = text end
 function methods:SetFont(file, size, flags) self.font = { file, size, flags } end
 -- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
 function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
+-- A text wraps every 520 pixels, 14 pixels a line.
+function methods:GetStringHeight() return 14 * math.max(1, math.ceil(self:GetUnboundedStringWidth() / 520)) end
 function methods:SetGradient(orientation, from, to) self.gradient = { orientation, from, to } end
 function methods:GetText() return self.text end
 function methods:SetTextColor(r, g, b) self.color = { r, g, b } end
@@ -119,6 +121,8 @@ function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
+-- A panel template's title (DefaultPanelFlatTemplate's SetTitle).
+function methods:SetTitle(text) self.title = text end
 function methods:IsEnabled() return self.enabled ~= false end
 function methods:SetFontObject(font) self.fontObject = font end
 function methods:HookScript(name, fn)
@@ -141,7 +145,12 @@ function methods:GenerateMenu()
 	end
 end
 function methods:CreateTexture() return UI.NewFake(self) end
-function methods:CreateFontString() return UI.NewFake(self) end
+-- A font string's template is its font object until SetFontObject changes it.
+function methods:CreateFontString(_, layer, template)
+	local text = UI.NewFake(self)
+	text.layer, text.fontObject = layer, template
+	return text
+end
 
 -- A fake frame, texture or font string; shown by default, like a new frame.
 function UI.NewFake(parent, strata)
@@ -234,6 +243,7 @@ function UI.Install()
 	rawset(_G, "UIParent", api.UIParent)
 	rawset(_G, "CreateFrame", function(_, name, parent, template)
 		local frame = UI.NewFake(parent)
+		frame.template = template
 		frame.protected = type(template) == "string" and template:find("Secure") ~= nil
 		-- A named frame is a global, as in the client.
 		if name then
@@ -248,6 +258,9 @@ function UI.Install()
 			frame.ScrollBar = UI.NewFake(frame)
 		elseif template and template:match("DropdownTemplate$") then
 			frame.dropdown = true
+		elseif template == "ColorSwatchTemplate" then
+			-- ColorSwatchMixin.
+			function frame:SetColorRGB(r, g, b) self.color = { r, g, b } end
 		end
 		api.frames[#api.frames + 1] = frame
 		return frame
@@ -368,6 +381,35 @@ function UI.Install()
 		Event = { OnValueChanged = "OnValueChanged" },
 	})
 	rawset(_G, "CreateMinimalSliderFormatter", function(_, formatter) return formatter or tostring end)
+	-- Runs hook after the table's function, with the same arguments.
+	rawset(_G, "hooksecurefunc", function(object, name, hook)
+		local original = object[name]
+		object[name] = function(...)
+			local results = { original(...) }
+			hook(...)
+			return unpack(results)
+		end
+	end)
+	-- The tabs of a frame (SharedUIPanelTemplates.lua): the chosen one.
+	rawset(_G, "PanelTemplates_SetNumTabs", function(frame, count) frame.numTabs = count end)
+	rawset(_G, "PanelTemplates_SetTab", function(frame, id) frame.selectedTab = id end)
+	-- The game's color picker (Blizzard_ColorPickerFrame): what it was opened
+	-- with, and Pick(r, g, b) or Cancel() as the player does.
+	local picker = { shown = false }
+	function picker:SetupColorPickerAndShow(info)
+		self.info, self.shown, self.color = info, true, { info.r, info.g, info.b }
+	end
+	function picker:GetColorRGB() return self.color[1], self.color[2], self.color[3] end
+	function picker:Pick(r, g, b)
+		self.color = { r, g, b }
+		self.info.swatchFunc()
+	end
+	function picker:Cancel()
+		self.shown = false
+		self.info.cancelFunc({ r = self.info.r, g = self.info.g, b = self.info.b })
+	end
+	api.colorPicker = picker
+	rawset(_G, "ColorPickerFrame", picker)
 	rawset(_G, "GameFontNormal", { GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end })
 	rawset(_G, "NumberFontNormal", { GetFont = function() return "Fonts\\ARIALN.TTF", 14, "OUTLINE" end })
 	return api

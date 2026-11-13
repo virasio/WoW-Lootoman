@@ -64,15 +64,6 @@ Modules\Shared\NameMenu.lua
 Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua
 
-Modules\LootFeed\Sources.lua
-Modules\LootFeed\Model.lua
-Modules\LootFeed\Design.lua
-Modules\LootFeed\Layouts.lua
-Modules\LootFeed\Frames.lua
-Modules\LootFeed\UseButton.lua
-Modules\LootFeed\LootFeed.lua
-Modules\LootFeed\Designer.lua
-
 Modules\Junk\Junk.lua
 Modules\Junk\Sections.lua
 Modules\Junk\ItemGrid.lua
@@ -82,10 +73,21 @@ Modules\Junk\SellQueue.lua
 Modules\Junk\SellButton.lua
 Modules\Junk\SellWindow.lua
 
+Modules\LootFeed\Sources.lua
+Modules\LootFeed\Model.lua
+Modules\LootFeed\Design.lua
+Modules\LootFeed\Looks.lua
+Modules\LootFeed\LookMenu.lua
+Modules\LootFeed\Frames.lua
+Modules\LootFeed\UseButton.lua
+Modules\LootFeed\LootFeed.lua
+Modules\LootFeed\LookWindow.lua
+
 Settings\Panel.lua
 Settings\Profiles.lua
 Settings\Share.lua
 Settings\JunkList.lua
+Settings\AutoLootBox.lua
 
 #@debug@
 Dev\LootDump.lua

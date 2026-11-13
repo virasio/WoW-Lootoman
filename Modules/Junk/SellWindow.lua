@@ -80,7 +80,7 @@ Junk.AddPart({
 		if not grid then
 			grid = Junk.ItemGrid.Create({
 				name = SellWindow.NAME,
-				title = L["Sell junk"],
+				title = L["Sort junk"],
 				kind = "sell",
 				onRefresh = updateFooter,
 				footer = footer,

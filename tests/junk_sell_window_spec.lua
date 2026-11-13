@@ -31,7 +31,6 @@ describe("sell window", function()
 		Loader.Start(ns)
 		Junk = ns.Modules:Get("Junk")
 		SellWindow = Junk.SellWindow
-		Junk:Set("sellOnOpen", false)
 		local items = {}
 		for itemID = 1, 20 do
 			items[itemID] = { name = "Item " .. itemID, sellPrice = itemID }

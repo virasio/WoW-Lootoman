@@ -4,13 +4,13 @@ local Panel = ns.SettingsPanel
 
 -- The Share and Import dialogs of profile texts. They
 -- open from the profile menu for a whole profile ("profile"), or from a
--- menu of named items, such as the loot feed's layouts, for the items only
--- ("layouts", the name of the collection).
+-- menu of named items, such as the loot feed's looks, for the items only
+-- ("looks", the name of the collection).
 --
 -- Both list what a text can hold, with a checkbox each: every module's
 -- settings, and indented under them the parts of the module, which can be
 -- ticked only while the module's settings are; a part that needs an item
--- (Use layout “Name”) needs that item ticked too. Then each collection under
+-- (Use look “Name”) needs that item ticked too. Then each collection under
 -- its header, an item per row.
 --
 -- Share: everything ticked but the items, of which only those the profile
@@ -477,7 +477,7 @@ local function ready()
 end
 
 -- mode: "profile", or the name of a collection to share only its items.
-function Dialogs.OpenShare(mode)
+function Dialogs.OpenShare(mode, item)
 	if not ready() then
 		return
 	end
@@ -503,7 +503,9 @@ function Dialogs.OpenShare(mode)
 			itemLines(lines, collection, collection.list())
 		end
 	end
-	if mode ~= "profile" then
+	if mode ~= "profile" and item then
+		share.checked[itemKey(mode, item)] = true
+	elseif mode ~= "profile" then
 		for _, line in ipairs(partLines(nil, Share.Get)) do
 			if line.needs then
 				share.checked[line.needs] = true
@@ -529,9 +531,9 @@ function Dialogs.OpenImport(mode)
 	import.box.EditBox:SetFocus()
 end
 
--- From the menus of named items in modules (the designer's layout menu).
-Bus:On("OpenShareDialog", Dialogs, function(_, mode)
-	Dialogs.OpenShare(mode)
+-- From the menus of named items in modules (the look menu).
+Bus:On("OpenShareDialog", Dialogs, function(_, mode, item)
+	Dialogs.OpenShare(mode, item)
 end)
 Bus:On("OpenImportDialog", Dialogs, function(_, mode)
 	Dialogs.OpenImport(mode)
