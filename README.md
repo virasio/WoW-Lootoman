@@ -62,8 +62,9 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 - `/lootoman design`: open the window of the loot feed's look.
 - `/lootoman toss`: open the sort window.
 - `/lootoman sales`: list what was sold this session.
-- `/lootoman debug on` or `off`: turn debug messages on or off for all characters.
-- `/lootoman selftest`: check the addon against the game client. Its output helps with bug reports.
+- `/lootoman debug on` or `off`: turn debug messages on or off for all characters. While they are on, the last 300 are also kept in the saved data.
+- `/lootoman selftest`: check the addon against the game client. Its output helps with bug reports, and the last one is kept in the saved data too.
+- `/lootoman debug clear`: empty the debug messages and the self-test kept in the saved data.
 
 ## Screenshots
 
