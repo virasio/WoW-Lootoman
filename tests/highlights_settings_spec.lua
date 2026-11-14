@@ -183,3 +183,18 @@ describe("gathering highlights' game settings", function()
 		assert.equals("0", ns.Compat.Test.state.consoleVars.SoftTargetInteract)
 	end)
 end)
+
+describe("gathering highlights' game settings on retail", function()
+	it("do nothing: no listener, and no saved section", function()
+		local ns = Loader.LoadAddon()
+		local Test = ns.Compat.Test
+		Test.state.consoleVars = { SoftTargetInteract = "0" }
+		Loader.Start(ns)
+		assert.is_nil(ns.Highlights and ns.Highlights.GameSettings)
+		assert.is_false(Test.IsRegistered("PLAYER_LOGOUT"))
+		Test.FireEvent("PLAYER_LOGOUT")
+		local sections = Test.state.saved.LootomanDB.sections or {}
+		assert.is_nil(sections.highlightCVars)
+		assert.same({}, Test.state.cvarChanges or {})
+	end)
+end)
