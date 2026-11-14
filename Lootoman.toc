@@ -51,6 +51,7 @@ Core\Startup.lua
 
 Rules\Junk.lua
 Rules\Usable.lua
+Rules\Objects.lua
 
 Providers\Inventory.lua
 Providers\Bags.lua
