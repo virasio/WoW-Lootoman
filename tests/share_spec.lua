@@ -87,6 +87,13 @@ describe("profile texts", function()
 		assert.equals("broken", why("LTM1:garbage"))
 		assert.equals("broken", why("LTM1:" .. ns.Compat.Encode("a string")))
 		assert.equals("broken", why("LTM1:" .. ("A"):rep(Share.MAX_LENGTH)))
+		-- A short text whose data decompresses into too much.
+		local big = text({ format = 2, sections = {} })
+		ns.Compat.Test.state.decodedSizes[tonumber(big:match("ENC(%d+)$"))] = Share.MAX_DATA + 1
+		assert.equals("broken", why(big))
+		local fits = text({ format = 2, sections = {} })
+		ns.Compat.Test.state.decodedSizes[tonumber(fits:match("ENC(%d+)$"))] = Share.MAX_DATA
+		assert.equals("nothing", why(fits))
 		-- Only plain data, not too deep and not too much.
 		local deep = {}
 		local level = deep

@@ -22,8 +22,9 @@ local Bus, Compat, L, Modules, Profiles, Storage, Text = ns.Bus, ns.Compat, ns.L
 -- (Share.RegisterUpgrade): format 1, of 0.1 to 0.4, held the loot feed's
 -- settings and row layouts, which became feed looks.
 --
--- Reading never trusts the text: it must be plain data (no deeper than
--- MAX_DEPTH, no more than MAX_VALUES values); a module setting must be known,
+-- Reading never trusts the text: it must decompress into no more than
+-- MAX_DATA bytes and be plain data (no deeper than MAX_DEPTH, no more than
+-- MAX_VALUES values); a module setting must be known,
 -- of its default's type and a value its controls can set (module:Validate,
 -- from its declared settings); other parts and items go through their owner's
 -- clean function. What does not pass is left out and counted.
@@ -35,6 +36,10 @@ local Share = {
 	-- levels down; such a text is still read for its other parts.
 	MAX_DEPTH = 12,
 	MAX_VALUES = 5000,
+	-- What the text may decompress into, in bytes: far more than MAX_VALUES
+	-- values of a real profile take, and far less than a crafted text could
+	-- make of MAX_LENGTH characters.
+	MAX_DATA = 1000000,
 }
 ns.Share = Share
 
@@ -302,7 +307,7 @@ function Share.Read(text)
 	elseif not Compat.CanEncode() then
 		return nil, "encoder"
 	end
-	local data = Compat.Decode(body)
+	local data = Compat.Decode(body, Share.MAX_DATA)
 	if type(data) ~= "table" or not plain(data, 1, { left = Share.MAX_VALUES }) then
 		return nil, "broken"
 	end

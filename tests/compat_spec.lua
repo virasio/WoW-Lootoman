@@ -417,6 +417,27 @@ describe("Compat", function()
 		assert.same({ { 2589, true, false, true, false }, { 2589, false, false, false, false } }, asked)
 	end)
 
+	it("decodes a profile text, but not data that decompresses past the limit", function()
+		local saved = { C_EncodingUtil = rawget(_G, "C_EncodingUtil"), Enum = rawget(_G, "Enum") }
+		local deserialized = 0
+		stub({
+			Enum = { CompressionMethod = { Deflate = 0 } },
+			C_EncodingUtil = {
+				SerializeCBOR = function() end,
+				DecodeBase64 = function(text) return text end,
+				DecompressString = function() return ("x"):rep(20) end,
+				DeserializeCBOR = function() deserialized = deserialized + 1; return { read = true } end,
+			},
+		})
+		assert.same({ read = true }, Compat.Decode("text"))
+		assert.same({ read = true }, Compat.Decode("text", 20))
+		-- Over the limit: refused before the data is read.
+		assert.is_nil(Compat.Decode("text", 19))
+		assert.equals(2, deserialized)
+		rawset(_G, "C_EncodingUtil", saved.C_EncodingUtil)
+		rawset(_G, "Enum", saved.Enum)
+	end)
+
 	it("registers slash commands the way the game expects", function()
 		local handler = function() end
 		stub({ SlashCmdList = {} })

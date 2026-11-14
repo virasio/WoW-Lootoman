@@ -738,14 +738,21 @@ function Compat.Encode(value)
 	return ok and text or nil
 end
 
-function Compat.Decode(text)
+-- limit: the most bytes the decompressed data may have, or nil for no limit.
+-- A short text can decompress into a great deal; the client's decompression
+-- takes no limit of its own (API docs), so the length is checked before the
+-- data is read.
+function Compat.Decode(text, limit)
 	if not Compat.CanEncode() or type(text) ~= "string" then
 		return nil
 	end
 	local ok, value = pcall(function()
 		local packed = C_EncodingUtil.DecodeBase64(text)
 		local cbor = packed and C_EncodingUtil.DecompressString(packed, Enum.CompressionMethod.Deflate)
-		return cbor and C_EncodingUtil.DeserializeCBOR(cbor)
+		if type(cbor) ~= "string" or (limit and #cbor > limit) then
+			return nil
+		end
+		return C_EncodingUtil.DeserializeCBOR(cbor)
 	end)
 	return ok and value or nil
 end
