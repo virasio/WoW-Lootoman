@@ -279,6 +279,22 @@ function ModelMixin:Visible(now)
 	return list
 end
 
+-- The next moment after now that a row starts fading or sticks, so a feed at
+-- rest knows when to draw again; nil when no row waits for one, and while the
+-- pointer is over the feed (time stands still).
+function ModelMixin:NextChange(now)
+	if self.pausedAt then
+		return nil
+	end
+	local soonest
+	for _, row in ipairs(self.rows) do
+		if not row.stuck and row.fadeStart > now and (not soonest or row.fadeStart < soonest) then
+			soonest = row.fadeStart
+		end
+	end
+	return soonest
+end
+
 -- The stuck rows, the first one first.
 function ModelMixin:Stuck()
 	local list = {}

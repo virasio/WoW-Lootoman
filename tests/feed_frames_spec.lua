@@ -581,5 +581,97 @@ describe("loot feed frames", function()
 			assert.same({ true, "Experience", "+12,345" }, hover("Experience"))
 			assert.same({ true, "Reputation with Stormwind", "-250" }, hover("Reputation with Stormwind"))
 		end)
+
+		describe("drawing", function()
+			local draws
+			local FRAME = 1 / 60
+
+			-- Runs the game's frames for this long, 60 a second, while the feed is
+			-- shown; returns the times it drew at.
+			local function run(seconds)
+				local times = {}
+				for _ = 1, math.floor(seconds * 60 + 0.5) do
+					ns.Compat.Test.Advance(FRAME)
+					if feed.frame.shown then
+						local before = draws
+						feed.frame.scripts.OnUpdate(feed.frame, FRAME)
+						if draws > before then
+							times[#times + 1] = ns.Compat.GetTime()
+						end
+					end
+				end
+				return times
+			end
+
+			before_each(function()
+				draws = 0
+				local draw = feed.Draw
+				feed.Draw = function(...)
+					draws = draws + 1
+					return draw(...)
+				end
+			end)
+
+			it("rests while it only shows a warning, and wakes for a new row at once", function()
+				feed:SetWarnings({ GENERAL })
+				run(1)
+				-- Nothing moves: a few draws a second.
+				local resting = #run(1)
+				assert.is_true(resting >= 4 and resting <= 6, resting)
+				-- A new row draws on the next frame, and on every frame while it fades in.
+				model:Add({ kind = "money", amount = 100 }, ns.Compat.GetTime())
+				feed:Wake()
+				assert.equals(12, #run(0.2))
+			end)
+
+			it("rests while it only shows a stuck row", function()
+				local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 },
+					ns.Compat.GetTime())
+				model:SetSticky(quest, "quest", ns.Compat.GetTime())
+				feed:Wake()
+				run(7)
+				assert.equals(1, #model:Stuck())
+				local resting = #run(1)
+				assert.is_true(resting >= 4 and resting <= 6, resting)
+			end)
+
+			it("draws every frame while a row slides to its place", function()
+				model:Add({ kind = "money", amount = 100 }, ns.Compat.GetTime())
+				feed:Wake()
+				run(1)
+				-- A warning comes: the row slides after it over 0.15 seconds, nine frames.
+				feed:SetWarnings({ GENERAL })
+				assert.equals(9, #run(0.15))
+				assert.same({ "100 copper@42" }, layout())
+				local resting = #run(1)
+				assert.is_true(resting <= 6, resting)
+			end)
+
+			it("starts a row's fade on time, and draws every frame of it", function()
+				local start = ns.Compat.GetTime()
+				model:Add({ kind = "money", amount = 100 }, start)
+				feed:Wake()
+				run(1.1)
+				-- A wake-up at an odd moment, so the draws at rest fall between frames
+				-- that are 0.2 seconds from the fade's start.
+				feed:RefreshOwned()
+				run(4.8)
+				-- The row fades from 6 to 7 seconds.
+				local times = run(1.2)
+				local fadeStart = start + 6
+				local first, during = nil, 0
+				for _, at in ipairs(times) do
+					if at >= fadeStart - 1e-6 then
+						first = first or at
+						if at < fadeStart + 1 then
+							during = during + 1
+						end
+					end
+				end
+				assert.is_true(first - fadeStart < FRAME, first - fadeStart)
+				assert.is_true(during >= 59, during)
+				assert.is_false(feed.frame.shown)
+			end)
+		end)
 	end)
 end)
