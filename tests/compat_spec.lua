@@ -545,19 +545,26 @@ describe("Compat for highlights", function()
 		assert.same({ false, false }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
 		spells[8387] = true
 		assert.same({ true, false }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
-		-- WoW Forever's skill lines: Mining with a rank.
+		-- WoW Forever's skill lines: Mining with a rank; Herbalism not learned.
 		spells = {}
+		local count = 3
 		stub({ C_SkillInfo = {
-			GetNumSkillLines = function() return 3 end,
-			GetSkillLineInfoByID = function(line) return line == 186 and { maxRank = 75 } or { maxRank = 0 } end,
+			GetNumSkillLines = function() return count end,
+			GetSkillLineInfoByID = function(line) return line == 186 and { maxRank = 75 } or nil end,
 		} })
 		assert.same({ false, true }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
-		-- The professions list.
+		-- Just after logging in the skill lines are not loaded yet: the spells' no is not enough.
+		count = 0
+		assert.same({ nil, nil }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
+		-- The professions list says yes; its leaving one out says nothing (WoW Forever may leave
+		-- the classic professions out).
 		unset("C_SkillInfo", "C_SpellBook")
 		stub({ GetProfessions = function() return 1, nil, nil, 4 end,
 			GetProfessionInfo = function(index) return nil, nil, nil, nil, nil, nil, index == 1 and 182 or 356 end })
 		lines = Compat.GetGatheringSkills()
-		assert.same({ true, false }, { lines.herbs, lines.ore })
+		assert.same({ true, nil }, { lines.herbs, lines.ore })
+		stub({ GetProfessions = function() return nil end })
+		assert.same({ nil, nil }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
 		-- Nothing can say.
 		unset("GetProfessions", "GetProfessionInfo")
 		assert.same({ nil, nil }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })

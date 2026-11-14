@@ -647,10 +647,13 @@ function Compat.GetLootSourceObjects()
 end
 
 -- Whether the character has Herbalism and Mining: { herbs, ore }, each true,
--- false, or nil when the client cannot say yet. Any source that says yes is
--- enough: the tracking spell each profession teaches (Find Herbs, Find
--- Minerals), the skill line, the professions list. The spells and the skill
--- lines on WoW Forever are what Lueur found there.
+-- false, or nil when the client cannot say yet, read as Lueur does on WoW
+-- Forever. Yes from any source is enough: the tracking spell each profession
+-- teaches (Find Herbs, Find Minerals), the skill line with a rank, the
+-- professions list. No only when a source that can answer says so; while the
+-- client has not loaded the skill lines yet (just after logging in), it
+-- cannot say. The professions list only ever says yes: on WoW Forever it may
+-- leave the classic professions out.
 local GATHERING = {
 	herbs = { line = 182, spells = { 2383, 8387 } },
 	ore = { line = 186, spells = { 2580, 8388 } },
@@ -678,36 +681,41 @@ local function professionLines()
 	return lines
 end
 
+local function gatheringSkill(profession, known, lines)
+	local answered = false
+	if known then
+		for _, spell in ipairs(profession.spells) do
+			local has = try(known, spell)
+			if has == true then
+				return true
+			end
+			answered = answered or has == false
+		end
+	end
+	if lines and lines[profession.line] then
+		return true
+	end
+	if Compat.Has("C_SkillInfo.GetSkillLineInfoByID") then
+		-- No skill lines yet: they are still loading, and nothing can say no.
+		if (try(C_SkillInfo.GetNumSkillLines) or 0) == 0 then
+			return nil
+		end
+		local info = try(C_SkillInfo.GetSkillLineInfoByID, profession.line)
+		if type(info) == "table" and (type(info.maxRank) ~= "number" or info.maxRank > 0) then
+			return true
+		end
+		answered = true
+	end
+	if answered then
+		return false
+	end
+	return nil
+end
+
 function Compat.GetGatheringSkills()
-	local skills = {}
 	local known = Compat.Has("C_SpellBook.IsSpellKnown") and C_SpellBook.IsSpellKnown or nil
 	local lines = professionLines()
-	local skillLines = Compat.Has("C_SkillInfo.GetSkillLineInfoByID")
-		and (try(C_SkillInfo.GetNumSkillLines) or 0) > 0
-	for kind, profession in pairs(GATHERING) do
-		local answer
-		if known then
-			for _, spell in ipairs(profession.spells) do
-				local has = try(known, spell)
-				if has == true then
-					answer = true
-				elseif has == false and answer == nil then
-					answer = false
-				end
-			end
-		end
-		if answer ~= true and skillLines then
-			local info = try(C_SkillInfo.GetSkillLineInfoByID, profession.line)
-			if type(info) == "table" then
-				answer = (type(info.maxRank) ~= "number" or info.maxRank > 0) or answer or false
-			end
-		end
-		if answer ~= true and lines then
-			answer = lines[profession.line] == true or answer or false
-		end
-		skills[kind] = answer
-	end
-	return skills
+	return { herbs = gatheringSkill(GATHERING.herbs, known, lines), ore = gatheringSkill(GATHERING.ore, known, lines) }
 end
 
 -- The player's position in the world, two coordinates in yards as the client
