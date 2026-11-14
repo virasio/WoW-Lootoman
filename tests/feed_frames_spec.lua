@@ -647,6 +647,21 @@ describe("loot feed frames", function()
 				assert.is_true(resting <= 6, resting)
 			end)
 
+			it("rests while the pointer holds a row halfway through its fade, and fades on when it leaves", function()
+				model:Add({ kind = "money", amount = 100 }, ns.Compat.GetTime())
+				feed:Wake()
+				run(6.5)
+				feed.frame.mouseOver = true
+				run(0.25)
+				-- Held: nothing changes, a few draws a second.
+				local resting = #run(1)
+				assert.is_true(resting <= 6, resting)
+				assert.is_true(feed.frame.shown)
+				feed.frame.mouseOver = false
+				run(1)
+				assert.is_false(feed.frame.shown)
+			end)
+
 			it("starts a row's fade on time, and draws every frame of it", function()
 				local start = ns.Compat.GetTime()
 				model:Add({ kind = "money", amount = 100 }, start)

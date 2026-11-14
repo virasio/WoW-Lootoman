@@ -791,7 +791,9 @@ function FeedMixin:Draw(now, elapsed)
 			local fadeIn = math.min(1, (now - self.seen[row]) / Frames.FADE_IN)
 			rowFrame:SetAlpha(view.alpha * (self.preview and 1 or fadeIn))
 			rowFrame:Show()
-			moving = moving or fadeIn < 1 or view.alpha < 1
+			-- A fade out holds still while the pointer is over the feed (the model's
+			-- timers stop); the fade in runs on.
+			moving = moving or fadeIn < 1 or (view.alpha < 1 and not hovered)
 		end
 	end
 	placeBackground(self)
