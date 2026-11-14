@@ -38,11 +38,11 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ### Gathering highlights (WoW Forever)
 
-- The object you are about to loot sparkles gold: the one your Interact key would use, within about 15 yards. Herbs, ore veins, chests and quest objects all sparkle alike, each kind with its own switch under *Highlight lootable objects*. The sparkles are bright in reach, quieter further away, and faint on what you can't use yet (a locked chest, too little skill).
+- The object you are about to loot sparkles with a few small gold stars: the one your Interact key would use, within about 15 yards. Herbs, ore veins, chests and quest objects all sparkle alike, each kind with its own switch under *Highlight lootable objects*. The sparkles are bright in reach, quieter further away, and faint on what you can't use yet (a locked chest, too little skill).
 - *Only herbs and ore you can gather* (on by default) lights herbs only with Herbalism and ore only with Mining; turn it off to see them anyway, say to help a friend who gathers.
 - One object at a time: the game tells addons only about the one its soft targeting picks.
 - Chests are known by their cursor and name, and any object you loot that is none of the kinds counts as a chest from then on.
-- To work, it turns on the game's soft targeting of objects (Options, Controls, *Enable Interact Key*) and a few related game settings while highlights are on, and gives them back when you turn highlights off or log out; a setting you change yourself meanwhile stays yours. If soft targeting was off before, Lootoman pauses it next to a living creature or player and as a fight begins, so a spell cast without a target never lands on someone else. The soft target's nameplate shows only under the sparkles, without a bar or a name.
+- To work, it turns on the game's soft targeting of objects (Options, Controls, *Enable Interact Key*) and a few related game settings while highlights are on, and gives them back when you turn highlights off or log out; a setting you change yourself meanwhile stays yours. If soft targeting was off before, Lootoman pauses it next to a living creature or player and as a fight begins, so a spell cast without a target never lands on someone else. The soft target's nameplate, and the game's interact icon over an object (a pickaxe, a hand), are switched on only for an object that sparkles, and stay hidden under the stars; a vein you can't mine shows nothing.
 - An object another addon already lights (Lueur, for one) is left alone; running two such addons together is not supported.
 
 ### Options and profiles

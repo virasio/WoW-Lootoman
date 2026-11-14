@@ -305,11 +305,13 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 
 - [ ] **Self-test.** `/lootoman selftest`. *Expected:* a `Highlights:` line with every function `yes` (note any `NO`), the settings with Lootoman's values, the cursors found (note how many) and your Herbalism and Mining. On retail there is no such line.
 - [ ] **Each kind.** Walk up to a herb, an ore vein, a chest (and a crate or barrel you have looted before), and a quest object. *Expected:* each sparkles gold, in the same style, when it is the object the Interact key would use; at most one at a time.
-- [ ] **States.** *Expected:* full sparkles in reach, quieter out of reach, faint without motes on a locked chest or a node that needs more skill; no flicker at the edge of reach.
+- [ ] **The look.** *Expected:* only a few small gold stars twinkling around the object, on every kind; no glow, frame or ring.
+- [ ] **States.** *Expected:* full sparkles in reach, quieter out of reach, faint on a locked chest or a node that needs more skill; no flicker at the edge of reach.
 - [ ] **Where they sit.** *Expected:* on the object, a little below where its name would be; note tall and flat objects where they miss.
 - [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* it applies at once; with all off, nothing sparkles; *Only herbs and ore you can gather* greys out while both herbs and ore are off.
 - [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only herbs and ore you can gather* off, they sparkle; with Herbs on and Ore off, only herbs.
-- [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar or name either.
+- [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar, name or icon either.
+- [ ] **No icon without sparkles.** On a character without Mining, with *Only herbs and ore you can gather* on, walk up to an ore vein. *Expected:* no sparkles and no pickaxe over it (unless *Interact Key Icons* was your own setting before).
 - [ ] **Self-cast.** With *Enable Interact Key* off before highlights: stand next to an NPC, then next to a player, and cast a friendly spell (a heal) without a target, out of combat and as a fight begins. *Expected:* it lands on you. Note whether soft targeting pauses as a fight begins (debug line, or `SoftTargetInteract` at 0).
 - [ ] **Your own interact key.** With *Enable Interact Key* on before highlights. *Expected:* the key keeps working on NPCs; nothing pauses it.
 - [ ] **Game settings.** Turn highlights off. *Expected:* every setting noted above is back. Turn them on, change *Enable Interact Key* by hand, turn them off: yours stays. Turn them on and log out: back again after logging in with highlights off.
