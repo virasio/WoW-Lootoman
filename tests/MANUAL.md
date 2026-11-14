@@ -47,6 +47,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
     - *Show the loot feed*, with *Feed look* under it (greyed out while the feed is off).
   - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
   - There are no subpages under Lootoman.
+  - When the page is taller than the panel (WoW Forever with the Auto Loot box, or a small window), everything under the title scrolls, with the mouse wheel and the scroll bar, and the last checkbox can be reached; the title stays.
   - Hovering a checkbox highlights only its row.
   - The panel's *Defaults* button is hidden on Lootoman's page and back on others.
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.
@@ -308,7 +309,7 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **The look.** *Expected:* only a few small gold stars twinkling around the object, on every kind; no glow, frame or ring.
 - [ ] **States.** *Expected:* full sparkles in reach, quieter out of reach, faint on a locked chest or a node that needs more skill; no flicker at the edge of reach.
 - [ ] **Where they sit.** *Expected:* on the object, a little below where its name would be; note tall and flat objects where they miss.
-- [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* it applies at once; with all off, nothing sparkles; *Only herbs and ore you can gather* greys out while both herbs and ore are off.
+- [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* the kinds stand two to a row (herbs and ore, chests and quest objects), hovering one lights only its half, and *Only herbs and ore you can gather* sits a little apart under them; each applies at once; with all off, nothing sparkles; *Only herbs and ore you can gather* greys out while both herbs and ore are off.
 - [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only herbs and ore you can gather* off, they sparkle; with Herbs on and Ore off, only herbs.
 - [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar, name or icon either.
 - [ ] **No icon without sparkles.** On a character without Mining, with *Only herbs and ore you can gather* on, walk up to an ore vein. *Expected:* no sparkles and no pickaxe over it (unless *Interact Key Icons* was your own setting before).
