@@ -120,13 +120,16 @@ describe("sell-junk button", function()
 			reads = reads + 1
 			return saleList(...)
 		end
-		-- Away from merchants Blizzard's button is hidden: bag changes read nothing.
-		Blizzard:Hide()
+		-- Away from merchants the merchant's frame is closed, Blizzard's button still
+		-- flagged as shown, as the game leaves it: bag changes read nothing.
+		MerchantFrame:Hide()
 		Test.SetBags({ [0] = { size = 4 } })
 		Test.FireEvent("BAG_UPDATE_DELAYED")
 		assert.equals(0, reads)
 		-- At a merchant the icon is right at once: grey without junk, coloured with it.
-		Blizzard:Show()
+		MerchantFrame:Show()
+		Test.SetInteracting("Merchant", true)
+		Test.Advance(0)
 		assert.is_true(button().icon.desaturated)
 		Test.SetBags({ [0] = { size = 4, items = { [1] = gray(1) } } })
 		Test.FireEvent("BAG_UPDATE_DELAYED")
