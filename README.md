@@ -1,6 +1,6 @@
 # Lootoman
 
-Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you can design, and junk thrown away or sold in a click. It looks and feels like the default game interface.
+Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you can design, junk thrown away or sold in a click, and on WoW Forever, sparkles on what you are about to loot. It looks and feels like the default game interface.
 
 ## Features
 
@@ -36,9 +36,18 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - **Junk list**, a window of its own opened from the options or from the sort window's title bar: every item marked as junk or as not junk, with a Remove button for each and *Clear list*. Marks belong to the profile.
 - Auction prices come from [Auctionator](https://www.curseforge.com/wow/addons/auctionator) when it is installed; without it, the merchant's price.
 
+### Gathering highlights (WoW Forever)
+
+- The object you are about to loot sparkles gold: the one your Interact key would use, within about 15 yards. Herbs, ore veins, chests and quest objects all sparkle alike, each kind with its own switch under *Highlight lootable objects*. The sparkles are bright in reach, quieter further away, and faint on what you can't use yet (a locked chest, too little skill).
+- *Only herbs and ore you can gather* (on by default) lights herbs only with Herbalism and ore only with Mining; turn it off to see them anyway, say to help a friend who gathers.
+- One object at a time: the game tells addons only about the one its soft targeting picks.
+- Chests are known by their cursor and name, and any object you loot that is none of the kinds counts as a chest from then on.
+- To work, it turns on the game's soft targeting of objects (Options, Controls, *Enable Interact Key*) and a few related game settings while highlights are on, and gives them back when you turn highlights off or log out; a setting you change yourself meanwhile stays yours. If soft targeting was off before, Lootoman pauses it next to a living creature or player and as a fight begins, so a spell cast without a target never lands on someone else. The soft target's nameplate shows only under the sparkles, without a bar or a name.
+- An object another addon already lights (Lueur, for one) is left alone; running two such addons together is not supported.
+
 ### Options and profiles
 
-- One options page in the game's AddOns settings, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk and the loot feed, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window and the junk list.
+- One options page in the game's AddOns settings, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk, the loot feed and, on WoW Forever, gathering highlights, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window and the junk list.
 - Every character can use its own profile; new characters use the Default profile.
 - **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's settings, the loot feed's position and the look it uses, and any of your feed looks. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one; texts from earlier versions are read too. When an imported look's name is taken, choose for each one: keep both, replace yours, or keep yours. Feed looks can also be shared and imported on their own, from the look menu.
 - Changes apply at once, without `/reload`.

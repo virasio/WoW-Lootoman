@@ -299,12 +299,31 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 - [ ] **Turning junk off.** Untick *Enable junk management*. *Expected:* the settings under it are greyed out; no button at the loot window; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/lootoman toss` says it is off. Tick it again: all is back.
 
+## Gathering highlights (0.5)
+
+On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.GetCVar("SoftTargetInteract")`, and the same for `SoftTargetInteractRange`, `SoftTargetInteractArc`, `SoftTargetInteractOnlyInRange`, `SoftTargetIconGameObject`, `SoftTargetNameplateInteract` and `nameplateGameObjectMaxDistance`. Turn debug on (`/lootoman debug on`) to see each target's line.
+
+- [ ] **Self-test.** `/lootoman selftest`. *Expected:* a `Highlights:` line with every function `yes` (note any `NO`), the settings with Lootoman's values, the cursors found (note how many) and your Herbalism and Mining. On retail there is no such line.
+- [ ] **Each kind.** Walk up to a herb, an ore vein, a chest (and a crate or barrel you have looted before), and a quest object. *Expected:* each sparkles gold, in the same style, when it is the object the Interact key would use; at most one at a time.
+- [ ] **States.** *Expected:* full sparkles in reach, quieter out of reach, faint without motes on a locked chest or a node that needs more skill; no flicker at the edge of reach.
+- [ ] **Where they sit.** *Expected:* on the object, a little below where its name would be; note tall and flat objects where they miss.
+- [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* it applies at once; with all off, nothing sparkles; *Only herbs and ore you can gather* greys out while both herbs and ore are off.
+- [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only herbs and ore you can gather* off, they sparkle; with Herbs on and Ore off, only herbs.
+- [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar or name either.
+- [ ] **Self-cast.** With *Enable Interact Key* off before highlights: stand next to an NPC, then next to a player, and cast a friendly spell (a heal) without a target, out of combat and as a fight begins. *Expected:* it lands on you. Note whether soft targeting pauses as a fight begins (debug line, or `SoftTargetInteract` at 0).
+- [ ] **Your own interact key.** With *Enable Interact Key* on before highlights. *Expected:* the key keeps working on NPCs; nothing pauses it.
+- [ ] **Game settings.** Turn highlights off. *Expected:* every setting noted above is back. Turn them on, change *Enable Interact Key* by hand, turn them off: yours stays. Turn them on and log out: back again after logging in with highlights off.
+- [ ] **Another addon.** With Lueur loaded. *Expected:* an object Lueur lights gets no sparkles from Lootoman; note whether the nameplate setting flips back and forth.
+- [ ] **The game's loot sparkle.** With `outlineModeShowLootEffectWhenDisabled` on (Forever Loot Sparkles, or by hand), look at a quest object. *Expected:* note how both sparkles look together.
+- [ ] **In a fight.** *Expected:* the sparkles keep working; a switch changed in the fight applies at once, game settings after it; no errors and no blocked action.
+- [ ] **Profile texts.** Share a profile on WoW Forever and import it on retail. *Expected:* it reads, with the highlights' part left out.
+
 ## Taint
 
 - [ ] **Taint log.** After the rounds above, `/reload` and look at `Logs/taint.log`. *Expected:* no lines blaming Lootoman for the loot window, the merchant frame, the game menu or a protected action of the loot feed's use button.
 
 ## Russian client
 
-- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка окна сортировки*, *У торговца*, *Сортировка хлама*, *Настроить список хлама*, and the Auto Loot box's header with the game's own names. Nothing is cut off in the main page's dropdowns.
+- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка окна сортировки*, *У торговца*, *Сортировка хлама*, *Настроить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns.
 - [ ] **Feed messages.** Loot items and gain reputation. *Expected:* rows like «Репутация Штормграда +250» («Фракция «…»» for a faction name the message does not decline); the self-test still shows `20 of 20`.
 - [ ] **Numbers.** With a look of icons, loot money and gain experience in the thousands; point at the experience row. *Expected:* note the decimal point the client gives ("1.23" or "1,23"), the K and M, and the thousands separator in the tooltip.
