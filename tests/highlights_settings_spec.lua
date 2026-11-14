@@ -69,6 +69,89 @@ describe("gathering highlights' game settings", function()
 		assert.equals("0", Test.state.consoleVars.SoftTargetInteract)
 	end)
 
+	it("switches the soft target's nameplate on only for what sparkles, and never off for a player who keeps it on", function()
+		local settings = Test.state.consoleVars
+		GameSettings.Gate(true)
+		assert.equals("1", settings.SoftTargetNameplateInteract)
+		GameSettings.Gate(false)
+		assert.same({ "0", nil }, { settings.SoftTargetNameplateInteract,
+			Test.state.saved.LootomanDB.sections.highlightCVars.values.SoftTargetNameplateInteract })
+		-- In a fight it stays as the fight found it.
+		GameSettings.Gate(true)
+		Test.SetCombat(true)
+		GameSettings.Gate(false)
+		assert.equals("1", settings.SoftTargetNameplateInteract)
+		Test.SetCombat(false)
+		-- Given back with the rest.
+		GameSettings.GiveBack()
+		assert.equals("0", settings.SoftTargetNameplateInteract)
+		-- The player's own nameplates stay on.
+		settings.SoftTargetNameplateInteract = "1"
+		GameSettings.Gate(true)
+		GameSettings.Gate(false)
+		assert.equals("1", settings.SoftTargetNameplateInteract)
+	end)
+
+	it("pauses soft targeting on a living unit until the player moves away, when it turned it on itself", function()
+		GameSettings.Start()
+		Test.state.position = { 10, 10 }
+		assert.is_true(GameSettings.Pause("unit"))
+		assert.same({ "0", true }, { Test.state.consoleVars.SoftTargetInteract, Test.state.saved.LootomanDB.sections.highlightCVars.paused })
+		-- Three yards away: still paused; five: on again.
+		Test.state.position = { 13, 10 }
+		GameSettings.CheckPause()
+		assert.is_true(GameSettings.IsPaused())
+		Test.state.position = { 13, 14 }
+		GameSettings.CheckPause()
+		assert.same({ false, "3" }, { GameSettings.IsPaused(), Test.state.consoleVars.SoftTargetInteract })
+		-- Without a position, three seconds.
+		Test.state.position = nil
+		GameSettings.Pause("unit")
+		Test.Advance(2)
+		GameSettings.CheckPause()
+		assert.is_true(GameSettings.IsPaused())
+		Test.Advance(1)
+		GameSettings.CheckPause()
+		assert.is_false(GameSettings.IsPaused())
+	end)
+
+	it("pauses as a fight begins, when the client still takes it, until the fight ends", function()
+		GameSettings.Start()
+		Test.FireEvent("PLAYER_REGEN_DISABLED")
+		assert.equals("0", Test.state.consoleVars.SoftTargetInteract)
+		-- A living unit in the fight changes nothing; neither does moving.
+		Test.state.combat = true
+		GameSettings.Pause("unit")
+		GameSettings.CheckPause()
+		assert.equals("0", Test.state.consoleVars.SoftTargetInteract)
+		Test.SetCombat(false)
+		assert.equals("3", Test.state.consoleVars.SoftTargetInteract)
+		-- Already in the lockdown: no pause.
+		Test.SetCombat(true)
+		assert.equals("3", Test.state.consoleVars.SoftTargetInteract)
+		Test.SetCombat(false)
+		-- After Stop the fights mean nothing.
+		GameSettings.Stop()
+		Test.state.consoleVars.SoftTargetInteract = "3"
+		Test.FireEvent("PLAYER_REGEN_DISABLED")
+		assert.equals("3", Test.state.consoleVars.SoftTargetInteract)
+	end)
+
+	it("never pauses the player's own soft targeting, and gives back the player's value from a pause", function()
+		Test.state.consoleVars.SoftTargetInteract = "2"
+		GameSettings.Start()
+		assert.same({ "3", false }, { Test.state.consoleVars.SoftTargetInteract, GameSettings.Pause("unit") })
+		GameSettings.Stop()
+		assert.equals("2", Test.state.consoleVars.SoftTargetInteract)
+		-- Off before: a pause, then highlights stop; it stays off.
+		Test.state.consoleVars.SoftTargetInteract = "0"
+		GameSettings.Start()
+		GameSettings.Pause("unit")
+		GameSettings.Stop()
+		assert.same({ "0", {} }, { Test.state.consoleVars.SoftTargetInteract,
+			Test.state.saved.LootomanDB.sections.highlightCVars.values })
+	end)
+
 	it("gives everything back at logout", function()
 		GameSettings.Borrow()
 		Test.FireEvent("PLAYER_LOGOUT")
