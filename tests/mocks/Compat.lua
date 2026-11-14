@@ -232,6 +232,17 @@ function Compat.GetNamePlate(unit)
 	return state.nameplates[unit]
 end
 
+-- The soft target's plate by its own unit, or the plate of the shown unit
+-- that state.softInteractUnit names ("nameplate3").
+function Compat.GetSoftInteractPlate(units)
+	local plate = state.nameplates.softinteract
+	if plate then
+		return plate
+	end
+	local unit = state.softInteractUnit
+	return unit and units and units[unit] and state.nameplates[unit] or nil
+end
+
 -- A fake frame's source is its field source.
 function Compat.GetFrameSource(frame)
 	return type(frame) == "table" and frame.source or nil

@@ -60,8 +60,9 @@ function Highlights.Chests()
 end
 
 -- What the module knows while it is on: the cursor files, Herbalism and
--- Mining, the objects the soft target showed as none of the kinds.
-local known, skills, others
+-- Mining, the objects the soft target showed as none of the kinds, and the
+-- nameplate units shown now ({ ["nameplate3"] = true }).
+local known, skills, others, plates
 
 -- How the sparkles look: in reach, out of reach, or not usable yet (an
 -- "Unable" cursor in reach). Without the reach check, an Unable cursor counts
@@ -122,7 +123,7 @@ function Highlights:Evaluate()
 			state = Highlights.State(facts, extra)
 		end
 	end
-	local plate = lit and Compat.GetNamePlate("softinteract") or nil
+	local plate = lit and Compat.GetSoftInteractPlate(plates) or nil
 	if lit and ns.Highlights.Sparkles and ns.Highlights.Sparkles.Taken(plate) then
 		lit, why, state = false, "another addon", nil
 	end
@@ -154,7 +155,7 @@ end
 function Highlights:OnEnable()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
 	skills = Compat.GetGatheringSkills()
-	others = {}
+	others, plates = {}, {}
 	told = nil
 	if not self.ticker then
 		self.ticker = CreateFrame("Frame")
@@ -177,13 +178,19 @@ function Highlights:OnEnable()
 		self:Evaluate()
 	end
 	self:OnEvent("PLAYER_SOFT_INTERACT_CHANGED", evaluate)
-	local function plate(_, unit)
-		if unit == "softinteract" then
-			self:Evaluate()
+	-- The soft target's plate comes as any other, named "nameplate3" or so.
+	self:OnEvent("NAME_PLATE_UNIT_ADDED", function(_, unit)
+		if type(unit) == "string" and not Compat.IsSecret(unit) then
+			plates[unit] = true
 		end
-	end
-	self:OnEvent("NAME_PLATE_UNIT_ADDED", plate)
-	self:OnEvent("NAME_PLATE_UNIT_REMOVED", plate)
+		self:Evaluate()
+	end)
+	self:OnEvent("NAME_PLATE_UNIT_REMOVED", function(_, unit)
+		if type(unit) == "string" and not Compat.IsSecret(unit) then
+			plates[unit] = nil
+		end
+		self:Evaluate()
+	end)
 	self:OnEvent("LOOT_OPENED", function()
 		self:Learn()
 	end)
@@ -212,7 +219,7 @@ function Highlights:OnDisable()
 	end
 	self.lit = nil
 	GameSettings.Stop()
-	known, skills, others = nil, nil, nil
+	known, skills, others, plates = nil, nil, nil, nil
 end
 
 -- What the self-test reports: the client's functions and settings that

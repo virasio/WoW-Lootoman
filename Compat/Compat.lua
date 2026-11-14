@@ -544,11 +544,14 @@ local cursorProbe
 -- questRelated (to an active quest), questObjective (a quest objective line
 -- in its tooltip). Each value the client keeps secret is nil.
 function Compat.GetSoftInteract()
-	if try(UnitExists, SOFT) ~= true then
+	-- A world object does not exist as far as UnitExists is concerned (as
+	-- Lueur and Forever Loot Sparkles found); only a unit does.
+	local isUnit, isObject = try(UnitExists, SOFT), try(UnitIsGameObject, SOFT)
+	if isUnit ~= true and isObject ~= true then
 		return nil
 	end
 	local facts = {
-		isObject = try(UnitIsGameObject, SOFT),
+		isObject = isObject,
 		isDead = try(UnitIsDead, SOFT),
 		objectID = objectID(try(UnitGUID, SOFT)),
 		name = try(UnitName, SOFT),
@@ -588,6 +591,29 @@ end
 -- The nameplate of a unit, but not a forbidden one; nil without one.
 function Compat.GetNamePlate(unit)
 	return try(C_NamePlate.GetNamePlateForUnit, unit, false)
+end
+
+-- The soft interact target's nameplate: by its own unit, or else among the
+-- nameplates shown now (their units, "nameplate1" …, as the game named them
+-- when it added each), the one that is the soft target or a game object.
+-- Lueur found the first way does not always give an object's plate.
+function Compat.GetSoftInteractPlate(units)
+	local plate = Compat.GetNamePlate(SOFT)
+	if plate then
+		return plate
+	end
+	local object
+	for unit in pairs(units or {}) do
+		if try(UnitIsUnit, unit, SOFT) == true then
+			plate = Compat.GetNamePlate(unit)
+			if plate then
+				return plate
+			end
+		elseif not object and try(UnitIsGameObject, unit) == true then
+			object = unit
+		end
+	end
+	return object and Compat.GetNamePlate(object) or nil
 end
 
 -- Where a frame was made: the file and line the client tells, or nil when it

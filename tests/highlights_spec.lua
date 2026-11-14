@@ -59,6 +59,21 @@ describe("gathering highlights", function()
 		assert.is_nil(lit())
 	end)
 
+	it("finds the soft target's plate when the game adds it under another name", function()
+		Test.state.nameplates = {}
+		target(herb())
+		assert.same({ "herbs", nil }, { lit(), module.lit.plate })
+		-- The plate the nameplate switch brought, as "nameplate3".
+		local shown = _G.CreateFrame("Frame")
+		Test.state.nameplates.nameplate3 = shown
+		Test.state.softInteractUnit = "nameplate3"
+		Test.FireEvent("NAME_PLATE_UNIT_ADDED", "nameplate3")
+		assert.equals(shown, module.lit.plate)
+		Test.state.nameplates.nameplate3 = nil
+		Test.FireEvent("NAME_PLATE_UNIT_REMOVED", "nameplate3")
+		assert.is_nil(module.lit.plate)
+	end)
+
 	it("shows how far and how usable the object is", function()
 		target(herb({ inReach = false }))
 		assert.equals("far", module.lit.state)

@@ -74,6 +74,7 @@ files["Compat/"] = {
 		"UnitIsDead",
 		"UnitIsGameObject",
 		"UnitIsInInteractRange",
+		"UnitIsUnit",
 		"UnitName",
 		"UnitPosition",
 		"ITEM_SPELL_KNOWN",

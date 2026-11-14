@@ -461,10 +461,11 @@ describe("Compat for highlights", function()
 		function probe:SetTexture(texture) self.texture = texture end
 		function probe:GetTexture() return self.texture end
 		function probe:GetAtlas() return nil end
-		local exists, name, guid, inReach = true, "Peacebloom", "GameObject-0-1-2-3-1617-00004A1B2C", false
+		-- A world object does not exist for UnitExists; a unit does.
+		local exists, object, name, guid, inReach = false, true, "Peacebloom", "GameObject-0-1-2-3-1617-00004A1B2C", false
 		stub({
 			UnitExists = function(unit) return unit == "softinteract" and exists end,
-			UnitIsGameObject = function() return true end,
+			UnitIsGameObject = function() return object end,
 			UnitIsDead = function() return false end,
 			UnitGUID = function() return guid end,
 			UnitName = function() return name end,
@@ -485,9 +486,11 @@ describe("Compat for highlights", function()
 		name, guid, inReach = SECRET, SECRET, SECRET
 		facts = Compat.GetSoftInteract()
 		assert.same({ nil, nil, nil, true }, { facts.name, facts.objectID, facts.inReach, facts.isObject })
-		-- A creature's GUID gives no object ID; no target, no facts.
-		name, guid = "Wolf", "Creature-0-1-2-3-525-00004A1B2C"
-		assert.is_nil(Compat.GetSoftInteract().objectID)
+		-- A creature exists, is no object, and its GUID gives no object ID.
+		exists, object, name, guid = true, false, "Wolf", "Creature-0-1-2-3-525-00004A1B2C"
+		local wolf = Compat.GetSoftInteract()
+		assert.same({ false, true, nil }, { wolf.isObject, wolf.isLiving, wolf.objectID })
+		-- No target, no facts.
 		exists = false
 		assert.is_nil(Compat.GetSoftInteract())
 	end)
@@ -510,6 +513,24 @@ describe("Compat for highlights", function()
 		assert.same({ 100, -50 }, { Compat.GetPlayerPosition() })
 		position = { SECRET, -50 }
 		assert.is_nil(Compat.GetPlayerPosition())
+	end)
+
+	it("finds the soft target's nameplate by its unit, or among the shown nameplates", function()
+		local plates = { nameplate3 = { name = "three" }, nameplate5 = { name = "five" } }
+		local soft = "nameplate3"
+		stub({
+			C_NamePlate = { GetNamePlateForUnit = function(unit) return plates[unit] end },
+			UnitIsUnit = function(unit, other) return other == "softinteract" and unit == soft end,
+			UnitIsGameObject = function(unit) return unit == "nameplate5" end,
+		})
+		assert.equals(plates.nameplate3, Compat.GetSoftInteractPlate({ nameplate5 = true, nameplate3 = true }))
+		-- None is the soft target: the one that is a game object.
+		soft = nil
+		assert.equals(plates.nameplate5, Compat.GetSoftInteractPlate({ nameplate5 = true, nameplate3 = true }))
+		assert.is_nil(Compat.GetSoftInteractPlate({ nameplate3 = true }))
+		-- Its own unit first.
+		plates.softinteract = { name = "own" }
+		assert.equals(plates.softinteract, Compat.GetSoftInteractPlate({ nameplate3 = true }))
 	end)
 
 	it("knows Herbalism and Mining from the tracking spells, the skill lines or the professions", function()
