@@ -85,6 +85,7 @@ Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\LookWindow.lua
 
 Modules\Highlights\GameSettings.lua
+Modules\Highlights\Sparkles.lua
 Modules\Highlights\Highlights.lua
 
 Settings\Panel.lua

@@ -206,6 +206,92 @@ describe("gathering highlights", function()
 	end)
 end)
 
+describe("gathering highlights' sparkles", function()
+	local ns, Test, module, Sparkles, plate
+
+	before_each(function()
+		ns = Loader.LoadAddon({ gameType = "camelot" })
+		Test = ns.Compat.Test
+		Test.state.consoleVars = { SoftTargetInteract = "0", SoftTargetNameplateInteract = "0" }
+		Test.state.cursorFiles = { GatherHerbs = 3 }
+		Test.state.gatheringSkills = { herbs = true }
+		plate = _G.CreateFrame("Frame")
+		plate.UnitFrame = _G.CreateFrame("Frame", nil, plate)
+		plate.UnitFrame.source = "Interface/AddOns/Blizzard_NamePlates/Blizzard_NamePlates.lua:120"
+		plate.children = { plate.UnitFrame }
+		function plate:GetChildren() return unpack(self.children) end
+		Test.state.nameplates = { softinteract = plate }
+		Loader.Start(ns)
+		module, Sparkles = ns.Modules:Get("Highlights"), ns.Highlights.Sparkles
+	end)
+
+	local function target(facts)
+		Test.state.softInteract = facts
+		Test.FireEvent("PLAYER_SOFT_INTERACT_CHANGED")
+	end
+
+	local HERB = { isObject = true, isDead = false, cursor = 3, inReach = true, name = "Peacebloom" }
+
+	it("hang on the object's nameplate, below it, with the plate's own frame hidden until they leave", function()
+		assert.is_nil((Sparkles.Current()))
+		target(HERB)
+		local frame = Sparkles.Create()
+		assert.same({ plate, "ready" }, { Sparkles.Current() })
+		assert.same({ true, plate, { "CENTER", plate, "CENTER", 0, -45 } }, { frame.shown, frame.parent, frame.points[1] })
+		assert.equals(0, plate.UnitFrame.alpha)
+		-- The game's code shows the plate again: it stays hidden.
+		plate.UnitFrame:SetAlpha(1)
+		assert.equals(0, plate.UnitFrame.alpha)
+		target(nil)
+		assert.same({ false, 1 }, { frame.shown, plate.UnitFrame.alpha })
+		-- Free again, the game's code may show it.
+		plate.UnitFrame:SetAlpha(0.5)
+		assert.equals(0.5, plate.UnitFrame.alpha)
+	end)
+
+	it("brighten in, and change state only once it has held", function()
+		target(HERB)
+		local frame = Sparkles.Create()
+		frame.scripts.OnUpdate(frame, 0.1)
+		assert.is_true(frame.level > 0 and frame.level < 1)
+		frame.scripts.OnUpdate(frame, 0.2)
+		assert.equals(1, frame.level)
+		-- Out of reach for a moment only: no change.
+		Sparkles.Show(plate, "far")
+		frame.scripts.OnUpdate(frame, 0.1)
+		Sparkles.Show(plate, "ready")
+		frame.scripts.OnUpdate(frame, 0.1)
+		assert.same({ "ready", 1 }, { frame.state, frame.level })
+		-- Locked for long enough: faint, without motes.
+		Sparkles.Show(plate, "locked")
+		frame.scripts.OnUpdate(frame, 0.2)
+		assert.equals("locked", frame.state)
+		for _ = 1, 10 do
+			frame.scripts.OnUpdate(frame, 0.1)
+		end
+		assert.equals(0.3, frame.level)
+		for _, mote in ipairs(frame.motes) do
+			assert.equals(0, mote.alpha)
+		end
+	end)
+
+	it("leave an object alone that another addon already lights, but not for the game's own frames", function()
+		local theirs = _G.CreateFrame("Frame", nil, plate)
+		theirs.source = "Interface\\AddOns\\Lueur\\Effects.lua:880"
+		local hidden = _G.CreateFrame("Frame", nil, plate)
+		hidden.source = "Interface/AddOns/SomeAddon/Glow.lua:10"
+		hidden:Hide()
+		plate.children = { plate.UnitFrame, hidden }
+		target(HERB)
+		assert.equals("herbs", module.lit.kind)
+		plate.children = { plate.UnitFrame, hidden, theirs }
+		target(HERB)
+		assert.is_nil(module.lit)
+		assert.is_nil((Sparkles.Current()))
+		assert.equals("0", Test.state.consoleVars.SoftTargetNameplateInteract)
+	end)
+end)
+
 describe("gathering highlights on the options page", function()
 	it("is a switch with a checkbox for each kind and the profession option under it, on WoW Forever only", function()
 		SettingsAPI.Install()
