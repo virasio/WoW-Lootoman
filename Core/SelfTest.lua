@@ -105,9 +105,9 @@ function SelfTest.Run()
 	report(function()
 		return ("Character %s, profile %s"):format(tostring(Storage.character), Storage:GetProfileName())
 	end)
+	local READ_ONLY = { newer = ", read-only (saved by a newer version)", failed = ", read-only (the upgrade failed)" }
 	report(function()
-		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema),
-			Storage.readOnly and ", read-only (saved by a newer version)" or "")
+		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema), READ_ONLY[Storage.readOnlyReason] or "")
 	end)
 	-- The client fills in [Game] and [Family] of these TOC fields: they show
 	-- what a new client (WoW Forever) calls itself in TOC conditions, as its

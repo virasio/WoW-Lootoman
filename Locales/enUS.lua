@@ -9,6 +9,7 @@ ns.Locales.AddEnglish({
 
 	-- Core/Startup.lua
 	"Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update.",
+	"Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page.",
 
 	-- Core/Slash.lua
 	"Debug messages are on for all characters.",

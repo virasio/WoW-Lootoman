@@ -120,12 +120,38 @@ describe("storage", function()
 		end)
 	end)
 
-	it("returns the saved tables to keep", function()
-		local account, character = { schema = 1, profiles = { Default = {} }, profileKeys = {}, global = {} }, { schema = 1 }
+	it("returns the saved tables to keep: the same ones when current, upgraded copies otherwise", function()
+		local current = #ns.Migrations.account
+		local account, character = { schema = current, profiles = { Default = {} }, profileKeys = {}, global = {} }, { schema = 1 }
 		local db, charDB = load(account, character)
 		assert.equals(account, db)
 		assert.equals(character, charDB)
 		assert.is_false(Storage.readOnly)
+		local old = { schema = 1, profiles = { Default = {} }, profileKeys = {}, global = {} }
+		db = load(old, nil)
+		assert.are_not.equals(old, db)
+		assert.same({ current, 1 }, { db.schema, old.schema })
+	end)
+
+	it("keeps data it could not upgrade untouched and works on defaults in memory", function()
+		local steps = ns.Migrations.account
+		local last = steps[#steps]
+		-- Breaks on saved settings only: a step that broke on a fresh install would fail its tests.
+		steps[#steps] = function(db)
+			if db.profiles.Default.modules then
+				db.profiles.Default.broken = true
+				error("broken step")
+			end
+		end
+		local account = { schema = #steps - 1, profiles = { Default = { modules = { Feed = { rows = 9 } } } }, profileKeys = {},
+			global = {} }
+		local db = load(account, nil)
+		steps[#steps] = last
+		assert.same({ true, "failed" }, { Storage.readOnly, Storage.readOnlyReason })
+		assert.equals(account, db)
+		assert.same({ schema = #steps - 1, profiles = { Default = { modules = { Feed = { rows = 9 } } } }, profileKeys = {},
+			global = {} }, account)
+		assert.equals(5, Storage:Get("Feed", "rows"))
 	end)
 
 	it("keeps data from a newer version untouched and works on defaults in memory", function()

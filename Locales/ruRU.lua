@@ -9,6 +9,7 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Core/Startup.lua
 	["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
+	["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
 
 	-- Core/Slash.lua
 	["Debug messages are on for all characters."] = "Отладочные сообщения включены для всех персонажей.",

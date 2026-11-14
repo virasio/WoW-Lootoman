@@ -205,6 +205,31 @@ describe("migrations", function()
 		assert.same({ schema = 3, done = true }, data)
 	end)
 
+	it("leaves the data untouched when a step fails, and reports the error once", function()
+		local ns = Loader.LoadAddon()
+		local steps = {
+			function(data) data.first = true end,
+			-- Changes the data, then breaks.
+			function(data) data.nested.value = 2; data.half = true; error("broken step") end,
+		}
+		local saved = { schema = 0, nested = { value = 1 } }
+		local data, status = ns.Migrations.Run(steps, saved)
+		assert.equals("failed", status)
+		assert.equals(saved, data)
+		assert.same({ schema = 0, nested = { value = 1 } }, saved)
+		assert.equals(1, #ns.Compat.Test.state.errors)
+		assert.matches("broken step", ns.Compat.Test.state.errors[1])
+		assert.matches("schema 2", ns.Compat.Test.state.errors[1])
+	end)
+
+	it("upgrades a copy, so the saved table is replaced only when every step worked", function()
+		local saved = { schema = 1, nested = { value = 1 } }
+		local data, status = Migrations.Run({ function() end, function(d) d.nested.value = 2 end }, saved)
+		assert.equals("upgraded", status)
+		assert.same({ schema = 2, nested = { value = 2 } }, data)
+		assert.same({ schema = 1, nested = { value = 1 } }, saved)
+	end)
+
 	it("returns data from a newer version untouched", function()
 		local saved = { schema = 99, profiles = "something new" }
 		local db, status = Migrations.Run(Migrations.account, saved)

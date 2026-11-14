@@ -12,8 +12,10 @@ local Storage = {
 	DEFAULT_PROFILE = "Default",
 	defaults = {},
 	globalDefaults = {},
-	-- True when the saved data comes from a newer version of the addon.
+	-- True when the saved data comes from a newer version of the addon, or an
+	-- upgrade of it failed; readOnlyReason says which: "newer" or "failed".
 	readOnly = false,
+	readOnlyReason = nil,
 }
 ns.Storage = Storage
 
@@ -40,12 +42,19 @@ function Storage:RegisterGlobalDefaults(defaults)
 end
 
 -- Called with the saved tables on ADDON_LOADED. Returns the tables to save.
--- Data from a newer version is returned untouched, and the addon works on
--- defaults in memory that are never saved.
+-- Data from a newer version, or data an upgrade failed on, is returned
+-- untouched, and the addon works on defaults in memory that are never saved.
 function Storage:Load(account, character)
 	local db, accountStatus = Migrations.Run(Migrations.account, account)
 	local charDB, characterStatus = Migrations.Run(Migrations.character, character)
-	self.readOnly = accountStatus == "newer" or characterStatus == "newer"
+	if accountStatus == "failed" or characterStatus == "failed" then
+		self.readOnlyReason = "failed"
+	elseif accountStatus == "newer" or characterStatus == "newer" then
+		self.readOnlyReason = "newer"
+	else
+		self.readOnlyReason = nil
+	end
+	self.readOnly = self.readOnlyReason ~= nil
 	if self.readOnly then
 		self.db = Migrations.Run(Migrations.account, nil)
 		self.charDB = Migrations.Run(Migrations.character, nil)
