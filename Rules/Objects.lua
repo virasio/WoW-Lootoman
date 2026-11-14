@@ -140,14 +140,16 @@ function Objects.Classify(facts, known)
 	return nil, "other"
 end
 
--- After looting: the loot window's source objects (their IDs) that the soft
--- target had shown as other objects (others: { [objectID] = true }) are
--- chests from now on, in chests. Herbs, veins, quest objects and the fishing
--- bobber never are. Returns how many were learned.
-function Objects.Learn(chests, sources, others)
+-- After looting a game object: every source object of the loot window (its
+-- ID) is a chest from now on, in chests, as Lueur learns them; the caller
+-- leaves out fishing. A herb, a vein or a quest object learned so stays what
+-- it is, as its cursor or its quest comes before the learned chests
+-- (Classify); only an object with neither, a crate or a Windstone, lights as
+-- a chest from then on. Returns how many were learned.
+function Objects.Learn(chests, sources)
 	local learned = 0
 	for _, id in ipairs(sources) do
-		if others[id] and not chests[id] then
+		if not chests[id] then
 			chests[id] = true
 			learned = learned + 1
 		end

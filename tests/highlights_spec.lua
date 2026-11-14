@@ -146,14 +146,15 @@ describe("gathering highlights", function()
 		assert.is_nil(lit())
 	end)
 
-	it("learns a looted object that showed as none of the kinds as a chest, but never from fishing", function()
-		local barrel = { isObject = true, cursor = 99, name = "Barrel of Milk", objectID = 3658 }
-		target(barrel)
+	it("learns a looted object as a chest, also one the soft target never picked, but never from fishing", function()
+		local windstone = { isObject = true, cursor = 99, name = "Windstone", objectID = 3658 }
+		target(windstone)
 		assert.is_nil(lit())
+		-- Looted while the soft target was on something else.
+		target(nil)
 		Test.state.lootSources = { 3658 }
 		Test.FireEvent("LOOT_OPENED")
-		target(nil)
-		target(barrel)
+		target(windstone)
 		assert.equals("chests", lit())
 		assert.same({ [3658] = true }, Test.state.saved.LootomanDB.sections.lootContainers.values)
 		-- A bobber looted is never learned.

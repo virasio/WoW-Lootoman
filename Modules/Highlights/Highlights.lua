@@ -11,8 +11,8 @@ local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 -- The module borrows the game settings soft targeting needs (GameSettings),
 -- decides from the target's facts what it is (Rules.Objects) and whether it
 -- lights it, and hangs the sparkles on its nameplate (Sparkles). Objects
--- looted that showed as none of the kinds are chests from then on (account
--- section lootContainers).
+-- looted are chests from then on (account section lootContainers), which
+-- matters only for an object that is none of the other kinds.
 --
 -- Only WoW Forever's data offers it; on retail the module is not registered,
 -- so it has no switch, no saved values and no part in profile texts.
@@ -65,9 +65,8 @@ function Highlights.Chests()
 end
 
 -- What the module knows while it is on: the cursor files, Herbalism and
--- Mining, the objects the soft target showed as none of the kinds, and the
--- nameplate units shown now ({ ["nameplate3"] = true }).
-local known, skills, others, plates
+-- Mining, and the nameplate units shown now ({ ["nameplate3"] = true }).
+local known, skills, plates
 
 -- How the sparkles look: in reach, out of reach, or not usable yet (an
 -- "Unable" cursor in reach). Without the reach check, an Unable cursor counts
@@ -118,9 +117,6 @@ function Highlights:Evaluate()
 		GameSettings.Pause("unit")
 	end
 	local kind, extra = Objects.Classify(facts, known)
-	if not kind and extra == "other" and facts and facts.objectID then
-		others[facts.objectID] = true
-	end
 	local lit, why, state = false, extra, nil
 	if kind then
 		lit, why = self:Wants(kind)
@@ -145,13 +141,13 @@ function Highlights:Evaluate()
 	debug(facts, kind, state, why)
 end
 
--- After looting a game object: the ones that showed as none of the kinds are
--- chests from now on. Never from fishing.
+-- After looting game objects: chests from now on (Objects.Learn). Never from
+-- fishing: the bobber is no chest.
 function Highlights:Learn()
 	if Compat.IsFishingLoot() then
 		return
 	end
-	local learned = Objects.Learn(Highlights.Chests(), Compat.GetLootSourceObjects(), others)
+	local learned = Objects.Learn(Highlights.Chests(), Compat.GetLootSourceObjects())
 	if learned > 0 then
 		ns.Debug(("Highlights: learned %d chest(s)"):format(learned))
 	end
@@ -160,7 +156,7 @@ end
 function Highlights:OnEnable()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
 	skills = Compat.GetGatheringSkills()
-	others, plates = {}, {}
+	plates = {}
 	told = nil
 	if not self.ticker then
 		self.ticker = CreateFrame("Frame")
@@ -224,7 +220,7 @@ function Highlights:OnDisable()
 	end
 	self.lit = nil
 	GameSettings.Stop()
-	known, skills, others, plates = nil, nil, nil, nil
+	known, skills, plates = nil, nil, nil
 end
 
 -- What the self-test reports: the client's functions and settings that

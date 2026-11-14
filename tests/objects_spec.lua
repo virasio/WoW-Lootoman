@@ -69,10 +69,15 @@ describe("objects for gathering highlights", function()
 		assert.same({ nil, "none" }, { Objects.Classify(nil, known) })
 	end)
 
-	it("learns the looted objects the soft target showed as other objects as chests, and nothing else", function()
+	it("learns every looted object as a chest, which changes only objects that are none of the other kinds", function()
 		local chests = {}
-		assert.equals(1, Objects.Learn(chests, { 3658, 1617 }, { [3658] = true }))
-		assert.same({ [3658] = true }, chests)
-		assert.equals(0, Objects.Learn(chests, { 3658 }, { [3658] = true }))
+		assert.equals(2, Objects.Learn(chests, { 3658, 1617 }))
+		assert.same({ [3658] = true, [1617] = true }, chests)
+		assert.equals(0, Objects.Learn(chests, { 3658 }))
+		known.chests = chests
+		-- A herb looted stays a herb, a quest object a quest object; a Windstone becomes a chest.
+		assert.equals("herbs", (Objects.Classify(object({ cursor = 3, objectID = 1617 }), known)))
+		assert.equals("quest", (Objects.Classify(object({ questRelated = true, objectID = 1617 }), known)))
+		assert.equals("chests", (Objects.Classify(object({ cursor = 10, name = "Windstone", objectID = 3658 }), known)))
 	end)
 end)
