@@ -543,7 +543,10 @@ local cursorProbe
 -- game would show over it), inReach (nil without UnitIsInInteractRange),
 -- questRelated (to an active quest), questObjective (a quest objective line
 -- in its tooltip). Each value the client keeps secret is nil.
-function Compat.GetSoftInteract()
+-- skipQuest: leave out the quest facts (questRelated, questObjective), the
+-- costly part (the tooltip comes as a new table), for a caller that keeps
+-- them from an earlier read of the same target.
+function Compat.GetSoftInteract(skipQuest)
 	-- A world object does not exist as far as UnitExists is concerned (as
 	-- Lueur and Forever Loot Sparkles found); only a unit does.
 	local isUnit, isObject = try(UnitExists, SOFT), try(UnitIsGameObject, SOFT)
@@ -567,6 +570,9 @@ function Compat.GetSoftInteract()
 	end
 	if Compat.Has("UnitIsInInteractRange") then
 		facts.inReach = try(UnitIsInInteractRange, SOFT)
+	end
+	if skipQuest then
+		return facts
 	end
 	if Compat.Has("C_QuestLog.UnitIsRelatedToActiveQuest") then
 		facts.questRelated = try(C_QuestLog.UnitIsRelatedToActiveQuest, SOFT)

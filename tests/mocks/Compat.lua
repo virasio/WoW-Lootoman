@@ -209,8 +209,9 @@ function Compat.SetCVar(name, value)
 	return true
 end
 
--- state.softInteract: the facts of GetSoftInteract, or nil without a target.
-function Compat.GetSoftInteract()
+-- state.softInteract: the facts of GetSoftInteract, or nil without a target;
+-- skipQuest leaves the quest facts out, as the client does.
+function Compat.GetSoftInteract(skipQuest)
 	local facts = state.softInteract
 	if not facts then
 		return nil
@@ -220,6 +221,9 @@ function Compat.GetSoftInteract()
 		copy[key] = value
 	end
 	copy.isLiving = copy.isObject == false and copy.isDead == false
+	if skipQuest then
+		copy.questRelated, copy.questObjective = nil, nil
+	end
 	return copy
 end
 

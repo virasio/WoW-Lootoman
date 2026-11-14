@@ -98,6 +98,11 @@ end
 -- The last target told in the debug output, so each one is told once.
 local told
 
+-- The quest facts of the last target read in full, which the ticks reuse:
+-- they change only with an event (a new target, a plate that comes or goes,
+-- the quest log), and each of those reads them again.
+local questFacts
+
 -- "Highlights: <name> (object <id>, cursor <cursor>), <kind>, <state or why not>".
 local function debug(facts, kind, state, why)
 	local target = "no target"
@@ -113,12 +118,22 @@ local function debug(facts, kind, state, why)
 end
 
 -- Reads the soft target again and lights it or lets it go. A living unit
--- pauses soft targeting (safe self-cast, GameSettings).
-function Highlights:Evaluate()
+-- pauses soft targeting (safe self-cast, GameSettings). tick: the ticker's
+-- re-reading, which keeps the quest facts of the last full read.
+function Highlights:Evaluate(tick)
 	if not self.active or not known then
 		return
 	end
-	local facts = Compat.GetSoftInteract()
+	local facts
+	if tick and questFacts then
+		facts = Compat.GetSoftInteract(true)
+		if facts then
+			facts.questRelated, facts.questObjective = questFacts.questRelated, questFacts.questObjective
+		end
+	else
+		facts = Compat.GetSoftInteract()
+		questFacts = facts and { questRelated = facts.questRelated, questObjective = facts.questObjective } or nil
+	end
 	if facts and facts.isLiving then
 		GameSettings.Pause("unit")
 	end
@@ -162,7 +177,7 @@ end
 function Highlights:OnEnable()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
 	plates = {}
-	told = nil
+	told, questFacts = nil, nil
 	if not self.ticker then
 		self.ticker = CreateFrame("Frame")
 		self.ticker.elapsed = 0
@@ -171,7 +186,7 @@ function Highlights:OnEnable()
 			if ticker.elapsed >= Highlights.TICK then
 				ticker.elapsed = 0
 				GameSettings.CheckPause()
-				self:Evaluate()
+				self:Evaluate(true)
 			end
 		end)
 	end
@@ -211,6 +226,10 @@ function Highlights:OnEnable()
 	end
 	self:OnEvent("SKILL_LINES_CHANGED", professions)
 	self:OnEvent("SPELLS_CHANGED", professions)
+	-- An object a quest wanted may be done with, or a new quest may want one.
+	self:OnEvent("QUEST_LOG_UPDATE", function()
+		self:Evaluate()
+	end)
 	self:On("SettingChanged", function(_, module)
 		if module == self.name then
 			self:Evaluate()
@@ -230,7 +249,7 @@ function Highlights:OnDisable()
 	end
 	self.lit = nil
 	GameSettings.Stop()
-	known, plates = nil, nil
+	known, plates, questFacts = nil, nil, nil
 end
 
 -- What the self-test reports: the client's functions and settings that

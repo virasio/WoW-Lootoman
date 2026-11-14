@@ -180,6 +180,37 @@ describe("gathering highlights", function()
 		assert.is_nil(lit())
 	end)
 
+	it("reads the quest facts once per target, and again when a target, a plate or the quest log changes", function()
+		local reads, full = 0, 0
+		local get = ns.Compat.GetSoftInteract
+		ns.Compat.GetSoftInteract = function(skipQuest)
+			reads = reads + 1
+			full = full + (skipQuest and 0 or 1)
+			return get(skipQuest)
+		end
+		local stone = { isObject = true, cursor = 99, name = "Odd Stone", inReach = true, questObjective = true }
+		target(stone)
+		assert.same({ "quest", 1 }, { lit(), full })
+		-- Ticks while it sparkles reuse them, and still read the rest.
+		for _ = 1, 10 do
+			module.ticker.scripts.OnUpdate(module.ticker, 0.2)
+		end
+		assert.same({ 11, 1, "quest" }, { reads, full, lit() })
+		Test.state.softInteract.inReach = false
+		module.ticker.scripts.OnUpdate(module.ticker, 0.2)
+		assert.equals("far", module.lit.state)
+		-- The quest log changed: read again, and no longer a quest object.
+		Test.state.softInteract.questObjective = nil
+		Test.FireEvent("QUEST_LOG_UPDATE")
+		assert.same({ 2, nil }, { full, lit() })
+		-- A plate that comes, a new target: read again.
+		Test.state.softInteract.questObjective = true
+		Test.FireEvent("NAME_PLATE_UNIT_ADDED", "nameplate1")
+		assert.same({ 3, "quest" }, { full, lit() })
+		target(herb())
+		assert.same({ 4, "herbs" }, { full, lit() })
+	end)
+
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
 		Test.RunSlashCommand("LOOTOMAN", "debug on")
 		Test.state.nameplates = {}
