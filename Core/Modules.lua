@@ -81,6 +81,12 @@ function ModuleMixin:Validate(key, value)
 			if setting.key == key then
 				return allows(setting, value)
 			end
+			-- Checkboxes in columns hold their settings in items.
+			for _, item in ipairs(setting.items or {}) do
+				if item.key == key then
+					return allows(item, value)
+				end
+			end
 		end
 	end
 	return true
