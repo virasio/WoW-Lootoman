@@ -1,5 +1,4 @@
 local _, ns = ...
-local Compat = ns.Compat
 
 -- The sparkles of gathering highlights: one look for every kind of object, in
 -- the default UI's gold, and light: six small stars that light up at random
@@ -19,9 +18,9 @@ local Compat = ns.Compat
 -- so the sparkles don't flicker at the edge of reach (Lueur's lesson), and
 -- the brightness fades to it.
 --
--- Another addon may already light the object (Lueur, Forever Loot Sparkles
--- - Herbs & Ores hang theirs on the plate too): Taken tells, from the plate's
--- shown child frames that come from another addon's files.
+-- What other addons hang on the plate is not looked at: a nameplate addon
+-- draws on every plate, and another addon that lights objects simply shows
+-- beside the stars.
 ns.Highlights = ns.Highlights or {}
 local Sparkles = {}
 ns.Highlights.Sparkles = Sparkles
@@ -173,26 +172,4 @@ end
 -- The plate the sparkles hang on now, and their state, for tests.
 function Sparkles.Current()
 	return effect and effect.plate, effect and effect.state
-end
-
--- Whether another addon already draws on this plate: a shown child frame that
--- is not ours and comes from an addon's files, not the game's own. A child
--- whose source the client does not tell is the game's.
-function Sparkles.Taken(plate)
-	if type(plate) ~= "table" or type(plate.GetChildren) ~= "function" then
-		return false
-	end
-	for _, child in ipairs({ plate:GetChildren() }) do
-		if child ~= effect and type(child) == "table" and child.IsShown and child:IsShown() then
-			local source = Compat.GetFrameSource(child)
-			if source then
-				local path = source:gsub("\\", "/"):lower()
-				if path:find("interface/addons/", 1, true) and not path:find("interface/addons/blizzard_", 1, true)
-					and not path:find("interface/addons/lootoman/", 1, true) then
-					return true
-				end
-			end
-		end
-	end
-	return false
 end

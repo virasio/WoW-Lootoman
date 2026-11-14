@@ -332,20 +332,15 @@ describe("gathering highlights' sparkles", function()
 		assert.equals(0.3, frame.level)
 	end)
 
-	it("leave an object alone that another addon already lights, but not for the game's own frames", function()
-		local theirs = _G.CreateFrame("Frame", nil, plate)
-		theirs.source = "Interface\\AddOns\\Lueur\\Effects.lua:880"
-		local hidden = _G.CreateFrame("Frame", nil, plate)
-		hidden.source = "Interface/AddOns/SomeAddon/Glow.lua:10"
-		hidden:Hide()
-		plate.children = { plate.UnitFrame, hidden }
+	it("light an object whatever other addons draw on its plate: a nameplate addon's frames, another glow", function()
+		-- A nameplate addon puts its own frames on every plate; another addon may light the object too.
+		local nameplateAddon = _G.CreateFrame("Frame", nil, plate)
+		local glow = _G.CreateFrame("Frame", nil, plate)
+		plate.children = { plate.UnitFrame, nameplateAddon, glow }
 		target(HERB)
 		assert.equals("herbs", module.lit.kind)
-		plate.children = { plate.UnitFrame, hidden, theirs }
-		target(HERB)
-		assert.is_nil(module.lit)
-		assert.is_nil((Sparkles.Current()))
-		assert.equals("0", Test.state.consoleVars.SoftTargetNameplateInteract)
+		assert.equals(plate, (Sparkles.Current()))
+		assert.equals("1", Test.state.consoleVars.SoftTargetNameplateInteract)
 	end)
 end)
 

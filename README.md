@@ -43,7 +43,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - One object at a time: the game tells addons only about the one its soft targeting picks.
 - Chests are known by their cursor and name, and any object you loot that is none of the kinds counts as a chest from then on.
 - To work, it turns on the game's soft targeting of objects (Options, Controls, *Enable Interact Key*) and a few related game settings while highlights are on, and gives them back when you turn highlights off or log out; a setting you change yourself meanwhile stays yours. If soft targeting was off before, Lootoman pauses it next to a living creature or player and as a fight begins, so a spell cast without a target never lands on someone else. The soft target's nameplate, and the game's interact icon over an object (a pickaxe, a hand), are switched on only for an object that sparkles, and stay hidden under the stars; a vein you can't mine shows nothing.
-- An object another addon already lights (Lueur, for one) is left alone; running two such addons together is not supported.
+- Other addons don't change what sparkles: with a nameplate addon the stars show all the same, and with another addon that lights objects you see both.
 
 ### Options and profiles
 

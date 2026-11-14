@@ -616,16 +616,6 @@ function Compat.GetSoftInteractPlate(units)
 	return object and Compat.GetNamePlate(object) or nil
 end
 
--- Where a frame was made: the file and line the client tells, or nil when it
--- does not say or keeps it secret.
-function Compat.GetFrameSource(frame)
-	if type(frame) ~= "table" or not frame.GetSourceLocation then
-		return nil
-	end
-	local source = try(frame.GetSourceLocation, frame)
-	return type(source) == "string" and source or nil
-end
-
 -- The object IDs of the game objects the open loot window came from (a
 -- chest, a herb), each once.
 function Compat.GetLootSourceObjects()
