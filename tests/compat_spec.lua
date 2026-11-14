@@ -34,6 +34,40 @@ describe("Compat", function()
 		assert.same(functionNames(Compat), functionNames(loadCompat("tests/mocks/Compat.lua")))
 	end)
 
+	it("names what each function needs from the client, and every game namespace it calls", function()
+		local ns = { Compat = Compat }
+		assert(loadfile("Compat/Needs.lua"))("Lootoman", ns)
+		local needs = Compat.NEEDS
+		for _, name in ipairs(functionNames(Compat)) do
+			assert.is_table(needs[name], name .. " has no entry")
+		end
+		for name, need in pairs(needs) do
+			assert.is_function(Compat[name], name .. " is no function")
+			for _, path in ipairs(need) do
+				assert.is_string(path)
+			end
+		end
+		-- A call into a C_ namespace written in a function is listed for it.
+		local file = assert(io.open("Compat/Compat.lua"))
+		local source = file:read("*a")
+		file:close()
+		local checked = 0
+		for name, body in source:gmatch("\nfunction Compat%.([%w_]+)%((.-)\nend") do
+			local listed = {}
+			for _, path in ipairs(needs[name]) do
+				listed[path] = true
+			end
+			for _, path in ipairs(needs[name].optional or {}) do
+				listed[path] = true
+			end
+			for path in body:gmatch("C_[%w_]+%.[%w_]+") do
+				assert.is_true(listed[path], ("%s calls %s"):format(name, path))
+				checked = checked + 1
+			end
+		end
+		assert.is_true(checked > 40)
+	end)
+
 	it("detects capabilities by global and field path", function()
 		stub({ C_FakeContainer = { GetItem = function() end } })
 		assert.is_true(Compat.Has("C_FakeContainer"))

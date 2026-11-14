@@ -346,3 +346,21 @@ end
 function EditMode.IsActive()
 	return lib ~= nil and lib:IsInEditMode()
 end
+
+-- What the self-test reports: LibEditMode's version as LibStub has it, and
+-- whether its dialog's Reset To Default button was found. The button is
+-- reached through the library's internals (no public way), so an update of
+-- the library is the likely thing to break it.
+ns.SelfTest.AddReport(function()
+	local library, minor
+	if LibStub then
+		library, minor = LibStub("LibEditMode", true)
+	end
+	if not library then
+		return "Edit Mode: LibEditMode not found"
+	end
+	local dialog = library.internal and library.internal.dialog
+	local reset = type(dialog) == "table" and dialog.Settings and dialog.Settings.ResetButton
+	return ("Edit Mode: LibEditMode %s; dialog %s, reset button %s, hooked %s"):format(tostring(minor),
+		type(dialog) == "table" and "found" or "NOT found", reset and "found" or "NOT found", hookedDialog and "yes" or "no")
+end)

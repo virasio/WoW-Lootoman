@@ -127,6 +127,34 @@ describe("slash commands", function()
 			assert.equals("2 check(s) failed.", printed[#printed]:match("[%d]+ check%(s%) failed%."))
 		end)
 
+		it("tells which Compat functions miss what they need, and what this client lacks", function()
+			local total = 0
+			for _, need in pairs(ns.Compat.NEEDS) do
+				total = total + 1
+				for _, path in ipairs(need) do
+					Test.state.capabilities[path] = true
+				end
+				for _, path in ipairs(need.optional or {}) do
+					Test.state.capabilities[path] = true
+				end
+			end
+			local function line()
+				local found
+				for _, text in ipairs(printed) do
+					found = text:match("Compat: .*") or found
+				end
+				return found
+			end
+			run("selftest")
+			assert.equals(("Compat: %d of %d functions have what they need"):format(total, total), line())
+			Test.state.capabilities["C_Timer.After"] = nil
+			Test.state.capabilities["C_EncodingUtil.SerializeCBOR"] = nil
+			run("selftest")
+			assert.equals(("Compat: %d of %d functions have what they need; missing: After (C_Timer.After); "
+				.. "not on this client: CanEncode (C_EncodingUtil.SerializeCBOR); Decode (C_EncodingUtil.SerializeCBOR); "
+				.. "Encode (C_EncodingUtil.SerializeCBOR)"):format(total - 1, total), line())
+		end)
+
 		it("reports a timer that cannot be scheduled", function()
 			ns.Compat.After = function() error("no timers") end
 			run("selftest")
