@@ -325,9 +325,10 @@ describe("gathering highlights on the options page", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_truthy(table.concat(texts, "|"):find(
-			"Highlight lootable objects|Herbs|Ore|Chests|Quest objects|Only herbs and ore you can gather", 1, true))
-		-- The kinds two to a row, the second at the rows' control column, each in a cell of its own
-		-- (the hover lights only the cell); the profession option a little apart.
+			"Highlight lootable objects|Quest objects|Herbs|Chests|Ore|Only herbs and ore you can gather", 1, true))
+		-- The kinds two to a row, quest objects and chests on the left, herbs and ore on the right at the
+		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
+		-- profession option a little apart.
 		local page, rows, option = ns.SettingsPanel.main, {}, nil
 		for _, entry in ipairs(page.items) do
 			if entry.kind == "checkboxes" then
@@ -336,14 +337,15 @@ describe("gathering highlights on the options page", function()
 				option = entry
 			end
 		end
-		assert.same({ 2, "Herbs|Ore", "Chests|Quest objects" }, { #rows, rows[1].text, rows[2].text })
+		assert.same({ 2, "Quest objects|Herbs", "Chests|Ore" }, { #rows, rows[1].text, rows[2].text })
 		local cells = rows[1].region.cells
 		assert.same({ 24, cells[1], cells[2] }, { rows[1].indent, cells[1].checkbox.parent, cells[2].checkbox.parent })
 		assert.same({ "TOPLEFT", rows[1].region, "TOPLEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 24, 0 }, cells[2].points[1])
 		assert.equals(14, option.gap)
 		-- Clicking a cell's checkbox sets its kind; profile texts still check the kinds' values.
-		cells[2].checkbox.checked = false
-		cells[2].checkbox.scripts.OnClick(cells[2].checkbox)
+		local ore = rows[2].region.cells[2].checkbox
+		ore.checked = false
+		ore.scripts.OnClick(ore)
 		assert.is_false(ns.Storage:Get("Highlights", "ore"))
 		assert.is_true(ns.Modules:Get("Highlights"):Validate("chests", false))
 		SettingsAPI.Install()

@@ -34,13 +34,15 @@ local Highlights = ns.Modules:Register({
 	switchLabel = L["Highlight lootable objects"],
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
 	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true },
-	-- The kinds in two columns, then, a little apart, the profession option.
+	-- The kinds in two columns, quest objects and chests on the left, herbs and
+	-- ore on the right, over the profession option a little apart. The rows
+	-- fill from the left.
 	mainSettings = {
 		{ kind = "checkboxes", columns = 2, items = {
-			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
-			{ kind = "checkbox", key = "ore", label = L["Ore"] },
-			{ kind = "checkbox", key = "chests", label = L["Chests"], tooltip = L["Chests, crates and other containers you can loot."] },
 			{ kind = "checkbox", key = "quest", label = L["Quest objects"] },
+			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
+			{ kind = "checkbox", key = "chests", label = L["Chests"], tooltip = L["Chests, crates and other containers you can loot."] },
+			{ kind = "checkbox", key = "ore", label = L["Ore"] },
 		} },
 		{ kind = "checkbox", key = "gatherable", label = L["Only herbs and ore you can gather"], gap = 14,
 			tooltip = L["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."], enabledWhen = eitherGathering },
