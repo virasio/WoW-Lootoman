@@ -247,6 +247,16 @@ describe("gathering highlights' sparkles", function()
 
 	local HERB = { isObject = true, isDead = false, cursor = 3, inReach = true, name = "Peacebloom" }
 
+	it("are only small gold stars", function()
+		local frame = Sparkles.Create()
+		local textures = 0
+		for _, star in ipairs(frame.stars) do
+			textures = textures + 1
+			assert.same({ [[Interface\Cooldown\star4]], { 1, 0.82, 0 } }, { star.texture, star.vertex })
+		end
+		assert.same({ 6, nil, nil }, { textures, frame.haze, frame.motes })
+	end)
+
 	it("hang on the object's nameplate, below it, with the plate's own frame hidden until they leave", function()
 		assert.is_nil((Sparkles.Current()))
 		target(HERB)
@@ -277,7 +287,7 @@ describe("gathering highlights' sparkles", function()
 		Sparkles.Show(plate, "ready")
 		frame.scripts.OnUpdate(frame, 0.1)
 		assert.same({ "ready", 1 }, { frame.state, frame.level })
-		-- Locked for long enough: faint, without motes.
+		-- Locked for long enough: faint.
 		Sparkles.Show(plate, "locked")
 		frame.scripts.OnUpdate(frame, 0.2)
 		assert.equals("locked", frame.state)
@@ -285,9 +295,6 @@ describe("gathering highlights' sparkles", function()
 			frame.scripts.OnUpdate(frame, 0.1)
 		end
 		assert.equals(0.3, frame.level)
-		for _, mote in ipairs(frame.motes) do
-			assert.equals(0, mote.alpha)
-		end
 	end)
 
 	it("leave an object alone that another addon already lights, but not for the game's own frames", function()
