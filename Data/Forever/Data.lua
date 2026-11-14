@@ -5,4 +5,7 @@ local _, ns = ...
 -- for the self-test.
 ns.Data = {
 	set = "Forever",
+	-- Gathering highlights (Modules/Highlights): the soft targeting they use
+	-- works there as Lueur found it.
+	highlights = true,
 }

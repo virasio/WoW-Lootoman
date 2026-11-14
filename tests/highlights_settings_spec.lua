@@ -21,7 +21,8 @@ describe("gathering highlights' game settings", function()
 		ns = Loader.LoadAddon({ gameType = "camelot" })
 		Test = ns.Compat.Test
 		Test.state.consoleVars = playerSettings()
-		Loader.Start(ns)
+		-- With highlights off, so only these calls change the settings.
+		Loader.Start(ns, { LootomanDB = { schema = 3, profiles = { Default = { modules = { Highlights = { enabled = false } } } } } })
 		GameSettings = ns.Highlights.GameSettings
 		Test.state.cvarChanges = {}
 	end)
