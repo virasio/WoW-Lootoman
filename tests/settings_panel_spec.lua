@@ -79,9 +79,22 @@ describe("settings panel", function()
 		assert.equals(44, item("Sort bags").parent.points[1][4])
 	end)
 
-	it("scrolls everything under the title when the page is taller than the panel", function()
+	it("keeps the profile and its divider on top, and scrolls what is under them when the page is taller than the panel", function()
 		assert.same({ page.frame, page.scroll, "ScrollFrameTemplate" }, { page.scroll.parent, page.body.parent, page.scroll.template })
-		assert.same({ "TOPLEFT", page.frame, "TOPLEFT", 0, -56 }, page.scroll.points[1])
+		-- The profile row and the divider under it are the page's own, not the scrolling part's.
+		local profile, divider
+		for _, entry in ipairs(page.items) do
+			if entry.text == "Profile" then
+				profile = entry
+			elseif entry.kind == "divider" then
+				divider = entry
+			end
+		end
+		assert.same({ "head", page.frame, "head", page.frame }, { profile.area, profile.frame.parent, divider.area, divider.frame.parent })
+		assert.same({ "TOPLEFT", page.frame, "TOPLEFT", 20, -62 }, profile.frame.points[1])
+		-- The scrolling part starts under the divider: the row (6 + 28), the divider's room (12 + 6).
+		assert.equals(-108, page.head)
+		assert.same({ "TOPLEFT", page.frame, "TOPLEFT", 0, -108 }, page.scroll.points[1])
 		assert.same({ "BOTTOMRIGHT", page.frame, "BOTTOMRIGHT", -26, 4 }, page.scroll.points[2])
 		-- As tall as its items, and as wide as the scrolling part.
 		assert.equals(-page.y + 12, page.body.height)

@@ -39,8 +39,10 @@ local GAP = 6
 -- The main page, built from top to bottom: every Add puts an item under the
 -- last one. An item can be hidden (options.visible): the page lays its items
 -- out again whenever it refreshes. items lists what was added, in order, for
--- tests. The title stays on top; everything under it is in body, which
--- scrolls when the page is taller than the panel.
+-- tests. The title and the head under it (the profile and its divider) stay
+-- on top; everything under them is in body, which scrolls when the page is
+-- taller than the panel. page.area says where the next items go: "head" or
+-- "body" (the default).
 local MainPage = {}
 MainPage.__index = MainPage
 
@@ -56,17 +58,17 @@ local function newMainPage()
 	local divider = frame:CreateTexture(nil, "ARTWORK")
 	divider:SetAtlas("Options_HorizontalDivider", true)
 	divider:SetPoint("TOP", frame, "TOP", 0, -50)
-	-- Under the title, the scrolling part; its bar sits in the room on the right.
+	-- Under the head, the scrolling part (placed by Layout); its bar sits in
+	-- the room on the right.
 	page.scroll = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
-	page.scroll:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -56)
-	page.scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -Panel.SCROLL_BAR, 4)
 	page.body = CreateFrame("Frame", nil, page.scroll)
 	page.body:SetSize(1, 1)
 	page.scroll:SetScrollChild(page.body)
 	page.scroll:SetScript("OnSizeChanged", function(_, width)
 		page.body:SetWidth(width)
 	end)
-	page.top = 0
+	page.top = -56
+	page.area = "body"
 	-- The options panel calls it when it shows the page (and when it opens on
 	-- another page).
 	function frame.OnRefresh()
@@ -78,33 +80,53 @@ local function newMainPage()
 	return page
 end
 
--- Places every shown item under the one before it.
-function MainPage:Layout()
-	local y = self.top
-	for _, item in ipairs(self.items) do
-		local frame = item.frame
-		local shown = item.visible == nil or item.visible()
-		item.hidden = not shown
-		if not shown then
-			frame:Hide()
-		elseif item.kind == "divider" then
-			y = y - 12
-			frame:ClearAllPoints()
-			frame:SetPoint("TOP", self.body, "TOP", 0, y)
-			frame:Show()
-			y = y - 6
-		else
-			y = y - item.gap
-			frame:ClearAllPoints()
-			frame:SetPoint("TOPLEFT", self.body, "TOPLEFT", Panel.LEFT + item.indent, y)
-			if item.wide then
-				frame:SetPoint("TOPRIGHT", self.body, "TOPRIGHT", -Panel.LEFT, y)
-				frame:SetHeight(item.height)
+-- The frame the next items are made in: the page itself for the head, the
+-- scrolling body for the rest.
+function MainPage:Area()
+	return self.area == "head" and self.frame or self.body
+end
+
+-- Places the shown items of one area under each other in container, from y
+-- down; returns where they end.
+local function place(page, area, container, y)
+	for _, item in ipairs(page.items) do
+		if item.area == area then
+			local frame = item.frame
+			local shown = item.visible == nil or item.visible()
+			item.hidden = not shown
+			if not shown then
+				frame:Hide()
+			elseif item.kind == "divider" then
+				y = y - 12
+				frame:ClearAllPoints()
+				frame:SetPoint("TOP", container, "TOP", 0, y)
+				frame:Show()
+				y = y - 6
+			else
+				y = y - item.gap
+				frame:ClearAllPoints()
+				frame:SetPoint("TOPLEFT", container, "TOPLEFT", Panel.LEFT + item.indent, y)
+				if item.wide then
+					frame:SetPoint("TOPRIGHT", container, "TOPRIGHT", -Panel.LEFT, y)
+					frame:SetHeight(item.height)
+				end
+				frame:Show()
+				y = y - item.height
 			end
-			frame:Show()
-			y = y - item.height
 		end
 	end
+	return y
+end
+
+-- Places every shown item under the one before it: the head under the
+-- title, the scrolling part under the head, the body's items in it.
+function MainPage:Layout()
+	local head = place(self, "head", self.frame, self.top)
+	self.scroll:ClearAllPoints()
+	self.scroll:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, head)
+	self.scroll:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -Panel.SCROLL_BAR, 4)
+	self.head = head
+	local y = place(self, "body", self.body, 0)
 	self.y = y
 	-- As tall as what it holds, and a little room at the bottom.
 	self.body:SetHeight(-y + 12)
@@ -126,13 +148,14 @@ function MainPage:Add(kind, region, height, options)
 		wide = options.wide,
 		text = options.text,
 		visible = options.visible,
+		area = self.area,
 	}
 	self:Layout()
 	return region
 end
 
 function MainPage:AddDivider()
-	local divider = self.body:CreateTexture(nil, "ARTWORK")
+	local divider = self:Area():CreateTexture(nil, "ARTWORK")
 	divider:SetAtlas("Options_HorizontalDivider", true)
 	return self:Add("divider", divider, 0, { gap = 0 })
 end
@@ -211,7 +234,7 @@ end
 -- A checkbox (newCheckbox) in a row of its own, as on the panel's list pages;
 -- gap, the room above it, for a group of its own.
 function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, enabledWhen, gap)
-	local row = CreateFrame("Frame", nil, self.body)
+	local row = CreateFrame("Frame", nil, self:Area())
 	local checkbox = newCheckbox(self, row, module, key, label, tooltip, requires, enabledWhen)
 	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true, gap = gap })
 end
@@ -227,7 +250,7 @@ function MainPage:AddCheckboxes(module, items, options)
 	local indent = options.indent or 0
 	local column = Panel.CONTROL_X - Panel.LEFT - indent
 	for first = 1, #items, columns do
-		local row = CreateFrame("Frame", nil, self.body)
+		local row = CreateFrame("Frame", nil, self:Area())
 		row.cells = {}
 		local labels = {}
 		for index = 0, columns - 1 do
@@ -287,7 +310,7 @@ end
 -- enabledWhen, tooltip.
 function MainPage:AddButton(text, onClick, options)
 	options = options or {}
-	local button = CreateFrame("Button", nil, self.body, "UIPanelButtonTemplate")
+	local button = CreateFrame("Button", nil, self:Area(), "UIPanelButtonTemplate")
 	button:SetText(text)
 	-- As wide as its text, and at least as wide as the options' own buttons.
 	button:SetSize(math.max(120, (button.GetTextWidth and button:GetTextWidth() or 0) + 24), 22)
@@ -321,14 +344,14 @@ end
 
 -- A frame for a row's control: make the control a child of it, then AddRow.
 function MainPage:NewRow()
-	return CreateFrame("Frame", nil, self.body)
+	return CreateFrame("Frame", nil, self:Area())
 end
 
 -- A framed group with a header on top, height high in all: the caller puts
 -- its content inside, under box.header. options: indent, visible, headerFont.
 function MainPage:AddBox(header, height, options)
 	options = options or {}
-	local box = CreateFrame("Frame", nil, self.body, "InsetFrameTemplate")
+	local box = CreateFrame("Frame", nil, self:Area(), "InsetFrameTemplate")
 	box.header = box:CreateFontString(nil, "ARTWORK", options.headerFont or "GameFontNormal")
 	box.header:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -8)
 	box.header:SetPoint("TOPRIGHT", box, "TOPRIGHT", -10, -8)
@@ -346,7 +369,7 @@ end
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
-		local title = page.body:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+		local title = page:Area():CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 		title:SetText(module.title)
 		page:Add("title", title, 20, { text = module.title, gap = 10 })
 	else
@@ -380,12 +403,15 @@ local function build()
 	page.category = category
 	Panel.category, Panel.main = category, page
 
+	-- The profile and its divider stay on top; the modules scroll under them.
+	page.area = "head"
 	for _, builder in ipairs(Panel.mainBuilders) do
 		xpcall(function()
 			builder(page)
 		end, Compat.ReportError)
 	end
 	page:AddDivider()
+	page.area = "body"
 	for _, module in ipairs(Modules:List()) do
 		xpcall(function()
 			addModule(page, module)

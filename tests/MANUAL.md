@@ -47,7 +47,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
     - *Show the loot feed*, with *Feed look* under it (greyed out while the feed is off).
   - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
   - There are no subpages under Lootoman.
-  - When the page is taller than the panel (WoW Forever with the Auto Loot box, or a small window), everything under the title scrolls, with the mouse wheel and the scroll bar, and the last checkbox can be reached; the title stays.
+  - When the page is taller than the panel (WoW Forever with the Auto Loot box, or a small window), everything under the profile's divider scrolls, with the mouse wheel and the scroll bar, and the last checkbox can be reached; the title, the profile and its divider stay.
   - Hovering a checkbox highlights only its row.
   - The panel's *Defaults* button is hidden on Lootoman's page and back on others.
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.
