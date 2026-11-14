@@ -234,7 +234,9 @@ ns.SelfTest.AddReport(function()
 	for _, wanted in ipairs(GameSettings.WANTED) do
 		settings[#settings + 1] = wanted[1] .. "=" .. tostring(Compat.GetCVar(wanted[1]) or "unknown")
 	end
-	settings[#settings + 1] = "SoftTargetNameplateInteract=" .. tostring(Compat.GetCVar("SoftTargetNameplateInteract") or "unknown")
+	for _, name in ipairs(GameSettings.GATED) do
+		settings[#settings + 1] = name .. "=" .. tostring(Compat.GetCVar(name) or "unknown")
+	end
 	local cursors, total = 0, 0
 	for name in pairs(Objects.CURSORS) do
 		total = total + 1

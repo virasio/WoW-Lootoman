@@ -48,10 +48,10 @@ describe("gathering highlights", function()
 		assert.is_true(module:IsActive())
 	end)
 
-	it("lights a herb in reach and switches the soft target's nameplate on for it", function()
+	it("lights a herb in reach and switches the interact icon and the nameplate on for it", function()
 		target(herb())
 		assert.same({ "herbs", "ready", plate }, { lit(), module.lit.state, module.lit.plate })
-		assert.equals("1", Test.state.consoleVars.SoftTargetNameplateInteract)
+		assert.same({ "1", "1" }, { Test.state.consoleVars.SoftTargetIconGameObject, Test.state.consoleVars.SoftTargetNameplateInteract })
 		-- Another target that is nothing: the light and the nameplate go.
 		target({ isObject = true, cursor = 99, name = "Signpost" })
 		assert.same({ nil, "0" }, { lit(), Test.state.consoleVars.SoftTargetNameplateInteract })
@@ -88,7 +88,9 @@ describe("gathering highlights", function()
 
 	it("lights ore only with Mining, unless the player wants herbs and ore without the profession", function()
 		target({ isObject = true, cursor = 1, inReach = true, name = "Copper Vein" })
-		assert.is_nil(lit())
+		-- No sparkles, and no pickaxe from the game's interact icon either.
+		assert.same({ nil, "0", "0" }, { lit(), Test.state.consoleVars.SoftTargetIconGameObject,
+			Test.state.consoleVars.SoftTargetNameplateInteract })
 		module:Set("gatherable", false)
 		assert.equals("ore", lit())
 		-- Herbs on, ore off: herbs for another character's Herbalism, no ore.

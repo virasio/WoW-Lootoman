@@ -16,9 +16,11 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 -- setting the client does not know is skipped.
 --
 -- Two more, learned from Lueur and Forever Loot Sparkles:
--- - The soft target's nameplate is on only while the target is an object
---   that sparkles (Gate), so NPCs and mailboxes get no label from Lootoman.
---   A player who keeps it on for everything keeps it on.
+-- - The soft target's nameplate, and the game's interact icon for objects
+--   (Interact Key Icons) that the game needs to give an object a nameplate,
+--   are on only while the target is an object that sparkles (Gate): NPCs,
+--   mailboxes and a vein the character can't mine get no label or icon from
+--   Lootoman. A player who keeps either on for everything keeps it on.
 -- - Safe self-cast: a spell cast without a target can land on the soft
 --   target when it is a living unit next to the player. So while Lootoman
 --   itself turned soft targeting on (the player had it off), it pauses it on
@@ -42,7 +44,6 @@ GameSettings.WANTED = {
 	{ "SoftTargetInteractRange", "15" },
 	{ "SoftTargetInteractArc", "2" },
 	{ "SoftTargetInteractOnlyInRange", "0" },
-	{ "SoftTargetIconGameObject", "1" },
 	{ "nameplateGameObjectMaxDistance", "15", true },
 }
 
@@ -156,21 +157,24 @@ function GameSettings.Holds(name)
 	return entry ~= nil and Compat.GetCVar(name) == entry.ours
 end
 
-local NAMEPLATE = "SoftTargetNameplateInteract"
+-- The interact icon for objects, without which the game makes no nameplate
+-- for one, and the soft target's nameplate.
+GameSettings.GATED = { "SoftTargetIconGameObject", "SoftTargetNameplateInteract" }
 
--- The soft target's nameplate on (an object that sparkles) or off, out of
--- combat only: in a fight it stays as the fight found it. Off means the
--- player's own value again.
+-- Both on (an object that sparkles) or off, out of combat only: in a fight
+-- they stay as the fight found them. Off means the player's own values again.
 function GameSettings.Gate(open)
 	if Compat.InCombat() then
 		return
 	end
-	if open then
-		GameSettings.Take(NAMEPLATE, "1")
-	elseif GameSettings.Holds(NAMEPLATE) then
-		local values = GameSettings.Memory().values
-		Compat.SetCVar(NAMEPLATE, values[NAMEPLATE].old)
-		values[NAMEPLATE] = nil
+	local values = GameSettings.Memory().values
+	for _, name in ipairs(GameSettings.GATED) do
+		if open then
+			GameSettings.Take(name, "1")
+		elseif GameSettings.Holds(name) then
+			Compat.SetCVar(name, values[name].old)
+			values[name] = nil
+		end
 	end
 end
 

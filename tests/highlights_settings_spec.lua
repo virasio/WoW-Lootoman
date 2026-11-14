@@ -29,7 +29,8 @@ describe("gathering highlights' game settings", function()
 
 	it("changes only the settings that differ, and remembers each one's old value and its own", function()
 		GameSettings.Borrow()
-		assert.same({ "SoftTargetInteract=3", "SoftTargetInteractRange=15", "SoftTargetInteractOnlyInRange=0", "SoftTargetIconGameObject=1" },
+		-- The interact icon and the nameplate wait for an object that sparkles (Gate).
+		assert.same({ "SoftTargetInteract=3", "SoftTargetInteractRange=15", "SoftTargetInteractOnlyInRange=0" },
 			Test.state.cvarChanges)
 		local memory = Test.state.saved.LootomanDB.sections.highlightCVars
 		assert.same({ 1, { old = "0", ours = "3" } }, { memory.schema, memory.values.SoftTargetInteract })
@@ -52,8 +53,8 @@ describe("gathering highlights' game settings", function()
 		Test.state.consoleVars.SoftTargetInteract = "1"
 		GameSettings.GiveBack()
 		local settings = Test.state.consoleVars
-		assert.same({ "1", "10", "1", "0" }, { settings.SoftTargetInteract, settings.SoftTargetInteractRange,
-			settings.SoftTargetInteractOnlyInRange, settings.SoftTargetIconGameObject })
+		assert.same({ "1", "10", "1" }, { settings.SoftTargetInteract, settings.SoftTargetInteractRange,
+			settings.SoftTargetInteractOnlyInRange })
 		assert.same({}, Test.state.saved.LootomanDB.sections.highlightCVars.values)
 	end)
 
@@ -70,12 +71,12 @@ describe("gathering highlights' game settings", function()
 		assert.equals("0", Test.state.consoleVars.SoftTargetInteract)
 	end)
 
-	it("switches the soft target's nameplate on only for what sparkles, and never off for a player who keeps it on", function()
+	it("switches the interact icon and the nameplate on only for what sparkles, and never off for a player who keeps them on", function()
 		local settings = Test.state.consoleVars
 		GameSettings.Gate(true)
-		assert.equals("1", settings.SoftTargetNameplateInteract)
+		assert.same({ "1", "1" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract })
 		GameSettings.Gate(false)
-		assert.same({ "0", nil }, { settings.SoftTargetNameplateInteract,
+		assert.same({ "0", "0", nil }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract,
 			Test.state.saved.LootomanDB.sections.highlightCVars.values.SoftTargetNameplateInteract })
 		-- In a fight it stays as the fight found it.
 		GameSettings.Gate(true)
@@ -85,12 +86,12 @@ describe("gathering highlights' game settings", function()
 		Test.SetCombat(false)
 		-- Given back with the rest.
 		GameSettings.GiveBack()
-		assert.equals("0", settings.SoftTargetNameplateInteract)
-		-- The player's own nameplates stay on.
-		settings.SoftTargetNameplateInteract = "1"
+		assert.same({ "0", "0" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract })
+		-- The player's own icons stay on.
+		settings.SoftTargetIconGameObject = "1"
 		GameSettings.Gate(true)
 		GameSettings.Gate(false)
-		assert.equals("1", settings.SoftTargetNameplateInteract)
+		assert.same({ "1", "0" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract })
 	end)
 
 	it("pauses soft targeting on a living unit until the player moves away, when it turned it on itself", function()
