@@ -1,5 +1,15 @@
 # Lootoman changelog
 
+## 0.5
+
+Gathering highlights on WoW Forever.
+
+- **What you are about to loot sparkles**: a few small gold stars on the herb, ore vein, chest or quest object your Interact key would use, within about 15 yards. Bright in reach, quieter further away, faint on what you can't use yet. Each kind has its own switch under *Highlight lootable objects*.
+- **Only herbs and ore you can gather** (on by default): herbs need Herbalism and ore Mining. Turn it off to see them anyway, say to help a friend who gathers.
+- **Chests** are known by their look and name, and anything you loot once, a crate or a Windstone, sparkles from then on.
+- **Your game settings stay yours**: the soft targeting Lootoman needs is borrowed while highlights are on and given back when you turn them off or log out. No pickaxe or name over objects that don't sparkle, and a spell cast without a target never lands on someone else.
+- **The options page scrolls** when it is taller than the window, the profile staying on top.
+
 ## 0.4.5
 
 One options page, feed looks you can share, and one window to sort your junk.

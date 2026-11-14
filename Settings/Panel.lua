@@ -28,6 +28,8 @@ end
 Panel.LEFT = 20
 Panel.INDENT = 24
 Panel.CONTROL_X = 260
+-- The room the page's scroll bar takes on the right.
+Panel.SCROLL_BAR = 26
 -- The size of the page's dropdowns but the profile's: room for the longest
 -- choice, in Russian too.
 Panel.DROPDOWN_WIDTH = 260
@@ -37,7 +39,10 @@ local GAP = 6
 -- The main page, built from top to bottom: every Add puts an item under the
 -- last one. An item can be hidden (options.visible): the page lays its items
 -- out again whenever it refreshes. items lists what was added, in order, for
--- tests.
+-- tests. The title and the head under it (the profile and its divider) stay
+-- on top; everything under them is in body, which scrolls when the page is
+-- taller than the panel. page.area says where the next items go: "head" or
+-- "body" (the default).
 local MainPage = {}
 MainPage.__index = MainPage
 
@@ -53,7 +58,17 @@ local function newMainPage()
 	local divider = frame:CreateTexture(nil, "ARTWORK")
 	divider:SetAtlas("Options_HorizontalDivider", true)
 	divider:SetPoint("TOP", frame, "TOP", 0, -50)
+	-- Under the head, the scrolling part (placed by Layout); its bar sits in
+	-- the room on the right.
+	page.scroll = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
+	page.body = CreateFrame("Frame", nil, page.scroll)
+	page.body:SetSize(1, 1)
+	page.scroll:SetScrollChild(page.body)
+	page.scroll:SetScript("OnSizeChanged", function(_, width)
+		page.body:SetWidth(width)
+	end)
 	page.top = -56
+	page.area = "body"
 	-- The options panel calls it when it shows the page (and when it opens on
 	-- another page).
 	function frame.OnRefresh()
@@ -65,34 +80,56 @@ local function newMainPage()
 	return page
 end
 
--- Places every shown item under the one before it.
-function MainPage:Layout()
-	local y = self.top
-	for _, item in ipairs(self.items) do
-		local frame = item.frame
-		local shown = item.visible == nil or item.visible()
-		item.hidden = not shown
-		if not shown then
-			frame:Hide()
-		elseif item.kind == "divider" then
-			y = y - 12
-			frame:ClearAllPoints()
-			frame:SetPoint("TOP", self.frame, "TOP", 0, y)
-			frame:Show()
-			y = y - 6
-		else
-			y = y - item.gap
-			frame:ClearAllPoints()
-			frame:SetPoint("TOPLEFT", self.frame, "TOPLEFT", Panel.LEFT + item.indent, y)
-			if item.wide then
-				frame:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -Panel.LEFT, y)
-				frame:SetHeight(item.height)
+-- The frame the next items are made in: the page itself for the head, the
+-- scrolling body for the rest.
+function MainPage:Area()
+	return self.area == "head" and self.frame or self.body
+end
+
+-- Places the shown items of one area under each other in container, from y
+-- down; returns where they end.
+local function place(page, area, container, y)
+	for _, item in ipairs(page.items) do
+		if item.area == area then
+			local frame = item.frame
+			local shown = item.visible == nil or item.visible()
+			item.hidden = not shown
+			if not shown then
+				frame:Hide()
+			elseif item.kind == "divider" then
+				y = y - 12
+				frame:ClearAllPoints()
+				frame:SetPoint("TOP", container, "TOP", 0, y)
+				frame:Show()
+				y = y - 6
+			else
+				y = y - item.gap
+				frame:ClearAllPoints()
+				frame:SetPoint("TOPLEFT", container, "TOPLEFT", Panel.LEFT + item.indent, y)
+				if item.wide then
+					frame:SetPoint("TOPRIGHT", container, "TOPRIGHT", -Panel.LEFT, y)
+					frame:SetHeight(item.height)
+				end
+				frame:Show()
+				y = y - item.height
 			end
-			frame:Show()
-			y = y - item.height
 		end
 	end
+	return y
+end
+
+-- Places every shown item under the one before it: the head under the
+-- title, the scrolling part under the head, the body's items in it.
+function MainPage:Layout()
+	local head = place(self, "head", self.frame, self.top)
+	self.scroll:ClearAllPoints()
+	self.scroll:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, head)
+	self.scroll:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -Panel.SCROLL_BAR, 4)
+	self.head = head
+	local y = place(self, "body", self.body, 0)
 	self.y = y
+	-- As tall as what it holds, and a little room at the bottom.
+	self.body:SetHeight(-y + 12)
 end
 
 -- Puts a region gap pixels under the last item, indent pixels further in.
@@ -111,13 +148,14 @@ function MainPage:Add(kind, region, height, options)
 		wide = options.wide,
 		text = options.text,
 		visible = options.visible,
+		area = self.area,
 	}
 	self:Layout()
 	return region
 end
 
 function MainPage:AddDivider()
-	local divider = self.frame:CreateTexture(nil, "ARTWORK")
+	local divider = self:Area():CreateTexture(nil, "ARTWORK")
 	divider:SetAtlas("Options_HorizontalDivider", true)
 	return self:Add("divider", divider, 0, { gap = 0 })
 end
@@ -164,14 +202,13 @@ local function addTooltip(frame, title, text)
 	end)
 end
 
--- A checkbox in the options panel's own style with its label after it, bound
--- to a boolean module setting; a click on the label toggles it too. With
--- requires, it can be changed only while that module is on; with enabledWhen,
--- only while that says so. It sits in a row of its own, as on the panel's list
--- pages: the template's hover background fills the checkbox's parent's
--- parent, so only that row lights up.
-function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, enabledWhen)
-	local row = CreateFrame("Frame", nil, self.frame)
+-- A checkbox in the options panel's own style with its label after it, in
+-- parent, bound to a boolean module setting; a click on the label toggles it
+-- too. With requires, it can be changed only while that module is on; with
+-- enabledWhen, only while that says so. The template's hover background fills
+-- the checkbox's parent, so only the parent lights up.
+local function newCheckbox(page, parent, module, key, label, tooltip, requires, enabledWhen)
+	local row = parent
 	local checkbox = CreateFrame("CheckButton", nil, row, "SettingsCheckboxTemplate")
 	checkbox:SetPoint("LEFT", row, "LEFT", 0, 0)
 	local text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -185,13 +222,54 @@ function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, ena
 	checkbox:SetScript("OnClick", function(button)
 		Storage:Set(module, key, button:GetChecked() and true or false)
 	end)
-	self:OnRefresh(function()
+	page:OnRefresh(function()
 		checkbox:SetChecked(Storage:Get(module, key))
 		local isEnabled = enabled(requires, enabledWhen)
 		checkbox:SetEnabled(isEnabled)
 		setTextEnabled(text, isEnabled)
 	end)
-	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true })
+	return checkbox
+end
+
+-- A checkbox (newCheckbox) in a row of its own, as on the panel's list pages;
+-- gap, the room above it, for a group of its own.
+function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, enabledWhen, gap)
+	local row = CreateFrame("Frame", nil, self:Area())
+	local checkbox = newCheckbox(self, row, module, key, label, tooltip, requires, enabledWhen)
+	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true, gap = gap })
+end
+
+-- Checkboxes side by side, columns of them to a row: the first at the left,
+-- the next at the rows' control column (CONTROL_X), each in a cell of its own
+-- so only its cell lights up. items: { { key, label, tooltip }, … }; options:
+-- indent, requires, enabledWhen, columns (2). Each row is one item, its text
+-- the labels joined by "|".
+function MainPage:AddCheckboxes(module, items, options)
+	options = options or {}
+	local columns = options.columns or 2
+	local indent = options.indent or 0
+	local column = Panel.CONTROL_X - Panel.LEFT - indent
+	for first = 1, #items, columns do
+		local row = CreateFrame("Frame", nil, self:Area())
+		row.cells = {}
+		local labels = {}
+		for index = 0, columns - 1 do
+			local item = items[first + index]
+			if item then
+				local cell = CreateFrame("Frame", nil, row)
+				cell:SetPoint("TOPLEFT", row, "TOPLEFT", index * column, 0)
+				if index < columns - 1 then
+					cell:SetPoint("BOTTOMRIGHT", row, "BOTTOMLEFT", (index + 1) * column, 0)
+				else
+					cell:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+				end
+				cell.checkbox = newCheckbox(self, cell, module, item.key, item.label, item.tooltip, options.requires, options.enabledWhen)
+				row.cells[#row.cells + 1] = cell
+				labels[#labels + 1] = item.label
+			end
+		end
+		self:Add("checkboxes", row, 29, { indent = indent, text = table.concat(labels, "|"), wide = true })
+	end
 end
 
 -- A dropdown for the page, as the Edit Mode dialogs show them (the feed look's
@@ -232,7 +310,7 @@ end
 -- enabledWhen, tooltip.
 function MainPage:AddButton(text, onClick, options)
 	options = options or {}
-	local button = CreateFrame("Button", nil, self.frame, "UIPanelButtonTemplate")
+	local button = CreateFrame("Button", nil, self:Area(), "UIPanelButtonTemplate")
 	button:SetText(text)
 	-- As wide as its text, and at least as wide as the options' own buttons.
 	button:SetSize(math.max(120, (button.GetTextWidth and button:GetTextWidth() or 0) + 24), 22)
@@ -266,14 +344,14 @@ end
 
 -- A frame for a row's control: make the control a child of it, then AddRow.
 function MainPage:NewRow()
-	return CreateFrame("Frame", nil, self.frame)
+	return CreateFrame("Frame", nil, self:Area())
 end
 
 -- A framed group with a header on top, height high in all: the caller puts
 -- its content inside, under box.header. options: indent, visible, headerFont.
 function MainPage:AddBox(header, height, options)
 	options = options or {}
-	local box = CreateFrame("Frame", nil, self.frame, "InsetFrameTemplate")
+	local box = CreateFrame("Frame", nil, self:Area(), "InsetFrameTemplate")
 	box.header = box:CreateFontString(nil, "ARTWORK", options.headerFont or "GameFontNormal")
 	box.header:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -8)
 	box.header:SetPoint("TOPRIGHT", box, "TOPRIGHT", -10, -8)
@@ -285,12 +363,13 @@ end
 -- A module's block on the main page: its switch, or its title for a module
 -- that has none (switchLabel = false); then what goes under it, indented:
 -- the module's main settings, which can be changed only while it is on.
--- A main setting is a checkbox, a choice (a dropdown), a button, or a
--- custom builder(page, indent, module), each with an optional enabledWhen().
+-- A main setting is a checkbox (with gap, the room above it), checkboxes in
+-- columns (items, columns), a choice (a dropdown), a button, or a custom
+-- builder(page, indent, module), each with an optional enabledWhen().
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
-		local title = page.frame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+		local title = page:Area():CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 		title:SetText(module.title)
 		page:Add("title", title, 20, { text = module.title, gap = 10 })
 	else
@@ -300,7 +379,10 @@ local function addModule(page, module)
 	for _, setting in ipairs(module.mainSettings or {}) do
 		local indent = Panel.INDENT * (setting.level or 1)
 		if setting.kind == "checkbox" then
-			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen)
+			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen, setting.gap)
+		elseif setting.kind == "checkboxes" then
+			page:AddCheckboxes(module.name, setting.items, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
+				columns = setting.columns })
 		elseif setting.kind == "choice" then
 			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = indent, requires = requires,
 				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
@@ -321,12 +403,15 @@ local function build()
 	page.category = category
 	Panel.category, Panel.main = category, page
 
+	-- The profile and its divider stay on top; the modules scroll under them.
+	page.area = "head"
 	for _, builder in ipairs(Panel.mainBuilders) do
 		xpcall(function()
 			builder(page)
 		end, Compat.ReportError)
 	end
 	page:AddDivider()
+	page.area = "body"
 	for _, module in ipairs(Modules:List()) do
 		xpcall(function()
 			addModule(page, module)

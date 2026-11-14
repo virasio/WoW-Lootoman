@@ -59,6 +59,18 @@ local state = {
 	cursor = nil,
 	-- Bag item uses, pick ups, deletes and cursor clears, in order.
 	bagActions = {},
+	-- Game settings as strings (GetCVar, SetCVar), and each change, "name=value".
+	consoleVars = {},
+	cvarChanges = {},
+	-- The soft interact target's facts, or nil; cursor file IDs by name;
+	-- nameplates by unit; the loot window's source object IDs; Herbalism and
+	-- Mining; the player's position { x, y }.
+	softInteract = nil,
+	cursorFiles = {},
+	nameplates = {},
+	lootSources = {},
+	gatheringSkills = {},
+	position = nil,
 }
 
 function Compat.Has(path)
@@ -175,6 +187,83 @@ function Compat.SetAutoLootKey(key)
 	state.modifiedClicks.AUTOLOOTTOGGLE = key
 	state.savedBindings = (state.savedBindings or 0) + 1
 	return true
+end
+
+-- state.consoleVars: game settings by name, as strings; a name that is not
+-- there is unknown to the fake client. state.combat makes SetCVar refuse.
+function Compat.GetCVar(name)
+	if state.consoleVars[name] == nil and state.cvars[name] ~= nil then
+		-- The boolean settings the other functions read (Auto Loot).
+		return state.cvars[name] and "1" or "0"
+	end
+	return state.consoleVars[name]
+end
+
+function Compat.SetCVar(name, value)
+	if state.combat or state.consoleVars[name] == nil then
+		return false
+	end
+	state.consoleVars[name] = tostring(value)
+	state.cvarChanges[#state.cvarChanges + 1] = name .. "=" .. tostring(value)
+	return true
+end
+
+-- state.softInteract: the facts of GetSoftInteract, or nil without a target.
+function Compat.GetSoftInteract()
+	local facts = state.softInteract
+	if not facts then
+		return nil
+	end
+	local copy = {}
+	for key, value in pairs(facts) do
+		copy[key] = value
+	end
+	copy.isLiving = copy.isObject == false and copy.isDead == false
+	return copy
+end
+
+-- state.cursorFiles: the file IDs of the game's cursors by name.
+function Compat.GetCursorFileID(name)
+	return state.cursorFiles[name]
+end
+
+-- state.nameplates: the nameplate frames by unit.
+function Compat.GetNamePlate(unit)
+	return state.nameplates[unit]
+end
+
+-- The soft target's plate by its own unit, or the plate of the shown unit
+-- that state.softInteractUnit names ("nameplate3").
+function Compat.GetSoftInteractPlate(units)
+	local plate = state.nameplates.softinteract
+	if plate then
+		return plate
+	end
+	local unit = state.softInteractUnit
+	return unit and units and units[unit] and state.nameplates[unit] or nil
+end
+
+-- A fake frame's source is its field source.
+function Compat.GetFrameSource(frame)
+	return type(frame) == "table" and frame.source or nil
+end
+
+-- state.lootSources: the object IDs of the loot window's sources.
+function Compat.GetLootSourceObjects()
+	return state.lootSources
+end
+
+-- state.gatheringSkills: { herbs, ore }.
+function Compat.GetGatheringSkills()
+	return { herbs = state.gatheringSkills.herbs, ore = state.gatheringSkills.ore }
+end
+
+-- state.position: { x, y }, or nil where the client gives none.
+function Compat.GetPlayerPosition()
+	if not state.position then
+		return nil
+	end
+	return state.position[1], state.position[2]
 end
 
 function Compat.IsInGroup()

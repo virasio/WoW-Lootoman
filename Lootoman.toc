@@ -51,6 +51,7 @@ Core\Startup.lua
 
 Rules\Junk.lua
 Rules\Usable.lua
+Rules\Objects.lua
 
 Providers\Inventory.lua
 Providers\Bags.lua
@@ -82,6 +83,10 @@ Modules\LootFeed\Frames.lua
 Modules\LootFeed\UseButton.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\LookWindow.lua
+
+Modules\Highlights\GameSettings.lua
+Modules\Highlights\Sparkles.lua
+Modules\Highlights\Highlights.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
