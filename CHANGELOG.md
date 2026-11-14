@@ -1,5 +1,11 @@
 # Lootoman changelog
 
+## 0.5.1
+
+A fix for gathering highlights on WoW Forever.
+
+- **Herbs and ore sparkle for every herbalist and miner**: some characters with Herbalism or Mining saw no sparkles on herbs or veins, because Lootoman could take them for characters without the profession, especially right after logging in. The profession is now read the way the game reports it, each time.
+
 ## 0.5
 
 Gathering highlights on WoW Forever.

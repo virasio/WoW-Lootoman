@@ -64,9 +64,9 @@ function Highlights.Chests()
 	return section.values
 end
 
--- What the module knows while it is on: the cursor files, Herbalism and
--- Mining, and the nameplate units shown now ({ ["nameplate3"] = true }).
-local known, skills, plates
+-- What the module knows while it is on: the cursor files and the nameplate
+-- units shown now ({ ["nameplate3"] = true }).
+local known, plates
 
 -- How the sparkles look: in reach, out of reach, or not usable yet (an
 -- "Unable" cursor in reach). Without the reach check, an Unable cursor counts
@@ -83,12 +83,13 @@ end
 
 -- Whether a kind lights: its switch, and for herbs and ore the profession
 -- while the player wants only those it can gather (an unknown skill lights).
--- The second value says why not.
+-- The profession is read each time, as Lueur does: just after logging in the
+-- client may not know it yet. The second value says why not.
 function Highlights:Wants(kind)
 	if not self:Get(kind) then
 		return false, "kind off"
 	end
-	if (kind == "herbs" or kind == "ore") and self:Get("gatherable") and skills[kind] == false then
+	if (kind == "herbs" or kind == "ore") and self:Get("gatherable") and Compat.GetGatheringSkills()[kind] == false then
 		return false, "no profession"
 	end
 	return true
@@ -143,7 +144,8 @@ function Highlights:Evaluate()
 		end
 	end
 	self.ticker:SetShown(lit or GameSettings.IsPaused())
-	debug(facts, kind, state, why)
+	-- Lit, but nothing to draw on yet: the game gave no nameplate.
+	debug(facts, kind, state and (plate and state or state .. ", no nameplate"), why)
 end
 
 -- After looting game objects: chests from now on (Objects.Learn). Never from
@@ -160,7 +162,6 @@ end
 
 function Highlights:OnEnable()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
-	skills = Compat.GetGatheringSkills()
 	plates = {}
 	told = nil
 	if not self.ticker then
@@ -205,8 +206,8 @@ function Highlights:OnEnable()
 	end
 	self:OnEvent("LOOT_READY", learn)
 	self:OnEvent("LOOT_OPENED", learn)
+	-- A profession learned or unlearned shows at once.
 	local function professions()
-		skills = Compat.GetGatheringSkills()
 		self:Evaluate()
 	end
 	self:OnEvent("SKILL_LINES_CHANGED", professions)
@@ -230,7 +231,7 @@ function Highlights:OnDisable()
 	end
 	self.lit = nil
 	GameSettings.Stop()
-	known, skills, plates = nil, nil, nil
+	known, plates = nil, nil
 end
 
 -- What the self-test reports: the client's functions and settings that
