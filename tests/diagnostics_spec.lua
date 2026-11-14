@@ -49,6 +49,17 @@ describe("diagnostics", function()
 		assert.same({ 300, "10.00 line 310" }, { #section().log, section().log[300] })
 	end)
 
+	it("never stop the self-test, which runs to its end when the settings could not be loaded", function()
+		ns.Storage.db = nil
+		Test.RunSlashCommand("LOOTOMAN", "selftest")
+		local text = table.concat(Test.state.printed, "\n")
+		assert.matches("Self%-test", text)
+		assert.matches("check%(s%) failed%.", text)
+		-- Nothing to clear, and nothing breaks.
+		Test.RunSlashCommand("LOOTOMAN", "debug clear")
+		assert.matches("cleared", Test.state.printed[#Test.state.printed])
+	end)
+
 	it("are cleared by /lootoman debug clear", function()
 		Test.RunSlashCommand("LOOTOMAN", "debug on")
 		ns.Debug("something")

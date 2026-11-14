@@ -34,17 +34,23 @@ function Diagnostics.Log(text)
 end
 
 -- A new self-test run: its lines go into this table, which may still grow
--- (a line that comes from a timer). A broken client call must not stop the
--- self-test, which reports it itself.
+-- (a line that comes from a timer). Nothing here may stop the self-test, which
+-- reports what is broken itself: a broken client call, or settings that never
+-- loaded (then the lines are not kept).
 function Diagnostics.StartSelfTest()
 	local ok, version, build = pcall(Compat.GetBuildInfo)
 	local client = ok and ("%s (%s)"):format(tostring(version), tostring(build)) or "unknown"
 	local run = { at = Compat.GetTime(), client = client, lines = {} }
-	Diagnostics.Section().selfTest = run
+	if Storage.db then
+		Diagnostics.Section().selfTest = run
+	end
 	return run.lines
 end
 
 function Diagnostics.Clear()
+	if not Storage.db then
+		return
+	end
 	local section = Diagnostics.Section()
 	section.log = {}
 	section.selfTest = nil
