@@ -41,6 +41,19 @@ function Storage:RegisterGlobalDefaults(defaults)
 	end
 end
 
+-- Defaults in memory: a fresh table through every step. Should a step fail
+-- even on that, the first step alone, which makes the shape the rest of the
+-- addon reads (profiles, the profile of each character, global values).
+local function fresh(steps)
+	local data, status = Migrations.Run(steps, nil)
+	if status == "failed" then
+		data = {}
+		steps[1](data)
+		data.schema = #steps
+	end
+	return data
+end
+
 -- Called with the saved tables on ADDON_LOADED. Returns the tables to save.
 -- Data from a newer version, or data an upgrade failed on, is returned
 -- untouched, and the addon works on defaults in memory that are never saved.
@@ -56,8 +69,8 @@ function Storage:Load(account, character)
 	end
 	self.readOnly = self.readOnlyReason ~= nil
 	if self.readOnly then
-		self.db = Migrations.Run(Migrations.account, nil)
-		self.charDB = Migrations.Run(Migrations.character, nil)
+		self.db = fresh(Migrations.account)
+		self.charDB = fresh(Migrations.character)
 	else
 		self.db, self.charDB = db, charDB
 	end

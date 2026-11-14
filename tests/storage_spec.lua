@@ -154,6 +154,19 @@ describe("storage", function()
 		assert.equals(5, Storage:Get("Feed", "rows"))
 	end)
 
+	it("still has defaults to work on when the failing step fails on a fresh table too", function()
+		local steps = ns.Migrations.account
+		local last = steps[#steps]
+		steps[#steps] = function() error("always broken") end
+		local account = { schema = #steps - 1, profiles = { Default = {} }, profileKeys = {}, global = {} }
+		local db = load(account, nil)
+		steps[#steps] = last
+		assert.equals(account, db)
+		assert.same({ true, "failed" }, { Storage.readOnly, Storage.readOnlyReason })
+		assert.equals("Default", Storage:GetProfileName())
+		assert.equals(5, Storage:Get("Feed", "rows"))
+	end)
+
 	it("keeps data from a newer version untouched and works on defaults in memory", function()
 		local account = { schema = 99, profiles = { Default = { modules = { Feed = { rows = 9 } } } } }
 		local db = load(account, nil)
