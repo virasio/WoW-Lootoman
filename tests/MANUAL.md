@@ -302,7 +302,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 ## Gathering highlights (0.5)
 
-On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.GetCVar("SoftTargetInteract")`, and the same for `SoftTargetInteractRange`, `SoftTargetInteractArc`, `SoftTargetInteractOnlyInRange`, `SoftTargetIconGameObject`, `SoftTargetNameplateInteract` and `nameplateGameObjectMaxDistance`. Turn debug on (`/lootoman debug on`) to see each target's line.
+On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.GetCVar("SoftTargetInteract")`, and the same for `SoftTargetInteractRange`, `SoftTargetInteractArc`, `SoftTargetInteractOnlyInRange`, `SoftTargetIconGameObject`, `SoftTargetIconInteract`, `SoftTargetNameplateInteract` and `nameplateGameObjectMaxDistance`. Turn debug on (`/lootoman debug on`) to see each target's line.
 
 - [ ] **Self-test.** `/lootoman selftest`. *Expected:* a `Highlights:` line with every function `yes` (note any `NO`), the settings with Lootoman's values, the cursors found (note how many) and your Herbalism and Mining. On retail there is no such line.
 - [ ] **Each kind.** Walk up to a herb, an ore vein, a chest (and a crate or barrel you have looted before), and a quest object. *Expected:* each sparkles gold, in the same style, when it is the object the Interact key would use; at most one at a time.
@@ -312,11 +312,12 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* the kinds stand in two columns (quest objects and chests on the left, herbs and ore on the right), hovering one lights only its half, and *Only herbs and ore you can gather* sits a little apart under them; each applies at once; with all off, nothing sparkles; *Only herbs and ore you can gather* greys out while both herbs and ore are off.
 - [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only herbs and ore you can gather* off, they sparkle; with Herbs on and Ore off, only herbs.
 - [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar, name or icon either.
+- [ ] **Interact icons.** With *Interact Key Icons* on in the game's options. *Expected:* no herb leaf or pickaxe over a sparkling herb or vein; walk on to an NPC: its icon shows as before. Turn highlights off: `SoftTargetIconInteract` is back at `1`.
 - [ ] **No icon without sparkles.** On a character without Mining, with *Only herbs and ore you can gather* on, walk up to an ore vein. *Expected:* no sparkles and no pickaxe over it (unless *Interact Key Icons* was your own setting before).
 - [ ] **Self-cast.** With *Enable Interact Key* off before highlights: stand next to an NPC, then next to a player, and cast a friendly spell (a heal) without a target, out of combat and as a fight begins. *Expected:* it lands on you. Note whether soft targeting pauses as a fight begins (debug line, or `SoftTargetInteract` at 0).
 - [ ] **Your own interact key.** With *Enable Interact Key* on before highlights. *Expected:* the key keeps working on NPCs; nothing pauses it.
 - [ ] **Game settings.** Turn highlights off. *Expected:* every setting noted above is back. Turn them on, change *Enable Interact Key* by hand, turn them off: yours stays. Turn them on and log out: back again after logging in with highlights off.
-- [ ] **Another addon.** With Lueur loaded. *Expected:* an object Lueur lights gets no sparkles from Lootoman; note whether the nameplate setting flips back and forth.
+- [ ] **Other addons.** With a nameplate addon loaded (Platynator), then with Lueur. *Expected:* herbs, ore, chests and quest objects sparkle all the same, with no interact icon over them; what the nameplate addon draws itself (its plate) stays its own. With Lueur, note how both effects look.
 - [ ] **The game's loot sparkle.** With `outlineModeShowLootEffectWhenDisabled` on (Forever Loot Sparkles, or by hand), look at a quest object. *Expected:* note how both sparkles look together.
 - [ ] **In a fight.** *Expected:* the sparkles keep working; a switch changed in the fight applies at once, game settings after it; no errors and no blocked action.
 - [ ] **Profile texts.** Share a profile on WoW Forever and import it on retail. *Expected:* it reads, with the highlights' part left out.

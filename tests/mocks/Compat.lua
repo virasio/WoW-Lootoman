@@ -243,11 +243,6 @@ function Compat.GetSoftInteractPlate(units)
 	return unit and units and units[unit] and state.nameplates[unit] or nil
 end
 
--- A fake frame's source is its field source.
-function Compat.GetFrameSource(frame)
-	return type(frame) == "table" and frame.source or nil
-end
-
 -- state.lootSources: the object IDs of the loot window's sources.
 function Compat.GetLootSourceObjects()
 	return state.lootSources

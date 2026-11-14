@@ -14,6 +14,7 @@ describe("gathering highlights' game settings", function()
 			SoftTargetIconGameObject = "0",
 			nameplateGameObjectMaxDistance = "40",
 			SoftTargetNameplateInteract = "0",
+			SoftTargetIconInteract = "1",
 		}
 	end
 
@@ -74,10 +75,21 @@ describe("gathering highlights' game settings", function()
 	it("switches the interact icon and the nameplate on only for what sparkles, and never off for a player who keeps them on", function()
 		local settings = Test.state.consoleVars
 		GameSettings.Gate(true)
-		assert.same({ "1", "1" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract })
+		-- The icon the game draws over the target itself is off meanwhile.
+		assert.same({ "1", "1", "0" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract,
+			settings.SoftTargetIconInteract })
 		GameSettings.Gate(false)
-		assert.same({ "0", "0", nil }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract,
-			Test.state.saved.LootomanDB.sections.highlightCVars.values.SoftTargetNameplateInteract })
+		assert.same({ "0", "0", "1", nil }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract,
+			settings.SoftTargetIconInteract, Test.state.saved.LootomanDB.sections.highlightCVars.values.SoftTargetNameplateInteract })
+		-- A player who changes the icons while something sparkles keeps their choice.
+		GameSettings.Gate(true)
+		settings.SoftTargetIconInteract = "1"
+		GameSettings.Gate(false)
+		settings.SoftTargetIconInteract = "0"
+		GameSettings.Gate(true)
+		GameSettings.Gate(false)
+		assert.equals("0", settings.SoftTargetIconInteract)
+		settings.SoftTargetIconInteract = "1"
 		-- In a fight it stays as the fight found it.
 		GameSettings.Gate(true)
 		Test.SetCombat(true)
@@ -86,7 +98,8 @@ describe("gathering highlights' game settings", function()
 		Test.SetCombat(false)
 		-- Given back with the rest.
 		GameSettings.GiveBack()
-		assert.same({ "0", "0" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract })
+		assert.same({ "0", "0", "1" }, { settings.SoftTargetIconGameObject, settings.SoftTargetNameplateInteract,
+			settings.SoftTargetIconInteract })
 		-- The player's own icons stay on.
 		settings.SoftTargetIconGameObject = "1"
 		GameSettings.Gate(true)

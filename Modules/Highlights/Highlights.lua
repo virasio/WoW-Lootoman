@@ -130,10 +130,9 @@ function Highlights:Evaluate()
 			state = Highlights.State(facts, extra)
 		end
 	end
+	-- Other addons on the plate don't matter: nameplate addons draw on every
+	-- plate, and a player who runs another addon that lights objects sees both.
 	local plate = lit and Compat.GetSoftInteractPlate(plates) or nil
-	if lit and ns.Highlights.Sparkles and ns.Highlights.Sparkles.Taken(plate) then
-		lit, why, state = false, "another addon", nil
-	end
 	GameSettings.Gate(lit)
 	self.lit = lit and { kind = kind, state = state, plate = plate } or nil
 	if ns.Highlights.Sparkles then
@@ -246,8 +245,8 @@ ns.SelfTest.AddReport(function()
 	for _, wanted in ipairs(GameSettings.WANTED) do
 		settings[#settings + 1] = wanted[1] .. "=" .. tostring(Compat.GetCVar(wanted[1]) or "unknown")
 	end
-	for _, name in ipairs(GameSettings.GATED) do
-		settings[#settings + 1] = name .. "=" .. tostring(Compat.GetCVar(name) or "unknown")
+	for _, gated in ipairs(GameSettings.GATED) do
+		settings[#settings + 1] = gated[1] .. "=" .. tostring(Compat.GetCVar(gated[1]) or "unknown")
 	end
 	local cursors, total = 0, 0
 	for name in pairs(Objects.CURSORS) do

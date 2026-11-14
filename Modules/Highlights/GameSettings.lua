@@ -21,6 +21,9 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 --   are on only while the target is an object that sparkles (Gate): NPCs,
 --   mailboxes and a vein the character can't mine get no label or icon from
 --   Lootoman. A player who keeps either on for everything keeps it on.
+--   Meanwhile the interact icon the game draws over the target itself is off,
+--   so no herb leaf or pickaxe shows under the stars; the next target that
+--   doesn't sparkle (an NPC) gets the player's icons again.
 -- - Safe self-cast: a spell cast without a target can land on the soft
 --   target when it is a living unit next to the player. So while Lootoman
 --   itself turned soft targeting on (the player had it off), it pauses it on
@@ -157,22 +160,33 @@ function GameSettings.Holds(name)
 	return entry ~= nil and Compat.GetCVar(name) == entry.ours
 end
 
--- The interact icon for objects, without which the game makes no nameplate
--- for one, and the soft target's nameplate.
-GameSettings.GATED = { "SoftTargetIconGameObject", "SoftTargetNameplateInteract" }
+-- name and value while an object sparkles: the interact icon for objects,
+-- without which the game makes no nameplate for one, and the soft target's
+-- nameplate, both on; the interact icon the game draws over the target itself,
+-- in the world where no addon reaches it (a herb leaf, a pickaxe), off.
+GameSettings.GATED = {
+	{ "SoftTargetIconGameObject", "1" },
+	{ "SoftTargetNameplateInteract", "1" },
+	{ "SoftTargetIconInteract", "0" },
+}
 
--- Both on (an object that sparkles) or off, out of combat only: in a fight
--- they stay as the fight found them. Off means the player's own values again.
+-- Lootoman's values (an object that sparkles) or the player's own again, out
+-- of combat only: in a fight they stay as the fight found them.
 function GameSettings.Gate(open)
 	if Compat.InCombat() then
 		return
 	end
 	local values = GameSettings.Memory().values
-	for _, name in ipairs(GameSettings.GATED) do
+	for _, gated in ipairs(GameSettings.GATED) do
+		local name = gated[1]
 		if open then
-			GameSettings.Take(name, "1")
-		elseif GameSettings.Holds(name) then
-			Compat.SetCVar(name, values[name].old)
+			GameSettings.Take(name, gated[2])
+		elseif values[name] then
+			-- Changed meanwhile by the player or another addon: theirs stays, and
+			-- the memory goes either way.
+			if GameSettings.Holds(name) then
+				Compat.SetCVar(name, values[name].old)
+			end
 			values[name] = nil
 		end
 	end
