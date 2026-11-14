@@ -67,15 +67,39 @@ describe("settings panel", function()
 	end)
 
 	it("puts every checkbox in a row of its own across the page, so its hover highlight covers only that row", function()
-		-- Blizzard's HoverBackgroundTemplate fills the checkbox's parent's parent.
+		-- Blizzard's HoverBackgroundTemplate fills the checkbox's parent (relativeKey $parent.$parent from the texture).
 		for _, text in ipairs({ "Enable loot feed", "Sort bags" }) do
 			local checkbox = item(text)
 			local row = checkbox.parent
-			assert.are_not.equal(page.frame, row, text)
-			assert.same({ page.frame, row, 29 }, { row.parent, checkbox.label.parent, row.height }, text)
-			assert.same({ "TOPRIGHT", page.frame, "TOPRIGHT", -20 }, { row.points[2][1], row.points[2][2], row.points[2][3], row.points[2][4] }, text)
+			assert.are_not.equal(page.body, row, text)
+			assert.same({ page.body, row, 29 }, { row.parent, checkbox.label.parent, row.height }, text)
+			assert.same({ "TOPLEFT", page.body, "TOPLEFT" }, { row.points[1][1], row.points[1][2], row.points[1][3] }, text)
+			assert.same({ "TOPRIGHT", page.body, "TOPRIGHT", -20 }, { row.points[2][1], row.points[2][2], row.points[2][3], row.points[2][4] }, text)
 		end
 		assert.equals(44, item("Sort bags").parent.points[1][4])
+	end)
+
+	it("keeps the profile and its divider on top, and scrolls what is under them when the page is taller than the panel", function()
+		assert.same({ page.frame, page.scroll, "ScrollFrameTemplate" }, { page.scroll.parent, page.body.parent, page.scroll.template })
+		-- The profile row and the divider under it are the page's own, not the scrolling part's.
+		local profile, divider
+		for _, entry in ipairs(page.items) do
+			if entry.text == "Profile" then
+				profile = entry
+			elseif entry.kind == "divider" then
+				divider = entry
+			end
+		end
+		assert.same({ "head", page.frame, "head", page.frame }, { profile.area, profile.frame.parent, divider.area, divider.frame.parent })
+		assert.same({ "TOPLEFT", page.frame, "TOPLEFT", 20, -62 }, profile.frame.points[1])
+		-- The scrolling part starts under the divider: the row (6 + 28), the divider's room (12 + 6).
+		assert.equals(-108, page.head)
+		assert.same({ "TOPLEFT", page.frame, "TOPLEFT", 0, -108 }, page.scroll.points[1])
+		assert.same({ "BOTTOMRIGHT", page.frame, "BOTTOMRIGHT", -26, 4 }, page.scroll.points[2])
+		-- As tall as its items, and as wide as the scrolling part.
+		assert.equals(-page.y + 12, page.body.height)
+		page.scroll.scripts.OnSizeChanged(page.scroll, 600, 400)
+		assert.equals(600, page.body.width)
 	end)
 
 	it("binds switches and main settings to the module settings", function()

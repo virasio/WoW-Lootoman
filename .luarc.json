@@ -32,6 +32,7 @@
     "CLOSE",
     "ColorManager",
     "ColorPickerFrame",
+    "C_SkillInfo",
     "CreateMinimalSliderFormatter",
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",
@@ -59,6 +60,7 @@
     "StaticPopup_Show",
     "SecureHandlerWrapScript",
     "TEXTURE_ITEM_QUEST_BANG",
+    "UnitIsInInteractRange",
     "TooltipUtil",
     "UISpecialFrames",
     "WOW_PROJECT_ID"
