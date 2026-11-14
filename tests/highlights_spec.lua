@@ -10,7 +10,7 @@ describe("gathering highlights", function()
 	local function playerSettings()
 		return { SoftTargetInteract = "0", SoftTargetInteractRange = "10", SoftTargetInteractArc = "2",
 			SoftTargetInteractOnlyInRange = "1", SoftTargetIconGameObject = "0", nameplateGameObjectMaxDistance = "40",
-			SoftTargetNameplateInteract = "0" }
+			SoftTargetNameplateInteract = "0", SoftTargetIconInteract = "1" }
 	end
 
 	-- The soft target becomes this object (or unit), and the game says so.
@@ -52,9 +52,12 @@ describe("gathering highlights", function()
 		target(herb())
 		assert.same({ "herbs", "ready", plate }, { lit(), module.lit.state, module.lit.plate })
 		assert.same({ "1", "1" }, { Test.state.consoleVars.SoftTargetIconGameObject, Test.state.consoleVars.SoftTargetNameplateInteract })
-		-- Another target that is nothing: the light and the nameplate go.
+		-- No herb leaf from the game over it meanwhile.
+		assert.equals("0", Test.state.consoleVars.SoftTargetIconInteract)
+		-- Another target that is nothing: the light and the nameplate go, the player's icons come back.
 		target({ isObject = true, cursor = 99, name = "Signpost" })
-		assert.same({ nil, "0" }, { lit(), Test.state.consoleVars.SoftTargetNameplateInteract })
+		assert.same({ nil, "0", "1" }, { lit(), Test.state.consoleVars.SoftTargetNameplateInteract,
+			Test.state.consoleVars.SoftTargetIconInteract })
 		target(nil)
 		assert.is_nil(lit())
 	end)
