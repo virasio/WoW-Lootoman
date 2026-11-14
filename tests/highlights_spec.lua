@@ -105,6 +105,13 @@ describe("gathering highlights", function()
 		Test.state.gatheringSkills = {}
 		Test.FireEvent("SPELLS_CHANGED")
 		assert.equals("herbs", lit())
+		-- Read at each decision: Herbalism the client learns of later, without an event, counts at the next target.
+		Test.state.gatheringSkills = { herbs = false }
+		target(herb())
+		assert.is_nil(lit())
+		Test.state.gatheringSkills = { herbs = true }
+		target(herb())
+		assert.equals("herbs", lit())
 	end)
 
 	it("applies each kind's switch at once", function()
@@ -168,6 +175,14 @@ describe("gathering highlights", function()
 		Test.FireEvent("LOOT_OPENED")
 		target(bobber)
 		assert.is_nil(lit())
+	end)
+
+	it("says in the debug output when a lit object has no nameplate to draw on", function()
+		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.state.nameplates = {}
+		target(herb())
+		assert.matches("Highlights: Peacebloom %(object 1617, cursor 3%), herbs, ready, no nameplate",
+			Test.state.printed[#Test.state.printed])
 	end)
 
 	it("tells each new target once in the debug output, with its object ID and cursor", function()
