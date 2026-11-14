@@ -1,5 +1,12 @@
 # Lootoman changelog
 
+## 0.5.2
+
+Fixes for gathering highlights on WoW Forever.
+
+- **Sparkles with nameplate addons**: with an addon that draws its own nameplates, such as Platynator, nothing sparkled, because Lootoman took its nameplates for another addon already lighting the object. Lootoman no longer looks at other addons: objects sparkle whatever else is installed.
+- **No herb leaf or pickaxe over what sparkles**: with the game's *Interact Key Icons* on, the game drew its icon over the herb or vein under the stars. Lootoman now turns those icons off only while something sparkles and gives your setting back with the next target, so NPCs keep theirs.
+
 ## 0.5.1
 
 A fix for gathering highlights on WoW Forever.
