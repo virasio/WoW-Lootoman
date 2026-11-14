@@ -36,8 +36,10 @@ local function displayName(name)
 	return label
 end
 
+-- A switch while the character is unknown simply doesn't happen: nothing to
+-- tell the player that would help.
 local function report(result, err)
-	if not result then
+	if not result and err ~= "noCharacter" then
 		ns.Print(ERRORS[err] or tostring(err))
 	end
 	return result

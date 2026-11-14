@@ -78,6 +78,11 @@ function Profiles.Switch(name)
 	if not Profiles.Exists(name) then
 		return nil, "missing"
 	end
+	-- The character's name and realm are unknown (the client didn't tell yet):
+	-- there is no key to keep its choice under.
+	if not Storage.character then
+		return nil, "noCharacter"
+	end
 	local old = Profiles.GetCurrent()
 	Storage.db.profileKeys[Storage.character] = name ~= DEFAULT and name or nil
 	if name ~= old then

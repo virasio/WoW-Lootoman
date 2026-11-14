@@ -197,6 +197,15 @@ describe("profile control", function()
 		assert.equals("Default", Profiles.GetCurrent())
 	end)
 
+	it("says nothing when a switch can't happen because the character is unknown yet", function()
+		Profiles.Create("Main")
+		ns.Storage:SetCharacter(nil)
+		local printed = #ns.Compat.Test.state.printed
+		profile("Main").setSelected("Main")
+		assert.equals(printed, #ns.Compat.Test.state.printed)
+		assert.equals("Default", Profiles.GetCurrent())
+	end)
+
 	it("explains why a name is not accepted", function()
 		newProfile()
 		api.AcceptPopup("   ")
