@@ -84,6 +84,8 @@ Modules\LootFeed\UseButton.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\LookWindow.lua
 
+Modules\Highlights\GameSettings.lua
+
 Settings\Panel.lua
 Settings\Profiles.lua
 Settings\Share.lua
