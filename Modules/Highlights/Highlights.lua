@@ -97,9 +97,14 @@ end
 -- The last target told in the debug output, so each one is told once.
 local told
 
+-- "Highlights: <name> (object <id>, cursor <cursor>), <kind>, <state or why not>".
 local function debug(facts, kind, state, why)
-	local line = ("Highlights: %s, %s, %s"):format(facts and tostring(facts.name or facts.objectID or "?") or "no target",
-		tostring(kind or "-"), tostring(state or why or "-"))
+	local target = "no target"
+	if facts then
+		target = ("%s (object %s, cursor %s)"):format(tostring(facts.name or "?"), tostring(facts.objectID or "?"),
+			tostring(facts.cursor or "none"))
+	end
+	local line = ("Highlights: %s, %s, %s"):format(target, tostring(kind or "-"), tostring(state or why or "-"))
 	if line ~= told then
 		told = line
 		ns.Debug(line)
@@ -192,9 +197,14 @@ function Highlights:OnEnable()
 		end
 		self:Evaluate()
 	end)
-	self:OnEvent("LOOT_OPENED", function()
+	-- On the loot's first event: with fast autoloot (or the game's) the slots
+	-- are taken before LOOT_OPENED, which may not come at all; LOOT_READY still
+	-- has them, as the server clears a slot only later. Lueur learns on both.
+	local function learn()
 		self:Learn()
-	end)
+	end
+	self:OnEvent("LOOT_READY", learn)
+	self:OnEvent("LOOT_OPENED", learn)
 	local function professions()
 		skills = Compat.GetGatheringSkills()
 		self:Evaluate()

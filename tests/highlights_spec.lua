@@ -150,10 +150,13 @@ describe("gathering highlights", function()
 		local windstone = { isObject = true, cursor = 99, name = "Windstone", objectID = 3658 }
 		target(windstone)
 		assert.is_nil(lit())
-		-- Looted while the soft target was on something else.
+		-- Looted with fast autoloot while the soft target was on something else: only
+		-- LOOT_READY comes while the loot is still there.
 		target(nil)
 		Test.state.lootSources = { 3658 }
-		Test.FireEvent("LOOT_OPENED")
+		Test.FireEvent("LOOT_READY", true)
+		Test.state.lootSources = {}
+		Test.FireEvent("LOOT_CLOSED")
 		target(windstone)
 		assert.equals("chests", lit())
 		assert.same({ [3658] = true }, Test.state.saved.LootomanDB.sections.lootContainers.values)
@@ -165,6 +168,20 @@ describe("gathering highlights", function()
 		Test.FireEvent("LOOT_OPENED")
 		target(bobber)
 		assert.is_nil(lit())
+	end)
+
+	it("tells each new target once in the debug output, with its object ID and cursor", function()
+		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		target({ isObject = true, cursor = 99, name = "Windstone", objectID = 3658 })
+		target({ isObject = true, cursor = 99, name = "Windstone", objectID = 3658 })
+		local lines = {}
+		for _, line in ipairs(Test.state.printed) do
+			if line:find("Highlights: Windstone", 1, true) then
+				lines[#lines + 1] = line
+			end
+		end
+		assert.equals(1, #lines)
+		assert.matches("Highlights: Windstone %(object 3658, cursor 99%), %-, other", lines[1])
 	end)
 
 	it("re-reads the target while it sparkles", function()
