@@ -206,6 +206,7 @@ ns.Locales.AddEnglish({
 	"The profile name is too long.",
 	"A profile with this name already exists.",
 	"This profile no longer exists.",
+	"Lootoman doesn't know this character's name yet, so it stays on its profile. Try again after /reload.",
 	"Makes a text of the current profile to copy and give to another character or player.",
 
 	-- Settings/Share.lua

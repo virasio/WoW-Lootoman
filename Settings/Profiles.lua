@@ -17,6 +17,7 @@ local ERRORS = {
 	too_long = L["The profile name is too long."],
 	exists = L["A profile with this name already exists."],
 	missing = L["This profile no longer exists."],
+	noCharacter = L["Lootoman doesn't know this character's name yet, so it stays on its profile. Try again after /reload."],
 }
 
 -- Default is stored under its English name and shown in the client language.
@@ -36,10 +37,8 @@ local function displayName(name)
 	return label
 end
 
--- A switch while the character is unknown simply doesn't happen: nothing to
--- tell the player that would help.
 local function report(result, err)
-	if not result and err ~= "noCharacter" then
+	if not result then
 		ns.Print(ERRORS[err] or tostring(err))
 	end
 	return result
@@ -56,7 +55,7 @@ local function create()
 	askName(L["Name of the new profile:"], nil, nil, function(name)
 		local created = report(Profiles.Create(name))
 		if created then
-			Profiles.Switch(created)
+			report(Profiles.Switch(created))
 		end
 	end)
 end
@@ -65,7 +64,7 @@ local function copy(source)
 	askName(L["Name of the copy of “%s”:"], displayName(source), nil, function(name)
 		local copied = report(Profiles.Copy(source, name))
 		if copied then
-			Profiles.Switch(copied)
+			report(Profiles.Switch(copied))
 		end
 	end)
 end

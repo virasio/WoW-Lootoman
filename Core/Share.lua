@@ -396,8 +396,10 @@ end
 -- … }, collections = { [collection] = { [item] = how } }, newName = <name> }:
 -- the items first, then the parts into the current profile (they replace
 -- what it had) or, with newName, into a new profile the character then uses.
--- Returns the profile's name (nil when no part was chosen) and renamed (see
--- importItems), or nil and an error code of Profiles for the new name.
+-- Returns the profile's name (nil when no part was chosen), renamed (see
+-- importItems) and, when the character could not switch to the new profile,
+-- the reason (Profiles.Switch); or nil and an error code of Profiles for the
+-- new name.
 function Share.Import(read, choice)
 	local names = choice.parts or {}
 	local target, profile
@@ -435,10 +437,11 @@ function Share.Import(read, choice)
 	if profile and profile.modules and next(profile.modules) == nil then
 		profile.modules = nil
 	end
+	local switched, why = true, nil
 	if target and choice.newName then
-		Profiles.Switch(target)
+		switched, why = Profiles.Switch(target)
 	elseif target then
 		Bus:Send("ProfileChanged", target, target)
 	end
-	return target, renamed
+	return target, renamed, not switched and why or nil
 end

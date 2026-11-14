@@ -238,6 +238,16 @@ describe("profile texts", function()
 			assert.same({ "Default", "Raid", "Solo" }, Looks.List())
 		end)
 
+		it("say so when the character can't switch to the new profile, its name unknown yet", function()
+			ns.Storage:SetCharacter(nil)
+			local name, _, why = Share.Import(read, choice("both"))
+			assert.same({ "Shared", "noCharacter", "Default" }, { name, why, Profiles.GetCurrent() })
+			-- Into the current profile there is nothing to switch.
+			local current = choice("both")
+			current.newName = nil
+			assert.is_nil(select(3, Share.Import(read, current)))
+		end)
+
 		it("keeps the player's look of a taken name, and the profile uses the player's", function()
 			Looks.Create("raid")
 			local _, renamed = Share.Import(read, choice("keep"))
