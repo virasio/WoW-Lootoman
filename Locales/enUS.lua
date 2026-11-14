@@ -14,10 +14,11 @@ ns.Locales.AddEnglish({
 	-- Core/Slash.lua
 	"Debug messages are on for all characters.",
 	"Debug messages are off for all characters.",
-	"Unknown value “%s”. Use /lootoman debug on or /lootoman debug off.",
+	"Unknown value “%s”. Use /lootoman debug on, off or clear.",
 	"Commands:",
 	"/lootoman or /ltm: open the settings",
-	"/lootoman debug [on | off]: show, turn on or turn off debug messages",
+	"/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones",
+	"The saved debug messages and self-test are cleared.",
 	"/lootoman selftest: check the addon against the game client",
 
 	-- Core/Share.lua

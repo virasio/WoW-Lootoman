@@ -14,10 +14,11 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Core/Slash.lua
 	["Debug messages are on for all characters."] = "Отладочные сообщения включены для всех персонажей.",
 	["Debug messages are off for all characters."] = "Отладочные сообщения выключены для всех персонажей.",
-	["Unknown value “%s”. Use /lootoman debug on or /lootoman debug off."] = "Неизвестное значение «%s». Используйте /lootoman debug on или /lootoman debug off.",
+	["Unknown value “%s”. Use /lootoman debug on, off or clear."] = "Неизвестное значение «%s». Используйте /lootoman debug on, off или clear.",
 	["Commands:"] = "Команды:",
 	["/lootoman or /ltm: open the settings"] = "/lootoman или /ltm: открыть настройки",
-	["/lootoman debug [on | off]: show, turn on or turn off debug messages"] = "/lootoman debug [on | off]: показать, включить или выключить отладочные сообщения",
+	["/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones"] = "/lootoman debug [on | off | clear]: показать, включить или выключить отладочные сообщения либо очистить сохранённые",
+	["The saved debug messages and self-test are cleared."] = "Сохранённые отладочные сообщения и самопроверка очищены.",
 	["/lootoman selftest: check the addon against the game client"] = "/lootoman selftest: проверить работу аддона с клиентом игры",
 
 	-- Core/Share.lua

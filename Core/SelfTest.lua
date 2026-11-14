@@ -63,8 +63,13 @@ function SelfTest.AddReport(build)
 	reports[#reports + 1] = build
 end
 
+-- The lines go to the chat and into the saved diagnostics.
 function SelfTest.Run()
-	local say = ns.Print
+	local saved = ns.Diagnostics.StartSelfTest()
+	local function say(text)
+		saved[#saved + 1] = text
+		ns.Print(text)
+	end
 	say("Self-test")
 
 	local failed = 0

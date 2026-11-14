@@ -46,6 +46,7 @@ Core\Profiles.lua
 Core\Modules.lua
 Core\Marks.lua
 Core\Share.lua
+Core\Diagnostics.lua
 Core\Slash.lua
 Core\SelfTest.lua
 Core\Startup.lua
