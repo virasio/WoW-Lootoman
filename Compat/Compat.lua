@@ -492,6 +492,208 @@ function Compat.GetGlobalString(name)
 	return nil
 end
 
+-- Game settings (console variables), as the game's own options read and
+-- change them. GetCVar is nil for a name the client does not know; SetCVar
+-- refuses in combat, where the client refuses such changes, and says whether
+-- the value was taken.
+function Compat.GetCVar(name)
+	local ok, value = pcall(C_CVar.GetCVar, name)
+	if ok and value ~= nil and not Compat.IsSecret(value) then
+		return value
+	end
+	return nil
+end
+
+function Compat.SetCVar(name, value)
+	if Compat.InCombat() then
+		return false
+	end
+	local ok, done = pcall(C_CVar.SetCVar, name, tostring(value))
+	return ok and done ~= false
+end
+
+-- A value the client keeps secret is left out (nil); so is a failing call.
+local function plain(ok, value)
+	if not ok or value == nil or Compat.IsSecret(value) then
+		return nil
+	end
+	return value
+end
+
+local function try(fn, ...)
+	return plain(pcall(fn, ...))
+end
+
+-- The object ID in a game object's GUID ("GameObject-0-1-2-3-<id>-…"), or nil.
+local function objectID(guid)
+	if type(guid) ~= "string" then
+		return nil
+	end
+	return tonumber(guid:match("^GameObject%-%d+%-%d+%-%d+%-%d+%-(%d+)"))
+end
+
+-- The game's soft interact target: the one object or unit the Interact key
+-- would use (the unit "softinteract").
+local SOFT = "softinteract"
+local cursorProbe
+
+-- The facts about the soft interact target, or nil without one: isObject,
+-- isDead, isLiving (a unit that is neither an object nor dead), objectID
+-- (from its GUID), name, cursor (the file ID, path or atlas of the cursor the
+-- game would show over it), inReach (nil without UnitIsInInteractRange),
+-- questRelated (to an active quest), questObjective (a quest objective line
+-- in its tooltip). Each value the client keeps secret is nil.
+function Compat.GetSoftInteract()
+	if try(UnitExists, SOFT) ~= true then
+		return nil
+	end
+	local facts = {
+		isObject = try(UnitIsGameObject, SOFT),
+		isDead = try(UnitIsDead, SOFT),
+		objectID = objectID(try(UnitGUID, SOFT)),
+		name = try(UnitName, SOFT),
+	}
+	facts.isLiving = facts.isObject == false and facts.isDead == false
+	-- The cursor goes onto a hidden texture, as the game's own nameplates do
+	-- for this unit; low-priority cursors too, as Lueur found objects use them.
+	cursorProbe = cursorProbe or UIParent:CreateTexture(nil, "BACKGROUND")
+	cursorProbe:Hide()
+	cursorProbe:SetTexture(nil)
+	if try(SetUnitCursorTexture, cursorProbe, SOFT, nil, true) then
+		facts.cursor = try(cursorProbe.GetTexture, cursorProbe) or try(cursorProbe.GetAtlas, cursorProbe)
+	end
+	if Compat.Has("UnitIsInInteractRange") then
+		facts.inReach = try(UnitIsInInteractRange, SOFT)
+	end
+	if Compat.Has("C_QuestLog.UnitIsRelatedToActiveQuest") then
+		facts.questRelated = try(C_QuestLog.UnitIsRelatedToActiveQuest, SOFT)
+	end
+	if Compat.Has("C_TooltipInfo.GetUnit") then
+		local data = try(C_TooltipInfo.GetUnit, SOFT)
+		for _, line in ipairs(type(data) == "table" and data.lines or {}) do
+			if line.type == Enum.TooltipDataLineType.QuestObjective then
+				facts.questObjective = true
+			end
+		end
+	end
+	return facts
+end
+
+-- The file ID of one of the game's cursors (Interface\Cursor\<name>), or nil.
+function Compat.GetCursorFileID(name)
+	local path = "Interface\\Cursor\\" .. name
+	return try(GetFileIDFromPath, path) or try(GetFileIDFromPath, path .. ".blp")
+end
+
+-- The nameplate of a unit, but not a forbidden one; nil without one.
+function Compat.GetNamePlate(unit)
+	return try(C_NamePlate.GetNamePlateForUnit, unit, false)
+end
+
+-- Where a frame was made: the file and line the client tells, or nil when it
+-- does not say or keeps it secret.
+function Compat.GetFrameSource(frame)
+	if type(frame) ~= "table" or not frame.GetSourceLocation then
+		return nil
+	end
+	local source = try(frame.GetSourceLocation, frame)
+	return type(source) == "string" and source or nil
+end
+
+-- The object IDs of the game objects the open loot window came from (a
+-- chest, a herb), each once.
+function Compat.GetLootSourceObjects()
+	local ids, seen = {}, {}
+	for slot = 1, GetNumLootItems() do
+		local sources = { pcall(GetLootSourceInfo, slot) }
+		if sources[1] then
+			-- guid, quantity, guid, quantity, …
+			for index = 2, #sources, 2 do
+				local id = objectID(plain(true, sources[index]))
+				if id and not seen[id] then
+					seen[id] = true
+					ids[#ids + 1] = id
+				end
+			end
+		end
+	end
+	return ids
+end
+
+-- Whether the character has Herbalism and Mining: { herbs, ore }, each true,
+-- false, or nil when the client cannot say yet. Any source that says yes is
+-- enough: the tracking spell each profession teaches (Find Herbs, Find
+-- Minerals), the skill line, the professions list. The spells and the skill
+-- lines on WoW Forever are what Lueur found there.
+local GATHERING = {
+	herbs = { line = 182, spells = { 2383, 8387 } },
+	ore = { line = 186, spells = { 2580, 8388 } },
+}
+
+local function professionLines()
+	if not (Compat.Has("GetProfessions") and Compat.Has("GetProfessionInfo")) then
+		return nil
+	end
+	local lines = {}
+	local ok, first, second, third, fourth, fifth = pcall(GetProfessions)
+	if not ok then
+		return nil
+	end
+	for _, profession in pairs({ first, second, third, fourth, fifth }) do
+		if type(profession) == "number" then
+			local line = plain(pcall(function()
+				return (select(7, GetProfessionInfo(profession)))
+			end))
+			if line then
+				lines[line] = true
+			end
+		end
+	end
+	return lines
+end
+
+function Compat.GetGatheringSkills()
+	local skills = {}
+	local known = Compat.Has("C_SpellBook.IsSpellKnown") and C_SpellBook.IsSpellKnown or nil
+	local lines = professionLines()
+	local skillLines = Compat.Has("C_SkillInfo.GetSkillLineInfoByID")
+		and (try(C_SkillInfo.GetNumSkillLines) or 0) > 0
+	for kind, profession in pairs(GATHERING) do
+		local answer
+		if known then
+			for _, spell in ipairs(profession.spells) do
+				local has = try(known, spell)
+				if has == true then
+					answer = true
+				elseif has == false and answer == nil then
+					answer = false
+				end
+			end
+		end
+		if answer ~= true and skillLines then
+			local info = try(C_SkillInfo.GetSkillLineInfoByID, profession.line)
+			if type(info) == "table" then
+				answer = (type(info.maxRank) ~= "number" or info.maxRank > 0) or answer or false
+			end
+		end
+		if answer ~= true and lines then
+			answer = lines[profession.line] == true or answer or false
+		end
+		skills[kind] = answer
+	end
+	return skills
+end
+
+-- The player's position in the world, two coordinates in yards as the client
+-- gives them, or nil where it does not (secret, or missing in instances).
+function Compat.GetPlayerPosition()
+	local ok, first, second = pcall(UnitPosition, "player")
+	if ok and type(first) == "number" and type(second) == "number" and not Compat.IsSecret(first) and not Compat.IsSecret(second) then
+		return first, second
+	end
+	return nil
+end
+
 -- A table as text and back, for profile texts: CBOR, Deflate and Base64, as
 -- Blizzard's own import strings (C_EncodingUtil, 11.1). Both return nil when
 -- the client has no encoder or the text is broken; reading a text never runs

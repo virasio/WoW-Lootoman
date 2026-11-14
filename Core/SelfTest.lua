@@ -41,6 +41,10 @@ local checks = {
 	{ "RegisterEvent", function()
 		return Storage.db ~= nil and Storage.character ~= nil, "ADDON_LOADED or PLAYER_LOGIN was not received"
 	end },
+	{ "GetCVar", function()
+		local value = Compat.GetCVar("autoLootDefault")
+		return type(value) == "string", "autoLootDefault is " .. tostring(value)
+	end },
 	{ "Encode", function()
 		if not Compat.CanEncode() then
 			return nil, "no C_EncodingUtil, so Import and Share are off"

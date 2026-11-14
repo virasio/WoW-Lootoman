@@ -427,6 +427,122 @@ describe("Compat", function()
 	end)
 end)
 
+describe("Compat for highlights", function()
+	local Compat
+	local SECRET = { secret = true }
+
+	before_each(function()
+		Compat = loadCompat("Compat/Compat.lua")
+		stub({
+			issecretvalue = function(value) return value == SECRET end,
+			InCombatLockdown = function() return false end,
+		})
+	end)
+
+	it("reads game settings, nil when unknown or secret, and changes them only out of combat", function()
+		local values, set, combat = { SoftTargetInteract = "1", Hidden = SECRET }, {}, false
+		stub({
+			C_CVar = {
+				GetCVar = function(name) return values[name] end,
+				SetCVar = function(name, value) set[#set + 1] = name .. "=" .. value; return true end,
+			},
+			InCombatLockdown = function() return combat end,
+		})
+		assert.same({ "1", nil, nil }, { Compat.GetCVar("SoftTargetInteract"), Compat.GetCVar("Missing"), Compat.GetCVar("Hidden") })
+		assert.is_true(Compat.SetCVar("SoftTargetInteract", 3))
+		combat = true
+		assert.is_false(Compat.SetCVar("SoftTargetInteract", 0))
+		assert.same({ "SoftTargetInteract=3" }, set)
+	end)
+
+	it("tells the soft interact target's facts, leaving out what the client keeps secret", function()
+		local probe = { texture = nil }
+		function probe:Hide() end
+		function probe:SetTexture(texture) self.texture = texture end
+		function probe:GetTexture() return self.texture end
+		function probe:GetAtlas() return nil end
+		local exists, name, guid, inReach = true, "Peacebloom", "GameObject-0-1-2-3-1617-00004A1B2C", false
+		stub({
+			UnitExists = function(unit) return unit == "softinteract" and exists end,
+			UnitIsGameObject = function() return true end,
+			UnitIsDead = function() return false end,
+			UnitGUID = function() return guid end,
+			UnitName = function() return name end,
+			UIParent = { CreateTexture = function() return probe end },
+			SetUnitCursorTexture = function(texture, unit, _, lowPriority)
+				texture:SetTexture(unit == "softinteract" and lowPriority and 136126 or nil)
+				return true
+			end,
+			UnitIsInInteractRange = function() return inReach end,
+			C_QuestLog = { UnitIsRelatedToActiveQuest = function() return false end },
+			C_TooltipInfo = { GetUnit = function() return { lines = { { type = 8 } } } end },
+			Enum = { TooltipDataLineType = { QuestObjective = 8 } },
+		})
+		local facts = Compat.GetSoftInteract()
+		assert.same({ true, false, false, 1617, "Peacebloom", 136126, false, false, true },
+			{ facts.isObject, facts.isDead, facts.isLiving, facts.objectID, facts.name, facts.cursor, facts.inReach,
+				facts.questRelated, facts.questObjective })
+		name, guid, inReach = SECRET, SECRET, SECRET
+		facts = Compat.GetSoftInteract()
+		assert.same({ nil, nil, nil, true }, { facts.name, facts.objectID, facts.inReach, facts.isObject })
+		-- A creature's GUID gives no object ID; no target, no facts.
+		name, guid = "Wolf", "Creature-0-1-2-3-525-00004A1B2C"
+		assert.is_nil(Compat.GetSoftInteract().objectID)
+		exists = false
+		assert.is_nil(Compat.GetSoftInteract())
+	end)
+
+	it("finds the game's cursor files, the loot window's source objects and the player's position", function()
+		local position = { 100, -50 }
+		stub({
+			GetFileIDFromPath = function(path) return path == "Interface\\Cursor\\Mine.blp" and 136126 or nil end,
+			GetNumLootItems = function() return 2 end,
+			GetLootSourceInfo = function(slot)
+				if slot == 1 then
+					return "GameObject-0-1-2-3-1617-0000AA", 1, "Creature-0-1-2-3-525-0000BB", 2
+				end
+				return "GameObject-0-1-2-3-1617-0000CC", 1
+			end,
+			UnitPosition = function() return position[1], position[2], 0, 1 end,
+		})
+		assert.same({ 136126, nil }, { Compat.GetCursorFileID("Mine"), Compat.GetCursorFileID("GatherHerbs") })
+		assert.same({ 1617 }, Compat.GetLootSourceObjects())
+		assert.same({ 100, -50 }, { Compat.GetPlayerPosition() })
+		position = { SECRET, -50 }
+		assert.is_nil(Compat.GetPlayerPosition())
+	end)
+
+	it("knows Herbalism and Mining from the tracking spells, the skill lines or the professions", function()
+		local spells, lines = {}
+		local function unset(...)
+			for _, name in ipairs({ ... }) do
+				rawset(_G, name, nil)
+			end
+		end
+		unset("C_SkillInfo", "GetProfessions", "GetProfessionInfo", "IsPlayerSpell")
+		stub({ C_SpellBook = { IsSpellKnown = function(spell) return spells[spell] == true end } })
+		assert.same({ false, false }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
+		spells[8387] = true
+		assert.same({ true, false }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
+		-- WoW Forever's skill lines: Mining with a rank.
+		spells = {}
+		stub({ C_SkillInfo = {
+			GetNumSkillLines = function() return 3 end,
+			GetSkillLineInfoByID = function(line) return line == 186 and { maxRank = 75 } or { maxRank = 0 } end,
+		} })
+		assert.same({ false, true }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
+		-- The professions list.
+		unset("C_SkillInfo", "C_SpellBook")
+		stub({ GetProfessions = function() return 1, nil, nil, 4 end,
+			GetProfessionInfo = function(index) return nil, nil, nil, nil, nil, nil, index == 1 and 182 or 356 end })
+		lines = Compat.GetGatheringSkills()
+		assert.same({ true, false }, { lines.herbs, lines.ore })
+		-- Nothing can say.
+		unset("GetProfessions", "GetProfessionInfo")
+		assert.same({ nil, nil }, { Compat.GetGatheringSkills().herbs, Compat.GetGatheringSkills().ore })
+	end)
+end)
+
 describe("Compat mock", function()
 	local Compat
 
