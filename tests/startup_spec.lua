@@ -100,7 +100,7 @@ describe("startup", function()
 		Loader.Start(ns, saved)
 		local fresh = dofile("tests/fixtures/saved_0_4.lua")()
 		assert.same(fresh.LootomanDB, Test.state.saved.LootomanDB)
-		assert.same({ true, "failed" }, { ns.Storage.readOnly, ns.Storage.readOnlyReason })
+		assert.same({ true, "failed" }, { ns.Storage:IsReadOnly(), ns.Storage.readOnlyReason })
 		-- The modules started, on their defaults.
 		assert.is_true(ns.Modules:Get("LootFeed"):IsActive())
 		assert.equals(1, #Test.state.errors)
