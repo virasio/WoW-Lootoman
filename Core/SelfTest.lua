@@ -36,7 +36,7 @@ local checks = {
 		return type(interface) == "number", "no interface number"
 	end },
 	{ "GetSaved", function()
-		return Storage.readOnly or Compat.GetSaved("LootomanDB") == Storage.db, "LootomanDB is not the loaded table"
+		return Storage:IsReadOnly() or Compat.GetSaved("LootomanDB") == Storage.db, "LootomanDB is not the loaded table"
 	end },
 	{ "RegisterEvent", function()
 		return Storage.db ~= nil and Storage.character ~= nil, "ADDON_LOADED or PLAYER_LOGIN was not received"

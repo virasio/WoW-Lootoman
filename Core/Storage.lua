@@ -12,9 +12,10 @@ local Storage = {
 	DEFAULT_PROFILE = "Default",
 	defaults = {},
 	globalDefaults = {},
-	-- True when the saved data comes from a newer version of the addon, or an
-	-- upgrade of it failed; readOnlyReason says which: "newer" or "failed".
-	readOnly = false,
+	-- Why the saved data is left alone: "newer" when it comes from a newer
+	-- version of the addon, "failed" when an upgrade of it failed; nil when it
+	-- is worked on. Either way the addon runs on defaults in memory that are
+	-- never saved (IsReadOnly).
 	readOnlyReason = nil,
 }
 ns.Storage = Storage
@@ -54,6 +55,11 @@ local function fresh(steps)
 	return data
 end
 
+-- Whether the saved data is left alone (see readOnlyReason).
+function Storage:IsReadOnly()
+	return self.readOnlyReason ~= nil
+end
+
 -- Called with the saved tables on ADDON_LOADED. Returns the tables to save.
 -- Data from a newer version, or data an upgrade failed on, is returned
 -- untouched, and the addon works on defaults in memory that are never saved.
@@ -67,8 +73,7 @@ function Storage:Load(account, character)
 	else
 		self.readOnlyReason = nil
 	end
-	self.readOnly = self.readOnlyReason ~= nil
-	if self.readOnly then
+	if self:IsReadOnly() then
 		self.db = fresh(Migrations.account)
 		self.charDB = fresh(Migrations.character)
 	else
