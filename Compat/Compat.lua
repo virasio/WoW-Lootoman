@@ -543,7 +543,10 @@ local cursorProbe
 -- game would show over it), inReach (nil without UnitIsInInteractRange),
 -- questRelated (to an active quest), questObjective (a quest objective line
 -- in its tooltip). Each value the client keeps secret is nil.
-function Compat.GetSoftInteract()
+-- skipQuest: leave out the quest facts (questRelated, questObjective), the
+-- costly part (the tooltip comes as a new table), for a caller that keeps
+-- them from an earlier read of the same target.
+function Compat.GetSoftInteract(skipQuest)
 	-- A world object does not exist as far as UnitExists is concerned (as
 	-- Lueur and Forever Loot Sparkles found); only a unit does.
 	local isUnit, isObject = try(UnitExists, SOFT), try(UnitIsGameObject, SOFT)
@@ -567,6 +570,9 @@ function Compat.GetSoftInteract()
 	end
 	if Compat.Has("UnitIsInInteractRange") then
 		facts.inReach = try(UnitIsInInteractRange, SOFT)
+	end
+	if skipQuest then
+		return facts
 	end
 	if Compat.Has("C_QuestLog.UnitIsRelatedToActiveQuest") then
 		facts.questRelated = try(C_QuestLog.UnitIsRelatedToActiveQuest, SOFT)
@@ -738,14 +744,21 @@ function Compat.Encode(value)
 	return ok and text or nil
 end
 
-function Compat.Decode(text)
+-- limit: the most bytes the decompressed data may have, or nil for no limit.
+-- A short text can decompress into a great deal; the client's decompression
+-- takes no limit of its own (API docs), so the length is checked before the
+-- data is read.
+function Compat.Decode(text, limit)
 	if not Compat.CanEncode() or type(text) ~= "string" then
 		return nil
 	end
 	local ok, value = pcall(function()
 		local packed = C_EncodingUtil.DecodeBase64(text)
 		local cbor = packed and C_EncodingUtil.DecompressString(packed, Enum.CompressionMethod.Deflate)
-		return cbor and C_EncodingUtil.DeserializeCBOR(cbor)
+		if type(cbor) ~= "string" or (limit and #cbor > limit) then
+			return nil
+		end
+		return C_EncodingUtil.DeserializeCBOR(cbor)
 	end)
 	return ok and value or nil
 end

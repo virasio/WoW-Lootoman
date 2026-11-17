@@ -63,8 +63,13 @@ function SelfTest.AddReport(build)
 	reports[#reports + 1] = build
 end
 
+-- The lines go to the chat and into the saved diagnostics.
 function SelfTest.Run()
-	local say = ns.Print
+	local saved = ns.Diagnostics.StartSelfTest()
+	local function say(text)
+		saved[#saved + 1] = text
+		ns.Print(text)
+	end
 	say("Self-test")
 
 	local failed = 0
@@ -105,9 +110,9 @@ function SelfTest.Run()
 	report(function()
 		return ("Character %s, profile %s"):format(tostring(Storage.character), Storage:GetProfileName())
 	end)
+	local READ_ONLY = { newer = ", read-only (saved by a newer version)", failed = ", read-only (the upgrade failed)" }
 	report(function()
-		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema),
-			Storage.readOnly and ", read-only (saved by a newer version)" or "")
+		return ("Saved data: schema %s%s"):format(tostring(Storage.db.schema), READ_ONLY[Storage.readOnlyReason] or "")
 	end)
 	-- The client fills in [Game] and [Family] of these TOC fields: they show
 	-- what a new client (WoW Forever) calls itself in TOC conditions, as its
@@ -118,6 +123,46 @@ function SelfTest.Run()
 			tostring(Compat.GetAddOnMetadata(addonName, "X-Family")),
 			tostring(Compat.GetProjectID()),
 			ns.Data and ns.Data.set or "none", ns.Locales.current)
+	end)
+	-- Every Compat function against the client: what it needs, and what it
+	-- can do without (Compat.NEEDS).
+	report(function()
+		local names = {}
+		for name in pairs(Compat.NEEDS or {}) do
+			names[#names + 1] = name
+		end
+		table.sort(names)
+		local ready, missing, absent = 0, {}, {}
+		for _, name in ipairs(names) do
+			local need = Compat.NEEDS[name]
+			local lacks, gone = {}, {}
+			for _, path in ipairs(need) do
+				if not Compat.Has(path) then
+					lacks[#lacks + 1] = path
+				end
+			end
+			for _, path in ipairs(need.optional or {}) do
+				if not Compat.Has(path) then
+					gone[#gone + 1] = path
+				end
+			end
+			if #lacks == 0 then
+				ready = ready + 1
+			else
+				missing[#missing + 1] = ("%s (%s)"):format(name, table.concat(lacks, ", "))
+			end
+			if #gone > 0 then
+				absent[#absent + 1] = ("%s (%s)"):format(name, table.concat(gone, ", "))
+			end
+		end
+		local line = ("Compat: %d of %d functions have what they need"):format(ready, #names)
+		if #missing > 0 then
+			line = line .. "; missing: " .. table.concat(missing, "; ")
+		end
+		if #absent > 0 then
+			line = line .. "; not on this client: " .. table.concat(absent, "; ")
+		end
+		return line
 	end)
 	for _, build in ipairs(reports) do
 		report(build)

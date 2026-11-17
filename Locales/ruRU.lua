@@ -9,14 +9,16 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Core/Startup.lua
 	["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
+	["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
 
 	-- Core/Slash.lua
 	["Debug messages are on for all characters."] = "Отладочные сообщения включены для всех персонажей.",
 	["Debug messages are off for all characters."] = "Отладочные сообщения выключены для всех персонажей.",
-	["Unknown value “%s”. Use /lootoman debug on or /lootoman debug off."] = "Неизвестное значение «%s». Используйте /lootoman debug on или /lootoman debug off.",
+	["Unknown value “%s”. Use /lootoman debug on, off or clear."] = "Неизвестное значение «%s». Используйте /lootoman debug on, off или clear.",
 	["Commands:"] = "Команды:",
 	["/lootoman or /ltm: open the settings"] = "/lootoman или /ltm: открыть настройки",
-	["/lootoman debug [on | off]: show, turn on or turn off debug messages"] = "/lootoman debug [on | off]: показать, включить или выключить отладочные сообщения",
+	["/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones"] = "/lootoman debug [on | off | clear]: показать, включить или выключить отладочные сообщения либо очистить сохранённые",
+	["The saved debug messages and self-test are cleared."] = "Сохранённые отладочные сообщения и самопроверка очищены.",
 	["/lootoman selftest: check the addon against the game client"] = "/lootoman selftest: проверить работу аддона с клиентом игры",
 
 	-- Core/Share.lua
@@ -199,6 +201,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["The profile name is too long."] = "Слишком длинное название профиля.",
 	["A profile with this name already exists."] = "Профиль с таким названием уже есть.",
 	["This profile no longer exists."] = "Этого профиля больше нет.",
+	["Lootoman doesn't know this character's name yet, so it stays on its profile. Try again after /reload."] = "Lootoman ещё не знает имени этого персонажа, поэтому профиль остаётся прежним. Попробуйте снова после /reload.",
 	["Makes a text of the current profile to copy and give to another character or player."] = "Создаёт текст текущего профиля, чтобы скопировать его и передать другому персонажу или игроку.",
 
 	-- Settings/Share.lua

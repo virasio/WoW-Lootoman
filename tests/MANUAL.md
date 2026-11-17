@@ -24,9 +24,12 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
   - `Loot feed chat formats: 20 of 20`.
   - A `Junk:` line, and `Last sale: none this session`.
   - A `Module …: on` line for AutoLoot, LootFeed and Junk.
+  - `Compat: … of … functions have what they need`, with no `missing:`; note what `not on this client:` lists.
+  - `Edit Mode: LibEditMode …; dialog found, reset button found, hooked yes`.
   - `All checks passed.`, then `After: OK`.
 - [ ] **Self-test on WoW Forever.** `/lootoman selftest`. *Expected:* as on retail, but `Game Camelot` (or `Forever`, if the client renamed it), its own project number and `data set: Forever`; a herb bag in the reagent slot shows as `reagent 5 (…, family 32)`.
-- [ ] **Commands.** `/ltm` opens the options; `/lootoman help` lists `/lootoman` or `/ltm`, `debug`, `selftest`, `design`, `toss` and `sales`; `/lootoman debug` shows the state, `on` and `off` change it. *Expected:* `/lootoman bars` and `/lootoman families` are unknown commands and show the list.
+- [ ] **Commands.** `/ltm` opens the options; `/lootoman help` lists `/lootoman` or `/ltm`, `debug`, `selftest`, `design`, `toss` and `sales`; `/lootoman debug` shows the state, `on` and `off` change it, `clear` says the saved messages are cleared. *Expected:* `/lootoman bars` and `/lootoman families` are unknown commands and show the list.
+- A saved-data upgrade that fails can't be checked in game without breaking saved data on purpose; the unit tests cover it (the data is kept as it was, the session runs on defaults, a chat message says so).
 - [ ] **Smoke test on the PTR and WoW Forever.** Loot with fast autoloot, watch the feed, open the sort window, sell junk at a merchant.
 - [ ] **Saved data with bars.** Log in with saved variables of 0.3 or 0.3.5 that have a bar set and the free-slot bar set up.
   - *Expected:* no errors; no bar frames in Edit Mode and no bar pages in the options.
@@ -228,6 +231,14 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Following the design.** Change the look's design (icon size and place, the name's and the amount's place and size, their backgrounds, the row's background), and check the warning sample in the look window. *Expected:* the warning row follows like any row.
 - [ ] **With icons.** With a look of icons, filling up, down and sideways. *Expected:* the warning is a bag icon in the first place, like the other icons, with a red border and the free slots as its amount; no name; the tooltip names each kind.
 
+### At rest (0.5.5)
+
+The feed draws on every frame only while something moves, and a few times a second otherwise.
+
+- [ ] **Looks as before.** Loot several things in a row, with rows and with icons. *Expected:* rows fade in, slide to their places and fade out as smoothly as before; a full feed pushes the oldest out; the pointer over the feed holds the rows, and they go on when it leaves (they may wait a moment longer to notice).
+- [ ] **Kept item and warning.** With only a kept item, then only a low-space warning on screen for a minute. *Expected:* they stay put; a right click on the kept item uses it, out of combat and, where allowed, in a fight; a new loot row appears at once.
+- [ ] **After a client or library update.** Open Edit Mode and select the loot feed. *Expected:* its dialog still has no *Reset To Default* (other frames' dialogs keep theirs), and the self-test's `Edit Mode:` line says the dialog and its reset button were found and hooked.
+
 ## Junk
 
 Some gray items and some items above gray in the bags; Auctionator installed for the checks that name it.
@@ -255,7 +266,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
   - a soulbound item (an equipped, then removed bind-on-equip piece) is weighed by the merchant's price only.
 - [ ] **Tooltips.** Point at items. *Expected:* the game's own tooltip for the bag item (with the comparison while Shift is held, or always with *Always compare items*), then what a right click and a drag do.
 - [ ] **Deleting.**
-  - Drag a gray stack out of the window and let it go over the game world. *Expected:* it is gone, with a chat line, and no "Interface action failed because of an AddOn" message. Deleting needs a mouse action, and the end of a drag should count, as it does for Blizzard's own buttons; if it does not, tell Claude.
+  - Drag a gray stack out of the window and let it go over the game world. *Expected:* it is gone, with a chat line, and no "Interface action failed because of an AddOn" message. Deleting needs a mouse action, and the end of a drag should count, as it does for Blizzard's own buttons; note it if it does not.
   - Let one go over another window (the bags, the loot window). *Expected:* deleted as well.
   - Drag a white or green item out. *Expected:* a question; *Cancel* keeps it, *Delete* deletes it.
   - Drag a rare or epic item out. *Expected:* the question asks for the game's word (DELETE, or the client's own word), and *Delete* stays off until it is typed; Enter in the field deletes.
@@ -294,6 +305,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
   - A right click or a drag moves an item between the sections and sells nothing; an item dragged out of the window stays where it is.
   - More than 12 stacks of junk show the buyback warning, and selling them warns in chat.
 - [ ] **Stopping.** Close the merchant's window in the middle of a sale. *Expected:* selling stops with a chat line, and no item is used, equipped or opened afterwards. Sell an item you can still trade to your group: the game's question shows and selling stops.
+- [ ] **Sell button away from merchants (0.5.5).** Loot and move items with no merchant open, then open a merchant with junk in the bags, and again with none. *Expected:* the button's icon is coloured with junk and grey without it from the moment the merchant opens; selling by the button, by the sort window and automatically on opening work as before.
 - [ ] **Sales log.** `/lootoman sales`. *Expected:* every stack sold this session with its price and the total; the same after `/reload`; empty after logging out and in.
 
 ### The switch
@@ -321,6 +333,14 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **The game's loot sparkle.** With `outlineModeShowLootEffectWhenDisabled` on (Forever Loot Sparkles, or by hand), look at a quest object. *Expected:* note how both sparkles look together.
 - [ ] **In a fight.** *Expected:* the sparkles keep working; a switch changed in the fight applies at once, game settings after it; no errors and no blocked action.
 - [ ] **Profile texts.** Share a profile on WoW Forever and import it on retail. *Expected:* it reads, with the highlights' part left out.
+- [ ] **A quest object's quest changes (0.5.5).** Stand at a quest object until it sparkles; finish the objective it is for (or abandon the quest), and accept a quest that wants an object you stand at. *Expected:* the sparkles follow at once: the object you no longer need stops sparkling as a quest object, the one you now need starts.
+- [ ] **After a client update.** *Expected:* the object's nameplate still stays hidden under the sparkles (no name, bar or interact icon from the game), and the self-test's `Highlights:` line shows every function `yes`.
+
+## Saved diagnostics (0.5.5)
+
+- [ ] **Self-test kept.** `/lootoman selftest`, then `/reload`. *Expected:* the saved data holds the same lines (`LootomanDB.sections.diagnostics.selfTest`), with the client and the time it ran.
+- [ ] **Debug log kept.** `/lootoman debug on`, loot a few things, `/lootoman debug off`, loot again, `/reload`. *Expected:* the saved log holds the debug lines from while it was on, each with its session time, and nothing after.
+- [ ] **Cleared.** `/lootoman debug clear`, then `/reload`. *Expected:* a chat line says they are cleared; the saved log is empty and no self-test is kept.
 
 ## Taint
 

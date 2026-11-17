@@ -52,6 +52,8 @@ ns.Highlights.Module = Highlights
 
 -- The re-reading while something sparkles or soft targeting is paused.
 Highlights.TICK = 0.2
+-- How long the ticks may reuse a target's quest facts.
+Highlights.QUEST_REFRESH = 1
 Highlights.SECTION = "lootContainers"
 
 -- The chests learned from looting: { [objectID] = true }.
@@ -98,6 +100,18 @@ end
 -- The last target told in the debug output, so each one is told once.
 local told
 
+-- The quest facts of the last target read in full, which the ticks reuse for
+-- that target ({ key, at, questRelated, questObjective }): they change with
+-- an event (a new target, a plate that comes or goes, the quest log), each of
+-- which reads them again; a tooltip line that comes late is caught by the
+-- read once every QUEST_REFRESH seconds.
+local questFacts
+
+-- Which object the facts are of: its object ID and name.
+local function factsKey(facts)
+	return tostring(facts.objectID) .. "|" .. tostring(facts.name)
+end
+
 -- "Highlights: <name> (object <id>, cursor <cursor>), <kind>, <state or why not>".
 local function debug(facts, kind, state, why)
 	local target = "no target"
@@ -113,12 +127,28 @@ local function debug(facts, kind, state, why)
 end
 
 -- Reads the soft target again and lights it or lets it go. A living unit
--- pauses soft targeting (safe self-cast, GameSettings).
-function Highlights:Evaluate()
+-- pauses soft targeting (safe self-cast, GameSettings). tick: the ticker's
+-- re-reading, which keeps the quest facts of the last full read.
+function Highlights:Evaluate(tick)
 	if not self.active or not known then
 		return
 	end
-	local facts = Compat.GetSoftInteract()
+	local facts
+	local now = Compat.GetTime()
+	if tick and questFacts and now - questFacts.at < Highlights.QUEST_REFRESH then
+		facts = Compat.GetSoftInteract(true)
+		if facts and factsKey(facts) == questFacts.key then
+			facts.questRelated, facts.questObjective = questFacts.questRelated, questFacts.questObjective
+		elseif facts then
+			-- Another object before the game said so: its own facts.
+			facts = nil
+		end
+	end
+	if not facts then
+		facts = Compat.GetSoftInteract()
+		questFacts = facts and { key = factsKey(facts), at = now, questRelated = facts.questRelated,
+			questObjective = facts.questObjective } or nil
+	end
 	if facts and facts.isLiving then
 		GameSettings.Pause("unit")
 	end
@@ -162,7 +192,7 @@ end
 function Highlights:OnEnable()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
 	plates = {}
-	told = nil
+	told, questFacts = nil, nil
 	if not self.ticker then
 		self.ticker = CreateFrame("Frame")
 		self.ticker.elapsed = 0
@@ -171,7 +201,7 @@ function Highlights:OnEnable()
 			if ticker.elapsed >= Highlights.TICK then
 				ticker.elapsed = 0
 				GameSettings.CheckPause()
-				self:Evaluate()
+				self:Evaluate(true)
 			end
 		end)
 	end
@@ -211,6 +241,18 @@ function Highlights:OnEnable()
 	end
 	self:OnEvent("SKILL_LINES_CHANGED", professions)
 	self:OnEvent("SPELLS_CHANGED", professions)
+	-- An object a quest wanted may be done with, or a new quest may want one.
+	-- The event comes in bursts: one read, a tick later.
+	self:OnEvent("QUEST_LOG_UPDATE", function()
+		questFacts = nil
+		if not self.questPending then
+			self.questPending = true
+			Compat.After(Highlights.TICK, function()
+				self.questPending = false
+				self:Evaluate()
+			end)
+		end
+	end)
 	self:On("SettingChanged", function(_, module)
 		if module == self.name then
 			self:Evaluate()
@@ -230,7 +272,7 @@ function Highlights:OnDisable()
 	end
 	self.lit = nil
 	GameSettings.Stop()
-	known, plates = nil, nil
+	known, plates, questFacts = nil, nil, nil
 end
 
 -- What the self-test reports: the client's functions and settings that

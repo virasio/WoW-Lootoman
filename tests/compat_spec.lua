@@ -34,6 +34,40 @@ describe("Compat", function()
 		assert.same(functionNames(Compat), functionNames(loadCompat("tests/mocks/Compat.lua")))
 	end)
 
+	it("names what each function needs from the client, and every game namespace it calls", function()
+		local ns = { Compat = Compat }
+		assert(loadfile("Compat/Needs.lua"))("Lootoman", ns)
+		local needs = Compat.NEEDS
+		for _, name in ipairs(functionNames(Compat)) do
+			assert.is_table(needs[name], name .. " has no entry")
+		end
+		for name, need in pairs(needs) do
+			assert.is_function(Compat[name], name .. " is no function")
+			for _, path in ipairs(need) do
+				assert.is_string(path)
+			end
+		end
+		-- A call into a C_ namespace written in a function is listed for it.
+		local file = assert(io.open("Compat/Compat.lua"))
+		local source = file:read("*a")
+		file:close()
+		local checked = 0
+		for name, body in source:gmatch("\nfunction Compat%.([%w_]+)%((.-)\nend") do
+			local listed = {}
+			for _, path in ipairs(needs[name]) do
+				listed[path] = true
+			end
+			for _, path in ipairs(needs[name].optional or {}) do
+				listed[path] = true
+			end
+			for path in body:gmatch("C_[%w_]+%.[%w_]+") do
+				assert.is_true(listed[path], ("%s calls %s"):format(name, path))
+				checked = checked + 1
+			end
+		end
+		assert.is_true(checked > 40)
+	end)
+
 	it("detects capabilities by global and field path", function()
 		stub({ C_FakeContainer = { GetItem = function() end } })
 		assert.is_true(Compat.Has("C_FakeContainer"))
@@ -415,6 +449,27 @@ describe("Compat", function()
 		stub({ C_Item = { GetItemCount = function(...) asked[#asked + 1] = { ... } return 7 end } })
 		assert.same({ 7, 7 }, { Compat.GetItemCount(2589), Compat.GetItemCount(2589, true) })
 		assert.same({ { 2589, true, false, true, false }, { 2589, false, false, false, false } }, asked)
+	end)
+
+	it("decodes a profile text, but not data that decompresses past the limit", function()
+		local saved = { C_EncodingUtil = rawget(_G, "C_EncodingUtil"), Enum = rawget(_G, "Enum") }
+		local deserialized = 0
+		stub({
+			Enum = { CompressionMethod = { Deflate = 0 } },
+			C_EncodingUtil = {
+				SerializeCBOR = function() end,
+				DecodeBase64 = function(text) return text end,
+				DecompressString = function() return ("x"):rep(20) end,
+				DeserializeCBOR = function() deserialized = deserialized + 1; return { read = true } end,
+			},
+		})
+		assert.same({ read = true }, Compat.Decode("text"))
+		assert.same({ read = true }, Compat.Decode("text", 20))
+		-- Over the limit: refused before the data is read.
+		assert.is_nil(Compat.Decode("text", 19))
+		assert.equals(2, deserialized)
+		rawset(_G, "C_EncodingUtil", saved.C_EncodingUtil)
+		rawset(_G, "Enum", saved.Enum)
 	end)
 
 	it("registers slash commands the way the game expects", function()

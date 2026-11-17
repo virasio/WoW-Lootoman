@@ -1,22 +1,29 @@
 # Static analysis and unit tests. Same commands as the local /check.
+# The release workflow calls it for a tag before it publishes, so a pushed tag
+# does not run it a second time here.
 name: Check
 
 on:
   push:
+    branches: ["**"]
   pull_request:
     branches: [develop, main]
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: leafo/gh-actions-lua@v13
+      - uses: leafo/gh-actions-lua@32909a2dea0a48c433aec79e7fcd31b4cd55800f # v13.1.0
         with:
           luaVersion: "5.1"
 
-      - uses: leafo/gh-actions-luarocks@v6
+      - uses: leafo/gh-actions-luarocks@1c4a92caecc8f6850f673cbadfd57b3e555417ce # v6.1.1
 
       - name: Install luacheck and busted
         run: |
@@ -35,7 +42,7 @@ jobs:
       LUALS_VERSION: "3.19.2"
       WOW_API_VERSION: "0.22.3"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Into the checkout (ignored by git), where .luarc.json expects them.
       - name: Install lua-language-server and the WoW annotations

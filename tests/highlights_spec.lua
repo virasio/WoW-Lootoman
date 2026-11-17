@@ -180,6 +180,52 @@ describe("gathering highlights", function()
 		assert.is_nil(lit())
 	end)
 
+	it("reads the quest facts once per target and once a second, and again when a target, a plate or the quest log changes", function()
+		local full = 0
+		local get = ns.Compat.GetSoftInteract
+		ns.Compat.GetSoftInteract = function(skipQuest)
+			full = full + (skipQuest and 0 or 1)
+			return get(skipQuest)
+		end
+		local function tick()
+			Test.Advance(0.25)
+			module.ticker.scripts.OnUpdate(module.ticker, 0.25)
+		end
+		local stone = { isObject = true, cursor = 99, name = "Odd Stone", objectID = 77, inReach = true, questObjective = true }
+		target(stone)
+		assert.same({ "quest", 1 }, { lit(), full })
+		-- Ticks while it sparkles reuse them, and still read the rest; once a
+		-- second they read them again, for a tooltip line that came late.
+		for _ = 1, 3 do
+			tick()
+		end
+		assert.same({ 1, "quest" }, { full, lit() })
+		tick()
+		assert.equals(2, full)
+		Test.state.softInteract.inReach = false
+		tick()
+		assert.equals("far", module.lit.state)
+		-- The quest log changes, in a burst: read once, a moment later; no longer a quest object.
+		Test.state.softInteract.questObjective = nil
+		full = 0
+		for _ = 1, 5 do
+			Test.FireEvent("QUEST_LOG_UPDATE")
+		end
+		Test.Advance(0.2)
+		assert.same({ 1, nil }, { full, lit() })
+		-- A plate that comes, a new target: read again.
+		Test.state.softInteract.questObjective = true
+		Test.FireEvent("NAME_PLATE_UNIT_ADDED", "nameplate1")
+		assert.same({ 2, "quest" }, { full, lit() })
+		-- Another object under a tick, before the game said the target changed:
+		-- its own facts, not the last one's.
+		Test.state.softInteract = { isObject = true, cursor = 99, name = "Signpost", objectID = 78, inReach = true }
+		tick()
+		assert.same({ 3, nil }, { full, lit() })
+		target(herb())
+		assert.same({ 4, "herbs" }, { full, lit() })
+	end)
+
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
 		Test.RunSlashCommand("LOOTOMAN", "debug on")
 		Test.state.nameplates = {}

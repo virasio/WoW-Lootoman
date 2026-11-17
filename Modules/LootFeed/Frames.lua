@@ -34,6 +34,12 @@ local Compat, L = ns.Compat, ns.L
 -- stuck one, and the mouse wheel keeps zooming the camera. Hovering pauses the model's timers. The
 -- frame is hidden, and costs nothing, while there are no rows and no warnings.
 --
+-- It draws on every frame only while something moves: a row fading in or
+-- out, a row sliding to its place, the preview in Edit Mode. At rest (a
+-- warning, a stuck row, rows waiting for their time) it draws every IDLE
+-- seconds, and at once when a row's fade is due or a call below wakes it; the
+-- hover pause may follow the pointer one rest step late.
+--
 --   local feed = Frames.Create(model)        -- out of combat, when the module starts
 --   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design, size),
 --       opacity = 0.5, showOwned = true, showGlow = true })
@@ -53,6 +59,8 @@ Frames.PIN = "Waypoint-MapPin-Tracked"
 Frames.FADE_IN = 0.2
 -- Seconds a row takes to slide one place.
 Frames.SLIDE_TIME = 0.15
+-- Seconds between draws while nothing moves.
+Frames.IDLE = 0.2
 -- Items of this quality and better get a glow (Enum.ItemQuality.Rare).
 Frames.GLOW_QUALITY = 3
 -- The quality border is this much bigger than the icon, as on the loot roll.
@@ -596,6 +604,9 @@ function Frames.Create(model)
 		seen = setmetatable({}, { __mode = "k" }),
 		version = 0,
 		warnings = {},
+		-- Whether the last draw left something moving, and when to draw next at rest.
+		moving = false,
+		nextDraw = 0,
 	}, FeedMixin)
 	for index = 1, Frames.POOL do
 		feed.rows[index] = Frames.CreateRow(frame)
@@ -605,8 +616,11 @@ function Frames.Create(model)
 	-- The warning's own row, outside the pool.
 	feed.warningRow = Frames.CreateRow(frame)
 	feed.warningRow.feed = feed
-	frame:SetScript("OnUpdate", function()
-		feed:Draw(Compat.GetTime())
+	frame:SetScript("OnUpdate", function(_, elapsed)
+		local now = Compat.GetTime()
+		if feed.moving or now >= feed.nextDraw then
+			feed:Draw(now, elapsed)
+		end
 	end)
 	frame:Hide()
 	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE, Design.BASE_SIZE), opacity = 0.5 })
@@ -636,6 +650,7 @@ function FeedMixin:SetWarnings(warnings)
 	settle(self)
 	placeWarnings(self)
 	self.version = self.version + 1
+	self.nextDraw = 0
 	if #warnings > 0 then
 		self.frame:Show()
 	end
@@ -663,10 +678,12 @@ function FeedMixin:SetOptions(options)
 		place(self, rowFrame, rowFrame.offset)
 	end
 	self.version = self.version + 1
+	self.nextDraw = 0
 end
 
 -- Shows the feed after the model got a row; it hides itself when it has none.
 function FeedMixin:Wake()
+	self.nextDraw = 0
 	self.frame:Show()
 end
 
@@ -695,18 +712,23 @@ end
 -- Owned counts are read again on the next draw.
 function FeedMixin:RefreshOwned()
 	self.version = self.version + 1
+	self.nextDraw = 0
 end
 
 function FeedMixin:SetPreview(active)
 	self.preview = active and Frames.PreviewRows() or nil
 	self.frame.PreviewBackground:SetShown(active)
+	self.nextDraw = 0
 	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or #self.warnings > 0)
 end
 
-function FeedMixin:Draw(now)
+-- elapsed: the game frame's own time, as OnUpdate gives it, so a slide that
+-- begins after a rest starts smoothly; without it, the time since the last draw.
+function FeedMixin:Draw(now, elapsed)
 	local model = self.model
-	local elapsed = self.drawnAt and math.max(0, now - self.drawnAt) or 0
+	elapsed = elapsed or (self.drawnAt and math.max(0, now - self.drawnAt) or 0)
 	self.drawnAt = now
+	local moving = self.preview ~= nil
 	local hovered = self.frame:IsMouseOver()
 	model:SetHover(hovered, now)
 	model:Update(now)
@@ -756,6 +778,7 @@ function FeedMixin:Draw(now)
 			local distance = target - rowFrame.offset
 			place(self, rowFrame, math.abs(distance) <= slide and target
 				or rowFrame.offset + (distance > 0 and slide or -slide))
+			moving = moving or rowFrame.offset ~= target
 		end
 		if rowFrame then
 			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total
@@ -768,6 +791,9 @@ function FeedMixin:Draw(now)
 			local fadeIn = math.min(1, (now - self.seen[row]) / Frames.FADE_IN)
 			rowFrame:SetAlpha(view.alpha * (self.preview and 1 or fadeIn))
 			rowFrame:Show()
+			-- A fade out holds still while the pointer is over the feed (the model's
+			-- timers stop); the fade in runs on.
+			moving = moving or fadeIn < 1 or (view.alpha < 1 and not hovered)
 		end
 	end
 	placeBackground(self)
@@ -775,6 +801,8 @@ function FeedMixin:Draw(now)
 		self.useButton:Sync(stuck and stuck.row or nil, stuck and stuckPlace(self) or nil)
 	end
 
+	self.moving = moving
+	self.nextDraw = math.min(now + Frames.IDLE, model:NextChange(now) or math.huge)
 	if #views == 0 and not hovered and #self.warnings == 0 then
 		self.frame:Hide()
 	end

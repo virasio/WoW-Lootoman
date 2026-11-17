@@ -27,12 +27,16 @@ local function blizzard()
 	return MerchantSellAllJunkButton
 end
 
+-- The junk is read only while the button is on screen: away from merchants a
+-- bag change costs nothing. Visible, not shown: closing the merchant hides its
+-- frame but leaves Blizzard's button flagged as shown. The hook on Blizzard's
+-- OnShow, which fires as the merchant's frame opens, puts the icon right.
 local function update()
 	if not button then
 		return
 	end
 	button:SetShown(active and blizzard():IsShown())
-	if active then
+	if active and blizzard():IsVisible() then
 		button.icon:SetDesaturated(#Junk.Sections.SaleList() == 0)
 	end
 end

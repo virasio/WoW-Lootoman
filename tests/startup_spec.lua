@@ -85,6 +85,35 @@ describe("startup", function()
 		assert.is_true(third.Storage:GetGlobal("debug"))
 	end)
 
+	it("keeps settings it could not upgrade as they were, starts on defaults and says so", function()
+		-- 0.4's data runs one step to today's schema; that step changes the data, then breaks. It
+		-- breaks on saved settings only: a step that broke on a fresh install would fail its tests.
+		local steps = ns.Migrations.account
+		steps[#steps] = function(db)
+			if db.profiles.Default.modules then
+				db.profiles.Default = nil
+				db.global.half = true
+				error("broken step")
+			end
+		end
+		local saved = dofile("tests/fixtures/saved_0_4.lua")()
+		Loader.Start(ns, saved)
+		local fresh = dofile("tests/fixtures/saved_0_4.lua")()
+		assert.same(fresh.LootomanDB, Test.state.saved.LootomanDB)
+		assert.same({ true, "failed" }, { ns.Storage.readOnly, ns.Storage.readOnlyReason })
+		-- The modules started, on their defaults.
+		assert.is_true(ns.Modules:Get("LootFeed"):IsActive())
+		assert.equals(1, #Test.state.errors)
+		assert.equals(1, #Test.state.printed)
+		assert.matches("could not upgrade", Test.state.printed[1])
+		Test.RunSlashCommand("LOOTOMAN", "selftest")
+		local line
+		for _, printed in ipairs(Test.state.printed) do
+			line = line or printed:match("Saved data: .*")
+		end
+		assert.matches("read%-only %(the upgrade failed%)", line)
+	end)
+
 	it("warns about settings from a newer version and leaves them alone", function()
 		local newer = { schema = 99, profiles = {} }
 		Loader.Start(ns, { LootomanDB = newer })
