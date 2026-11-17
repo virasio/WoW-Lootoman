@@ -35,6 +35,13 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 --   GameSettings.Stop()       -- highlights stop: GiveBack
 --   GameSettings.Gate(open)   -- each soft target
 --   GameSettings.Pause("unit"); GameSettings.CheckPause()   -- a living unit; every few tenths of a second
+--
+-- Only where gathering highlights exist (WoW Forever's data): elsewhere it
+-- listens to nothing and saves nothing.
+if not (ns.Data and ns.Data.highlights) then
+	return
+end
+
 ns.Highlights = ns.Highlights or {}
 local GameSettings = {}
 ns.Highlights.GameSettings = GameSettings

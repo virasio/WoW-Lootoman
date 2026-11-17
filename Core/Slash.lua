@@ -5,11 +5,12 @@ local Bus, Compat, L, Storage = ns.Bus, ns.Compat, ns.L, ns.Storage
 
 Storage:RegisterGlobalDefaults({ debug = false })
 
--- Debug output for development and bug reports, shown after /lootoman debug on.
--- It is not translated.
+-- Debug output for development and bug reports, shown after /lootoman debug on
+-- and kept in the saved diagnostics. It is not translated.
 function ns.Debug(text)
 	if Storage.db and Storage:GetGlobal("debug") then
 		ns.Print("|cff999999" .. text .. "|r")
+		ns.Diagnostics.Log(text)
 	end
 end
 
@@ -30,12 +31,18 @@ commands[""] = function()
 end
 
 -- "debug" shows the switch; "debug on" and "debug off" set it. It is one switch
--- for the whole account, not part of a profile.
+-- for the whole account, not part of a profile. "debug clear" empties the saved
+-- diagnostics (the debug log and the last self-test).
 commands.debug = function(argument)
+	if argument:lower() == "clear" then
+		ns.Diagnostics.Clear()
+		ns.Print(L["The saved debug messages and self-test are cleared."])
+		return
+	end
 	if argument ~= "" then
 		local enabled = SWITCH[argument:lower()]
 		if enabled == nil then
-			ns.Print(L["Unknown value “%s”. Use /lootoman debug on or /lootoman debug off."]:format(argument))
+			ns.Print(L["Unknown value “%s”. Use /lootoman debug on, off or clear."]:format(argument))
 			return
 		end
 		Storage:SetGlobal("debug", enabled)
@@ -62,7 +69,7 @@ end
 commands.help = function()
 	ns.Print(L["Commands:"])
 	ns.Print(L["/lootoman or /ltm: open the settings"])
-	ns.Print(L["/lootoman debug [on | off]: show, turn on or turn off debug messages"])
+	ns.Print(L["/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones"])
 	ns.Print(L["/lootoman selftest: check the addon against the game client"])
 	for _, line in ipairs(moduleHelp) do
 		ns.Print(line)

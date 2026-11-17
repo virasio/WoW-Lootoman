@@ -87,6 +87,13 @@ describe("profile texts", function()
 		assert.equals("broken", why("LTM1:garbage"))
 		assert.equals("broken", why("LTM1:" .. ns.Compat.Encode("a string")))
 		assert.equals("broken", why("LTM1:" .. ("A"):rep(Share.MAX_LENGTH)))
+		-- A short text whose data decompresses into too much.
+		local big = text({ format = 2, sections = {} })
+		ns.Compat.Test.state.decodedSizes[tonumber(big:match("ENC(%d+)$"))] = Share.MAX_DATA + 1
+		assert.equals("broken", why(big))
+		local fits = text({ format = 2, sections = {} })
+		ns.Compat.Test.state.decodedSizes[tonumber(fits:match("ENC(%d+)$"))] = Share.MAX_DATA
+		assert.equals("nothing", why(fits))
 		-- Only plain data, not too deep and not too much.
 		local deep = {}
 		local level = deep
@@ -229,6 +236,16 @@ describe("profile texts", function()
 			assert.same({ "Shared", { looks = { Raid = "Raid", Solo = "Solo" } } }, { name, renamed })
 			assert.same({ "Shared", "Raid", "icons", 12 }, { Profiles.GetCurrent(), Looks.Current(), Looks.View("Raid"), feed().maxRows })
 			assert.same({ "Default", "Raid", "Solo" }, Looks.List())
+		end)
+
+		it("say so when the character can't switch to the new profile, its name unknown yet", function()
+			ns.Storage:SetCharacter(nil)
+			local name, _, why = Share.Import(read, choice("both"))
+			assert.same({ "Shared", "noCharacter", "Default" }, { name, why, Profiles.GetCurrent() })
+			-- Into the current profile there is nothing to switch.
+			local current = choice("both")
+			current.newName = nil
+			assert.is_nil(select(3, Share.Import(read, current)))
 		end)
 
 		it("keeps the player's look of a taken name, and the profile uses the player's", function()

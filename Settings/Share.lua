@@ -377,7 +377,7 @@ function Dialogs.ReadImport()
 end
 
 local function finishImport(read, choice)
-	local name, renamed = Share.Import(read, choice)
+	local name, renamed, why = Share.Import(read, choice)
 	if #choice.parts > 0 and not name then
 		-- renamed is the reason the new profile's name was not taken.
 		Panel.ProfileTools.report(nil, renamed)
@@ -386,6 +386,10 @@ local function finishImport(read, choice)
 	import:Hide()
 	if name then
 		ns.Print(L["Imported into profile “%s”."]:format(Panel.ProfileTools.displayName(name)))
+		-- The new profile is there, but the character could not switch to it.
+		if why then
+			Panel.ProfileTools.report(nil, why)
+		end
 	end
 	for collectionName, items in pairs(renamed or {}) do
 		local collection, names = Share.GetCollection(collectionName), {}

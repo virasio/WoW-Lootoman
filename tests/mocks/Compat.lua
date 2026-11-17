@@ -55,6 +55,7 @@ local state = {
 	-- tables encoded so far, a text "ENC<n>" for the n-th.
 	encoder = true,
 	encoded = {},
+	decodedSizes = {},
 	-- The cursor: nil, or { bag, slot } of the item it holds.
 	cursor = nil,
 	-- Bag item uses, pick ups, deletes and cursor clears, in order.
@@ -208,8 +209,9 @@ function Compat.SetCVar(name, value)
 	return true
 end
 
--- state.softInteract: the facts of GetSoftInteract, or nil without a target.
-function Compat.GetSoftInteract()
+-- state.softInteract: the facts of GetSoftInteract, or nil without a target;
+-- skipQuest leaves the quest facts out, as the client does.
+function Compat.GetSoftInteract(skipQuest)
 	local facts = state.softInteract
 	if not facts then
 		return nil
@@ -219,6 +221,9 @@ function Compat.GetSoftInteract()
 		copy[key] = value
 	end
 	copy.isLiving = copy.isObject == false and copy.isDead == false
+	if skipQuest then
+		copy.questRelated, copy.questObjective = nil, nil
+	end
 	return copy
 end
 
@@ -520,8 +525,13 @@ function Compat.Encode(value)
 	return "ENC" .. #state.encoded
 end
 
-function Compat.Decode(text)
+-- state.decodedSizes[n]: how many bytes the n-th text decompresses into, for
+-- the limit (0 unless a test says otherwise).
+function Compat.Decode(text, limit)
 	local index = state.encoder ~= false and type(text) == "string" and tonumber(text:match("^ENC(%d+)$"))
+	if index and limit and (state.decodedSizes[index] or 0) > limit then
+		return nil
+	end
 	return index and state.encoded[index] and deepCopy(state.encoded[index]) or nil
 end
 

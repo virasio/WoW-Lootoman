@@ -197,6 +197,23 @@ describe("profile control", function()
 		assert.equals("Default", Profiles.GetCurrent())
 	end)
 
+	it("says why a profile can't be chosen, made or copied into while the character is unknown yet", function()
+		Profiles.Create("Main")
+		ns.Storage:SetCharacter(nil)
+		local printed = ns.Compat.Test.state.printed
+		profile("Main").setSelected("Main")
+		assert.matches("doesn't know this character's name yet", printed[#printed])
+		assert.equals("Default", Profiles.GetCurrent())
+		-- A new profile is made, but the character stays on its own, and is told so.
+		local before = #printed
+		newProfile()
+		api.AcceptPopup("Raid")
+		assert.same({ "Default", "Main", "Raid" }, Profiles.List())
+		assert.equals("Default", Profiles.GetCurrent())
+		assert.equals(before + 1, #printed)
+		assert.matches("doesn't know this character's name yet", printed[#printed])
+	end)
+
 	it("explains why a name is not accepted", function()
 		newProfile()
 		api.AcceptPopup("   ")

@@ -1,4 +1,5 @@
 local _, ns = ...
+local Compat = ns.Compat
 
 -- Every saved table carries a schema version; on load, migrations bring older
 -- data up to the current schema. Step n upgrades schema n - 1 to
@@ -373,8 +374,11 @@ Migrations.character = {
 	function() end,
 }
 
--- Returns the data and a status: "new", "current", "upgraded", or "newer" for
--- data saved by a later version of the addon, which is returned untouched.
+-- Returns the data and a status: "new", "current", "upgraded", "newer" for
+-- data saved by a later version of the addon, or "failed" when a step raised
+-- an error. Newer and failed data come back untouched: the steps work on a
+-- copy, so a step that breaks halfway leaves nothing half moved for the game
+-- to save. The error is reported once, with the schema of the step.
 function Migrations.Run(steps, data)
 	local target = #steps
 	local status
@@ -389,9 +393,19 @@ function Migrations.Run(steps, data)
 	if schema == target then
 		return data, status or "current"
 	end
-	for version = schema + 1, target do
-		steps[version](data)
-		data.schema = version
+	local upgraded, version = copy(data), schema
+	local ok = xpcall(function()
+		for step = schema + 1, target do
+			version = step
+			steps[step](upgraded)
+			upgraded.schema = step
+		end
+	end, function(err)
+		Compat.ReportError(("Lootoman: the saved data could not be upgraded to schema %d and is kept as it was: %s")
+			:format(version, tostring(err)))
+	end)
+	if not ok then
+		return data, "failed"
 	end
-	return data, status or "upgraded"
+	return upgraded, status or "upgraded"
 end
