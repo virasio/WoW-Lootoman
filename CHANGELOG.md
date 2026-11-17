@@ -6,7 +6,7 @@ Safer settings, less work while you play, and easier bug reports.
 
 - **Your settings stay safe** if a new version can't upgrade them: they are kept as they were, that session runs on default settings, and a chat message says so.
 - **Less work while you play**: the loot feed rests while it only shows a warning or a kept item, the sell-junk button looks at your bags only at a merchant, and gathering highlights read an object's quest details once instead of five times a second.
-- **Easier bug reports**: `/lootoman selftest` checks every part of the addon that talks to the game and keeps its report in your saved data, as do debug messages while they are on (the last 300); `/lootoman debug clear` empties both.
+- **Easier bug reports**: `/lootoman selftest` checks that the game offers everything the addon uses and keeps its report in your saved data, as do debug messages while they are on (the last 300); `/lootoman debug clear` empties both.
 
 ## 0.5.2
 
