@@ -6,7 +6,7 @@ Gathering highlights on WoW Forever show what you are about to loot.
 
 - **The icon and the name over a sparkling object:** the object's interaction icon and its name under it, over the stars, on by default. Choose the icon alone or nothing under *Above the Object*.
 - **The name your way:** its size, colour and style, with an outline, a thick outline or a dark backdrop so it reads over any landscape; the icon and the name have their own opacity.
-- **Intensity** of the sparkles, right under the highlights' switch.
+- **Intensity and colour** of the sparkles, right under the highlights' switch.
 - **Sliders and colour buttons** on the options page, as in the game's own options.
 
 ## 0.5.6
