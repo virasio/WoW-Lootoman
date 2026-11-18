@@ -334,6 +334,7 @@ ns.Locales.AddEnglish({
 	"Only Herbs and Ore You Can Gather",
 	"Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway.",
 	"Intensity",
+	"Sparkle Color",
 	"Above the Object",
 	"What shows above the sparkling object: its interaction icon, and its name under it.",
 	"Nothing",

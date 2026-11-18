@@ -410,7 +410,7 @@ describe("gathering highlights' sparkles", function()
 		-- Never quite gone; and the stars out of reach leave it as it is.
 		module:Set("labelOpacity", 0)
 		assert.equals(0.1, frame.label.alpha)
-		Sparkles.Show(plate, "far", module:Look(), module:Intensity())
+		Sparkles.Show(plate, "far", module:Look(), module:Stars())
 		frame.scripts.OnUpdate(frame, 1)
 		assert.equals(0.1, frame.label.alpha)
 	end)
@@ -421,13 +421,32 @@ describe("gathering highlights' sparkles", function()
 		module:Set("intensity", 50)
 		frame.scripts.OnUpdate(frame, 1)
 		assert.equals(0.5, frame.alpha)
-		Sparkles.Show(plate, "locked", module:Look(), module:Intensity())
+		Sparkles.Show(plate, "locked", module:Look(), module:Stars())
 		for _ = 1, 10 do
 			frame.scripts.OnUpdate(frame, 0.1)
 		end
 		assert.equals(0.15, frame.alpha)
 		module:Set("intensity", 5)
 		assert.equals(0.1, module:Intensity())
+	end)
+
+	it("tint the stars in the player's colour, gold by default", function()
+		target(HERB)
+		local frame = Sparkles.Create()
+		local function colors()
+			local seen = {}
+			for _, star in ipairs(frame.stars) do
+				seen[#seen + 1] = table.concat(star.vertex, ",")
+			end
+			return seen
+		end
+		local gold = table.concat({ 1, 209 / 255, 0 }, ",")
+		assert.same({ gold, gold, gold, gold, gold, gold }, colors())
+		module:Set("starColor", "33ccff")
+		local blue = table.concat({ 0.2, 0.8, 1 }, ",")
+		assert.same({ blue, blue, blue, blue, blue, blue }, colors())
+		module:Set("starColor", "sky")
+		assert.same({ gold, gold, gold, gold, gold, gold }, colors())
 	end)
 
 	it("show the icon alone at the centre, or nothing, as the player chooses", function()
@@ -500,7 +519,7 @@ describe("gathering highlights on the options page", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_truthy(table.concat(texts, "|"):find(
-			"Highlight Lootable Objects|Intensity|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather", 1, true))
+			"Highlight Lootable Objects|Intensity|Sparkle Color|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather", 1, true))
 		-- The kinds two to a row, quest objects and chests on the left, herbs and ore on the right at the
 		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
 		-- profession option a little apart.
@@ -529,12 +548,12 @@ describe("gathering highlights on the options page", function()
 		local kinds = {}
 		for _, entry in ipairs(page.items) do
 			local text = entry.text
-			if text == "Intensity" or text == "Above the Object" or text == "Opacity" or text == "Text Size" or text == "Text Color"
-				or text == "Text Style" then
+			if text == "Intensity" or text == "Sparkle Color" or text == "Above the Object" or text == "Opacity" or text == "Text Size"
+				or text == "Text Color" or text == "Text Style" then
 				kinds[#kinds + 1] = entry.kind .. "@" .. entry.indent
 			end
 		end
-		assert.same({ "slider@24", "choice@24", "slider@48", "slider@48", "color@48", "choice@48" }, kinds)
+		assert.same({ "slider@24", "color@24", "choice@24", "slider@48", "slider@48", "color@48", "choice@48" }, kinds)
 		local function label(text)
 			for _, entry in ipairs(page.items) do
 				if entry.text == text then
@@ -549,8 +568,8 @@ describe("gathering highlights on the options page", function()
 		ns.Storage:Set("Highlights", "label", "none")
 		assert.equals("GameFontDisable", label("Opacity").fontObject)
 		local defaults = ns.Modules:Get("Highlights").defaults
-		assert.same({ 100, "name", 100, 12, "ffffff", "outline" }, { defaults.intensity, defaults.label, defaults.labelOpacity,
-			defaults.textSize, defaults.textColor, defaults.textStyle })
+		assert.same({ 100, "ffd100", "name", 100, 12, "ffffff", "outline" }, { defaults.intensity, defaults.starColor, defaults.label,
+			defaults.labelOpacity, defaults.textSize, defaults.textColor, defaults.textStyle })
 		SettingsAPI.Install()
 		ns = Loader.Start(Loader.LoadAddon({ skip = {} }))
 		texts = {}

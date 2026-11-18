@@ -42,13 +42,14 @@ local Highlights = ns.Modules:Register({
 	switchLabel = L["Highlight Lootable Objects"],
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
 	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true,
-		intensity = 100, label = "name", labelOpacity = 100, textSize = 12, textColor = "ffffff", textStyle = "outline" },
+		intensity = 100, starColor = "ffd100", label = "name", labelOpacity = 100, textSize = 12, textColor = "ffffff", textStyle = "outline" },
 	-- The kinds in two columns, quest objects and chests on the left, herbs and
 	-- ore on the right, over the profession option a little apart. The rows
 	-- fill from the left.
 	mainSettings = {
 		-- How bright the stars are, right under the switch.
 		{ kind = "slider", key = "intensity", label = L["Intensity"], min = 10, max = 100, step = 10, format = L["%d %%"] },
+		{ kind = "color", key = "starColor", label = L["Sparkle Color"] },
 		{ kind = "checkboxes", columns = 2, items = {
 			{ kind = "checkbox", key = "quest", label = L["Quest Objects"] },
 			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
@@ -111,6 +112,7 @@ end
 -- falls back to the default.
 Highlights.TEXT_SIZE = { min = 8, max = 24 }
 Highlights.TEXT_COLOR = "ffffff"
+Highlights.STAR_COLOR = "ffd100"
 local STYLES = { shadow = true, outline = true, thick = true, backdrop = true }
 
 -- A percentage setting from 10 to 100 in steps of 10, as 0.1 to 1.
@@ -118,9 +120,14 @@ local function share(value)
 	return Storage.OnStep(tonumber(value) or 100, 10, 100, 10) / 100
 end
 
--- How bright the stars are at most (Sparkles.Show).
+-- How bright the stars are at most, 0.1 to 1.
 function Highlights:Intensity()
 	return share(self:Get("intensity"))
+end
+
+-- The stars' intensity and colour (Sparkles.Show).
+function Highlights:Stars()
+	return { intensity = self:Intensity(), color = { ns.Text.RGB(self:Get("starColor"), Highlights.STAR_COLOR) } }
 end
 
 function Highlights:Look()
@@ -224,7 +231,7 @@ function Highlights:Evaluate(tick)
 	self.lit = lit and { kind = kind, state = state, plate = plate } or nil
 	if ns.Highlights.Sparkles then
 		if lit and plate then
-			ns.Highlights.Sparkles.Show(plate, state, self:Look(), self:Intensity())
+			ns.Highlights.Sparkles.Show(plate, state, self:Look(), self:Stars())
 		else
 			ns.Highlights.Sparkles.Hide()
 		end

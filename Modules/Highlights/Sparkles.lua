@@ -2,7 +2,7 @@ local _, ns = ...
 local Compat = ns.Compat
 
 -- The sparkles of gathering highlights: one look for every kind of object, in
--- the default UI's gold, and light: six small stars that light up at random
+-- the default UI's gold or the player's colour, and light: six small stars that light up at random
 -- points around the object and fade, nothing else. The game's own art, the
 -- cooldown "bling" star, blended additively.
 --
@@ -217,13 +217,17 @@ function Sparkles.Label(look)
 	label:SetShown(hasIcon or hasName)
 end
 
--- The sparkles on this plate, in this state ("ready", "far", "locked"), at
--- this intensity (0 to 1, full by default), with the label look gives
--- (Sparkles.Label). A new plate starts faint and brightens; a new state waits
--- until it has held.
-function Sparkles.Show(plate, state, look, intensity)
+-- The sparkles on this plate, in this state ("ready", "far", "locked"), with
+-- the label look gives (Sparkles.Label). stars: { intensity (0 to 1), color
+-- = { r, g, b } }, full and gold without it. A new plate starts faint and
+-- brightens; a new state waits until it has held.
+function Sparkles.Show(plate, state, look, stars)
 	local frame = Sparkles.Create()
-	frame.intensity = intensity or 1
+	frame.intensity = stars and stars.intensity or 1
+	local color = stars and stars.color or Sparkles.GOLD
+	for _, star in ipairs(frame.stars) do
+		star:SetVertexColor(color[1], color[2], color[3])
+	end
 	if frame.plate ~= plate then
 		Sparkles.Hide()
 		frame.plate = plate
