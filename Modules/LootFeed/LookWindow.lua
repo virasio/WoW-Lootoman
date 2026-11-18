@@ -1033,6 +1033,10 @@ local function build()
 	return frame
 end
 
+-- Opened from Edit Mode (the feed picked there), the window closes when Edit
+-- Mode does; opened any other way, it stays.
+local fromEditMode = false
+
 -- Opens the window on a look (the profile's, without one); it is built the
 -- first time, which waits for the end of combat.
 function LookWindow.Open(name)
@@ -1045,10 +1049,27 @@ function LookWindow.Open(name)
 		LookWindow.window = window
 	end
 	edited = Looks.Get(name) and name or Looks.Current()
+	if not window:IsShown() then
+		fromEditMode = false
+	end
 	window:Show()
 	LookWindow.ShowTab(window.tab)
 	LookWindow.Refresh()
 	return true
+end
+
+function LookWindow.OpenFromEditMode()
+	local wasShown = window ~= nil and window:IsShown()
+	if LookWindow.Open() and not wasShown then
+		fromEditMode = true
+	end
+end
+
+function LookWindow.CloseFromEditMode()
+	if fromEditMode and window then
+		window:Hide()
+	end
+	fromEditMode = false
 end
 
 -- The look the window edits.

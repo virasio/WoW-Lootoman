@@ -147,7 +147,7 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Edit Mode.** Open Edit Mode.
   - *Expected:* the loot feed is listed as *Loot Feed* with sample rows. The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
   - It can be moved, and keeps its position per Edit Mode layout and across `/reload`.
-  - Clicking it opens the look's window, not a small dialog (0.5.9); it stays picked and can still be dragged. Other frames, Blizzard's and other addons', keep their dialogs.
+  - Clicking it opens the look's window, not a small dialog (0.5.9); it stays picked and can still be dragged. Other frames, Blizzard's and other addons', keep their dialogs. Leaving Edit Mode closes the window it opened; a window opened with *Edit* stays.
 - [ ] **Look.** The Default look. *Expected:* a big icon with its quality border, a glow on rare and better items, no owned count, no background (its opacity is 0 until raised).
 
 ### Feed looks and their window (0.4.5)

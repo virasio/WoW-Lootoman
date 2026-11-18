@@ -487,7 +487,8 @@ describe("loot feed look window, opened from", function()
 		end
 		function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 		function lib:AddFrameSettingsButtons() end
-		function lib:RegisterCallback() end
+		lib.callbacks = {}
+		function lib:RegisterCallback(event, fn) self.callbacks[event] = fn end
 		function lib:IsInEditMode() return false end
 		lib.internal = { dialog = { shown = false } }
 		function lib.internal.dialog:Update(selection) self.selection, self.shown = selection, true end
@@ -524,6 +525,12 @@ describe("loot feed look window, opened from", function()
 		-- Another addon's frame keeps the dialog.
 		lib.internal.dialog:Update({ parent = {} })
 		assert.is_true(lib.internal.dialog.shown)
+		-- Opened from Edit Mode, it closes with it; opened otherwise, it stays.
+		lib.callbacks.exit()
+		assert.is_false(LookWindow.window.shown)
+		edit.scripts.OnClick(edit)
+		lib.callbacks.exit()
+		assert.is_true(LookWindow.window.shown)
 	end)
 end)
 

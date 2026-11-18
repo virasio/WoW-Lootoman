@@ -357,12 +357,16 @@ function LootFeed:OnEnable()
 			name = L["Loot Feed"],
 			default = self.DEFAULT_POSITION,
 			-- Picked in Edit Mode, the feed opens its look's window, which holds every
-			-- setting, the choice of look and the position's reset.
+			-- setting, the choice of look and the position's reset; opened so, it
+			-- closes with Edit Mode.
 			window = function()
-				self.LookWindow.Open()
+				self.LookWindow.OpenFromEditMode()
 			end,
 			onEditMode = function(active)
 				self.feed:SetPreview(active)
+				if not active then
+					self.LookWindow.CloseFromEditMode()
+				end
 			end,
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
