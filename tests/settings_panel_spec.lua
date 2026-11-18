@@ -151,7 +151,7 @@ describe("settings panel, a module with a broken main setting", function()
 			mainSettings = { { kind = "gauge", key = "rows", label = "Rows" } } })
 		ns.Modules:Register({ name = "Feed", defaults = { enabled = true } })
 		Loader.Start(ns)
-		assert.matches("Broken.rows: the main page takes checkboxes, choices, sliders, colours, buttons and custom blocks", ns.Compat.Test.state.errors[1])
+		assert.matches("Broken.rows: the main page takes headings, checkboxes, choices, sliders, colours, rows of them, buttons and custom blocks", ns.Compat.Test.state.errors[1])
 		local last = ns.SettingsPanel.main.items[#ns.SettingsPanel.main.items]
 		assert.equals("Feed", last.text)
 	end)
@@ -195,8 +195,16 @@ describe("settings panel main page controls", function()
 				end },
 			},
 		})
-		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", switchNote = "Rows fade out.", defaults = { enabled = true, glow = true },
-			mainSettings = { { kind = "checkbox", key = "glow", label = "Glow", note = ("A long line. "):rep(10) } } })
+		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", switchNote = "Rows fade out.",
+			defaults = { enabled = true, glow = true, rows = 5, shade = "336699" },
+			mainSettings = {
+				{ kind = "checkbox", key = "glow", label = "Glow", note = ("A long line. "):rep(10) },
+				{ kind = "heading", label = "Looks", gap = 16 },
+				{ kind = "controls", level = 2, items = {
+					{ kind = "slider", key = "rows", label = "Rows", min = 1, max = 10, step = 1 },
+					{ kind = "color", key = "shade", label = "Shade" },
+				} },
+			} })
 		Loader.Start(ns)
 		page = ns.SettingsPanel.main
 	end)
@@ -207,7 +215,7 @@ describe("settings panel main page controls", function()
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
 		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
-			"slider:Size:24", "color:Tint:48", "box:Watch out:24", "checkbox:Show the feed:0", "checkbox:Glow:24" }, list)
+			"slider:Size:24", "color:Tint:48", "box:Watch out:24", "checkbox:Show the feed:0", "checkbox:Glow:24", "heading:Looks:24", "controls:Rows|Shade:48" }, list)
 	end)
 
 	it("show a checkbox's note under its label in the small white font, as tall as its lines, the row with it", function()
@@ -308,6 +316,34 @@ describe("settings panel main page controls", function()
 		assert.same({ "0080ff", { 0, 128 / 255, 1 } }, { ns.Storage:Get("Bin", "tint"), swatch.color })
 		picker:Cancel()
 		assert.equals("ff8000", ns.Storage:Get("Bin", "tint"))
+	end)
+
+	it("show a heading over a group in the checkboxes' labels' font, greyed with its module", function()
+		local heading = itemOf("Looks")
+		assert.same({ "GameFontNormal", "LEFT", 16 }, { heading.region.fontObject, heading.region.justify, heading.gap })
+		ns.Storage:Set("Feed", "enabled", false)
+		assert.equals("GameFontDisable", heading.region.fontObject)
+	end)
+
+	it("put settings side by side on one row: the first at the control column, the next after it", function()
+		local row = itemOf("Rows|Shade").region
+		local rows, shade = row.labels[1], row.labels[2]
+		local slider, swatch = row.controls[1], row.controls[2]
+		assert.same({ "Rows", "Shade", "MinimalSliderWithSteppersTemplate", "ColorSwatchTemplate" },
+			{ rows.text, shade.text, slider.template, swatch.template })
+		assert.same({ "LEFT", row, "LEFT", 0, 0 }, rows.points[1])
+		assert.same({ "LEFT", row, "LEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 48, 0 }, slider.points[1])
+		-- After the slider's value, which keeps its width while the value changes.
+		assert.same({ { "LEFT", slider.valueLabel, "RIGHT", 16, 0 }, ns.SettingsPanel.SLIDER_VALUE_WIDTH },
+			{ shade.points[1], slider.valueLabel.width })
+		assert.same({ "LEFT", shade, "RIGHT", 8, 0 }, swatch.points[1])
+		-- Each saves its own setting, and both grey with the module.
+		slider.callbacks.OnValueChanged[1](nil, 7)
+		swatch.scripts.OnClick(swatch)
+		Loader.ui.colorPicker:Pick(1, 0, 0)
+		assert.same({ 7, "ff0000" }, { ns.Storage:Get("Feed", "rows"), ns.Storage:Get("Feed", "shade") })
+		ns.Storage:Set("Feed", "enabled", false)
+		assert.same({ "GameFontDisable", "GameFontDisable", false, false }, { rows.fontObject, shade.fontObject, slider.enabled, swatch.enabled })
 	end)
 
 	it("grey out a slider and a colour while their condition does not hold", function()

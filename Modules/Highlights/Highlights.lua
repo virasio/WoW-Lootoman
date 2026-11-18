@@ -43,24 +43,28 @@ local Highlights = ns.Modules:Register({
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
 	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true,
 		intensity = 100, starColor = "ffd100", label = "name", labelOpacity = 100, textSize = 12, textColor = "ffffff", textStyle = "outline" },
-	-- The kinds in two columns, quest objects and chests on the left, herbs and
-	-- ore on the right, over the profession option a little apart. The rows
-	-- fill from the left.
+	-- Three groups: the sparkles (their intensity and colour on one row); what
+	-- to highlight, the kinds in two columns (quest objects and chests on the
+	-- left, herbs and ore on the right; the rows fill from the left) over the
+	-- profession option a little apart; and what shows above the object.
 	mainSettings = {
-		-- How bright the stars are, right under the switch.
-		{ kind = "slider", key = "intensity", label = L["Intensity"], min = 10, max = 100, step = 10, format = L["%d %%"] },
-		{ kind = "color", key = "starColor", label = L["Sparkle Color"] },
-		{ kind = "checkboxes", columns = 2, items = {
+		{ kind = "heading", label = L["Sparkles"] },
+		{ kind = "controls", level = 2, items = {
+			{ kind = "slider", key = "intensity", label = L["Intensity"], min = 10, max = 100, step = 10, format = L["%d %%"] },
+			{ kind = "color", key = "starColor", label = L["Color"] },
+		} },
+		{ kind = "heading", label = L["What to Highlight"], gap = 16 },
+		{ kind = "checkboxes", level = 2, columns = 2, items = {
 			{ kind = "checkbox", key = "quest", label = L["Quest Objects"] },
 			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
 			{ kind = "checkbox", key = "chests", label = L["Chests"], tooltip = L["Chests, crates and other containers you can loot."] },
 			{ kind = "checkbox", key = "ore", label = L["Ore"] },
 		} },
-		{ kind = "checkbox", key = "gatherable", label = L["Only Herbs and Ore You Can Gather"], gap = 14,
+		{ kind = "checkbox", key = "gatherable", level = 2, label = L["Only Herbs and Ore You Can Gather"], gap = 14,
 			tooltip = L["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."], enabledWhen = eitherGathering },
 		-- Above the object: nothing, its icon, or its icon and name; the name's
 		-- size, colour and style only with the name.
-		{ kind = "choice", key = "label", label = L["Above the Object"],
+		{ kind = "choice", key = "label", label = L["Above the Object"], gap = 16,
 			tooltip = L["What shows above the sparkling object: its interaction icon, and its name under it."],
 			choices = { { "none", L["Nothing"] }, { "icon", L["Icon"] }, { "name", L["Icon and name"] } } },
 		{ kind = "slider", key = "labelOpacity", label = L["Opacity"], level = 2, min = 10, max = 100, step = 10, format = L["%d %%"],
