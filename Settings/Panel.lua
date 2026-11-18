@@ -484,7 +484,8 @@ function MainPage:AddButton(text, onClick, options)
 			button:SetEnabled(enabled(options.requires, options.enabledWhen))
 		end)
 	end
-	return self:Add("button", button, 22, { indent = options.indent, text = text, gap = options.gap or 4 })
+	return self:Add("button", button, 22, { indent = options.indent, text = text, gap = options.gap or 4,
+		visible = options.visible })
 end
 
 -- A row with a label on the left and a control (made by the caller, a child
@@ -524,13 +525,14 @@ function MainPage:AddBox(header, height, options)
 end
 
 -- A module's block on the main page: its switch (with switchNote, a text
--- under it), or its title for a module that has none (switchLabel = false);
+-- under it, or a function that gives it or nil as the page is built), or its title for a module that has none (switchLabel = false);
 -- then what goes under it, indented: the module's main settings, which can be
 -- changed only while it is on. A main setting is a heading (label) over a
 -- group of them, a checkbox (with note), checkboxes in columns (items,
 -- columns), a choice (a dropdown), a slider (min, max, step, format), a
--- colour, a button, or a custom builder(page, indent, module), each with an
--- optional enabledWhen() and gap, the room above it.
+-- colour, a button (shown only while visible() says so, when given), or a
+-- custom builder(page, indent, module), each with an optional enabledWhen()
+-- and gap, the room above it.
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
@@ -538,7 +540,11 @@ local function addModule(page, module)
 		title:SetText(module.title)
 		page:Add("title", title, 20, { text = module.title, gap = 10 })
 	else
-		page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0, nil, nil, nil, module.switchNote)
+		local note = module.switchNote
+		if type(note) == "function" then
+			note = note()
+		end
+		page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0, nil, nil, nil, note)
 		requires = module.name
 	end
 	for _, setting in ipairs(module.mainSettings or {}) do
@@ -562,7 +568,7 @@ local function addModule(page, module)
 				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
 		elseif setting.kind == "button" then
 			page:AddButton(setting.label, setting.click, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
-				tooltip = setting.tooltip })
+				tooltip = setting.tooltip, visible = setting.visible, gap = setting.gap })
 		elseif setting.kind == "custom" then
 			setting.build(page, indent, module)
 		else

@@ -191,6 +191,21 @@ function Storage:GetGlobalSection(name)
 	return sections[name]
 end
 
+-- Structured data of the current character, kept for good (the items of the
+-- quests it turned in): a table in LootomanCharDB.sections, created on first
+-- use, the same in every profile.
+function Storage:GetCharacterSection(name)
+	assert(type(name) == "string", "a section name must be a string")
+	if type(self.charDB.sections) ~= "table" then
+		self.charDB.sections = {}
+	end
+	local sections = self.charDB.sections
+	if type(sections[name]) ~= "table" then
+		sections[name] = {}
+	end
+	return sections[name]
+end
+
 -- Data of the current character for one session (the sales log): kept over
 -- /reload, emptied at each login (NewSession, from Startup). A table in
 -- LootomanCharDB.session, created on first use.

@@ -63,7 +63,7 @@ describe("Junk module", function()
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
 			texts[#texts + 1] = tostring(entry.text)
 		end
-		assert.is_true(table.concat(texts, "|"):find("Enable Junk Management|Set Up the Junk List|Sort Window Button|Style|At Merchants", 1, true) ~= nil)
+		assert.is_true(table.concat(texts, "|"):find("Enable Junk Management|Copy the QuestieDB Address|Edit the Junk List|Loot Window Button|Style|Bag Window Button|At Merchants|Suggestions|Quest Done|Leftovers from Quests", 1, true) ~= nil)
 		-- Fast autoloot's last item is the box of the game's Auto Loot settings.
 		assert.is_true(table.concat(texts, "|"):find("Confirm Bind%-on%-Pickup Items when Alone||Enable Junk Management") ~= nil)
 		local junk = ns.Modules:Get("Junk")
@@ -79,6 +79,50 @@ describe("Junk module", function()
 		end
 		ns.Modules:SetEnabled("Junk", false)
 		page:Refresh()
-		assert.same({ false, false }, { item("Set Up the Junk List").enabled, ns.Modules:Get("Junk"):IsActive() })
+		assert.same({ false, false }, { item("Edit the Junk List").enabled, ns.Modules:Get("Junk"):IsActive() })
+	end)
+
+	describe("the QuestieDB note", function()
+		local function page(withQuestieDB)
+			SettingsAPI.Install()
+			ns = Loader.LoadAddon({ skip = {} })
+			if withQuestieDB then
+				rawset(_G, "LibQuestieDB", { RequireContract = function() return true end, Item = { relatedQuests = function() end } })
+				ns.Compat.Test.state.addons.QuestieDB = true
+			end
+			Loader.Start(ns)
+			local found = {}
+			for _, entry in ipairs(ns.SettingsPanel.main.items) do
+				if entry.text then
+					found[entry.text] = entry
+				end
+			end
+			return found
+		end
+
+		after_each(function()
+			rawset(_G, "LibQuestieDB", nil)
+		end)
+
+		it("says under the switch that quests are better with QuestieDB, and copies its address", function()
+			local items = page(false)
+			assert.matches("better with QuestieDB", items["Enable Junk Management"].region.note.text)
+			local copy = items["Copy the QuestieDB Address"]
+			assert.is_true(copy.visible())
+			copy.region.scripts.OnClick(copy.region)
+			local dialog = rawget(_G, ns.SettingsPanel.COPY_NAME)
+			assert.same({ true, "https://www.curseforge.com/wow/addons/questiedb" }, { dialog:IsShown(), dialog.box:GetText() })
+			-- Typing changes nothing.
+			dialog.box:SetText("x")
+			dialog.box.scripts.OnTextChanged(dialog.box, true)
+			assert.equals("https://www.curseforge.com/wow/addons/questiedb", dialog.box:GetText())
+		end)
+
+		it("is not there while QuestieDB works", function()
+			local items = page(true)
+			assert.is_nil(items["Enable Junk Management"].region.note)
+			assert.is_false(items["Copy the QuestieDB Address"].visible())
+		end)
 	end)
 end)
+

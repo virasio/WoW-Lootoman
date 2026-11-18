@@ -22,6 +22,8 @@ files["Locales/Locales.lua"] = {
 files["Compat/"] = {
 	globals = { "SlashCmdList" },
 	read_globals = {
+		"UnitLevel",
+		"C_PlayerInfo",
 		"SetModifiedClick",
 		"SaveBindings",
 		"GetModifiedClick",
@@ -99,10 +101,16 @@ files["Integrations/Auctionator.lua"] = {
 	read_globals = { "Auctionator" },
 }
 
+files["Integrations/QuestieDB.lua"] = {
+	read_globals = { "LibQuestieDB" },
+}
+
 files["Modules/"] = {
 	read_globals = {
 		"CANCEL",
 		"ColorManager",
+		"ContainerFrame1",
+		"ContainerFrameCombinedBags",
 		"CreateAtlasMarkup",
 		"ColorPickerFrame",
 		"CreateColor",
@@ -142,6 +150,11 @@ files["Modules/"] = {
 files["Settings/"] = {
 	read_globals = {
 		"ALT_KEY",
+		"ChatFrameUtil",
+		"GameTooltip",
+		"hooksecurefunc",
+		"PanelTemplates_SetNumTabs",
+		"PanelTemplates_SetTab",
 		"AUTO_LOOT_DEFAULT_TEXT",
 		"AUTO_LOOT_KEY_TEXT",
 		"CANCEL",

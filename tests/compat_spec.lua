@@ -297,9 +297,9 @@ describe("Compat", function()
 				end },
 				ITEM_SPELL_KNOWN = "Already known",
 			})
-			assert.same({ itemID = 100, questID = 500, questTaken = false, recipe = false, known = false, openable = true, usable = true },
+			assert.same({ itemID = 100, questID = 500, questTaken = false, questItem = true, recipe = false, known = false, openable = true, usable = true },
 				Compat.GetBagItemUse(0, 1))
-			assert.same({ itemID = 200, questTaken = false, recipe = true, known = true, openable = false, usable = false },
+			assert.same({ itemID = 200, questTaken = false, questItem = false, recipe = true, known = true, openable = false, usable = false },
 				Compat.GetBagItemUse(0, 2))
 			assert.is_nil(Compat.GetBagItemUse(0, 3))
 		end)
@@ -423,8 +423,8 @@ describe("Compat", function()
 					end,
 				},
 			})
-			assert.same({ name = "Linen Cloth", link = "link", quality = 1, stackSize = 200, sellPrice = 13, isCraftingReagent = true },
-				Compat.GetItemInfo(2589))
+			assert.same({ name = "Linen Cloth", link = "link", quality = 1, stackSize = 200, sellPrice = 13, isCraftingReagent = true,
+				requiredLevel = 0, classID = 7, subclassID = 5 }, Compat.GetItemInfo(2589))
 			assert.is_nil(Compat.GetItemInfo(999))
 			assert.equals(32, Compat.GetItemFamily(765))
 			assert.equals(0, Compat.GetItemFamily(2589))
@@ -609,6 +609,40 @@ describe("Compat for highlights", function()
 		-- Without the quest log functions: none.
 		stub({ C_QuestLog = {} })
 		assert.same({}, Compat.GetQuestObjectiveTexts())
+	end)
+
+	it("gives every quest's objectives to collect or use, finished ones too, by quest", function()
+		stub({ C_QuestLog = {
+			GetNumQuestLogEntries = function() return 2, 2 end,
+			GetQuestIDForLogIndex = function(index) return ({ 101, 202 })[index] end,
+			GetQuestObjectives = function(questID)
+				if questID == 101 then
+					return { { text = "Waterlogged Saw: 1/1", type = "item", finished = true }, { text = "Murlocs slain: 2/10", type = "monster", finished = false } }
+				end
+				return { { text = SECRET, type = "object", finished = false } }
+			end,
+		} })
+		assert.same({ [101] = { "Waterlogged Saw: 1/1" } }, Compat.GetQuestItemObjectives())
+	end)
+
+	it("tells whether a quest is done, an item's class name and use, the level and the cursor's item", function()
+		stub({
+			C_QuestLog = { IsQuestFlaggedCompleted = function(id) return id == 7 end, IsOnQuest = function(id) return id == 9 end },
+			C_Item = {
+				GetItemClassInfo = function(id) return id == 7 and "Trade Goods" or nil end,
+				IsEquippableItem = function(id) return id == 1 end,
+			},
+			C_PlayerInfo = { CanUseItem = function(id) return id ~= 2 end },
+			UnitLevel = function() return 42 end,
+			GetCursorInfo = function() return "item", 2589 end,
+		})
+		assert.same({ true, false, nil }, { Compat.IsQuestDone(7), Compat.IsQuestDone(8), Compat.IsQuestDone("x") })
+		assert.same({ true, false, nil }, { Compat.IsOnQuest(9), Compat.IsOnQuest(7), Compat.IsOnQuest(nil) })
+		assert.same({ "Trade Goods", true, false, true, false }, { Compat.GetItemClassName(7), Compat.IsEquippableItem(1),
+			Compat.IsEquippableItem(3), Compat.CanUseItem(1), Compat.CanUseItem(2) })
+		assert.same({ 42, 2589 }, { Compat.GetPlayerLevel(), Compat.GetCursorItemID() })
+		stub({ GetCursorInfo = function() return "spell", 5 end, C_PlayerInfo = {} })
+		assert.same({ nil, nil }, { Compat.GetCursorItemID(), Compat.CanUseItem(1) })
 	end)
 
 	it("knows Herbalism and Mining from the tracking spells, the skill lines or the professions", function()

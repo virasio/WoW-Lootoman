@@ -69,6 +69,14 @@ local state = {
 	softInteract = nil,
 	-- The texts of the quests' objectives to collect or use (GetQuestObjectiveTexts).
 	questObjectives = {},
+	-- By quest, finished ones too (GetQuestItemObjectives); quests done (IsQuestDone).
+	questItemObjectives = {},
+	questsDone = {},
+	questsInLog = {},
+	-- Item class names by class ID; the character's level; the item on the cursor.
+	itemClasses = {},
+	playerLevel = 60,
+	cursorItem = nil,
 	cursorFiles = {},
 	nameplates = {},
 	lootSources = {},
@@ -389,11 +397,70 @@ function Compat.GetBagItemUse(bag, slot)
 		itemID = item.itemID,
 		questID = use.questID,
 		questTaken = use.questTaken == true,
+		questItem = use.questItem == true,
 		recipe = use.recipe == true,
 		known = use.known == true,
 		openable = use.openable == true,
 		usable = use.usable ~= false,
 	}
+end
+
+-- state.itemClasses: the client's class names by class ID.
+function Compat.GetItemClassName(classID)
+	return state.itemClasses[classID]
+end
+
+-- Items (state.items) may be equippable = true and usable = false (this
+-- character cannot use them).
+function Compat.IsEquippableItem(item)
+	local info = findItem(item)
+	return info ~= nil and info.equippable == true
+end
+
+function Compat.CanUseItem(itemID)
+	local info = findItem(itemID)
+	if not info then
+		return nil
+	end
+	return info.usable ~= false
+end
+
+-- state.questsDone: { [questID] = true }.
+function Compat.IsQuestDone(questID)
+	if type(questID) ~= "number" then
+		return nil
+	end
+	return state.questsDone[questID] == true
+end
+
+-- state.questsInLog: { [questID] = true }.
+function Compat.IsOnQuest(questID)
+	if type(questID) ~= "number" then
+		return nil
+	end
+	return state.questsInLog[questID] == true
+end
+
+-- state.playerLevel.
+function Compat.GetPlayerLevel()
+	return state.playerLevel
+end
+
+-- state.cursorItem: the item ID on the cursor.
+function Compat.GetCursorItemID()
+	return state.cursorItem
+end
+
+-- state.questItemObjectives: { [questID] = { texts } }.
+function Compat.GetQuestItemObjectives()
+	local quests = {}
+	for questID, texts in pairs(state.questItemObjectives) do
+		quests[questID] = {}
+		for index, text in ipairs(texts) do
+			quests[questID][index] = text
+		end
+	end
+	return quests
 end
 
 -- Every collection unless state.collections says otherwise.
@@ -458,6 +525,7 @@ end
 function Compat.ClearCursor()
 	state.bagActions[#state.bagActions + 1] = { "clear" }
 	state.cursor = nil
+	state.cursorItem = nil
 end
 
 -- Removes the item the cursor holds from its slot.
@@ -487,6 +555,9 @@ function Compat.GetItemInfo(item)
 		stackSize = info.stackSize,
 		sellPrice = info.sellPrice,
 		isCraftingReagent = info.isCraftingReagent,
+		requiredLevel = info.requiredLevel,
+		classID = info.classID,
+		subclassID = info.subclassID,
 	}
 end
 

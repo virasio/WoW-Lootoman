@@ -12,7 +12,11 @@ local Compat = ns.Compat
 -- found); it follows the plate and its scale, keeps its own alpha, and our
 -- frame is not protected, so this is allowed in combat too. The plate's own
 -- frame stays invisible under it, so an object shows no bar or name from the
--- game, and is shown again when the sparkles leave.
+-- game, and is shown again when the sparkles leave. On a corpse's plate
+-- (whole) everything else on it goes invisible too: a nameplate addon draws a
+-- unit's whole plate there, its health bar and name over our label; what is
+-- protected is left alone. Each frame gets back the alpha its owner last gave
+-- it.
 --
 -- How bright: in reach the player's intensity, out of reach about 60 % of
 -- it, not usable yet about 30 %. A new state shows only once it has held for a moment,
@@ -29,9 +33,9 @@ local Compat = ns.Compat
 -- SetText, and the backdrop is anchored to the text's edges, not sized from
 -- its width.
 --
--- What other addons hang on the plate is not looked at: a nameplate addon
--- draws on every plate, and another addon that lights objects simply shows
--- beside the stars.
+-- On an object's plate, what other addons hang there is not looked at: a
+-- nameplate addon draws at most an icon on an object's plate, and another
+-- addon that lights objects simply shows beside the stars.
 ns.Highlights = ns.Highlights or {}
 local Sparkles = {}
 ns.Highlights.Sparkles = Sparkles
@@ -57,41 +61,64 @@ Sparkles.STYLES = {
 Sparkles.BACKDROP = { 0, 0, 0, 0.6 }
 
 local effect
--- The plate's own frame hidden under the sparkles, and whether we are hiding
--- it again ourselves.
-local veiled, reveiling
+-- The frames hidden under the sparkles, each with the alpha to give back,
+-- and whether we are setting an alpha ourselves.
+local veiled, ours = {}, false
 local hooked = setmetatable({}, { __mode = "k" })
 
-local function keepVeiled(unitFrame, alpha)
-	if unitFrame == veiled and alpha ~= 0 and not reveiling then
-		reveiling = true
-		unitFrame:SetAlpha(0)
-		reveiling = false
+-- The owner sets the alpha again (the game's nameplate code, a nameplate
+-- addon): it is kept for later, and the frame stays hidden.
+local function keepVeiled(frame, alpha)
+	if veiled[frame] ~= nil and not ours then
+		veiled[frame] = alpha
+		if alpha ~= 0 then
+			ours = true
+			frame:SetAlpha(0)
+			ours = false
+		end
 	end
 end
 
 local function unveil()
-	if veiled then
-		local unitFrame = veiled
-		veiled = nil
-		unitFrame:SetAlpha(1)
+	local frames = veiled
+	veiled = {}
+	for frame, alpha in pairs(frames) do
+		frame:SetAlpha(alpha)
 	end
 end
 
--- The game's nameplate code may set the frame's alpha again; a hook keeps it
--- hidden while the sparkles are there.
-local function veil(plate)
-	unveil()
-	local unitFrame = type(plate) == "table" and plate.UnitFrame or nil
-	if type(unitFrame) ~= "table" or not unitFrame.SetAlpha then
+local function hide(frame)
+	if veiled[frame] ~= nil then
 		return
 	end
-	if not hooked[unitFrame] then
-		hooked[unitFrame] = true
-		hooksecurefunc(unitFrame, "SetAlpha", keepVeiled)
+	if not hooked[frame] then
+		hooked[frame] = true
+		hooksecurefunc(frame, "SetAlpha", keepVeiled)
 	end
-	veiled = unitFrame
-	unitFrame:SetAlpha(0)
+	veiled[frame] = frame:GetAlpha() or 1
+	ours = true
+	frame:SetAlpha(0)
+	ours = false
+end
+
+-- The plate's own frame, and with whole every other frame on it but ours
+-- and the protected ones.
+local function veil(plate, whole)
+	unveil()
+	if type(plate) ~= "table" then
+		return
+	end
+	local unitFrame = plate.UnitFrame
+	if type(unitFrame) == "table" and unitFrame.SetAlpha then
+		hide(unitFrame)
+	end
+	if whole and plate.GetChildren then
+		for _, child in ipairs({ plate:GetChildren() }) do
+			if child ~= effect and type(child) == "table" and child.SetAlpha and not child:IsProtected() then
+				hide(child)
+			end
+		end
+	end
 end
 
 local random = math.random
@@ -219,23 +246,24 @@ end
 
 -- The sparkles on this plate, in this state ("ready", "far", "locked"), with
 -- the label look gives (Sparkles.Label). stars: { intensity (0 to 1), color
--- = { r, g, b } }, full and gold without it. A new plate starts faint and
+-- = { r, g, b } }, full and gold without it. whole: a corpse's plate, where
+-- everything else on it is hidden too. A new plate starts faint and
 -- brightens; a new state waits until it has held.
-function Sparkles.Show(plate, state, look, stars)
+function Sparkles.Show(plate, state, look, stars, whole)
 	local frame = Sparkles.Create()
 	frame.intensity = stars and stars.intensity or 1
 	local color = stars and stars.color or Sparkles.GOLD
 	for _, star in ipairs(frame.stars) do
 		star:SetVertexColor(color[1], color[2], color[3])
 	end
-	if frame.plate ~= plate then
+	if frame.plate ~= plate or frame.whole ~= (whole == true) then
 		Sparkles.Hide()
-		frame.plate = plate
+		frame.plate, frame.whole = plate, whole == true
 		frame:SetParent(plate)
 		frame:ClearAllPoints()
 		frame:SetPoint("CENTER", plate, "CENTER", 0, Sparkles.OFFSET)
 		frame:SetIgnoreParentAlpha(true)
-		veil(plate)
+		veil(plate, whole)
 		frame.state, frame.pending, frame.level = state, nil, 0
 		frame:Show()
 	elseif state ~= frame.state then
@@ -255,7 +283,7 @@ function Sparkles.Hide()
 		effect:Hide()
 		effect:ClearAllPoints()
 		effect:SetParent(UIParent)
-		effect.plate = nil
+		effect.plate, effect.whole = nil, nil
 	end
 end
 
