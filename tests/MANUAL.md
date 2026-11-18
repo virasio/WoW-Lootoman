@@ -359,7 +359,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
 - [ ] **In a fight.** *Expected:* the icon and the name keep showing (the name may be one the game hides from addons: it still shows); no errors.
 - [ ] **A nameplate addon.** With Platynator. *Expected:* our icon and name over the stars; the addon's own plate stays its own; no second icon from the game.
 - [ ] **Kept.** `/reload`, and a profile text shared and imported. *Expected:* the four settings kept; a new character gets *Icon and name*.
-- [ ] **Russian client.** *Expected:* «Над объектом», «Ничего», «Значок», «Значок и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
+- [ ] **Russian client.** *Expected:* «Интенсивность», «Над объектом», «Непрозрачность», «Ничего», «Значок», «Значок и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
 
 ## Saved diagnostics (0.5.5)
 
