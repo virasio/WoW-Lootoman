@@ -32,17 +32,23 @@ local function showsName()
 	return Storage:Get("Highlights", "label") == "name"
 end
 
+local function showsLabel()
+	return Storage:Get("Highlights", "label") ~= "none"
+end
+
 local Highlights = ns.Modules:Register({
 	name = "Highlights",
 	title = L["Gathering highlights"],
 	switchLabel = L["Highlight Lootable Objects"],
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
 	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true,
-		label = "name", textSize = 12, textColor = "ffd100", textStyle = "outline" },
+		intensity = 100, label = "name", labelOpacity = 100, textSize = 12, textColor = "ffffff", textStyle = "outline" },
 	-- The kinds in two columns, quest objects and chests on the left, herbs and
 	-- ore on the right, over the profession option a little apart. The rows
 	-- fill from the left.
 	mainSettings = {
+		-- How bright the stars are, right under the switch.
+		{ kind = "slider", key = "intensity", label = L["Intensity"], min = 10, max = 100, step = 10, format = L["%d %%"] },
 		{ kind = "checkboxes", columns = 2, items = {
 			{ kind = "checkbox", key = "quest", label = L["Quest Objects"] },
 			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
@@ -56,6 +62,8 @@ local Highlights = ns.Modules:Register({
 		{ kind = "choice", key = "label", label = L["Above the Object"],
 			tooltip = L["What shows above the sparkling object: its interaction icon, and its name under it."],
 			choices = { { "none", L["Nothing"] }, { "icon", L["Icon"] }, { "name", L["Icon and name"] } } },
+		{ kind = "slider", key = "labelOpacity", label = L["Opacity"], level = 2, min = 10, max = 100, step = 10, format = L["%d %%"],
+			enabledWhen = showsLabel },
 		{ kind = "slider", key = "textSize", label = L["Text Size"], level = 2, min = 8, max = 24, step = 1, enabledWhen = showsName },
 		{ kind = "color", key = "textColor", label = L["Text Color"], level = 2, enabledWhen = showsName },
 		{ kind = "choice", key = "textStyle", label = L["Text Style"], level = 2, enabledWhen = showsName,
@@ -102,15 +110,25 @@ end
 -- settings; a value out of range or unknown, as a profile text may bring,
 -- falls back to the default.
 Highlights.TEXT_SIZE = { min = 8, max = 24 }
-Highlights.TEXT_COLOR = "ffd100"
+Highlights.TEXT_COLOR = "ffffff"
 local STYLES = { shadow = true, outline = true, thick = true, backdrop = true }
+
+-- A percentage setting from 10 to 100 in steps of 10, as 0.1 to 1.
+local function share(value)
+	return Storage.OnStep(tonumber(value) or 100, 10, 100, 10) / 100
+end
+
+-- How bright the stars are at most (Sparkles.Show).
+function Highlights:Intensity()
+	return share(self:Get("intensity"))
+end
 
 function Highlights:Look()
 	local mode = self:Get("label")
 	if mode ~= "icon" and mode ~= "name" then
 		return nil
 	end
-	local look = { icon = true }
+	local look = { icon = true, alpha = share(self:Get("labelOpacity")) }
 	if mode == "name" then
 		look.name, look.hasName = Compat.GetSoftInteractName()
 		local size = Highlights.TEXT_SIZE
@@ -206,7 +224,7 @@ function Highlights:Evaluate(tick)
 	self.lit = lit and { kind = kind, state = state, plate = plate } or nil
 	if ns.Highlights.Sparkles then
 		if lit and plate then
-			ns.Highlights.Sparkles.Show(plate, state, self:Look())
+			ns.Highlights.Sparkles.Show(plate, state, self:Look(), self:Intensity())
 		else
 			ns.Highlights.Sparkles.Hide()
 		end

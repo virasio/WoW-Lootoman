@@ -14,8 +14,8 @@ local Compat = ns.Compat
 -- frame stays invisible under it, so an object shows no bar or name from the
 -- game, and is shown again when the sparkles leave.
 --
--- How bright: in reach full, out of reach about 60 %, not usable yet about
--- 30 %. A new state shows only once it has held for a moment,
+-- How bright: in reach the player's intensity, out of reach about 60 % of
+-- it, not usable yet about 30 %. A new state shows only once it has held for a moment,
 -- so the sparkles don't flicker at the edge of reach (Lueur's lesson), and
 -- the brightness fades to it.
 --
@@ -23,8 +23,9 @@ local Compat = ns.Compat
 -- icon (the cursor the game would show over it) and its name under it, as
 -- Lueur does: our own, as the game's icon stays off over a sparkling object
 -- (GameSettings) and the plate's own frame, which holds the game's name, is
--- invisible. The label is a child of the effect, so it takes the stars'
--- brightness and fade. The name may be a secret value: it goes only to
+-- invisible. The label is a child of the effect, so it shows and goes with
+-- the stars, but its alpha is its own (the player's opacity for it), not the
+-- stars' intensity or state. The name may be a secret value: it goes only to
 -- SetText, and the backdrop is anchored to the text's edges, not sized from
 -- its width.
 --
@@ -117,7 +118,7 @@ local function animate(frame, elapsed)
 	local target = Sparkles.ALPHA[frame.state] or 1
 	local step = elapsed / Sparkles.FADE
 	frame.level = frame.level + math.max(-step, math.min(step, target - frame.level))
-	frame:SetAlpha(frame.level)
+	frame:SetAlpha(frame.level * (frame.intensity or 1))
 
 	for _, star in ipairs(frame.stars) do
 		star.age = star.age + elapsed
@@ -139,6 +140,7 @@ local function createLabel(frame)
 	local label = CreateFrame("Frame", nil, frame)
 	label:SetSize(1, 1)
 	label:SetPoint("CENTER", frame, "CENTER", 0, -Sparkles.OFFSET)
+	label:SetIgnoreParentAlpha(true)
 	label.backdrop = label:CreateTexture(nil, "BACKGROUND")
 	local backdrop = Sparkles.BACKDROP
 	label.backdrop:SetColorTexture(backdrop[1], backdrop[2], backdrop[3], backdrop[4])
@@ -178,10 +180,11 @@ function Sparkles.Create()
 	return effect
 end
 
--- What the label shows. look: nil for nothing, else { icon, name, hasName,
--- size, color = { r, g, b }, style }: the icon when look.icon and the target
--- has a cursor; the name when look.hasName, in its size, colour and style,
--- with the icon over it; the icon alone at the centre.
+-- What the label shows. look: nil for nothing, else { icon, alpha, name,
+-- hasName, size, color = { r, g, b }, style }: the icon when look.icon and
+-- the target has a cursor; the name when look.hasName, in its size, colour
+-- and style, with the icon over it; the icon alone at the centre; both at
+-- look.alpha.
 function Sparkles.Label(look)
 	local label = Sparkles.Create().label
 	if not look then
@@ -210,14 +213,17 @@ function Sparkles.Label(look)
 		label.backdrop:Hide()
 		label.icon:SetPoint("CENTER", label, "CENTER", 0, 0)
 	end
+	label:SetAlpha(look.alpha or 1)
 	label:SetShown(hasIcon or hasName)
 end
 
--- The sparkles on this plate, in this state ("ready", "far", "locked"), with
--- the label look gives (Sparkles.Label). A new plate starts faint and
--- brightens; a new state waits until it has held.
-function Sparkles.Show(plate, state, look)
+-- The sparkles on this plate, in this state ("ready", "far", "locked"), at
+-- this intensity (0 to 1, full by default), with the label look gives
+-- (Sparkles.Label). A new plate starts faint and brightens; a new state waits
+-- until it has held.
+function Sparkles.Show(plate, state, look, intensity)
 	local frame = Sparkles.Create()
+	frame.intensity = intensity or 1
 	if frame.plate ~= plate then
 		Sparkles.Hide()
 		frame.plate = plate

@@ -328,6 +328,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Quest Objects"] = "Объекты заданий",
 	["Only Herbs and Ore You Can Gather"] = "Только травы и руду, которые можно собрать",
 	["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."] = "Для трав нужно травничество, для руды — горное дело. Выключите, чтобы видеть их в любом случае.",
+	["Intensity"] = "Интенсивность",
 	["Above the Object"] = "Над объектом",
 	["What shows above the sparkling object: its interaction icon, and its name under it."] = "Что показывать над сверкающим объектом: значок взаимодействия и название под ним.",
 	["Nothing"] = "Ничего",
