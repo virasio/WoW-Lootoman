@@ -1,5 +1,17 @@
 # Lootoman changelog
 
+## 0.5.9
+
+The loot feed reads better, does more with a click, and its settings are easier to reach.
+
+- **The low-space warning stops crying wolf:** by default it warns only when your general bags run low (3 slots or fewer), since reagents go into the general bags when their own bag is full. Turn on a threshold for all bags or for the reagent bag if you like. Its number is a text you can write (`{general}+{reagent}` by default), its tooltip lists every kind of bag, and a click opens the window to throw away junk.
+- **All junk in one row:** gray items and items you marked as junk gather in one "Junk" row that lists them in its tooltip. An item you can still use, such as a picked lockbox, stays on its own.
+- **Quest items** carry the bags' gold quest border.
+- **Clicks:** Shift-click an item row to link it in the chat; right-click a piece of gear you just looted to equip it.
+- **Rows come in one after another** when you loot a lot at once, and leave the same way; the delay is a setting.
+- **The background** takes the colour you pick, reaches a little past the rows and fades out there, and follows them smoothly.
+- **The look window, rebuilt:** an *Edit* button beside the look on the options page; in Edit Mode, clicking the feed opens the window directly. At its top the look you edit, with *Apply* to use another one and *Reset Position*; its settings on four tabs: *Content*, *Appearance*, *Timings* and *Row* (or *Icon*).
+
 ## 0.5.8
 
 Junk management suggests what else can go, and the junk windows are easier to use.
