@@ -83,13 +83,35 @@ describe("junk list window", function()
 		JunkList.Open()
 		local frame = JunkList.Window().frame
 		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 1004, 900 } }, frame.points)
-		panel.right = 1800
+	end)
+
+	it("opens over the options' right edge when the screen has no room right of them", function()
+		local panel = rawget(_G, "SettingsPanel")
+		panel.shown, panel.right, panel.top = true, 1800, 900
+		Loader.ui.UIParent.GetRight = function() return 1920 end
 		JunkList.Open()
+		local frame = JunkList.Window().frame
 		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 1920 - frame:GetWidth(), 900 } }, frame.points)
-		-- With the options closed (from the toss or sell window): in the middle.
-		panel.shown = false
+	end)
+
+	it("opens first in the middle with the options closed, then where it was when it closed, however it opens", function()
+		local panel = rawget(_G, "SettingsPanel")
 		JunkList.Open()
+		local frame = JunkList.Window().frame
 		assert.same({ { "CENTER" } }, frame.points)
+		-- The player moves it, and closes it.
+		frame:ClearAllPoints()
+		frame:SetPoint("TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 300, 700)
+		frame:Hide()
+		-- From the options now: where it was.
+		panel.shown, panel.right, panel.top = true, 1000, 900
+		JunkList.Open()
+		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 300, 700 } }, frame.points)
+		-- Opened again while open: it stays.
+		frame:ClearAllPoints()
+		frame:SetPoint("TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 50, 60)
+		JunkList.Open()
+		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 50, 60 } }, frame.points)
 	end)
 
 	it("opens only out of combat the first time, and only while junk management is on", function()

@@ -70,6 +70,13 @@ function methods:ClearAllPoints()
 		self.points = {}
 	end
 end
+-- A point as SetPoint got it: point, relativeTo, relativePoint, x, y.
+function methods:GetPoint(index)
+	local point = self.points[index or 1]
+	if point then
+		return unpack(point, 1, 5)
+	end
+end
 function methods:SetPoint(...)
 	if not blocked(self, "SetPoint") then
 		self.points[#self.points + 1] = { ... }

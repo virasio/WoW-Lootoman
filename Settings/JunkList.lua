@@ -17,11 +17,12 @@ local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 -- item marked otherwise here than in the text keeps its mark, and a window
 -- shows these one by one, with the item's tooltip: Keep mine or Take theirs.
 --
--- It opens from the main page (Edit the Junk List), right of the game's
--- options window and level with its top (over the options' right edge when
--- the screen has no room for it there), and from the toss and sell windows,
--- in the middle of the screen while the options are closed; only while junk
--- management is on; it is built the first time, out
+-- It opens from the main page (Edit the Junk List) and from the toss and
+-- sell windows, only while junk management is on. The first time, right of
+-- the game's options window and level with its top (over the options' right
+-- edge when the screen has no room for it there), or in the middle of the
+-- screen while the options are closed; after that, where it was when it
+-- closed, until the next reload (kept in memory only); it is built the first time, out
 -- of combat. While shown it follows the bags, the marks and the profile; it
 -- closes when junk management is turned off. Escape and its close button
 -- hide it.
@@ -43,6 +44,8 @@ local TAB_MARKS = { [JunkList.JUNK] = "junk", [JunkList.NOT_JUNK] = "notJunk" }
 
 local Junk = ns.Modules:Get("Junk")
 local window, conflicts
+-- Where it was when it closed, as GetPoint gives it: until the next reload.
+local lastPlace
 local active, hooked = false, false
 
 -- The items with a mark, sorted by name: { itemID, mark, name, text, icon }.
@@ -265,6 +268,13 @@ local function build()
 		noListButton = true,
 		-- Over the game's options window (HIGH), where its button is.
 		strata = "DIALOG",
+		-- Its place, the player's move included, for the next opening.
+		onHide = function(grid)
+			local point, relativeTo, relativePoint, x, y = grid.frame:GetPoint(1)
+			if point then
+				lastPlace = { point, relativeTo, relativePoint, x, y }
+			end
+		end,
 	})
 	local frame = grid.frame
 	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
@@ -324,13 +334,18 @@ local function build()
 	end
 end
 
--- Puts the window right of the game's options window, level with its top,
--- moved left over it as far as the screen needs; in the middle of the screen
--- while the options are closed. (The grid leaves its place to its owner; a
--- frame with none is not drawn.)
+-- Puts the window where it was when it closed; the first time, right of the
+-- game's options window, level with its top, moved left over it as far as
+-- the screen needs, or in the middle of the screen while the options are
+-- closed. (The grid leaves its place to its owner; a frame with none is not
+-- drawn.)
 function JunkList.Place()
 	local frame = window.frame
 	frame:ClearAllPoints()
+	if lastPlace then
+		frame:SetPoint(unpack(lastPlace, 1, 5))
+		return
+	end
 	local panel = SettingsPanel
 	local right, top = panel and panel:IsVisible() and panel:GetRight(), panel and panel:GetTop()
 	local screen = UIParent:GetRight()
@@ -358,7 +373,10 @@ function JunkList.Open(tab)
 		end
 		build()
 	end
-	JunkList.Place()
+	-- Already open: it stays where it is.
+	if not window.frame:IsShown() then
+		JunkList.Place()
+	end
 	window.grid:Open()
 	JunkList.ShowTab(tab or window.tab)
 	return true
