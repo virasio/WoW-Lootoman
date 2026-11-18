@@ -1,5 +1,19 @@
 # Lootoman changelog
 
+## 0.5.8
+
+Junk management suggests what else can go, and the junk windows are easier to use.
+
+- **Suggestions:** items of quests you have done, leftovers from them, soulbound gear your class can't use, recipes and collectibles you already have, and food and potions you have outgrown, each in its own group with a *To Junk* button, and each a switch on the options page. A suggestion stays a suggestion until you send it to the junk. With [QuestieDB](https://www.curseforge.com/wow/addons/questiedb) installed, quest suggestions know every quest an item is for.
+- **A quest hint:** junk that a quest in your log still wants sits at the bottom of the junk, under a highlighted line.
+- **Not junk is for any item now:** mark something you keep, and it is never suggested again. *Not Junk* is grouped by kind of item.
+- **Quicker moves:** left-click a suggestion to junk it, right-click to keep it, or drag any item between the groups.
+- **At merchants**, moves in the sort window are for this sale only; hold Shift to mark items for good.
+- **The toss window** (*Throw Away Junk*) names the most valuable item left in the loot and checks the junk worth less. Quest items no quest needs any more can be thrown away there too.
+- **A button by the bags** opens the toss window: small in the bag window's title, large above it, or large on its own, placed and sized in Edit Mode.
+- **The junk list window** shows your bags and both lists in tabs. Add an item by dropping it there, Shift-clicking it or pasting its link or ID.
+- **Share your junk list** as a text, alone or with a profile; import it merged with your list or in its place, and settle each item marked otherwise.
+
 ## 0.5.7
 
 Gathering highlights on WoW Forever show what you are about to loot.

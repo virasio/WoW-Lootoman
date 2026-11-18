@@ -254,7 +254,7 @@ ns.Slash.Register("toss", function()
 	else
 		ns.Print(L["Junk management is off. Turn it on in the options."])
 	end
-end, L["/lootoman toss: open the sort window"])
+end, L["/lootoman toss: open the window to throw away junk"])
 
 Junk.AddPart({
 	Enable = function()

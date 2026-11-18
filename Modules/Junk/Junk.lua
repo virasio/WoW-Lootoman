@@ -11,7 +11,7 @@ local Junk = ns.Modules:Register({
 	name = "Junk",
 	title = L["Junk"],
 	switchLabel = L["Enable Junk Management"],
-	description = L["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."],
+	description = L["Throw junk away by the loot window or the bags and sell it at merchants, with suggestions of what else can go. Turned off, the game's own sell-junk button is back."],
 	-- Only while QuestieDB is not working, decided as the options page is built.
 	switchNote = function()
 		if not ns.Integrations.QuestieDB.Working() then
@@ -55,7 +55,7 @@ local Junk = ns.Modules:Register({
 			click = function()
 				ns.JunkList.Open()
 			end },
-		{ kind = "choice", key = "tossButton", label = L["Sort Window Button"],
+		{ kind = "choice", key = "tossButton", label = L["Loot Window Button"],
 			tooltip = L["The button by the loot window opens a window of your bags with the junk on top, to throw things away."],
 			choices = { { "never", L["Never"] }, { "always", L["Always"] }, { "full", L["When the bags are full"] } } },
 		{ kind = "choice", key = "tossStyle", label = L["Style"], level = 2,

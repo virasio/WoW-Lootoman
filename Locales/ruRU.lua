@@ -230,8 +230,8 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Modules/Junk/Junk.lua
 	["Junk"] = "Хлам",
 	["Enable Junk Management"] = "Включить управление хламом",
-	["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."] = "Хлам выбрасывается из окна добычи и продаётся у торговцев через окно сортировки Lootoman. Если выключить, вернётся кнопка продажи хлама самой игры.",
-	["Sort Window Button"] = "Кнопка окна сортировки",
+	["Throw junk away by the loot window or the bags and sell it at merchants, with suggestions of what else can go. Turned off, the game's own sell-junk button is back."] = "Выбрасывайте хлам у окна добычи или сумок и продавайте его торговцам, с подсказками, что ещё можно отдать. Если выключено, возвращается кнопка продажи хлама самой игры.",
+	["Loot Window Button"] = "Кнопка у окна добычи",
 	["The button by the loot window opens a window of your bags with the junk on top, to throw things away."] = "Кнопка у окна добычи открывает окно с содержимым сумок, хлам сверху, — чтобы выбросить лишнее.",
 	["Always"] = "Всегда",
 	["When the bags are full"] = "Когда сумки полны",
@@ -322,7 +322,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",
 	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
-	["/lootoman toss: open the sort window"] = "/lootoman toss: открыть окно сортировки",
+	["/lootoman toss: open the window to throw away junk"] = "/lootoman toss: открыть окно, чтобы выбросить хлам",
 	["Drag it out of the window to delete it."] = "Перетащите за пределы окна, чтобы удалить.",
 
 	-- Modules/Junk/SellQueue.lua
