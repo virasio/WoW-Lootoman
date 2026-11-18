@@ -101,6 +101,10 @@ files["Integrations/Auctionator.lua"] = {
 	read_globals = { "Auctionator" },
 }
 
+files["Integrations/QuestieDB.lua"] = {
+	read_globals = { "LibQuestieDB" },
+}
+
 files["Modules/"] = {
 	read_globals = {
 		"CANCEL",

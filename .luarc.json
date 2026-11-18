@@ -18,6 +18,7 @@
   },
   "diagnostics.globals": [
     "Auctionator",
+    "LibQuestieDB",
     "CANCEL",
     "ALT_KEY",
     "AUTO_LOOT_DEFAULT_TEXT",

@@ -60,6 +60,7 @@ Providers\Bags.lua
 Providers\Prices.lua
 
 Integrations\Auctionator.lua
+Integrations\QuestieDB.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua
