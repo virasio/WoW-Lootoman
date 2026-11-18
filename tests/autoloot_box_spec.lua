@@ -13,8 +13,18 @@ describe("the game's Auto Loot box on the options page", function()
 		end
 	end
 
-	-- The options panel shows the page.
+	-- The options window closes, then opens on the page.
 	local function open()
+		api.panel.shown = false
+		page.frame.scripts.OnHide(page.frame)
+		api.panel.shown = true
+		page.frame.OnRefresh()
+	end
+
+	-- The player looks at another options page and comes back to this one,
+	-- the window open all along.
+	local function back()
+		page.frame.scripts.OnHide(page.frame)
 		page.frame.OnRefresh()
 	end
 
@@ -68,6 +78,14 @@ describe("the game's Auto Loot box on the options page", function()
 
 	it("is not shown when Auto Loot is on as the page opens", function()
 		Test.state.cvars.autoLootDefault = true
+		open()
+		assert.is_true(item().hidden)
+	end)
+
+	it("stays while the player looks at another options page and comes back, until the window opens again", function()
+		click(box.check, true)
+		back()
+		assert.same({ false, "All set. Next time this box will be hidden." }, { item().hidden, box.header.text })
 		open()
 		assert.is_true(item().hidden)
 	end)
@@ -143,7 +161,7 @@ describe("the game's Auto Loot box on the options page", function()
 		assert.same({ api.controls:GetID(), "Auto Loot" }, { api.opened, api.scrolledTo })
 		-- Back from the game's page with Auto Loot on.
 		Test.state.cvars.autoLootDefault = true
-		page:Refresh()
+		back()
 		assert.same({ false, "All set. Next time this box will be hidden.", "GameFontHighlight" },
 			{ item().hidden, box.header.text, box.header.fontObject })
 		Test.state.secureCVars.autoLootDefault = nil

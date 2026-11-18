@@ -200,8 +200,10 @@ function SettingsAPI.Install()
 		table.insert(self.hooks[script], hook)
 	end
 	api.defaultsButton = defaults
-	local panel = { list = { Header = { DefaultsButton = defaults } } }
+	local panel = { list = { Header = { DefaultsButton = defaults } }, shown = true }
 	function panel:GetSettingsList() return self.list end
+	function panel:IsShown() return self.shown end
+	api.panel = panel
 	function panel:GetCurrentCategory() return self.current end
 	rawset(_G, "SettingsPanel", panel)
 	rawset(_G, "CreateSettingsListSectionHeaderInitializer", function(name, tooltip)

@@ -112,6 +112,7 @@ The box holds, top to bottom: a message; the game's *Auto Loot* checkbox and *Au
 - [ ] **Changing the game's settings.** Tick *Auto Loot* in the box, then choose another key.
   - *Expected:* the box stays; the message turns white: «All set. Next time this box will be hidden.»; the key's label becomes *Loot Key*; the grey line stays; the game's Controls page shows the same values.
   - Untick it in the box: the red message and *Auto Loot Key* are back.
+  - Tick it again, click another options page (*Controls*) and come back to Lootoman: the box is still there, with the white message.
   - After closing and opening the options with Auto Loot on, the box is gone.
 - [ ] **Only while fast autoloot is on.** Auto Loot off in the game.
   - Untick *Enable Fast Autoloot*. *Expected:* the box is hidden at once; closing and opening the options keeps it hidden.

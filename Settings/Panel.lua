@@ -78,11 +78,23 @@ local function newMainPage()
 	end)
 	page.top = -56
 	page.area = "body"
+	-- Whether the options window was closed since the page was last shown:
+	-- the page then opens anew. Coming back from another options page while
+	-- the window stays open is not opening it.
+	page.closed = true
+	frame:SetScript("OnHide", function()
+		if not (SettingsPanel and SettingsPanel:IsShown()) then
+			page.closed = true
+		end
+	end)
 	-- The options panel calls it when it shows the page (and when it opens on
 	-- another page).
 	function frame.OnRefresh()
-		for _, open in ipairs(page.openers) do
-			xpcall(open, Compat.ReportError)
+		if page.closed then
+			page.closed = false
+			for _, open in ipairs(page.openers) do
+				xpcall(open, Compat.ReportError)
+			end
 		end
 		page:Refresh()
 	end
@@ -179,7 +191,8 @@ function MainPage:OnRefresh(update)
 	self.refreshers[#self.refreshers + 1] = update
 end
 
--- open() runs when the options panel shows the page, before it refreshes.
+-- open() runs when the options window shows the page for the first time
+-- since it opened, before the page refreshes.
 function MainPage:OnOpen(open)
 	self.openers[#self.openers + 1] = open
 end

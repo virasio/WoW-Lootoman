@@ -9,8 +9,8 @@ local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 -- on the game's Controls page, where an addon may change them; else a button
 -- that opens that page. A grey line at the bottom says these are the game's
 -- own settings and where it keeps them. Once Auto Loot is on, the message says
--- in white that all is set; the box stays while the page is open and the
--- switch on.
+-- in white that all is set; the box stays while the options window is open
+-- and the switch on.
 local AutoLootBox = {}
 ns.AutoLootBox = AutoLootBox
 
@@ -56,8 +56,9 @@ end
 -- The box on the options page (Panel.lua's MainPage), indented like the
 -- module's settings.
 function AutoLootBox.Build(page, indent, module)
-	-- Decided as the page opens and whenever the switch changes (by a click or
-	-- with the profile); changes made in the box keep it.
+	-- Decided as the options window opens on the page and whenever the switch
+	-- changes (by a click or with the profile); changes made in the box keep
+	-- it, also while the player looks at another options page and comes back.
 	local shown, switchOn = false, nil
 	page:OnOpen(function()
 		switchOn = nil
