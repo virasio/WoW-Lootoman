@@ -51,7 +51,7 @@ describe("junk list window", function()
 		assert.is_false(frame.shown)
 		-- The sort window's own button opens it too.
 		local grid = ns.Modules:Get("Junk").ItemGrid.Create({ name = "LootomanTestGrid", title = "Sort junk", kind = "toss" })
-		assert.equals("Junk list", grid.listButton.text)
+		assert.equals("Junk List", grid.listButton.text)
 		grid.listButton.scripts.OnClick(grid.listButton)
 		assert.is_true(frame.shown)
 	end)

@@ -53,8 +53,8 @@ function Toss.DeleteNow(entry)
 	-- Read again: a question may have been open while the item went into an
 	-- equipment set.
 	local facts = Compat.GetBagItemFacts(item.bag, item.slot)
-	if facts.quest or facts.equipmentSet then
-		ns.Print(L["This item is now a quest item or in an equipment set; nothing was deleted."])
+	if facts.equipmentSet then
+		ns.Print(L["This item is now in an equipment set; nothing was deleted."])
 		return false
 	end
 	Compat.PickupBagItem(item.bag, item.slot)
@@ -218,7 +218,7 @@ Junk.AddPart({
 	Enable = function()
 		grid = grid or Junk.ItemGrid.Create({
 			name = Toss.NAME,
-			title = L["Sort junk"],
+			title = L["Throw Away Junk"],
 			kind = "toss",
 			dropOutside = L["Drag it out of the window to delete it."],
 			onDropOutside = Toss.Delete,

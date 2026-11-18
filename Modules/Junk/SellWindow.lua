@@ -46,7 +46,7 @@ local function footer(owner, frame)
 	owner.sellButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	owner.sellButton:SetSize(120, 22)
 	owner.sellButton:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
-	owner.sellButton:SetText(L["Sell junk"])
+	owner.sellButton:SetText(L["Sell Junk"])
 	-- The sale goes on without the window, which is done once the junk is picked.
 	owner.sellButton:SetScript("OnClick", function()
 		Junk.SellQueue.Start(saleOf(owner.built))
@@ -80,7 +80,7 @@ Junk.AddPart({
 		if not grid then
 			grid = Junk.ItemGrid.Create({
 				name = SellWindow.NAME,
-				title = L["Sort junk"],
+				title = L["Sort Junk"],
 				kind = "sell",
 				onRefresh = updateFooter,
 				footer = footer,

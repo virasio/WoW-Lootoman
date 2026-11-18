@@ -73,9 +73,22 @@ describe("sell window", function()
 		assert.is_false(grid().sellButton:IsEnabled())
 	end)
 
-	it("moves an item between the sections with a right click, and sells nothing that way", function()
+	it("moves an item to the junk for this sale with a drag, for good with Shift, and sells nothing that way", function()
 		local rest = grid().sections.rest.buttons[1]
-		rest.scripts.OnClick(rest, "RightButton")
+		local function drop(shift)
+			rawset(_G, "IsShiftKeyDown", function() return shift end)
+			rest.scripts.OnDragStart(rest)
+			grid().sections.junk.frame.mouseOver = true
+			rest.scripts.OnDragStop(rest)
+			grid().sections.junk.frame.mouseOver = false
+			rawset(_G, "IsShiftKeyDown", nil)
+		end
+		drop(false)
+		assert.same({ nil, true }, { ns.Marks.Get(3), grid().thisSale.junk[3] })
+		grid().thisSale.junk[3] = nil
+		grid():Refresh()
+		rest = grid().sections.rest.buttons[1]
+		drop(true)
 		assert.equals("junk", ns.Marks.Get(3))
 		assert.same({}, used())
 	end)
