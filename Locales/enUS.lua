@@ -278,6 +278,8 @@ ns.Locales.AddEnglish({
 	"A quest in your log still wants these",
 	"Junk List",
 	"Throw Away Junk",
+	"In the loot: %s, worth %s",
+	"Worth less than what is left in the loot.",
 	"Sort Junk",
 	"Sell Junk",
 	"This item is now in an equipment set; nothing was deleted.",

@@ -273,6 +273,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["A quest in your log still wants these"] = "Это ещё нужно заданиям в журнале",
 	["Junk List"] = "Список хлама",
 	["Throw Away Junk"] = "Выбросить хлам",
+	["In the loot: %s, worth %s"] = "В добыче: %s, стоит %s",
+	["Worth less than what is left in the loot."] = "Стоит меньше, чем то, что осталось в добыче.",
 	["Sort Junk"] = "Разбор хлама",
 	["Sell Junk"] = "Продать хлам",
 	["This item is now in an equipment set; nothing was deleted."] = "Этот предмет теперь в комплекте экипировки, ничего не удалено.",

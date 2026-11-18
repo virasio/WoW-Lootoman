@@ -218,6 +218,9 @@ function GridMixin:ShowTooltip(button)
 	if entry.kept then
 		GameTooltip:AddLine(L["Its bag is left out of junk selling."], 1, 0.82, 0)
 	end
+	if self.options.checked and self.options.checkedNote and self.options.checked(entry) then
+		GameTooltip:AddLine(self.options.checkedNote, 0.4, 1, 0.4, true)
+	end
 	if entry.suggestion then
 		GameTooltip:AddLine(ItemGrid.Reason(entry.suggestion), 1, 0.82, 0, true)
 	elseif entry.hint then

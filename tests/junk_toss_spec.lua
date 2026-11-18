@@ -110,6 +110,74 @@ describe("toss window", function()
 		assert.matches("is off", Test.state.printed[#Test.state.printed])
 	end)
 
+	describe("cheaper than the loot", function()
+		local function link(itemID, name)
+			return "|Hitem:" .. itemID .. "|h[" .. name .. "]|h"
+		end
+
+		local function checked(bag, slot)
+			for _, section in pairs(Toss.Grid().sections) do
+				for _, button in ipairs(section.buttons) do
+					if button:IsShown() and button.entry.item.bag == bag and button.entry.item.slot == slot then
+						return button.check:IsShown()
+					end
+				end
+			end
+			error("no button for " .. bag .. ":" .. slot)
+		end
+
+		before_each(function()
+			Test.SetItems({ [1] = { name = "Broken Tooth", sellPrice = 7 }, [2] = { name = "Cracked Shell", sellPrice = 80 },
+				[3] = { name = "Ring", sellPrice = 9000 }, [4] = { name = "Wool Cloth", sellPrice = 50 } })
+			Test.SetBags({ [0] = { size = 4, items = {
+				[1] = { itemID = 1, link = link(1, "Broken Tooth"), name = "Broken Tooth", quality = 0, count = 3 },
+				[2] = { itemID = 2, link = link(2, "Cracked Shell"), name = "Cracked Shell", quality = 0, count = 2 },
+				[3] = { itemID = 3, link = link(3, "Ring"), name = "Ring", quality = 4, count = 1 },
+			} } })
+			Test.SetLoot({
+				{ kind = "money", quantity = 500 },
+				{ kind = "item", link = link(4, "Wool Cloth"), quantity = 2 },
+				{ kind = "item", link = link(2, "Cracked Shell"), quantity = 1 },
+			})
+		end)
+
+		it("names the most valuable item left in the loot and checks the junk worth less", function()
+			LootFrame:Show()
+			Toss.Toggle()
+			local line = Toss.Grid().lootLine
+			assert.is_true(line:IsShown())
+			assert.equals("In the loot: " .. link(4, "Wool Cloth") .. ", worth 100 copper", line:GetText())
+			-- 3 × 7 is less than 2 × 50; 2 × 80 is not; the ring is not junk.
+			assert.same({ true, false, false }, { checked(0, 1), checked(0, 2), checked(0, 3) })
+		end)
+
+		it("weighs the loot again when an item is taken, and drops the line when nothing priced is left", function()
+			LootFrame:Show()
+			Toss.Toggle()
+			Test.ClearLootSlot(2)
+			local line = Toss.Grid().lootLine
+			assert.equals("In the loot: " .. link(2, "Cracked Shell") .. ", worth 80 copper", line:GetText())
+			assert.same({ true, false }, { checked(0, 1), checked(0, 2) })
+			Test.ClearLootSlot(3)
+			assert.is_false(line:IsShown())
+			assert.same({ false, false }, { checked(0, 1), checked(0, 2) })
+		end)
+
+		it("shows no line and no checks when opened away from the loot", function()
+			Test.RunSlashCommand("LOOTOMAN", "toss")
+			assert.is_false(Toss.Grid().lootLine:IsShown())
+			assert.same({ false, false }, { checked(0, 1), checked(0, 2) })
+		end)
+
+		it("leaves out a loot slot whose values the client keeps secret", function()
+			Test.SetLoot({ { kind = "item", link = link(3, "Ring"), quantity = { secret = true } },
+				{ kind = "item", link = link(4, "Wool Cloth"), quantity = 1 } })
+			LootFrame:Show()
+			Toss.Toggle()
+			assert.equals("In the loot: " .. link(4, "Wool Cloth") .. ", worth 50 copper", Toss.Grid().lootLine:GetText())
+		end)
+	end)
+
 	describe("deleting", function()
 		before_each(function()
 			Toss.Open()
