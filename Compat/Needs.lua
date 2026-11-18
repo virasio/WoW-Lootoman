@@ -86,12 +86,15 @@ ns.Compat.NEEDS = {
 	GetPlayerPosition = { "UnitPosition", optional = { "issecretvalue" } },
 	GetProjectID = { "WOW_PROJECT_ID" },
 	GetSaved = {},
+	GetQuestObjectiveTexts = { optional = { "C_QuestLog.GetNumQuestLogEntries", "C_QuestLog.GetQuestIDForLogIndex",
+		"C_QuestLog.GetQuestObjectives", "issecretvalue" } },
 	GetSoftInteract = { "Enum.TooltipDataLineType", "SetUnitCursorTexture", "UIParent", "UnitExists", "UnitGUID", "UnitIsDead", "UnitIsGameObject", "UnitName", optional = {
 		"C_QuestLog.UnitIsRelatedToActiveQuest",
 		"C_TooltipInfo.GetUnit",
 		"UnitIsInInteractRange",
 		"issecretvalue",
 	} },
+	GetSoftInteractName = { "UnitName", optional = { "issecretvalue" } },
 	GetSoftInteractPlate = { "C_NamePlate.GetNamePlateForUnit", "UnitIsGameObject", "UnitIsUnit", optional = {
 		"issecretvalue",
 	} },
@@ -120,6 +123,7 @@ ns.Compat.NEEDS = {
 	SetAutoLootKey = { "InCombatLockdown", optional = { "GetCurrentBindingSet", "SaveBindings", "SetModifiedClick" } },
 	SetCVar = { "C_CVar.SetCVar", "InCombatLockdown" },
 	SetSaved = {},
+	SetSoftInteractCursor = { "SetUnitCursorTexture", optional = { "issecretvalue" } },
 	UnregisterEvent = {},
 	UseBagItem = { "C_Container.UseContainerItem" },
 }

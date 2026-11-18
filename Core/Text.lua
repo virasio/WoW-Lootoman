@@ -127,3 +127,24 @@ function Text.CheckName(name, names, maxLength, renaming)
 	end
 	return name
 end
+
+-- A colour kept as "rrggbb" (either case), as the numbers 0 to 1 the game
+-- takes; fallback, another "rrggbb", for a value that is not one (else black).
+function Text.RGB(color, fallback)
+	local r, g, b = tostring(color):match("^(%x%x)(%x%x)(%x%x)$")
+	if not r then
+		if fallback then
+			return Text.RGB(fallback)
+		end
+		return 0, 0, 0
+	end
+	return tonumber(r, 16) / 255, tonumber(g, 16) / 255, tonumber(b, 16) / 255
+end
+
+-- The numbers 0 to 1 of a colour, as it is kept: "rrggbb".
+function Text.Hex(r, g, b)
+	local function byte(value)
+		return math.floor(math.min(math.max(value, 0), 1) * 255 + 0.5)
+	end
+	return ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+end

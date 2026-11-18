@@ -588,6 +588,57 @@ function Compat.GetSoftInteract(skipQuest)
 	return facts
 end
 
+-- Puts the soft interact target's cursor on a texture, the icon the game
+-- would show over it (low-priority cursors too); whether it has one.
+function Compat.SetSoftInteractCursor(texture)
+	return try(SetUnitCursorTexture, texture, SOFT, nil, true) == true
+end
+
+-- The soft interact target's name, for showing it, and whether it has one.
+-- The name may be a value the client keeps secret: give it only to a font
+-- string's SetText, which takes secrets; never compare or measure it.
+function Compat.GetSoftInteractName()
+	local ok, name = pcall(UnitName, SOFT)
+	if not ok then
+		return nil, false
+	end
+	if Compat.IsSecret(name) then
+		return name, true
+	end
+	if type(name) == "string" and name ~= "" then
+		return name, true
+	end
+	return nil, false
+end
+
+-- The objective types of something to collect or to use: the ones a game
+-- object can be for.
+local OBJECTIVE_TYPES = { item = true, object = true }
+
+-- The texts of the unfinished objectives, of the quests in the log, that ask
+-- to collect or use something ("Waterlogged Saw: 0/1"), in the client's
+-- language: a game object for such a quest often has neither the quest flag
+-- nor a quest line in its tooltip. A text the client keeps secret is left
+-- out; without the quest log functions, none.
+function Compat.GetQuestObjectiveTexts()
+	local texts = {}
+	if not (Compat.Has("C_QuestLog.GetNumQuestLogEntries") and Compat.Has("C_QuestLog.GetQuestIDForLogIndex")
+		and Compat.Has("C_QuestLog.GetQuestObjectives")) then
+		return texts
+	end
+	for index = 1, try(C_QuestLog.GetNumQuestLogEntries) or 0 do
+		local questID = try(C_QuestLog.GetQuestIDForLogIndex, index)
+		local objectives = type(questID) == "number" and questID > 0 and try(C_QuestLog.GetQuestObjectives, questID)
+		for _, objective in ipairs(type(objectives) == "table" and objectives or {}) do
+			local text, kind = plain(true, objective.text), plain(true, objective.type)
+			if type(text) == "string" and plain(true, objective.finished) == false and (kind == nil or OBJECTIVE_TYPES[kind]) then
+				texts[#texts + 1] = text
+			end
+		end
+	end
+	return texts
+end
+
 -- The file ID of one of the game's cursors (Interface\Cursor\<name>), or nil.
 function Compat.GetCursorFileID(name)
 	local path = "Interface\\Cursor\\" .. name
@@ -642,10 +693,10 @@ function Compat.GetLootSourceObjects()
 	return ids
 end
 
--- Whether the character has Herbalism and Mining: { herbs, ore }, each true,
--- false, or nil when the client cannot say yet, read as Lueur does on WoW
--- Forever. Yes from any source is enough: the tracking spell each profession
--- teaches (Find Herbs, Find Minerals), the skill line with a rank, the
+-- Whether the character has Herbalism, Mining and Skinning: { herbs, ore,
+-- skinning }, each true, false, or nil when the client cannot say yet, read
+-- as Lueur does on WoW Forever. Yes from any source is enough: a spell the
+-- profession teaches (Find Herbs, Find Minerals, Skinning's ranks), the skill line with a rank, the
 -- professions list. No only when a source that can answer says so; while the
 -- client has not loaded the skill lines yet (just after logging in), it
 -- cannot say. The professions list only ever says yes: on WoW Forever it may
@@ -653,6 +704,7 @@ end
 local GATHERING = {
 	herbs = { line = 182, spells = { 2383, 8387 } },
 	ore = { line = 186, spells = { 2580, 8388 } },
+	skinning = { line = 393, spells = { 8613, 8617, 8618, 10768 } },
 }
 
 local function professionLines()
@@ -711,7 +763,8 @@ end
 function Compat.GetGatheringSkills()
 	local known = Compat.Has("C_SpellBook.IsSpellKnown") and C_SpellBook.IsSpellKnown or nil
 	local lines = professionLines()
-	return { herbs = gatheringSkill(GATHERING.herbs, known, lines), ore = gatheringSkill(GATHERING.ore, known, lines) }
+	return { herbs = gatheringSkill(GATHERING.herbs, known, lines), ore = gatheringSkill(GATHERING.ore, known, lines),
+		skinning = gatheringSkill(GATHERING.skinning, known, lines) }
 end
 
 -- The player's position in the world, two coordinates in yards as the client

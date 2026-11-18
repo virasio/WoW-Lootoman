@@ -588,6 +588,29 @@ describe("Compat for highlights", function()
 		assert.equals(plates.softinteract, Compat.GetSoftInteractPlate({ nameplate3 = true }))
 	end)
 
+	it("gives the unfinished objectives to collect or use of the quests in the log, without secrets", function()
+		local SECRET_TEXT = SECRET
+		stub({ C_QuestLog = {
+			GetNumQuestLogEntries = function() return 3, 2 end,
+			-- A header, then two quests.
+			GetQuestIDForLogIndex = function(index) return ({ nil, 101, 202 })[index] end,
+			GetQuestObjectives = function(questID)
+				if questID == 101 then
+					return {
+						{ text = "Waterlogged Saw: 0/1", type = "item", finished = false },
+						{ text = "Murlocs slain: 2/10", type = "monster", finished = false },
+						{ text = "Shiny Junk: 8/8", type = "item", finished = true },
+					}
+				end
+				return { { text = SECRET_TEXT, type = "object", finished = false }, { text = "Strange Idol: 0/1", type = "object", finished = false } }
+			end,
+		} })
+		assert.same({ "Waterlogged Saw: 0/1", "Strange Idol: 0/1" }, Compat.GetQuestObjectiveTexts())
+		-- Without the quest log functions: none.
+		stub({ C_QuestLog = {} })
+		assert.same({}, Compat.GetQuestObjectiveTexts())
+	end)
+
 	it("knows Herbalism and Mining from the tracking spells, the skill lines or the professions", function()
 		local spells, lines = {}
 		local function unset(...)

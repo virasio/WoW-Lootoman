@@ -420,19 +420,12 @@ end
 
 -- A background's color, "rrggbb", as the numbers 0 to 1 the game takes.
 function Design.RGB(color)
-	local r, g, b = color:match("^(%x%x)(%x%x)(%x%x)$")
-	if not r then
-		return 0, 0, 0
-	end
-	return tonumber(r, 16) / 255, tonumber(g, 16) / 255, tonumber(b, 16) / 255
+	return ns.Text.RGB(color)
 end
 
 -- The numbers 0 to 1 of a color, as a design keeps it: "rrggbb".
 function Design.Hex(r, g, b)
-	local function byte(value)
-		return math.floor(math.min(math.max(value, 0), 1) * 255 + 0.5)
-	end
-	return ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+	return ns.Text.Hex(r, g, b)
 end
 
 -- The player's design: its base with the player's changes, inside its row.

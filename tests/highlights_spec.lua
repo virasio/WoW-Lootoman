@@ -129,7 +129,7 @@ describe("gathering highlights", function()
 		assert.equals("chests", lit())
 	end)
 
-	it("greys out the profession option while herbs and ore are both off", function()
+	it("greys out the profession option while herbs, ore and corpses to skin are all off", function()
 		local found
 		for _, setting in ipairs(module.mainSettings) do
 			if setting.key == "gatherable" then
@@ -139,10 +139,12 @@ describe("gathering highlights", function()
 		assert.is_true(found.enabledWhen())
 		module:Set("herbs", false)
 		module:Set("ore", false)
+		assert.is_true(found.enabledWhen())
+		module:Set("skinning", false)
 		assert.is_false(found.enabledWhen())
 	end)
 
-	it("never lights a creature or a corpse, and pauses soft targeting on a living unit", function()
+	it("never lights a creature or a corpse without the skinning cursor, and pauses soft targeting on a living unit", function()
 		target(herb())
 		target({ isObject = false, isDead = false, name = "Stormwind Guard" })
 		assert.same({ nil, "0", "0" }, { lit(), Test.state.consoleVars.SoftTargetNameplateInteract, Test.state.consoleVars.SoftTargetInteract })
@@ -224,6 +226,49 @@ describe("gathering highlights", function()
 		assert.same({ 3, nil }, { full, lit() })
 		target(herb())
 		assert.same({ 4, "herbs" }, { full, lit() })
+	end)
+
+	it("lights an object a quest's objective names at once, until the quest no longer wants it, and never learns it", function()
+		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.state.questObjectives = { "Waterlogged Saw: 0/1" }
+		Test.FireEvent("QUEST_LOG_UPDATE")
+		Test.Advance(0.2)
+		local saw = { isObject = true, cursor = 99, name = "Waterlogged Saw", objectID = 4242, inReach = true }
+		target(saw)
+		assert.equals("quest", lit())
+		assert.matches("Highlights: Waterlogged Saw (object 4242, cursor 99), quest by objective, ready", Test.state.printed[#Test.state.printed], 1, true)
+		-- Looted: not a chest from then on.
+		Test.state.lootSources = { 4242 }
+		Test.FireEvent("LOOT_READY", true)
+		Test.state.lootSources = {}
+		assert.is_nil(Test.state.saved.LootomanDB.sections.lootContainers.values[4242])
+		-- The objective is done: the saw no longer sparkles.
+		Test.state.questObjectives = {}
+		Test.FireEvent("QUEST_LOG_UPDATE")
+		Test.Advance(0.2)
+		target(saw)
+		assert.is_nil(lit())
+	end)
+
+	it("lights a corpse that can be skinned now, with Skinning or with the option off", function()
+		local corpse = { isObject = false, isDead = true, cursor = "Cursor Crosshair_Skin_64", name = "Plainstrider", inReach = true }
+		Test.state.gatheringSkills.skinning = true
+		target(corpse)
+		assert.same({ "skinning", "ready" }, { lit(), module.lit.state })
+		-- Too little skill: faint.
+		corpse.cursor = "Cursor Crosshair_UnableSkin_64"
+		target(corpse)
+		assert.equals("locked", module.lit.state)
+		-- Without Skinning, only with the option off; and never with the switch off.
+		Test.state.gatheringSkills.skinning = false
+		target(corpse)
+		assert.is_nil(lit())
+		module:Set("gatherable", false)
+		assert.equals("skinning", lit())
+		module:Set("skinning", false)
+		assert.is_nil(lit())
+		-- A corpse looks no other way to the safe self-cast: it is not living.
+		assert.is_false(ns.Highlights.GameSettings.IsPaused())
 	end)
 
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
@@ -381,6 +426,123 @@ describe("gathering highlights' sparkles", function()
 		assert.equals(0.3, frame.level)
 	end)
 
+	it("show the object's icon and its name over the stars by default, at the plate's centre", function()
+		Test.state.consoleVars.SoftTargetIconInteract = "1"
+		target(HERB)
+		local frame = Sparkles.Create()
+		local label = frame.label
+		-- A child of the stars' frame: it takes their brightness and fade.
+		assert.same({ true, frame, { "CENTER", frame, "CENTER", 0, 45 } }, { label.shown, label.parent, label.points[1] })
+		assert.same({ true, 3, { Sparkles.ICON, Sparkles.ICON } }, { label.icon.shown, label.icon.texture, { label.icon.width, label.icon.height } })
+		assert.same({ true, "Peacebloom", { "Fonts\\FRIZQT__.TTF", 12, "OUTLINE" }, { 0, 0 } },
+			{ label.name.shown, label.name.text, label.name.font, label.name.shadowOffset })
+		assert.same({ 1, 1, 1 }, label.name.color)
+		assert.same({ "BOTTOM", label.name, "TOP", 0, 4 }, label.icon.points[1])
+		-- Fully opaque, whatever the stars' brightness.
+		assert.same({ true, 1 }, { label.ignoresParentAlpha, label.alpha })
+		assert.is_false(label.backdrop.shown)
+		-- The game's own icon stays off over it.
+		assert.equals("0", Test.state.consoleVars.SoftTargetIconInteract)
+	end)
+
+	it("keep the icon and the name at their own opacity, not the stars'", function()
+		target(HERB)
+		local frame = Sparkles.Create()
+		module:Set("labelOpacity", 60)
+		assert.equals(0.6, frame.label.alpha)
+		module:Set("label", "icon")
+		assert.equals(0.6, frame.label.alpha)
+		-- Never quite gone; and the stars out of reach leave it as it is.
+		module:Set("labelOpacity", 0)
+		assert.equals(0.1, frame.label.alpha)
+		Sparkles.Show(plate, "far", module:Look(), module:Stars())
+		frame.scripts.OnUpdate(frame, 1)
+		assert.equals(0.1, frame.label.alpha)
+	end)
+
+	it("light the stars at the player's intensity, out of reach and locked by the same share of it", function()
+		target(HERB)
+		local frame = Sparkles.Create()
+		module:Set("intensity", 50)
+		frame.scripts.OnUpdate(frame, 1)
+		assert.equals(0.5, frame.alpha)
+		Sparkles.Show(plate, "locked", module:Look(), module:Stars())
+		for _ = 1, 10 do
+			frame.scripts.OnUpdate(frame, 0.1)
+		end
+		assert.equals(0.15, frame.alpha)
+		module:Set("intensity", 5)
+		assert.equals(0.1, module:Intensity())
+	end)
+
+	it("tint the stars in the player's colour, gold by default", function()
+		target(HERB)
+		local frame = Sparkles.Create()
+		local function colors()
+			local seen = {}
+			for _, star in ipairs(frame.stars) do
+				seen[#seen + 1] = table.concat(star.vertex, ",")
+			end
+			return seen
+		end
+		local gold = table.concat({ 1, 209 / 255, 0 }, ",")
+		assert.same({ gold, gold, gold, gold, gold, gold }, colors())
+		module:Set("starColor", "33ccff")
+		local blue = table.concat({ 0.2, 0.8, 1 }, ",")
+		assert.same({ blue, blue, blue, blue, blue, blue }, colors())
+		module:Set("starColor", "sky")
+		assert.same({ gold, gold, gold, gold, gold, gold }, colors())
+	end)
+
+	it("show the icon alone at the centre, or nothing, as the player chooses", function()
+		target(HERB)
+		local label = Sparkles.Create().label
+		module:Set("label", "icon")
+		assert.same({ true, true, false }, { label.shown, label.icon.shown, label.name.shown })
+		assert.same({ "CENTER", label, "CENTER", 0, 0 }, label.icon.points[1])
+		module:Set("label", "none")
+		assert.is_false(label.shown)
+		module:Set("label", "name")
+		assert.same({ true, true }, { label.shown, label.name.shown })
+	end)
+
+	it("write the name in the chosen size, colour and style", function()
+		target(HERB)
+		local name, backdrop = Sparkles.Create().label.name, Sparkles.Create().label.backdrop
+		module:Set("textSize", 18)
+		module:Set("textColor", "33ccff")
+		assert.same({ 18, { 0.2, 0.8, 1 } }, { name.font[2], name.color })
+		module:Set("textStyle", "shadow")
+		assert.same({ "", { 1, -1 }, false }, { name.font[3], name.shadowOffset, backdrop.shown })
+		module:Set("textStyle", "thick")
+		assert.same({ "THICKOUTLINE", { 0, 0 } }, { name.font[3], name.shadowOffset })
+		module:Set("textStyle", "backdrop")
+		assert.same({ "", { 1, -1 }, true }, { name.font[3], name.shadowOffset, backdrop.shown })
+		-- Around the text's own edges, whatever its width.
+		assert.same({ { "TOPLEFT", name, "TOPLEFT", -4, 2 }, { "BOTTOMRIGHT", name, "BOTTOMRIGHT", 4, -2 } }, backdrop.points)
+	end)
+
+	it("fall back to the defaults for a size, colour or style a profile text brought that is not valid", function()
+		target(HERB)
+		local name = Sparkles.Create().label.name
+		module:Set("textSize", 40)
+		module:Set("textColor", "gold")
+		module:Set("textStyle", "glitter")
+		assert.same({ 24, { 1, 1, 1 }, "OUTLINE" }, { name.font[2], name.color, name.font[3] })
+	end)
+
+	it("show a name the client keeps secret, and the icon alone when there is no name", function()
+		local secret = { secret = true }
+		Test.state.softInteractName = secret
+		target(HERB)
+		local label = Sparkles.Create().label
+		assert.same({ true, secret }, { label.name.shown, label.name.text })
+		Test.state.softInteractName = ""
+		target({ isObject = true, isDead = false, cursor = 3, inReach = true })
+		assert.same({ true, true, false }, { label.shown, label.icon.shown, label.name.shown })
+		assert.same({ "CENTER", label, "CENTER", 0, 0 }, label.icon.points[1])
+	end)
+
 	it("light an object whatever other addons draw on its plate: a nameplate addon's frames, another glow", function()
 		-- A nameplate addon puts its own frames on every plate; another addon may light the object too.
 		local nameplateAddon = _G.CreateFrame("Frame", nil, plate)
@@ -402,7 +564,8 @@ describe("gathering highlights on the options page", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_truthy(table.concat(texts, "|"):find(
-			"Highlight Lootable Objects|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather", 1, true))
+			"Highlight Lootable Objects|Intensity|Sparkle Color|What to Highlight|Quest Objects|Herbs|Chests|Ore|Corpses to Skin|Only What You Can Gather",
+			1, true))
 		-- The kinds two to a row, quest objects and chests on the left, herbs and ore on the right at the
 		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
 		-- profession option a little apart.
@@ -410,21 +573,52 @@ describe("gathering highlights on the options page", function()
 		for _, entry in ipairs(page.items) do
 			if entry.kind == "checkboxes" then
 				rows[#rows + 1] = entry
-			elseif entry.text == "Only Herbs and Ore You Can Gather" then
+			elseif entry.text == "Only What You Can Gather" then
 				option = entry
 			end
 		end
-		assert.same({ 2, "Quest Objects|Herbs", "Chests|Ore" }, { #rows, rows[1].text, rows[2].text })
+		assert.same({ 3, "Quest Objects|Herbs", "Chests|Ore", "Corpses to Skin" }, { #rows, rows[1].text, rows[2].text, rows[3].text })
 		local cells = rows[1].region.cells
-		assert.same({ 24, cells[1], cells[2] }, { rows[1].indent, cells[1].checkbox.parent, cells[2].checkbox.parent })
-		assert.same({ "TOPLEFT", rows[1].region, "TOPLEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 24, 0 }, cells[2].points[1])
-		assert.equals(14, option.gap)
+		assert.same({ 48, cells[1], cells[2] }, { rows[1].indent, cells[1].checkbox.parent, cells[2].checkbox.parent })
+		assert.same({ "TOPLEFT", rows[1].region, "TOPLEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 48, 0 }, cells[2].points[1])
+		assert.same({ 14, 48 }, { option.gap, option.indent })
 		-- Clicking a cell's checkbox sets its kind; profile texts still check the kinds' values.
 		local ore = rows[2].region.cells[2].checkbox
 		ore.checked = false
 		ore.scripts.OnClick(ore)
 		assert.is_false(ns.Storage:Get("Highlights", "ore"))
 		assert.is_true(ns.Modules:Get("Highlights"):Validate("chests", false))
+		-- Above the object: the choice, and the name's three settings under it, greyed without the name.
+		assert.is_truthy(table.concat(texts, "|"):find("Only What You Can Gather|Above the Object|Opacity|Text Size|Text Color|Text Style",
+			1, true))
+		local kinds = {}
+		for _, entry in ipairs(page.items) do
+			local text = entry.text
+			if text == "Intensity" or text == "Sparkle Color" or text == "What to Highlight" or text == "Above the Object"
+				or text == "Opacity" or text == "Text Size" or text == "Text Color" or text == "Text Style" then
+				kinds[#kinds + 1] = entry.kind .. "@" .. entry.indent .. "+" .. entry.gap
+			end
+		end
+		-- The stars' settings right under the switch; what to highlight under its heading, and what shows
+		-- above the object, a bigger gap before each.
+		assert.same({ "slider@24+6", "color@24+6", "heading@24+16", "choice@24+16", "slider@48+6", "slider@48+6", "color@48+6",
+			"choice@48+6" }, kinds)
+		local function label(text)
+			for _, entry in ipairs(page.items) do
+				if entry.text == text then
+					return entry.region.label
+				end
+			end
+		end
+		assert.equals("GameFontNormal", label("Text Size").fontObject)
+		ns.Storage:Set("Highlights", "label", "icon")
+		assert.same({ "GameFontNormal", "GameFontDisable", "GameFontDisable", "GameFontDisable" },
+			{ label("Opacity").fontObject, label("Text Size").fontObject, label("Text Color").fontObject, label("Text Style").fontObject })
+		ns.Storage:Set("Highlights", "label", "none")
+		assert.equals("GameFontDisable", label("Opacity").fontObject)
+		local defaults = ns.Modules:Get("Highlights").defaults
+		assert.same({ 100, "ffd100", "name", 100, 12, "ffffff", "outline" }, { defaults.intensity, defaults.starColor, defaults.label,
+			defaults.labelOpacity, defaults.textSize, defaults.textColor, defaults.textStyle })
 		SettingsAPI.Install()
 		ns = Loader.Start(Loader.LoadAddon({ skip = {} }))
 		texts = {}
