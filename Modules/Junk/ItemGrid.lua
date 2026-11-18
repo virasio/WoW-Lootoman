@@ -32,6 +32,7 @@ local JunkRule = ns.Rules.Junk
 --       dropOutside = <tooltip line>, onDropOutside = function(entry) end,  -- optional
 --       footer = function(grid, footer) end,  -- adds the owner's buttons
 --       top = <pixels>,                       -- room for the owner over the sections
+--       strata = "DIALOG",                    -- default "HIGH"; DIALOG opens over the game's options
 --   })
 --   grid:Attach()      -- in the part's Enable: refresh on changes while shown
 --   grid:Open() / grid:Close() / grid:Refresh()
@@ -497,7 +498,7 @@ function ItemGrid.Create(options)
 		height = height + sectionHeight(ItemGrid.ROWS[key]) + 8
 	end
 	frame:SetHeight(height + ItemGrid.FOOTER)
-	frame:SetFrameStrata("HIGH")
+	frame:SetFrameStrata(options.strata or "HIGH")
 	frame:SetToplevel(true)
 	frame:SetClampedToScreen(true)
 	frame:EnableMouse(true)

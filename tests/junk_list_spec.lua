@@ -64,6 +64,8 @@ describe("junk list window", function()
 		click(mainButton())
 		local frame = JunkList.Window().frame
 		assert.same({ true, "Junk List", "LootomanJunkList" }, { frame.shown, frame.title, frame.name })
+		-- Over the game's options window, which is HIGH.
+		assert.equals("DIALOG", frame.strata)
 		-- No button of its own to open itself.
 		assert.is_nil(JunkList.Window().grid.listButton)
 		assert.is_true(Loader.ui.PressEscape())

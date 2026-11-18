@@ -258,6 +258,8 @@ local function build()
 		kind = "toss",
 		mode = "keep",
 		noListButton = true,
+		-- Over the game's options window (HIGH), where its button is.
+		strata = "DIALOG",
 	})
 	local frame = grid.frame
 	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
