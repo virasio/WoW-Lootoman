@@ -91,9 +91,18 @@ function Highlights.Chests()
 	return section.values
 end
 
--- What the module knows while it is on: the cursor files and the nameplate
--- units shown now ({ ["nameplate3"] = true }).
-local known, plates
+-- What the module knows while it is on: the cursor files, the learned
+-- chests and the quests' objectives (known), the nameplate units shown now
+-- ({ ["nameplate3"] = true }), and the objects seen as quest objects this
+-- session ({ [objectID] = true }), which looting does not make chests.
+local known, plates, questObjects
+
+-- The quests' objectives to collect or use, as Objects.Classify compares them.
+local function readObjectives()
+	if known then
+		known.objectives = Objects.ObjectiveTexts(Compat.GetQuestObjectiveTexts())
+	end
+end
 
 -- How the sparkles look: in reach, out of reach, or not usable yet (an
 -- "Unable" cursor in reach). Without the reach check, an Unable cursor counts
@@ -217,7 +226,10 @@ function Highlights:Evaluate(tick)
 	if facts and facts.isLiving then
 		GameSettings.Pause("unit")
 	end
-	local kind, extra = Objects.Classify(facts, known)
+	local kind, extra, how = Objects.Classify(facts, known)
+	if kind == "quest" and facts.objectID then
+		questObjects[facts.objectID] = true
+	end
 	local lit, why, state = false, extra, nil
 	if kind then
 		lit, why = self:Wants(kind)
@@ -239,7 +251,7 @@ function Highlights:Evaluate(tick)
 	end
 	self.ticker:SetShown(lit or GameSettings.IsPaused())
 	-- Lit, but nothing to draw on yet: the game gave no nameplate.
-	debug(facts, kind, state and (plate and state or state .. ", no nameplate"), why)
+	debug(facts, how and kind .. " by " .. how or kind, state and (plate and state or state .. ", no nameplate"), why)
 end
 
 -- After looting game objects: chests from now on (Objects.Learn). Never from
@@ -248,7 +260,7 @@ function Highlights:Learn()
 	if Compat.IsFishingLoot() then
 		return
 	end
-	local learned = Objects.Learn(Highlights.Chests(), Compat.GetLootSourceObjects())
+	local learned = Objects.Learn(Highlights.Chests(), Compat.GetLootSourceObjects(), questObjects)
 	if learned > 0 then
 		ns.Debug(("Highlights: learned %d chest(s)"):format(learned))
 	end
@@ -256,7 +268,8 @@ end
 
 function Highlights:OnEnable()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
-	plates = {}
+	readObjectives()
+	plates, questObjects = {}, {}
 	told, questFacts = nil, nil
 	if not self.ticker then
 		self.ticker = CreateFrame("Frame")
@@ -314,6 +327,7 @@ function Highlights:OnEnable()
 			self.questPending = true
 			Compat.After(Highlights.TICK, function()
 				self.questPending = false
+				readObjectives()
 				self:Evaluate()
 			end)
 		end
@@ -337,7 +351,7 @@ function Highlights:OnDisable()
 	end
 	self.lit = nil
 	GameSettings.Stop()
-	known, plates, questFacts = nil, nil, nil
+	known, plates, questFacts, questObjects = nil, nil, nil, nil
 end
 
 -- What the self-test reports: the client's functions and settings that

@@ -67,6 +67,8 @@ local state = {
 	-- nameplates by unit; the loot window's source object IDs; Herbalism and
 	-- Mining; the player's position { x, y }.
 	softInteract = nil,
+	-- The texts of the quests' objectives to collect or use (GetQuestObjectiveTexts).
+	questObjectives = {},
 	cursorFiles = {},
 	nameplates = {},
 	lootSources = {},
@@ -251,6 +253,15 @@ function Compat.GetSoftInteractName()
 		return name, true
 	end
 	return nil, false
+end
+
+-- state.questObjectives, as the client gives them.
+function Compat.GetQuestObjectiveTexts()
+	local texts = {}
+	for index, text in ipairs(state.questObjectives) do
+		texts[index] = text
+	end
+	return texts
 end
 
 -- state.cursorFiles: the file IDs of the game's cursors by name.

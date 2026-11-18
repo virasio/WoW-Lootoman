@@ -611,6 +611,34 @@ function Compat.GetSoftInteractName()
 	return nil, false
 end
 
+-- The objective types of something to collect or to use: the ones a game
+-- object can be for.
+local OBJECTIVE_TYPES = { item = true, object = true }
+
+-- The texts of the unfinished objectives, of the quests in the log, that ask
+-- to collect or use something ("Waterlogged Saw: 0/1"), in the client's
+-- language: a game object for such a quest often has neither the quest flag
+-- nor a quest line in its tooltip. A text the client keeps secret is left
+-- out; without the quest log functions, none.
+function Compat.GetQuestObjectiveTexts()
+	local texts = {}
+	if not (Compat.Has("C_QuestLog.GetNumQuestLogEntries") and Compat.Has("C_QuestLog.GetQuestIDForLogIndex")
+		and Compat.Has("C_QuestLog.GetQuestObjectives")) then
+		return texts
+	end
+	for index = 1, try(C_QuestLog.GetNumQuestLogEntries) or 0 do
+		local questID = try(C_QuestLog.GetQuestIDForLogIndex, index)
+		local objectives = type(questID) == "number" and questID > 0 and try(C_QuestLog.GetQuestObjectives, questID)
+		for _, objective in ipairs(type(objectives) == "table" and objectives or {}) do
+			local text, kind = plain(true, objective.text), plain(true, objective.type)
+			if type(text) == "string" and plain(true, objective.finished) == false and (kind == nil or OBJECTIVE_TYPES[kind]) then
+				texts[#texts + 1] = text
+			end
+		end
+	end
+	return texts
+end
+
 -- The file ID of one of the game's cursors (Interface\Cursor\<name>), or nil.
 function Compat.GetCursorFileID(name)
 	local path = "Interface\\Cursor\\" .. name

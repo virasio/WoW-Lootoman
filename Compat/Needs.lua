@@ -86,6 +86,8 @@ ns.Compat.NEEDS = {
 	GetPlayerPosition = { "UnitPosition", optional = { "issecretvalue" } },
 	GetProjectID = { "WOW_PROJECT_ID" },
 	GetSaved = {},
+	GetQuestObjectiveTexts = { optional = { "C_QuestLog.GetNumQuestLogEntries", "C_QuestLog.GetQuestIDForLogIndex",
+		"C_QuestLog.GetQuestObjectives", "issecretvalue" } },
 	GetSoftInteract = { "Enum.TooltipDataLineType", "SetUnitCursorTexture", "UIParent", "UnitExists", "UnitGUID", "UnitIsDead", "UnitIsGameObject", "UnitName", optional = {
 		"C_QuestLog.UnitIsRelatedToActiveQuest",
 		"C_TooltipInfo.GetUnit",

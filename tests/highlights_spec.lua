@@ -226,6 +226,28 @@ describe("gathering highlights", function()
 		assert.same({ 4, "herbs" }, { full, lit() })
 	end)
 
+	it("lights an object a quest's objective names at once, until the quest no longer wants it, and never learns it", function()
+		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.state.questObjectives = { "Waterlogged Saw: 0/1" }
+		Test.FireEvent("QUEST_LOG_UPDATE")
+		Test.Advance(0.2)
+		local saw = { isObject = true, cursor = 99, name = "Waterlogged Saw", objectID = 4242, inReach = true }
+		target(saw)
+		assert.equals("quest", lit())
+		assert.matches("Highlights: Waterlogged Saw (object 4242, cursor 99), quest by objective, ready", Test.state.printed[#Test.state.printed], 1, true)
+		-- Looted: not a chest from then on.
+		Test.state.lootSources = { 4242 }
+		Test.FireEvent("LOOT_READY", true)
+		Test.state.lootSources = {}
+		assert.is_nil(Test.state.saved.LootomanDB.sections.lootContainers.values[4242])
+		-- The objective is done: the saw no longer sparkles.
+		Test.state.questObjectives = {}
+		Test.FireEvent("QUEST_LOG_UPDATE")
+		Test.Advance(0.2)
+		target(saw)
+		assert.is_nil(lit())
+	end)
+
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
 		Test.RunSlashCommand("LOOTOMAN", "debug on")
 		Test.state.nameplates = {}
