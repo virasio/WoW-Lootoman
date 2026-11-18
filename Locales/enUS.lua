@@ -252,6 +252,7 @@ ns.Locales.AddEnglish({
 
 	-- Modules/Junk/ItemGrid.lua
 	"Everything else",
+	"Other",
 	"Drag an item here to mark it as junk.",
 	"Drag an item here to remove its mark.",
 	"Auction price: %s",

@@ -121,6 +121,7 @@ local RULES = {
 
 -- The suggestion for an item, or nil: { rule, and what tells why }. enabled:
 -- the rules' switches by key; a rule missing from it is on.
+---@return { rule: string }?
 function Suggest.Find(facts, enabled)
 	if facts.mark or facts.equipmentSet or facts.refundable or facts.uncollected or wanted(facts) then
 		return nil

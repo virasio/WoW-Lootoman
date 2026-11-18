@@ -20,6 +20,12 @@ local Junk = ns.Modules:Register({
 		tossStyle = "large",
 		-- At Merchants (SellButton.lua): "auto", "button" or "window".
 		selling = "window",
+		-- The suggestion rules (Rules/Suggest.lua, Sections.SWITCHES).
+		suggestQuestDone = true,
+		suggestLeftovers = true,
+		suggestUnusable = true,
+		suggestKnown = true,
+		suggestOutgrown = true,
 	},
 	-- Under the switch the junk list first, then how the sort window opens.
 	mainSettings = {

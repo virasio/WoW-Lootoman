@@ -247,6 +247,7 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/Junk/ItemGrid.lua
 	["Everything else"] = "Всё остальное",
+	["Other"] = "Прочее",
 	["Drag an item here to mark it as junk."] = "Перетащите сюда предмет, чтобы пометить его как хлам.",
 	["Drag an item here to remove its mark."] = "Перетащите сюда предмет, чтобы снять с него пометку.",
 	["Auction price: %s"] = "Цена на аукционе: %s",
