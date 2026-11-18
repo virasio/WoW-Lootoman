@@ -58,6 +58,9 @@ local Design = ns.Feed.Design
 Frames.POOL = 24
 -- A stuck row's pin: the game's own map pin.
 Frames.PIN = "Waypoint-MapPin-Tracked"
+-- Enum.ItemClass.Questitem: an item of this class carries the bags' gold quest
+-- border on its icon, as in the bags.
+Frames.QUEST_CLASS = 12
 Frames.FADE_IN = 0.2
 -- Seconds a row takes to slide one place.
 Frames.SLIDE_TIME = 0.15
@@ -135,6 +138,9 @@ function Frames.Describe(row, options)
 		if kind == "currency" then
 			look.owned = options.showOwned and row.total or nil
 		else
+			-- Known once the client has the item's data.
+			local info = (row.link or row.id) and Compat.GetItemInfo(row.link or row.id)
+			look.questItem = info ~= nil and info.classID == Frames.QUEST_CLASS or nil
 			look.border = ColorManager.GetAtlasDataForLootBorderItemQuality(row.quality or 1) or "loottoast-itemborder-white"
 			if options.showGlow and (row.quality or 0) >= Frames.GLOW_QUALITY then
 				look.glow = ColorManager.GetAtlasDataForNewItemQuality(row.quality)
@@ -424,10 +430,13 @@ function Frames.Fill(rowFrame, row, options, stuck)
 		texture:SetColorTexture(r, g, b, part.opacity / 100)
 		texture:SetShown(part.background and rowFrame[Frames.REGIONS[name]]:IsShown())
 	end
-	-- The quest mark as soon as the item is known to start a quest; the pin and
-	-- the clicks for the stuck row.
+	-- The quest mark as soon as the item is known to start a quest ("!"), or the
+	-- gold quest border on the icon of a quest item; the pin and the clicks for
+	-- the stuck row.
 	placeMarks(rowFrame, iconShown, options.layout.height)
-	rowFrame.QuestMark:SetShown(row.sticky == "quest")
+	local starter = row.sticky == "quest"
+	rowFrame.QuestMark:SetTexture(starter and TEXTURE_ITEM_QUEST_BANG or TEXTURE_ITEM_QUEST_BORDER)
+	rowFrame.QuestMark:SetShown(starter or (look.questItem == true and iconShown))
 	rowFrame.Pin:SetShown(stuck ~= nil and row.sticky ~= "quest")
 	local size = math.max(8, math.floor(parts.icon.pixels * 0.4 + 0.5))
 	rowFrame.Pin:SetSize(size, size)

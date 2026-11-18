@@ -143,6 +143,7 @@ files["Modules/"] = {
 		"SecureHandlerWrapScript",
 		"StaticPopup_Show",
 		"TEXTURE_ITEM_QUEST_BANG",
+		"TEXTURE_ITEM_QUEST_BORDER",
 		"TooltipUtil",
 		"UIParent",
 	},

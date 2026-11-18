@@ -203,6 +203,26 @@ describe("loot feed frames", function()
 			assert.same({ "Junk", "[Rag] ×3", "[Bone]" }, tooltip.lines)
 		end)
 
+		it("marks a quest item with the bags' gold quest border on its icon; a kept starter keeps its \"!\"; no mark without the icon", function()
+			ns.Compat.Test.SetItems({ [800] = { name = "Wolf Meat", icon = 5, quality = 1, classID = 12 },
+				[2589] = { name = "Linen Cloth", icon = 1, quality = 1, classID = 7 } })
+			model:Add({ kind = "item", id = 800, link = "|Hitem:800::|h[Wolf Meat]|h", name = "Wolf Meat", icon = 5, quality = 1, amount = 1 }, 0)
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
+			feed:Draw(1)
+			local meat, cloth = frameWith("Wolf Meat"), frameWith("Linen Cloth")
+			assert.same({ true, "Interface\\ContainerFrame\\UI-Icon-QuestBorder", false }, { meat.QuestMark.shown, meat.QuestMark.texture,
+				cloth.QuestMark.shown })
+			local starter = { kind = "item", id = 800, link = "|Hitem:800::|h[Wolf Meat]|h", name = "Wolf Meat", icon = 5, quality = 1,
+				sticky = "quest" }
+			Frames.Fill(meat, starter, feed.options)
+			assert.same({ true, "Interface\\ContainerFrame\\UI-Icon-QuestBang" }, { meat.QuestMark.shown, meat.QuestMark.texture })
+			local noIcon = ns.Feed.Design.Layout(ns.Feed.Design.LARGE, 12)
+			noIcon.parts.icon.shown = false
+			Frames.Fill(meat, { kind = "item", id = 800, link = "|Hitem:800::|h[Wolf Meat]|h", name = "Wolf Meat", quality = 1 },
+				{ layout = noIcon })
+			assert.is_false(meat.QuestMark.shown)
+		end)
+
 		local GENERAL = { amount = "|cffffffff3|r", lines = { "General bags: 3 of 16 free" } }
 		local REAGENT = { amount = "|cff1eff002|r", lines = { "Reagent bag: 2 of 36 free" } }
 		local BOTH = { amount = "|cffffffff3|r+|cff1eff002|r", lines = { "General bags: 3 of 16 free", "Reagent bag: 2 of 36 free" } }

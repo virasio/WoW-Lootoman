@@ -65,6 +65,7 @@
     "StaticPopup_Show",
     "SecureHandlerWrapScript",
     "TEXTURE_ITEM_QUEST_BANG",
+    "TEXTURE_ITEM_QUEST_BORDER",
     "UnitIsInInteractRange",
     "TooltipUtil",
     "UISpecialFrames",
