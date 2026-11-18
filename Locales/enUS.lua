@@ -49,6 +49,7 @@ ns.Locales.AddEnglish({
 	-- Modules/LootFeed/Frames.lua
 	"Experience",
 	"Left-click: dismiss. Right-click: use.",
+	"Right-click: equip.",
 	"Left-click: dismiss. Right-click: use, after the fight.",
 	-- Sample rows in Edit Mode.
 	"Sample item",

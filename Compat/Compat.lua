@@ -651,6 +651,12 @@ function Compat.GetItemClassName(classID)
 	return try(C_Item.GetItemClassInfo, classID)
 end
 
+-- Equips an item from the bags (a link or an ID), or swaps it in; the game
+-- picks the slot, asks about binding, and refuses armour in a fight.
+function Compat.EquipItem(item)
+	try(C_Item.EquipItemByName, item)
+end
+
 -- Whether an item can be equipped at all (by anyone), and whether this
 -- character can use it now: nil where the client cannot say.
 function Compat.IsEquippableItem(item)

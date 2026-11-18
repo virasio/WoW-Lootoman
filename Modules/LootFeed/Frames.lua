@@ -33,7 +33,11 @@ local Compat, L = ns.Compat, ns.L
 -- fight is over.
 --
 -- Rows show tooltips but let clicks through to the game world, but for the
--- stuck one, and the mouse wheel keeps zooming the camera. Hovering pauses the model's timers. The
+-- stuck one, the warning (when it can be clicked), a row of gear in the bags
+-- (a right click equips it), and every item row while the chat-link modifier
+-- is held (SetLinkModifier: Shift-click puts its link into the chat, and the
+-- game's other modified clicks work as in the bags); the mouse wheel keeps
+-- zooming the camera. Hovering pauses the model's timers. The
 -- frame is hidden, and costs nothing, while there are no rows and no warnings.
 --
 -- It draws on every frame only while something moves: a row fading in or
@@ -209,6 +213,8 @@ local function showTooltip(rowFrame)
 			else
 				GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use."], 0.5, 1, 0.5)
 			end
+		elseif Frames.IsGear(row) then
+			GameTooltip:AddLine(L["Right-click: equip."], 0.5, 1, 0.5)
 		end
 		GameTooltip:Show()
 	elseif row.parts then
@@ -307,6 +313,17 @@ function Frames.CreateRow(parent)
 	rowFrame.Waiting:SetDrawLayer("OVERLAY", 5)
 	rowFrame.Waiting:Hide()
 	rowFrame:SetScript("OnMouseUp", function(self, button)
+		local row = self.data
+		-- The game's modified clicks on an item (its link into the chat with
+		-- Shift), as in the bags; a right click equips gear.
+		if self.feed and row and row.kind == "item" and row.link and self ~= self.feed.warningRow then
+			if button == "LeftButton" and Frames.ModifiedClick(row.link) then
+				return
+			elseif button == "RightButton" and not self.stuck and Frames.IsGear(row) then
+				Compat.EquipItem(row.link)
+				return
+			end
+		end
 		-- A left click lets the stuck item go (its right click is the use button's).
 		if self.stuck and button == "LeftButton" and self.feed then
 			self.feed:Dismiss(self.data)
@@ -446,10 +463,12 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
 	rowFrame.Waiting:SetShown(waiting > 0)
 	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting
-	-- In the feed only the stuck row takes clicks; the designer's rows take
+	-- In the feed the stuck row, gear in the bags and, while the chat-link
+	-- modifier is held, every item row take clicks; the designer's rows take
 	-- them all (they choose the row).
 	if rowFrame.feed then
-		rowFrame:SetMouseClickEnabled(stuck ~= nil)
+		local item = row.kind == "item" and row.link ~= nil
+		rowFrame:SetMouseClickEnabled(stuck ~= nil or (item and (rowFrame.feed.linkModifier or Frames.IsGear(row))))
 	end
 	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
 end
@@ -470,6 +489,26 @@ function Frames.PreviewRows()
 		{ row = { kind = "item", name = L["Sample quest item"], icon = [[Interface\Icons\INV_Misc_Note_02]], quality = 1, amount = 1,
 			owned = 1, sticky = "quest" }, alpha = 1, stuck = true, waiting = 1 },
 	}
+end
+
+-- Gear the bags hold: a right click on its row equips it.
+function Frames.IsGear(row)
+	return row.kind == "item" and row.link ~= nil and not row.parts and Compat.IsEquippableItem(row.link)
+		and Compat.GetItemCount(row.link, true) > 0
+end
+
+-- The game's modified click on an item, as its bags handle one (the chat link
+-- with Shift, the dressing room with Ctrl); true when one was made. A client
+-- without it still links with the chat-link modifier.
+function Frames.ModifiedClick(link)
+	if HandleModifiedItemClick then
+		return HandleModifiedItemClick(link) == true
+	end
+	if IsModifiedClick("CHATLINK") and ChatFrameUtil and ChatFrameUtil.InsertLink then
+		ChatFrameUtil.InsertLink(link)
+		return true
+	end
+	return false
 end
 
 -- The junk row's icon: the sell-junk icon Lootoman's toss and sell buttons use.
@@ -759,6 +798,16 @@ end
 function FeedMixin:RefreshOwned()
 	self.version = self.version + 1
 	self.nextDraw = 0
+end
+
+-- Whether the chat-link modifier (Shift) is held: every item row then takes
+-- clicks, for its link.
+function FeedMixin:SetLinkModifier(held)
+	if self.linkModifier ~= held then
+		self.linkModifier = held
+		self.version = self.version + 1
+		self.nextDraw = 0
+	end
 end
 
 function FeedMixin:SetPreview(active)

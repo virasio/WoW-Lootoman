@@ -37,6 +37,8 @@
     "ContainerFrameCombinedBags",
     "C_SkillInfo",
     "ChatFrameUtil",
+    "HandleModifiedItemClick",
+    "IsModifiedClick",
     "CreateMinimalSliderFormatter",
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",

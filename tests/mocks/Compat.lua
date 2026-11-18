@@ -75,6 +75,7 @@ local state = {
 	questsInLog = {},
 	-- Item class names by class ID; the character's level; the item on the cursor.
 	itemClasses = {},
+	equipped = {},
 	playerLevel = 60,
 	cursorItem = nil,
 	cursorFiles = {},
@@ -412,6 +413,11 @@ end
 
 -- Items (state.items) may be equippable = true and usable = false (this
 -- character cannot use them).
+-- state.equipped: what EquipItem was asked for, in order.
+function Compat.EquipItem(item)
+	state.equipped[#state.equipped + 1] = item
+end
+
 function Compat.IsEquippableItem(item)
 	local info = findItem(item)
 	return info ~= nil and info.equippable == true

@@ -223,6 +223,35 @@ describe("loot feed frames", function()
 			assert.is_false(meat.QuestMark.shown)
 		end)
 
+		it("lets a row of gear in the bags take clicks, a right click equipping it; others only while Shift is held, to link", function()
+			local SWORD = "|cff1eff00|Hitem:900::|h[Sword]|h|r"
+			ns.Compat.Test.SetItems({ [900] = { name = "Sword", icon = 6, quality = 2, equippable = true, owned = 1 },
+				[2589] = { name = "Linen Cloth", icon = 1, quality = 1 } })
+			ns.Compat.Test.SetBags({ [0] = { size = 4, items = { { itemID = 900, count = 1 } } } })
+			model:Add({ kind = "item", id = 900, link = SWORD, name = "Sword", icon = 6, quality = 2, amount = 1 }, 0)
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			local sword, cloth, money = frameWith("Sword"), frameWith("Linen Cloth"), frameWith("100 copper")
+			assert.same({ true, false, false }, { sword.mouseClicks, cloth.mouseClicks, money.mouseClicks })
+			sword.scripts.OnEnter(sword)
+			assert.equals("Right-click: equip.", tooltip.lines[#tooltip.lines])
+			sword.scripts.OnMouseUp(sword, "RightButton")
+			cloth.scripts.OnMouseUp(cloth, "RightButton")
+			assert.same({ SWORD }, ns.Compat.Test.state.equipped)
+			-- Shift held: every item row takes clicks, and a left click links it; money still lets them through.
+			feed:SetLinkModifier(true)
+			feed:Draw(2)
+			assert.same({ true, true, false }, { sword.mouseClicks, cloth.mouseClicks, money.mouseClicks })
+			Loader.ui.modifiers.CHATLINK = true
+			cloth.scripts.OnMouseUp(cloth, "LeftButton")
+			assert.same({ LINK }, Loader.ui.modifiedClicks)
+			Loader.ui.modifiers.CHATLINK = nil
+			feed:SetLinkModifier(false)
+			feed:Draw(3)
+			assert.is_false(cloth.mouseClicks)
+		end)
+
 		local GENERAL = { amount = "|cffffffff3|r", lines = { "General bags: 3 of 16 free" } }
 		local REAGENT = { amount = "|cff1eff002|r", lines = { "Reagent bag: 2 of 36 free" } }
 		local BOTH = { amount = "|cffffffff3|r+|cff1eff002|r", lines = { "General bags: 3 of 16 free", "Reagent bag: 2 of 36 free" } }

@@ -188,6 +188,15 @@ describe("loot feed module", function()
 		assert.same({ ["150 copper"] = "", ["Linen Cloth"] = "×2" }, shown)
 	end)
 
+	it("lets item rows take clicks while the chat-link modifier is held", function()
+		Loader.ui.modifiers.CHATLINK = true
+		Test.FireEvent("MODIFIER_STATE_CHANGED", "LSHIFT", 1)
+		assert.is_true(module.feed.linkModifier)
+		Loader.ui.modifiers.CHATLINK = nil
+		Test.FireEvent("MODIFIER_STATE_CHANGED", "LSHIFT", 0)
+		assert.is_false(module.feed.linkModifier)
+	end)
+
 	describe("junk in one row", function()
 		local RAG = "|cff9d9d9d|Hitem:700::|h[Rag]|h|r"
 		local BONE = "|cff9d9d9d|Hitem:701::|h[Bone]|h|r"

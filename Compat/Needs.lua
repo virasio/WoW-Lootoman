@@ -20,6 +20,7 @@ ns.Compat.NEEDS = {
 		"C_EncodingUtil.SerializeCBOR",
 	} },
 	DeleteCursorItem = { "DeleteCursorItem" },
+	EquipItem = { "C_Item.EquipItemByName", optional = { "issecretvalue" } },
 	Encode = { "C_EncodingUtil.CompressString", "C_EncodingUtil.EncodeBase64", "Enum.CompressionMethod", optional = {
 		"C_EncodingUtil.SerializeCBOR",
 	} },

@@ -367,6 +367,18 @@ function UI.Install()
 	end
 	rawset(_G, "TEXTURE_ITEM_QUEST_BANG", "Interface\\ContainerFrame\\UI-Icon-QuestBang")
 	rawset(_G, "TEXTURE_ITEM_QUEST_BORDER", "Interface\\ContainerFrame\\UI-Icon-QuestBorder")
+	-- Modified clicks (ItemButtonTemplate.lua): api.modifiers holds the ones the
+	-- player holds ({ CHATLINK = true }); HandleModifiedItemClick records the
+	-- links it took, and takes one only with a modifier held.
+	api.modifiers, api.modifiedClicks = {}, {}
+	rawset(_G, "IsModifiedClick", function(name) return api.modifiers[name] == true end)
+	rawset(_G, "HandleModifiedItemClick", function(link)
+		if api.modifiers.CHATLINK or api.modifiers.DRESSUP then
+			api.modifiedClicks[#api.modifiedClicks + 1] = link
+			return true
+		end
+		return false
+	end)
 	-- A tooltip's title goes first among its lines (a menu's tooltip gives a plain list).
 	rawset(_G, "GameTooltip_SetTitle", function(owner, text)
 		local lines = owner.lines or owner

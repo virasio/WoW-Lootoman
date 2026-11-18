@@ -49,6 +49,7 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Modules/LootFeed/Frames.lua
 	["Experience"] = "Опыт",
 	["Left-click: dismiss. Right-click: use."] = "Левый щелчок — убрать, правый — использовать.",
+	["Right-click: equip."] = "Правый щелчок: надеть.",
 	["Left-click: dismiss. Right-click: use, after the fight."] = "Левый щелчок — убрать, правый — использовать после боя.",
 	["Sample item"] = "Пример предмета",
 	["Sample rare item"] = "Пример редкого предмета",
