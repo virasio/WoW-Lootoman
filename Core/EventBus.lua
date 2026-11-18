@@ -33,6 +33,7 @@ Bus.MESSAGES = {
 	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot" },
+	OpenTossWindow = { payload = "", from = "the loot feed, a click on its low-space warning; the junk module opens the toss window" },
 }
 
 local messageListeners = {}

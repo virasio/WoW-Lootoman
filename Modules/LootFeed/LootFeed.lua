@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 local Feed = ns.Feed
 local Looks = Feed.Looks
 
@@ -165,6 +165,12 @@ function LootFeed:Warnings()
 			text = slots.reagent == 0 and L["No free reagent bag slots"] or L["Free reagent bag slots: %d"]:format(slots.reagent) }
 	end
 	return warnings
+end
+
+-- Asks for the junk module's toss window, the window that frees room in the
+-- bags; nothing opens while junk management is off.
+function LootFeed:OpenTossWindow()
+	Bus:Send("OpenTossWindow")
 end
 
 -- Whether the feed keeps items of a kind of usable item: not while it shows
