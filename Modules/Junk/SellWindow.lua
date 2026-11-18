@@ -1,15 +1,15 @@
 local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
--- The sell window: the bags as an item grid (ItemGrid.lua), laid out like the
--- toss window, with what a merchant buys: the junk on top, everything else
--- below, by the merchant's price. It opens from the sell-junk button (Shift-
--- click), to the right of the merchant's window, and closes with it.
+-- The sell window (the sort window, as the player sees it): the bags as an
+-- item grid (ItemGrid.lua), laid out like the toss window, with what a
+-- merchant buys, by the merchant's price. It opens from the sell-junk button,
+-- to the right of the merchant's window, and closes with it. A move in it is
+-- for this sale only, and for good with Shift held (ItemGrid.lua).
 --
--- Sell junk, at the bottom, sells the upper section, less the junk in bags the
+-- Sell Junk, at the bottom, sells the junk group, less the junk in bags the
 -- game keeps out of junk selling (shown darker), and closes the window; the
--- sale goes on with the window closed. A right click moves an item
--- between the sections (ItemGrid.lua). The bottom also says so when there is
+-- sale goes on with the window closed. The bottom also says so when there is
 -- more junk than the merchant can buy back.
 local Junk = ns.Modules:Get("Junk")
 local SellWindow = {}

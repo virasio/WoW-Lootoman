@@ -1,12 +1,14 @@
 local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
--- Getting rid of junk (Rules/Junk.lua decides what it is): a button by the
--- loot window opens the sort window, a bag-like window with the junk on top,
--- to delete things; at a merchant, Lootoman's sell-junk button sells the junk
--- or opens the same window to pick what to sell. Dragging an item between the
--- sections of either window marks it. Turned off, the game's own sell-junk
--- button is back.
+-- Getting rid of junk (Rules/Junk.lua decides what it is, Rules/Suggest.lua
+-- what else could go): buttons by the loot window and the bags open the toss
+-- window, a bag-like window with the junk on top, to delete things; at a
+-- merchant, Lootoman's sell-junk button sells the junk or opens the sort
+-- window to pick what to sell; the junk list window holds the marks. In all
+-- three the same groups (Sections.lua), and moving an item between them
+-- marks it (ItemGrid.lua). Turned off, the game's own sell-junk button is
+-- back.
 local Junk = ns.Modules:Register({
 	name = "Junk",
 	title = L["Junk"],
@@ -20,7 +22,7 @@ local Junk = ns.Modules:Register({
 	end,
 	defaults = {
 		enabled = true,
-		-- The sort window's button on the loot window: "never", "always" or "full".
+		-- The toss window's button on the loot window: "never", "always" or "full".
 		tossButton = "full",
 		-- Small on the loot window's title bar, or large next to it.
 		tossStyle = "large",

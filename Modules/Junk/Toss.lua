@@ -2,17 +2,17 @@ local _, ns = ...
 local Compat, Inventory, L, Prices, Text = ns.Compat, ns.Inventory, ns.L, ns.Prices, ns.Text
 
 -- The toss window: the bags as an item grid (ItemGrid.lua), junk on top, to
--- throw things away. It opens from the toss button, next to the loot window
--- (right of it, or left when there is no room) and closes with the loot; or
--- with /lootoman toss, in the middle of the screen.
+-- throw things away. It opens from the loot window's button, next to the loot
+-- window (right of it, or left when there is no room) and closes with the
+-- loot; or from the bag button and with /lootoman toss, in the middle of the
+-- screen. Every move in it marks the item for good.
 --
 -- Dragging an item out of the window deletes its stack: a gray one at once;
 -- any other after a confirmation in Lootoman's own dialog, which for rare and
 -- better items also asks for the game's confirmation word, as the game does.
 -- An item whose quality the client has not loaded yet counts as rare.
 -- (The game's own question comes only from dropping an item onto the world,
--- and showing Blizzard's dialogs from addon code would taint them.) A right
--- click moves an item between the sections (ItemGrid.lua).
+-- and showing Blizzard's dialogs from addon code would taint them.)
 --
 -- Deleting is a pick up and a delete in the same mouse action (the release of
 -- the drag, or the click on Delete), one item per action, as the game requires
