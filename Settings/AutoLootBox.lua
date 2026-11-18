@@ -1,13 +1,14 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 
--- Fast autoloot works only while the game loots automatically. When the
--- game's own Auto Loot is off as the options page opens, a box under the fast
--- autoloot block asks in red to turn it on, and holds the game's Auto Loot
--- settings: the checkbox and the Auto Loot key, as on the game's Controls
--- page, where an addon may change them; else a button that opens that page.
--- Once Auto Loot is on, its header says in green that all is set, and where
--- the game keeps these settings; the box stays until the page opens again.
+-- Fast autoloot works only while the game loots automatically. While fast
+-- autoloot is on, and the game's own Auto Loot was off when the options page
+-- opened or the switch was turned on, a box under the fast autoloot block
+-- asks in red to turn it on, and holds the game's Auto Loot settings: the
+-- checkbox and the Auto Loot key, as on the game's Controls page, where an
+-- addon may change them; else a button that opens that page. Once Auto Loot
+-- is on, its header says in green that all is set, and where the game keeps
+-- these settings; the box stays while the page is open and the switch on.
 local AutoLootBox = {}
 ns.AutoLootBox = AutoLootBox
 
@@ -49,11 +50,19 @@ end
 
 -- The box on the options page (Panel.lua's MainPage), indented like the
 -- module's settings.
-function AutoLootBox.Build(page, indent)
-	-- Decided as the page opens; changes made in the box keep it.
-	local shown = false
+function AutoLootBox.Build(page, indent, module)
+	-- Decided as the page opens and whenever the switch changes (by a click or
+	-- with the profile); changes made in the box keep it.
+	local shown, switchOn = false, nil
 	page:OnOpen(function()
-		shown = not Compat.GetAutoLoot()
+		switchOn = nil
+	end)
+	page:OnRefresh(function()
+		local on = Storage:Get(module.name, "enabled") and true or false
+		if on ~= switchOn then
+			switchOn = on
+			shown = on and not Compat.GetAutoLoot()
+		end
 	end)
 	local box = page:AddBox("", AutoLootBox.HEIGHT, { indent = indent, headerFont = "GameFontRed", visible = function()
 		return shown
