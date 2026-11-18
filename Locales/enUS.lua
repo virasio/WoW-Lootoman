@@ -358,7 +358,7 @@ ns.Locales.AddEnglish({
 	"None",
 	"Remove",
 	"Remove every mark of profile “%s” from the junk list?",
-	"Set Up the Junk List",
+	"Edit the Junk List",
 	"Every item you marked as junk or as not junk, to remove marks.",
 
 	-- Modules/LootFeed/LootFeed.lua

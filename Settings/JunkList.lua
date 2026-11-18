@@ -17,7 +17,7 @@ local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 -- item marked otherwise here than in the text keeps its mark, and a window
 -- shows these one by one, with the item's tooltip: Keep mine or Take theirs.
 --
--- It opens from the main page (Set Up the Junk List) and from the toss and
+-- It opens from the main page (Edit the Junk List) and from the toss and
 -- sell windows, while junk management is on; it is built the first time, out
 -- of combat. While shown it follows the bags, the marks and the profile; it
 -- closes when junk management is turned off. Escape and its close button

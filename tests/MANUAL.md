@@ -46,7 +46,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 - [ ] **Main page.** Options → AddOns → Lootoman.
   - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
     - *Enable Fast Autoloot*, a small white hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
-    - *Enable Junk Management*, with *Set Up the Junk List* right under it (and the QuestieDB note and button without QuestieDB), then *Loot Window Button*, *Style* under it (greyed out while the button is *Never*), *Bag Window Button*, *At Merchants* and the *Suggestions*, all greyed out while junk is off;
+    - *Enable Junk Management*, with *Edit the Junk List* right under it (and the QuestieDB note and button without QuestieDB), then *Loot Window Button*, *Style* under it (greyed out while the button is *Never*), *Bag Window Button*, *At Merchants* and the *Suggestions*, all greyed out while junk is off;
     - *Show the Loot Feed*, with *Feed Look* under it (greyed out while the feed is off);
     - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only What You Can Gather*.
   - Every title on the page is capitalized as the game's own are (short words such as *when*, *at*, *the* lowercase); the dropdowns' choices, the tooltips and the Russian texts stay as they were.
@@ -340,7 +340,7 @@ The same groups in all three junk windows.
 
 ### The junk list window (0.5.8)
 
-- [ ] **Opening.** *Set Up the Junk List* on the options page, and *Junk List* in the toss and sort windows' title bars. *Expected:* a window titled *Junk List* with three tabs under it, *Bags* first; it closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight. Turning junk management off closes it.
+- [ ] **Opening.** *Edit the Junk List* on the options page, and *Junk List* in the toss and sort windows' title bars. *Expected:* a window titled *Junk List* with three tabs under it, *Bags* first; it closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight. Turning junk management off closes it.
 - [ ] **Bags.** *Expected:* the groups; every click and drag marks for good, as in the toss window, with no Shift; items dragged out are not deleted.
 - [ ] **Junk and Not Junk.** *Expected:* every item with that mark, in the bags or not, by name, each with its icon, its tooltip on hover and *Remove*; *None* for an empty list. *Remove* takes one away (it moves in the open junk windows at once).
 - [ ] **Adding.** On *Junk*, then on *Not Junk*:
@@ -355,7 +355,7 @@ The same groups in all three junk windows.
 
 ### Options (0.5.8)
 
-- [ ] **Order.** *Expected:* under *Enable Junk Management*: *Set Up the Junk List*, *Loot Window Button* with *Style*, *Bag Window Button*, *At Merchants*, then a heading *Suggestions* with the five rules two to a row: *Quest Done*, *Leftovers from Quests*, *Your Class Can't Use It*, *Already Known*, *Outgrown*; each rule's tooltip says what it finds.
+- [ ] **Order.** *Expected:* under *Enable Junk Management*: *Edit the Junk List*, *Loot Window Button* with *Style*, *Bag Window Button*, *At Merchants*, then a heading *Suggestions* with the five rules two to a row: *Quest Done*, *Leftovers from Quests*, *Your Class Can't Use It*, *Already Known*, *Outgrown*; each rule's tooltip says what it finds.
 - [ ] **Without QuestieDB.** *Expected:* a note under the switch, «Suggestions about quests are better with QuestieDB…», and *Copy the QuestieDB Address* right under it; the button opens a small window with the address selected, to copy with Ctrl+C (Cmd+C on a Mac); typing changes nothing; Escape and *Close* close it.
 - [ ] **With QuestieDB.** *Expected:* neither the note nor the button.
 
@@ -417,6 +417,6 @@ On WoW Forever, with the default settings unless the check says otherwise.
 
 ## Russian client
 
-- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка у окна добычи*, *Кнопка у сумок*, *У торговца*, *Выбросить хлам*, *Разбор хлама*, *Список хлама*, *Предложения*, *Настроить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns.
+- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка у окна добычи*, *Кнопка у сумок*, *У торговца*, *Выбросить хлам*, *Разбор хлама*, *Список хлама*, *Предложения*, *Изменить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns.
 - [ ] **Feed messages.** Loot items and gain reputation. *Expected:* rows like «Репутация Штормграда +250» («Фракция «…»» for a faction name the message does not decline); the self-test still shows `20 of 20`.
 - [ ] **Numbers.** With a look of icons, loot money and gain experience in the thousands; point at the experience row. *Expected:* note the decimal point the client gives ("1.23" or "1,23"), the K and M, and the thousands separator in the tooltip.

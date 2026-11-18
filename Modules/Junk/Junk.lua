@@ -50,7 +50,7 @@ local Junk = ns.Modules:Register({
 				ns.SettingsPanel.CopyText("QuestieDB", L["Copy the address (Ctrl+C, or Cmd+C on a Mac) and open it in your browser."],
 					ns.Integrations.QuestieDB.ADDRESS)
 			end },
-		{ kind = "button", label = L["Set Up the Junk List"],
+		{ kind = "button", label = L["Edit the Junk List"],
 			tooltip = L["Every item you marked as junk or as not junk, to remove marks."],
 			click = function()
 				ns.JunkList.Open()

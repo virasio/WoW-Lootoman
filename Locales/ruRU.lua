@@ -353,7 +353,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["None"] = "Нет",
 	["Remove"] = "Убрать",
 	["Remove every mark of profile “%s” from the junk list?"] = "Убрать из списка хлама все пометки профиля «%s»?",
-	["Set Up the Junk List"] = "Настроить список хлама",
+	["Edit the Junk List"] = "Изменить список хлама",
 	["Every item you marked as junk or as not junk, to remove marks."] = "Все предметы, помеченные как хлам или как не хлам, — чтобы снять пометки.",
 
 	-- Modules/LootFeed/LootFeed.lua

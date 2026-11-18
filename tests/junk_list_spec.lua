@@ -52,7 +52,7 @@ describe("junk list window", function()
 
 	local function mainButton()
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
-			if entry.text == "Set Up the Junk List" then
+			if entry.text == "Edit the Junk List" then
 				return entry.region
 			end
 		end

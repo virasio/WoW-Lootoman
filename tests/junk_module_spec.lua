@@ -63,7 +63,7 @@ describe("Junk module", function()
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
 			texts[#texts + 1] = tostring(entry.text)
 		end
-		assert.is_true(table.concat(texts, "|"):find("Enable Junk Management|Copy the QuestieDB Address|Set Up the Junk List|Loot Window Button|Style|Bag Window Button|At Merchants|Suggestions|Quest Done|Leftovers from Quests", 1, true) ~= nil)
+		assert.is_true(table.concat(texts, "|"):find("Enable Junk Management|Copy the QuestieDB Address|Edit the Junk List|Loot Window Button|Style|Bag Window Button|At Merchants|Suggestions|Quest Done|Leftovers from Quests", 1, true) ~= nil)
 		-- Fast autoloot's last item is the box of the game's Auto Loot settings.
 		assert.is_true(table.concat(texts, "|"):find("Confirm Bind%-on%-Pickup Items when Alone||Enable Junk Management") ~= nil)
 		local junk = ns.Modules:Get("Junk")
@@ -79,7 +79,7 @@ describe("Junk module", function()
 		end
 		ns.Modules:SetEnabled("Junk", false)
 		page:Refresh()
-		assert.same({ false, false }, { item("Set Up the Junk List").enabled, ns.Modules:Get("Junk"):IsActive() })
+		assert.same({ false, false }, { item("Edit the Junk List").enabled, ns.Modules:Get("Junk"):IsActive() })
 	end)
 
 	describe("the QuestieDB note", function()
