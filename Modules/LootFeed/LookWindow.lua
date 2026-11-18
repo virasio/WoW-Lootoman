@@ -4,12 +4,16 @@ local Feed = ns.Feed
 
 -- The feed look window: everything about one feed look (Looks.lua) in one
 -- window, opened from Edit in a look's menu (LookMenu.lua), or with
--- /lootoman design for the profile's look. On the left, sample rows of every
+-- /lootoman design for the profile's look. At its top, a dropdown of the
+-- looks showing the look the window edits, with the look menu; choosing a
+-- look there edits it, and Apply beside it, shown while the profile uses
+-- another look, makes the profile use it. On the right, sample rows of every
 -- kind, drawn by the feed's own code in the look's design and size, each in
--- its box. On the right, two tabs:
--- - Feed: the look's settings in their groups (Looks.Settings), scrolled,
---   with the look's view, rows or icons, before the fill direction.
--- - Design: the chosen part, in the spirit of Platynator's nameplate
+-- its box. On the left, four tabs:
+-- - Content, Appearance and Timings: the look's settings (Looks.Settings,
+--   each with its tab), scrolled; the look's view, rows or icons, before the
+--   fill direction on Appearance.
+-- - Row (Icon for a look of icons): the chosen part, in the spirit of Platynator's nameplate
 --   designer: whether it is shown, what it is anchored to and where, its size,
 --   alignment and offsets. Numbers have a slider and a field to type them in;
 --   both only go as far as the row's box allows (Design.Range). An Icons look
@@ -22,8 +26,7 @@ local Feed = ns.Feed
 -- profile uses it.
 --
 -- The window edits the look it was opened for, whichever look the profile
--- uses: that is chosen in the look menus. Reset returns the look to its
--- defaults; Share opens the dialog of look texts with this look ticked.
+-- uses. Resetting and sharing a look are in its menu.
 --
 -- The window is the player's own frame, built the first time it opens, never
 -- in combat; Escape and its close button hide it.
@@ -37,10 +40,15 @@ LootFeed.LookWindow = LookWindow
 LookWindow.WIDTH = 900
 LookWindow.HEIGHT = 640
 LookWindow.PREVIEW_WIDTH = 440
+-- The tabs' panel on the left, and where the panels start under the top row.
+LookWindow.PANEL_WIDTH = LookWindow.WIDTH - LookWindow.PREVIEW_WIDTH - 48
+LookWindow.PANEL_TOP = -100
 -- The window's global name, for UISpecialFrames.
 LookWindow.NAME = "LootomanLookWindow"
--- The tabs.
-LookWindow.FEED, LookWindow.DESIGN = 1, 2
+-- The tabs: three of the look's settings (their tab in Looks.Settings), then
+-- the parts' designer.
+LookWindow.CONTENT, LookWindow.APPEARANCE, LookWindow.TIMINGS, LookWindow.DESIGN = 1, 2, 3, 4
+local SETTING_TABS = { "content", "appearance", "timings" }
 
 local TITLES = { row = L["Row"], icon = L["Icon"], name = L["Name"], amount = L["Amount"], owned = L["Owned count"] }
 local PART_ORDER = { "row", "icon", "name", "amount", "owned" }
@@ -245,7 +253,13 @@ function LookWindow.Refresh()
 		return
 	end
 	window:SetTitle(L["Feed look: %s"]:format(Looks.DisplayName(edited)))
+	window.looks:GenerateMenu()
+	window.apply:SetShown(edited ~= Looks.Current())
 	local design = Design.Current(section())
+	window.tab4:SetText(isIcons(design) and L["Icon"] or L["Row"])
+	if PanelTemplates_TabResize then
+		PanelTemplates_TabResize(window.tab4, 0)
+	end
 	if not controlsOf(design)[selected] then
 		selected = "row"
 	end
@@ -299,11 +313,6 @@ function LookWindow.Set(key, value)
 	LookWindow.Refresh()
 end
 
--- The look back to its defaults, after a confirmation.
-function LookWindow.Reset()
-	LookMenu.Reset(edited)
-end
-
 -- The look turned into the other view, after a confirmation: its design
 -- starts afresh.
 function LookWindow.SetView(view)
@@ -318,15 +327,32 @@ function LookWindow.SetView(view)
 	end)
 end
 
--- Shows a tab: the Feed tab's settings or the Design tab's inspector.
+-- Shows a tab: one of the settings' tabs, or the designer's inspector.
 function LookWindow.ShowTab(id)
 	if not window then
 		return
 	end
 	window.tab = id
 	PanelTemplates_SetTab(window, id)
-	window.feedTab:SetShown(id == LookWindow.FEED)
+	for index, panel in ipairs(window.settingTabs) do
+		panel:SetShown(id == index)
+	end
 	window.designTab:SetShown(id == LookWindow.DESIGN)
+end
+
+-- Switches the window to another look, which the profile may not use: Apply
+-- makes it use it.
+function LookWindow.Edit(name)
+	if Looks.Get(name) then
+		edited = name
+		LookWindow.Refresh()
+	end
+end
+
+-- The profile uses the look the window edits.
+function LookWindow.Apply()
+	LookMenu.Use(edited)
+	LookWindow.Refresh()
 end
 
 -- The inspector's controls, placed from the top under the part's line: a
@@ -606,8 +632,8 @@ local function formatValue(setting, value)
 	return format:format(value)
 end
 
--- The view is the design's, not one of the look's values: on the Feed tab
--- before the fill direction, whose choices follow it. Changing it starts the
+-- The view is the design's, not one of the look's values: on the Appearance
+-- tab before the fill direction, whose choices follow it. Changing it starts the
 -- design afresh, so SetView asks first.
 local VIEW_SETTING = {
 	kind = "dropdown", key = "view", label = L["View"],
@@ -693,29 +719,30 @@ local function createSetting(parent, setting, y)
 	return control
 end
 
--- The Feed tab's controls, made once: the settings do not change, only
--- the directions a dropdown offers.
-local function buildFeedTab(tab)
+-- A settings tab's controls, made once into controls: the settings do not
+-- change, only the directions a dropdown offers.
+local function buildSettingsTab(tab, which, controls)
 	local scroll = CreateFrame("ScrollFrame", nil, tab, "ScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 0, 0)
 	scroll:SetPoint("BOTTOMRIGHT", -26, 0)
 	local content = CreateFrame("Frame", nil, scroll)
-	content:SetSize(LookWindow.WIDTH - LookWindow.PREVIEW_WIDTH - 90, 10)
+	content:SetSize(LookWindow.PANEL_WIDTH - 40, 10)
 	scroll:SetScrollChild(content)
-	local controls, y = {}, -4
+	local y = -4
 	for _, setting in ipairs(Looks.Settings("icons")) do
-		if setting.key == "direction" then
-			controls[#controls + 1] = createSetting(content, VIEW_SETTING, y)
-			y = y - SETTING_HEIGHT.dropdown
+		if setting.tab == which then
+			if setting.key == "direction" then
+				controls[#controls + 1] = createSetting(content, VIEW_SETTING, y)
+				y = y - SETTING_HEIGHT.dropdown
+			end
+			controls[#controls + 1] = createSetting(content, setting, y)
+			y = y - SETTING_HEIGHT[setting.kind]
 		end
-		controls[#controls + 1] = createSetting(content, setting, y)
-		y = y - SETTING_HEIGHT[setting.kind]
 	end
 	content:SetHeight(-y + 10)
-	return controls
 end
 
--- The Feed tab's values, from the look.
+-- The settings' values, from the look.
 function LookWindow.UpdateFeed()
 	window.updating = true
 	for _, control in ipairs(window.settings) do
@@ -750,29 +777,46 @@ local function build()
 	-- Lootoman's code and taint the game menu, which then cannot stop a cast.)
 	table.insert(UISpecialFrames, LookWindow.NAME)
 
-	frame.reset = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	frame.reset:SetPoint("TOPLEFT", 20, -32)
-	frame.reset:SetSize(100, 22)
-	frame.reset:SetText(L["Reset"])
-	frame.reset:SetScript("OnClick", function()
-		LookWindow.Reset()
+	-- The top row: the looks, with the look menu; the look the window edits is
+	-- the chosen one. Apply, while the profile uses another.
+	frame.looks = CreateFrame("DropdownButton", nil, frame, "WowStyle1DropdownTemplate")
+	frame.looks:SetPoint("TOPLEFT", 20, -34)
+	frame.looks:SetWidth(240)
+	frame.looks:SetupMenu(LookMenu.Generator({
+		isSelected = function(name)
+			return name == edited
+		end,
+		select = LookWindow.Edit,
+		created = LookWindow.Edit,
+	}))
+	frame.apply = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.apply:SetPoint("LEFT", frame.looks, "RIGHT", 8, 0)
+	frame.apply:SetSize(100, 22)
+	frame.apply:SetText(L["Apply"])
+	frame.apply:SetScript("OnClick", LookWindow.Apply)
+	frame.apply:SetScript("OnEnter", function(button)
+		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+		GameTooltip_SetTitle(GameTooltip, L["Apply"])
+		GameTooltip_AddNormalLine(GameTooltip, L["This profile uses this look from now on."])
+		GameTooltip:Show()
 	end)
-	frame.share = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	frame.share:SetPoint("LEFT", frame.reset, "RIGHT", 8, 0)
-	frame.share:SetSize(100, 22)
-	frame.share:SetText(L["Share"])
-	frame.share:SetEnabled(Compat.CanEncode())
-	frame.share:SetScript("OnClick", function()
-		Bus:Send("OpenShareDialog", "looks", edited)
+	frame.apply:SetScript("OnLeave", function()
+		GameTooltip:Hide()
 	end)
+
+	-- The samples on the right, the tabs' panel on the left.
+	frame.preview = CreateFrame("Frame", nil, frame)
+	frame.preview:SetPoint("TOPRIGHT", -16, LookWindow.PANEL_TOP)
+	frame.preview:SetSize(LookWindow.PREVIEW_WIDTH, LookWindow.HEIGHT + LookWindow.PANEL_TOP - 36)
 
 	local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	hint:SetPoint("BOTTOMLEFT", 20, 14)
+	hint:SetPoint("TOPLEFT", frame.preview, "BOTTOMLEFT", 4, -8)
 	hint:SetText(L["Click a part to choose it, drag it to move it."])
 
-	frame.preview = CreateFrame("Frame", nil, frame)
-	frame.preview:SetPoint("TOPLEFT", 16, -64)
-	frame.preview:SetSize(LookWindow.PREVIEW_WIDTH, LookWindow.HEIGHT - 100)
+	frame.panel = CreateFrame("Frame", nil, frame)
+	frame.panel:SetPoint("TOPLEFT", 16, LookWindow.PANEL_TOP)
+	frame.panel:SetPoint("BOTTOMLEFT", 16, 36)
+	frame.panel:SetWidth(LookWindow.PANEL_WIDTH)
 	-- A wide row is cut off at the preview's edge.
 	frame.preview:SetClipsChildren(true)
 	local previewBackground = frame.preview:CreateTexture(nil, "BACKGROUND")
@@ -806,27 +850,35 @@ local function build()
 		frame.rows[index] = rowFrame
 	end
 
-	-- The tabs, over the right side.
-	for id, text in ipairs({ L["Feed"], L["Design"] }) do
+	-- The tabs, over the panel; the designer's is titled by the look's view.
+	local previous
+	for id, text in ipairs({ L["Content"], L["Appearance"], L["Timings"], L["Row"] }) do
 		local tab = CreateFrame("Button", nil, frame, "PanelTopTabButtonTemplate")
 		tab:SetID(id)
 		tab:SetText(text)
-		tab:SetPoint("BOTTOMLEFT", frame.preview, "TOPRIGHT", 16 + (id - 1) * 120, 2)
+		if previous then
+			tab:SetPoint("LEFT", previous, "RIGHT", 2, 0)
+		else
+			tab:SetPoint("BOTTOMLEFT", frame.panel, "TOPLEFT", 4, 2)
+		end
 		tab:SetScript("OnClick", function()
 			LookWindow.ShowTab(id)
 		end)
 		frame["tab" .. id] = tab
+		previous = tab
 	end
-	PanelTemplates_SetNumTabs(frame, 2)
+	PanelTemplates_SetNumTabs(frame, 4)
 
-	frame.feedTab = CreateFrame("Frame", nil, frame)
-	frame.feedTab:SetPoint("TOPLEFT", frame.preview, "TOPRIGHT", 16, 0)
-	frame.feedTab:SetPoint("BOTTOMRIGHT", -16, 36)
-	frame.settings = buildFeedTab(frame.feedTab)
+	frame.settings, frame.settingTabs = {}, {}
+	for index, which in ipairs(SETTING_TABS) do
+		local panel = CreateFrame("Frame", nil, frame.panel)
+		panel:SetAllPoints()
+		buildSettingsTab(panel, which, frame.settings)
+		frame.settingTabs[index] = panel
+	end
 
-	local inspector = CreateFrame("Frame", nil, frame)
-	inspector:SetPoint("TOPLEFT", frame.preview, "TOPRIGHT", 16, 0)
-	inspector:SetPoint("BOTTOMRIGHT", -16, 36)
+	local inspector = CreateFrame("Frame", nil, frame.panel)
+	inspector:SetAllPoints()
 	frame.designTab = inspector
 	local partLabel = inspector:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	partLabel:SetPoint("TOPLEFT", 12, -16)
@@ -880,7 +932,14 @@ local function build()
 			refreshShown()
 		end
 	end)
-	frame.tab = LookWindow.FEED
+	-- Another look in use (a menu, another profile): Apply shows or goes.
+	Bus:On("SettingChanged", LookWindow, function(_, module, key)
+		if module == LootFeed.name and key == "look" then
+			refreshShown()
+		end
+	end)
+	Bus:On("ProfileChanged", LookWindow, refreshShown)
+	frame.tab = LookWindow.CONTENT
 	return frame
 end
 

@@ -37,21 +37,27 @@ function LookMenu.Use(name)
 	return report(Looks.Use(name))
 end
 
--- A new look, which the profile then uses.
-function LookMenu.New()
+-- A new look, which the profile then uses; then, given, created(name).
+function LookMenu.New(created)
 	askName(L["Name of the new look:"], nil, nil, function(name)
-		local created = report(Looks.Create(name))
-		if created then
-			LookMenu.Use(created)
+		local made = report(Looks.Create(name))
+		if made then
+			LookMenu.Use(made)
+			if created then
+				created(made)
+			end
 		end
 	end)
 end
 
-function LookMenu.Copy(source)
+function LookMenu.Copy(source, created)
 	askName(L["Name of the copy of “%s”:"], Looks.DisplayName(source), nil, function(name)
 		local copied = report(Looks.Copy(source, name))
 		if copied then
 			LookMenu.Use(copied)
+			if created then
+				created(copied)
+			end
 		end
 	end)
 end
@@ -80,14 +86,14 @@ function LookMenu.Edit(name)
 	ns.Feed.LookWindow.Open(name)
 end
 
-local function addLook(root, name)
+local function addLook(root, name, how)
 	local isDefault = name == Looks.DEFAULT
 	local actions = {
 		{ text = L["Edit"], tooltip = L["Opens the window of this look, to change its settings and its row design."], run = function()
 			LookMenu.Edit(name)
 		end },
 		{ text = L["Copy"], tooltip = L["Creates a copy of this look, and this profile uses it."], run = function()
-			LookMenu.Copy(name)
+			LookMenu.Copy(name, how.created)
 		end },
 	}
 	if not isDefault then
@@ -102,10 +108,10 @@ local function addLook(root, name)
 		text = Looks.DisplayName(name),
 		data = name,
 		isSelected = function()
-			return Looks.Current() == name
+			return how.isSelected(name)
 		end,
 		select = function()
-			LookMenu.Use(name)
+			how.select(name)
 		end,
 		actions = actions,
 		gearTooltip = isDefault and L["Edit, copy or reset"] or L["Edit, copy, rename or reset"],
@@ -116,17 +122,32 @@ local function addLook(root, name)
 	})
 end
 
--- The menu, for a dropdown's SetupMenu: the looks, + New look, Import, Share.
-function LookMenu.Build(_, root)
-	NameMenu.OneColumn(root)
-	for _, name in ipairs(Looks.List()) do
-		addLook(root, name)
-	end
-	root:CreateDivider()
-	NameMenu.AddNew(root, L["New look"], L["Starts a look with every setting at its default, and this profile uses it."], LookMenu.New)
+-- A menu for a dropdown's SetupMenu: the looks, + New look, Import, Share.
+-- how: isSelected(name) and select(name) for the looks' radios, and
+-- created(name) after a new look or a copy, which the profile then uses.
+function LookMenu.Generator(how)
+	return function(_, root)
+		NameMenu.OneColumn(root)
+		for _, name in ipairs(Looks.List()) do
+			addLook(root, name, how)
+		end
+		root:CreateDivider()
+		NameMenu.AddNew(root, L["New look"], L["Starts a look with every setting at its default, and this profile uses it."], function()
+			LookMenu.New(how.created)
+		end)
 	NameMenu.AddShareEntries(root, function()
 		Bus:Send("OpenImportDialog", "looks")
 	end, function()
 		Bus:Send("OpenShareDialog", "looks")
 	end, L["Makes a text of your looks to copy and give to another character or player."])
+	end
 end
+
+-- The options page's and Edit Mode's menu: the radios choose the look the
+-- profile uses.
+LookMenu.Build = LookMenu.Generator({
+	isSelected = function(name)
+		return Looks.Current() == name
+	end,
+	select = LookMenu.Use,
+})

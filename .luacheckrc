@@ -137,6 +137,7 @@ files["Modules/"] = {
 		"NumberFontNormal",
 		"PanelTemplates_SetNumTabs",
 		"PanelTemplates_SetTab",
+		"PanelTemplates_TabResize",
 		"UISpecialFrames",
 		"StaticPopup_Hide",
 		"SecureHandlerWrapScript",

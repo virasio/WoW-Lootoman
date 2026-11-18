@@ -81,7 +81,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Toys"] = "Игрушки",
 	["Appearance sets"] = "Комплекты облика",
 	["Heirlooms"] = "Наследуемые предметы",
-	["Rows and timing"] = "Строки и время",
 	["Number of rows"] = "Число строк",
 	["How many rows are shown at once. When there are more, the oldest ones fade out at once."] = "Сколько строк видно одновременно. Когда их больше, самые старые сразу исчезают.",
 	["Fill direction"] = "Направление заполнения",
@@ -96,6 +95,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["Fade-out time"] = "Время исчезновения",
 	["%.1f s"] = "%.1f с",
 	["Appearance"] = "Внешний вид",
+	["Content"] = "Содержимое",
+	["Timings"] = "Время",
+	["Apply"] = "Применить",
+	["This profile uses this look from now on."] = "Этот профиль теперь использует этот вид.",
 	["Size"] = "Размер",
 	["The size of the text; the icons and rows follow it."] = "Размер текста; значки и строки меняются вместе с ним.",
 	["Background opacity"] = "Непрозрачность фона",
@@ -104,7 +107,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Glow for rare items"] = "Свечение редких предметов",
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
-	["Design"] = "Оформление",
 	["Feed Look"] = "Вид ленты",
 	["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
 	["Use look “%s”"] = "Использовать вид «%s»",
@@ -112,7 +114,6 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/LootFeed/Designer.lua
 	["Feed look: %s"] = "Вид ленты: %s",
-	["Feed"] = "Лента",
 	["Rows"] = "Строки",
 	["Icons"] = "Только иконки",
 	["Change"] = "Изменить",

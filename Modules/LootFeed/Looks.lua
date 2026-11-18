@@ -120,12 +120,14 @@ local function directionsOf(view)
 	return { Looks.DIRECTIONS[1], Looks.DIRECTIONS[2] }
 end
 
--- A look's settings, in groups: header, checkbox, slider and dropdown, as
--- the look window draws them. A setting with a parent (the key of a checkbox
--- before it) sits under it; a kind of usable item the client has no
--- collection for is not offered. view picks the directions offered.
+-- A look's settings, as the look window draws them on its tabs (tab =
+-- "content", "appearance" or "timings"): header, checkbox, slider and
+-- dropdown. A setting with a parent (the key of a checkbox before it) sits
+-- under it; a kind of usable item the client has no collection for is not
+-- offered. view picks the directions offered. The window puts the look's view
+-- before the fill direction.
 function Looks.Settings(view)
-	local list = {
+	local content = {
 		{ kind = "header", key = "shows", label = L["What the feed shows"] },
 		{ kind = "checkbox", key = "items", label = L["Items"] },
 		{ kind = "checkbox", key = "currencies", label = L["Currencies"] },
@@ -139,23 +141,9 @@ function Looks.Settings(view)
 			tooltip = L["Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use."] },
 	}
 	for _, kind in ipairs(ns.Rules.Usable.Kinds()) do
-		list[#list + 1] = { kind = "checkbox", key = Looks.KEEP[kind][1], label = Looks.KEEP[kind][2], parent = "keepUsable" }
+		content[#content + 1] = { kind = "checkbox", key = Looks.KEEP[kind][1], label = Looks.KEEP[kind][2], parent = "keepUsable" }
 	end
-	local rest = {
-		{ kind = "header", key = "timing", label = L["Rows and timing"] },
-		{ kind = "slider", key = "maxRows", label = L["Number of rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
-			min = 3, max = 20, step = 1, format = "%d" },
-		{ kind = "dropdown", key = "direction", label = L["Fill direction"],
-			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
-			choices = directionsOf(view) },
-		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
-			min = 2, max = 30, step = 1, format = L["%d s"] },
-		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
-		{ kind = "header", key = "appearance", label = L["Appearance"] },
-		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
-			min = 10, max = 16, step = 1, format = "%d" },
-		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
-		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
+	local warnings = {
 		{ kind = "header", key = "warnings", label = L["Low-space warnings"] },
 		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when few bag slots are free"],
 			tooltip = L["Shows a warning at the feed's edge while no more general bag slots are free than the number below."] },
@@ -164,8 +152,35 @@ function Looks.Settings(view)
 			tooltip = L["Shows a warning at the feed's edge while no more reagent bag slots are free than the number below."] },
 		{ kind = "slider", key = "warnReagentAt", label = L["Reagent bag slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnReagent" },
 	}
-	for _, setting in ipairs(rest) do
-		list[#list + 1] = setting
+	for _, setting in ipairs(warnings) do
+		content[#content + 1] = setting
+	end
+	local appearance = {
+		{ kind = "dropdown", key = "direction", label = L["Fill direction"],
+			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
+			choices = directionsOf(view) },
+		{ kind = "slider", key = "maxRows", label = L["Number of rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
+			min = 3, max = 20, step = 1, format = "%d" },
+		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
+			min = 10, max = 16, step = 1, format = "%d" },
+		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
+		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
+	}
+	local timings = {
+		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
+			min = 2, max = 30, step = 1, format = L["%d s"] },
+		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
+	}
+	local list = {}
+	for tab, settings in pairs({ content = content, appearance = appearance, timings = timings }) do
+		for _, setting in ipairs(settings) do
+			setting.tab = tab
+		end
+	end
+	for _, settings in ipairs({ content, appearance, timings }) do
+		for _, setting in ipairs(settings) do
+			list[#list + 1] = setting
+		end
 	end
 	return list
 end

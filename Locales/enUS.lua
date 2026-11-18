@@ -85,7 +85,6 @@ ns.Locales.AddEnglish({
 	"Toys",
 	"Appearance sets",
 	"Heirlooms",
-	"Rows and timing",
 	"Number of rows",
 	"How many rows are shown at once. When there are more, the oldest ones fade out at once.",
 	"Fill direction",
@@ -100,6 +99,10 @@ ns.Locales.AddEnglish({
 	"Fade-out time",
 	"%.1f s",
 	"Appearance",
+	"Content",
+	"Timings",
+	"Apply",
+	"This profile uses this look from now on.",
 	"Size",
 	"The size of the text; the icons and rows follow it.",
 	"Background opacity",
@@ -108,7 +111,6 @@ ns.Locales.AddEnglish({
 	"Glow for rare items",
 	"Rare and better items glow in their quality colour.",
 
-	"Design",
 	"Feed Look",
 	"The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit.",
 	"Use look “%s”",
@@ -116,7 +118,6 @@ ns.Locales.AddEnglish({
 
 	-- Modules/LootFeed/Designer.lua
 	"Feed look: %s",
-	"Feed",
 	"Rows",
 	"Icons",
 	"Change",

@@ -336,19 +336,35 @@ describe("loot feed look window", function()
 			window = LookWindow.window
 		end)
 
-		it("comes up first, with every setting of the look in its groups; a part chosen brings up Design", function()
-			assert.same({ 1, true, false }, { window.selectedTab, window.feedTab.shown, window.designTab.shown })
-			local headers = {}
+		it("comes up on Content, with every setting on its tab; a part chosen brings up the designer", function()
+			local function shown()
+				return { window.selectedTab, window.settingTabs[1].shown, window.settingTabs[2].shown, window.settingTabs[3].shown,
+					window.designTab.shown }
+			end
+			assert.same({ 1, true, false, false, false }, shown())
+			assert.same({ "Content", "Appearance", "Timings", "Row" }, { window.tab1.text, window.tab2.text, window.tab3.text, window.tab4.text })
+			local headers, tabs = {}, {}
 			for _, control in ipairs(window.settings) do
 				if control.setting.kind == "header" then
 					headers[#headers + 1] = control.text.text
+				else
+					tabs[control.setting.key] = control.setting.tab
 				end
 			end
-			assert.same({ "What the feed shows", "Kept usable items", "Rows and timing", "Appearance", "Low-space warnings" }, headers)
+			assert.same({ "What the feed shows", "Kept usable items", "Low-space warnings" }, headers)
+			assert.same({ "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings" },
+				{ tabs.items, tabs.warnGeneral, tabs.direction, tabs.maxRows, tabs.size, tabs.backgroundOpacity, tabs.duration, tabs.fade })
+			-- The view stands just before the fill direction, on Appearance.
+			for index, control in ipairs(window.settings) do
+				if control.setting.key == "direction" then
+					assert.equals("view", window.settings[index - 1].setting.key)
+				end
+			end
 			window.rows[1].hits.name.scripts.OnClick(window.rows[1].hits.name)
-			assert.same({ 2, false, true, "name" }, { window.selectedTab, window.feedTab.shown, window.designTab.shown, LookWindow.Selected() })
-			window.tab1.scripts.OnClick(window.tab1)
-			assert.equals(1, window.selectedTab)
+			assert.same({ 4, false, false, false, true }, shown())
+			assert.equals("name", LookWindow.Selected())
+			window.tab3.scripts.OnClick(window.tab3)
+			assert.same({ 3, false, false, true, false }, shown())
 		end)
 
 		it("sets the look's settings, and the feed follows at once", function()
@@ -477,20 +493,42 @@ describe("loot feed look window's buttons and view", function()
 		window = LookWindow.window
 	end)
 
-	it("returns the look to its defaults with Reset, after a confirmation", function()
-		Looks.SetDesign("Default", "row", "height", 40)
-		Looks.Set("Default", "maxRows", 9)
-		window.reset.scripts.OnClick(window.reset)
-		assert.equals("Default", api.popups[#api.popups].data.text_arg1)
-		api.AcceptPopup()
-		assert.same({ schema = 1, base = "large" }, Looks.Get("Default"))
+	local function lookEntry(name)
+		for _, entry in ipairs(api.OpenMenu(window.looks).entries) do
+			if entry.text == name then
+				return entry
+			end
+		end
+	end
+
+	it("has no Reset or Share buttons: both are in the look's menu", function()
+		assert.same({ nil, nil }, { window.reset, window.share })
 	end)
 
-	it("opens the dialog of look texts with Share, this look ticked", function()
-		local opened = {}
-		ns.Bus:On("OpenShareDialog", "test", function(_, mode, item) opened[#opened + 1] = mode .. ":" .. tostring(item) end)
-		window.share.scripts.OnClick(window.share)
-		assert.same({ "looks:Default" }, opened)
+	it("edits the look chosen in its dropdown, and Apply makes the profile use it", function()
+		Looks.Create("Raid")
+		assert.same({ true, false }, { lookEntry("Default").isSelected(), window.apply:IsShown() })
+		lookEntry("Raid").setSelected()
+		assert.same({ "Raid", "Default", "Feed look: Raid", true }, { LookWindow.Edited(), Looks.Current(), window.title, window.apply:IsShown() })
+		assert.is_true(lookEntry("Raid").isSelected())
+		window.apply.scripts.OnClick(window.apply)
+		assert.same({ "Raid", false }, { Looks.Current(), window.apply:IsShown() })
+	end)
+
+	it("shows Apply when the profile takes another look elsewhere", function()
+		Looks.Create("Raid")
+		Looks.Use("Raid")
+		assert.same({ "Default", true }, { LookWindow.Edited(), window.apply:IsShown() })
+	end)
+
+	it("edits a new look made from its menu", function()
+		for _, entry in ipairs(api.OpenMenu(window.looks).entries) do
+			if entry.text and entry.text:find("New look", 1, true) then
+				entry.callback()
+			end
+		end
+		api.AcceptPopup("Party")
+		assert.same({ "Party", "Party", false }, { LookWindow.Edited(), Looks.Current(), window.apply:IsShown() })
 	end)
 
 	it("asks before the View dropdown on the Feed tab turns the look into icons", function()
@@ -517,6 +555,8 @@ describe("loot feed look window's buttons and view", function()
 		api.AcceptPopup()
 		assert.same({ "icons", { schema = 1, base = "icons" } }, { Looks.View("Default"), Looks.Get("Default") })
 		assert.equals("row", LookWindow.Selected())
+		-- The designer's tab is named after the view.
+		assert.equals("Icon", window.tab4.text)
 		-- The same view again asks nothing.
 		local asked = #api.popups
 		LookWindow.SetView("icons")
