@@ -1,194 +1,345 @@
 local _, ns = ...
 local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 
--- The junk list: a window of its own with every item the profile marks,
--- opened from the main page (Set Up the Junk List) and from the sort windows.
--- Two lists, Marked as junk and Not junk (gray items kept out of the junk),
--- each item with its icon, its name and a Remove button; Clear list removes
--- them all after a question. The window follows the marks and the profile
--- while it is shown; Escape and its close button hide it.
+-- The junk list window: the profile's marks, in three tabs.
+--   Bags      the bags as the junk windows' item grid (ItemGrid.lua), where
+--             every move marks the item for good;
+--   Junk      every item marked junk, in the bags or not;
+--   Not junk  every item marked not junk.
+-- In the two lists each item has its icon, its name and Remove, and its
+-- tooltip on hover. An item joins the tab's list when it is dropped on the
+-- list from the bags, or through the field over the list: Shift-click an
+-- item anywhere while the field is active (the game puts the link there, as
+-- it does into the chat), or paste a link or type an item ID, then Add.
+-- Clear List removes every mark of the profile after a question.
+--
+-- It opens from the main page (Set Up the Junk List) and from the toss and
+-- sell windows, while junk management is on; it is built the first time, out
+-- of combat. While shown it follows the bags, the marks and the profile; it
+-- closes when junk management is turned off. Escape and its close button
+-- hide it.
 local JunkList = {}
 ns.JunkList = JunkList
 
-JunkList.ROW_HEIGHT = 26
-JunkList.TOP = -60
-JunkList.WIDTH = 560
-JunkList.HEIGHT = 480
 -- The window's global name, for UISpecialFrames.
 JunkList.NAME = "LootomanJunkList"
+JunkList.BAGS, JunkList.JUNK, JunkList.NOT_JUNK = 1, 2, 3
+JunkList.ROW_HEIGHT = 26
+-- Over the list: the field and its hint.
+JunkList.LIST_TOP = 64
 
-local GROUPS = {
-	{ mark = "junk", title = L["Marked as junk"] },
-	{ mark = "notJunk", title = L["Not junk"] },
-}
+-- The mark each list tab holds.
+local TAB_MARKS = { [JunkList.JUNK] = "junk", [JunkList.NOT_JUNK] = "notJunk" }
 
--- The page's lines, top to bottom: { kind = "header", text }, { kind =
--- "empty", text } for a list without items, and { kind = "item", itemID,
--- mark, text, icon } sorted by name. An item the client has not loaded yet
--- shows its ID.
-function JunkList.Lines()
-	local byMark = { junk = {}, notJunk = {} }
-	for _, mark in ipairs(Marks.List()) do
-		local info = Compat.GetItemInfo(mark.itemID)
-		local icon = Compat.GetItemLook(mark.itemID)
-		local line = {
-			kind = "item",
-			itemID = mark.itemID,
-			mark = mark.mark,
-			name = info and info.name or nil,
-			text = info and info.link or L["Item %d"]:format(mark.itemID),
-			icon = icon,
-		}
-		table.insert(byMark[mark.mark], line)
-	end
+local Junk = ns.Modules:Get("Junk")
+local window
+local active, hooked = false, false
+
+-- The items with a mark, sorted by name: { itemID, mark, name, text, icon }.
+-- An item the client has not loaded yet shows its ID.
+function JunkList.Lines(mark)
 	local lines = {}
-	for _, group in ipairs(GROUPS) do
-		lines[#lines + 1] = { kind = "header", text = group.title }
-		local items = byMark[group.mark]
-		table.sort(items, function(a, b)
-			local nameA, nameB = Text.FoldCase(a.name or ""), Text.FoldCase(b.name or "")
-			if nameA ~= nameB then
-				return nameA < nameB
-			end
-			return a.itemID < b.itemID
-		end)
-		if #items == 0 then
-			lines[#lines + 1] = { kind = "empty", text = L["None"] }
-		end
-		for _, line in ipairs(items) do
-			lines[#lines + 1] = line
+	for _, entry in ipairs(Marks.List()) do
+		if entry.mark == mark then
+			local info = Compat.GetItemInfo(entry.itemID)
+			lines[#lines + 1] = {
+				itemID = entry.itemID,
+				mark = entry.mark,
+				name = info and info.name or nil,
+				text = info and info.link or L["Item %d"]:format(entry.itemID),
+				icon = Compat.GetItemLook(entry.itemID),
+			}
 		end
 	end
+	table.sort(lines, function(a, b)
+		local nameA, nameB = Text.FoldCase(a.name or ""), Text.FoldCase(b.name or "")
+		if nameA ~= nameB then
+			return nameA < nameB
+		end
+		return a.itemID < b.itemID
+	end)
 	return lines
 end
 
-local page
+-- The item ID in a link ("item:12345…") or a typed number, or nil.
+function JunkList.ParseItem(text)
+	if type(text) ~= "string" then
+		return nil
+	end
+	local id = tonumber(text:match("item:(%d+)") or text:match("^%s*(%d+)%s*$"))
+	if id and id > 0 and id == math.floor(id) then
+		return id
+	end
+	return nil
+end
+
+-- Marks an item with the shown list tab's mark.
+function JunkList.Add(itemID)
+	local mark = window and TAB_MARKS[window.tab]
+	if mark and itemID then
+		Marks.Set(itemID, mark)
+	end
+end
+
+local function addFromField()
+	local itemID = JunkList.ParseItem(window.field:GetText())
+	if not itemID then
+		ns.Print(L["That is neither an item link nor an item ID."])
+		return
+	end
+	JunkList.Add(itemID)
+	window.field:SetText("")
+end
+
+-- An item dropped on the list from the bags: it goes back to its slot.
+local function dropped()
+	local itemID = Compat.GetCursorItemID()
+	if itemID and TAB_MARKS[window.tab] then
+		Compat.ClearCursor()
+		JunkList.Add(itemID)
+	end
+end
 
 local function row(index)
-	local entry = page.rows[index]
+	local entry = window.rows[index]
 	if entry then
 		return entry
 	end
-	entry = CreateFrame("Frame", nil, page.content)
+	entry = CreateFrame("Frame", nil, window.content)
 	entry:SetHeight(JunkList.ROW_HEIGHT)
 	entry:SetPoint("TOPLEFT", 0, -(index - 1) * JunkList.ROW_HEIGHT)
-	entry:SetPoint("RIGHT", page.content, "RIGHT", 0, 0)
+	entry:SetPoint("RIGHT", window.content, "RIGHT", 0, 0)
+	entry:EnableMouse(true)
 	entry.icon = entry:CreateTexture(nil, "ARTWORK")
 	entry.icon:SetSize(20, 20)
-	entry.icon:SetPoint("LEFT", 16, 0)
+	entry.icon:SetPoint("LEFT", 4, 0)
 	entry.text = entry:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-	entry.text:SetPoint("LEFT", 42, 0)
+	entry.text:SetPoint("LEFT", 30, 0)
+	entry.text:SetPoint("RIGHT", -84, 0)
 	entry.text:SetJustifyH("LEFT")
-	entry.header = entry:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	entry.header:SetPoint("LEFT", 0, 0)
+	entry.text:SetWordWrap(false)
 	entry.remove = CreateFrame("Button", nil, entry, "UIPanelButtonTemplate")
-	entry.remove:SetSize(90, 20)
-	entry.remove:SetPoint("RIGHT", -8, 0)
+	entry.remove:SetSize(76, 20)
+	entry.remove:SetPoint("RIGHT", -4, 0)
 	entry.remove:SetText(L["Remove"])
 	entry.remove:SetScript("OnClick", function()
-		if entry.line and entry.line.kind == "item" then
+		if entry.line then
 			Marks.Set(entry.line.itemID, nil)
 		end
 	end)
-	page.rows[index] = entry
+	entry:SetScript("OnEnter", function(self)
+		if self.line then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetItemByID(self.line.itemID)
+			GameTooltip:Show()
+		end
+	end)
+	entry:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	-- A drop on a row is a drop on the list.
+	entry:SetScript("OnReceiveDrag", dropped)
+	entry:SetScript("OnMouseUp", dropped)
+	window.rows[index] = entry
 	return entry
 end
 
+-- Fills the shown list tab.
 function JunkList.Refresh()
-	if not page then
+	if not window then
 		return
 	end
-	local lines = JunkList.Lines()
+	window.clear:SetEnabled(#Marks.List() > 0)
+	local mark = TAB_MARKS[window.tab]
+	if not mark then
+		return
+	end
+	local lines = JunkList.Lines(mark)
 	for index, line in ipairs(lines) do
 		local entry = row(index)
 		entry.line = line
-		local isItem = line.kind == "item"
-		entry.header:SetShown(line.kind == "header")
-		entry.header:SetText(line.kind == "header" and line.text or "")
-		entry.text:SetShown(line.kind ~= "header")
-		entry.text:SetText(line.kind ~= "header" and line.text or "")
-		entry.text:SetFontObject(line.kind == "empty" and "GameFontDisable" or "GameFontHighlight")
-		entry.icon:SetShown(isItem)
-		entry.icon:SetTexture(isItem and line.icon or nil)
-		entry.remove:SetShown(isItem)
+		entry.text:SetText(line.text)
+		entry.icon:SetTexture(line.icon)
 		entry:Show()
 	end
-	for index = #lines + 1, #page.rows do
-		page.rows[index].line = nil
-		page.rows[index]:Hide()
+	for index = #lines + 1, #window.rows do
+		window.rows[index].line = nil
+		window.rows[index]:Hide()
 	end
-	page.content:SetHeight(#lines * JunkList.ROW_HEIGHT)
-	page.clear:SetEnabled(#Marks.List() > 0)
-	page.lines = lines
+	window.empty:SetShown(#lines == 0)
+	window.content:SetHeight(math.max(1, #lines) * JunkList.ROW_HEIGHT)
+	window.lines = lines
+end
+
+-- Shows a tab: the item grid, or a list.
+function JunkList.ShowTab(id)
+	if not window then
+		return
+	end
+	window.tab = id
+	PanelTemplates_SetTab(window.frame, id)
+	local bags = id == JunkList.BAGS
+	for _, section in pairs(window.grid.sections) do
+		section.frame:SetShown(bags)
+	end
+	window.list:SetShown(not bags)
+	window.clear:SetShown(not bags)
+	if bags then
+		window.grid:Refresh()
+	else
+		window.field:SetText("")
+		JunkList.Refresh()
+	end
+end
+
+-- Shift-click on an item while the field is active: the game hands its link
+-- to whatever text field has the focus, and to ours through this hook.
+local function hookLinks()
+	if hooked or not (ChatFrameUtil and ChatFrameUtil.InsertLink) then
+		return
+	end
+	hooked = true
+	hooksecurefunc(ChatFrameUtil, "InsertLink", function(text)
+		if window and window.list:IsVisible() and window.field:HasFocus() and type(text) == "string"
+			and text:find("item:", 1, true) then
+			window.field:SetText(text)
+		end
+	end)
+end
+
+local function buildList(frame)
+	local ItemGrid = Junk.ItemGrid
+	local list = CreateFrame("Frame", nil, frame)
+	list:SetPoint("TOPLEFT", ItemGrid.SIDE, -ItemGrid.TOP)
+	list:SetPoint("BOTTOMRIGHT", -ItemGrid.SIDE, ItemGrid.FOOTER)
+	list:EnableMouse(true)
+	list:SetScript("OnReceiveDrag", dropped)
+	list:SetScript("OnMouseUp", dropped)
+	list:Hide()
+	window.list = list
+	window.field = CreateFrame("EditBox", nil, list, "InputBoxTemplate")
+	window.field:SetSize(220, 22)
+	window.field:SetPoint("TOPLEFT", 6, -4)
+	window.field:SetAutoFocus(false)
+	window.field:SetScript("OnEnterPressed", addFromField)
+	window.field:SetScript("OnEscapePressed", function(field)
+		field:ClearFocus()
+	end)
+	window.add = CreateFrame("Button", nil, list, "UIPanelButtonTemplate")
+	window.add:SetSize(90, 22)
+	window.add:SetPoint("LEFT", window.field, "RIGHT", 8, 0)
+	window.add:SetText(L["Add"])
+	window.add:SetScript("OnClick", addFromField)
+	window.hint = list:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	window.hint:SetPoint("TOPLEFT", 0, -30)
+	window.hint:SetPoint("TOPRIGHT", 0, -30)
+	window.hint:SetJustifyH("LEFT")
+	window.hint:SetText(L["Drop an item here from your bags, Shift-click one while the field is active, or paste a link or an item ID."])
+	local scroll = CreateFrame("ScrollFrame", nil, list, "ScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", 0, -JunkList.LIST_TOP)
+	scroll:SetPoint("BOTTOMRIGHT", -ItemGrid.SCROLL_BAR, 0)
+	window.content = CreateFrame("Frame", nil, scroll)
+	window.content:SetSize(ItemGrid.WIDTH - ItemGrid.SIDE * 2 - ItemGrid.SCROLL_BAR, JunkList.ROW_HEIGHT)
+	scroll:SetScrollChild(window.content)
+	window.empty = window.content:CreateFontString(nil, "ARTWORK", "GameFontDisable")
+	window.empty:SetPoint("TOPLEFT", 4, -6)
+	window.empty:SetText(L["None"])
 end
 
 local function build()
-	local frame = CreateFrame("Frame", JunkList.NAME, UIParent, "DefaultPanelFlatTemplate")
-	frame:Hide()
-	frame:SetSize(JunkList.WIDTH, JunkList.HEIGHT)
-	frame:SetPoint("CENTER")
-	frame:SetFrameStrata("DIALOG")
-	frame:SetToplevel(true)
-	frame:SetClampedToScreen(true)
-	frame:EnableMouse(true)
-	frame:SetMovable(true)
-	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-	frame:SetTitle(L["Junk list"])
-	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")
-	close:SetPoint("TOPRIGHT", 1, 0)
-	close:SetScript("OnClick", function()
-		frame:Hide()
-	end)
-	-- Escape closes it as it closes the game's own windows (see the look window:
-	-- RegisterGameMenuEscHandler would taint the game menu).
-	table.insert(UISpecialFrames, JunkList.NAME)
-	page = { frame = frame, rows = {} }
-	page.clear = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	page.clear:SetSize(120, 22)
-	page.clear:SetPoint("TOPRIGHT", -20, -30)
-	page.clear:SetText(L["Clear list"])
+	local grid = Junk.ItemGrid.Create({
+		name = JunkList.NAME,
+		title = L["Junk List"],
+		kind = "toss",
+		mode = "keep",
+		noListButton = true,
+	})
+	local frame = grid.frame
+	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
+	buildList(frame)
+
+	-- Clear List, under the lists.
+	window.clear = CreateFrame("Button", nil, grid.footer, "UIPanelButtonTemplate")
+	window.clear:SetSize(120, 22)
+	window.clear:SetPoint("LEFT", 0, 0)
+	window.clear:SetText(L["Clear List"])
+	window.clear:Hide()
 	-- The question names the profile, and clears nothing if the profile changed
 	-- while it was open.
-	page.clear:SetScript("OnClick", function()
+	window.clear:SetScript("OnClick", function()
 		local profile = ns.Profiles.GetCurrent()
-		ns.NameMenu.Confirm(L["Remove every mark of profile “%s” from the junk list?"], profile, L["Clear list"], function()
+		ns.NameMenu.Confirm(L["Remove every mark of profile “%s” from the junk list?"], profile, L["Clear List"], function()
 			if ns.Profiles.GetCurrent() == profile then
 				Marks.Clear()
 			end
 		end)
 	end)
-	local scroll = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
-	scroll:SetPoint("TOPLEFT", 20, JunkList.TOP)
-	scroll:SetPoint("BOTTOMRIGHT", -30, 14)
-	page.content = CreateFrame("Frame", nil, scroll)
-	page.content:SetSize(JunkList.WIDTH - 60, JunkList.ROW_HEIGHT)
-	scroll:SetScrollChild(page.content)
-	frame:SetScript("OnShow", JunkList.Refresh)
+
+	-- The tabs, under the window as on the game's own.
+	local tabs = {}
+	for id, text in ipairs({ L["Bags"], L["Junk"], L["Not Junk"] }) do
+		local tab = CreateFrame("Button", nil, frame, "PanelTabButtonTemplate")
+		tab:SetID(id)
+		tab:SetText(text)
+		tab:SetScript("OnClick", function()
+			JunkList.ShowTab(id)
+		end)
+		tabs[id] = tab
+	end
+	frame.Tabs = tabs
+	tabs[1]:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 12, 2)
+	PanelTemplates_SetNumTabs(frame, #tabs)
+	JunkList.ShowTab(JunkList.BAGS)
+	hookLinks()
+	if active then
+		grid:Attach()
+	end
 end
 
--- Opens the window; it is built the first time, which waits for the end of combat.
-function JunkList.Open()
-	if not page then
+-- Opens the window, on a tab (Bags by default); it is built the first time,
+-- which waits for the end of combat.
+function JunkList.Open(tab)
+	if not active then
+		ns.Print(L["Junk management is off. Turn it on in the options."])
+		return false
+	end
+	if not window then
 		if Compat.InCombat() then
 			ns.Print(L["The junk list opens out of combat."])
 			return false
 		end
 		build()
 	end
-	page.frame:Show()
-	JunkList.Refresh()
+	window.grid:Open()
+	JunkList.ShowTab(tab or window.tab)
 	return true
 end
 
--- The window, for tests: { frame, rows, lines, clear }.
-function JunkList.Page()
-	return page
+-- The window, for tests: { grid, frame, list, field, add, rows, lines, tab, clear }.
+function JunkList.Window()
+	return window
+end
+
+-- Without the junk module (a build that leaves it out) the window never opens.
+if Junk then
+	Junk.AddPart({
+		Enable = function()
+			active = true
+			if window then
+				window.grid:Attach()
+			end
+		end,
+		Disable = function()
+			active = false
+			if window then
+				window.grid:Close()
+			end
+		end,
+	})
 end
 
 local function refreshShown()
-	if page and page.frame:IsShown() then
+	if window and window.list:IsVisible() then
 		JunkList.Refresh()
 	end
 end

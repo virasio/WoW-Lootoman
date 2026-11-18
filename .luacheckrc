@@ -150,6 +150,11 @@ files["Modules/"] = {
 files["Settings/"] = {
 	read_globals = {
 		"ALT_KEY",
+		"ChatFrameUtil",
+		"GameTooltip",
+		"hooksecurefunc",
+		"PanelTemplates_SetNumTabs",
+		"PanelTemplates_SetTab",
 		"AUTO_LOOT_DEFAULT_TEXT",
 		"AUTO_LOOT_KEY_TEXT",
 		"CANCEL",

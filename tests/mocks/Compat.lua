@@ -525,6 +525,7 @@ end
 function Compat.ClearCursor()
 	state.bagActions[#state.bagActions + 1] = { "clear" }
 	state.cursor = nil
+	state.cursorItem = nil
 end
 
 -- Removes the item the cursor holds from its slot.
