@@ -129,7 +129,7 @@ describe("gathering highlights", function()
 		assert.equals("chests", lit())
 	end)
 
-	it("greys out the profession option while herbs and ore are both off", function()
+	it("greys out the profession option while herbs, ore and corpses to skin are all off", function()
 		local found
 		for _, setting in ipairs(module.mainSettings) do
 			if setting.key == "gatherable" then
@@ -139,10 +139,12 @@ describe("gathering highlights", function()
 		assert.is_true(found.enabledWhen())
 		module:Set("herbs", false)
 		module:Set("ore", false)
+		assert.is_true(found.enabledWhen())
+		module:Set("skinning", false)
 		assert.is_false(found.enabledWhen())
 	end)
 
-	it("never lights a creature or a corpse, and pauses soft targeting on a living unit", function()
+	it("never lights a creature or a corpse without the skinning cursor, and pauses soft targeting on a living unit", function()
 		target(herb())
 		target({ isObject = false, isDead = false, name = "Stormwind Guard" })
 		assert.same({ nil, "0", "0" }, { lit(), Test.state.consoleVars.SoftTargetNameplateInteract, Test.state.consoleVars.SoftTargetInteract })
@@ -246,6 +248,27 @@ describe("gathering highlights", function()
 		Test.Advance(0.2)
 		target(saw)
 		assert.is_nil(lit())
+	end)
+
+	it("lights a corpse that can be skinned now, with Skinning or with the option off", function()
+		local corpse = { isObject = false, isDead = true, cursor = "Cursor Crosshair_Skin_64", name = "Plainstrider", inReach = true }
+		Test.state.gatheringSkills.skinning = true
+		target(corpse)
+		assert.same({ "skinning", "ready" }, { lit(), module.lit.state })
+		-- Too little skill: faint.
+		corpse.cursor = "Cursor Crosshair_UnableSkin_64"
+		target(corpse)
+		assert.equals("locked", module.lit.state)
+		-- Without Skinning, only with the option off; and never with the switch off.
+		Test.state.gatheringSkills.skinning = false
+		target(corpse)
+		assert.is_nil(lit())
+		module:Set("gatherable", false)
+		assert.equals("skinning", lit())
+		module:Set("skinning", false)
+		assert.is_nil(lit())
+		-- A corpse looks no other way to the safe self-cast: it is not living.
+		assert.is_false(ns.Highlights.GameSettings.IsPaused())
 	end)
 
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
@@ -541,7 +564,7 @@ describe("gathering highlights on the options page", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_truthy(table.concat(texts, "|"):find(
-			"Highlight Lootable Objects|Intensity|Sparkle Color|What to Highlight|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather",
+			"Highlight Lootable Objects|Intensity|Sparkle Color|What to Highlight|Quest Objects|Herbs|Chests|Ore|Corpses to Skin|Only What You Can Gather",
 			1, true))
 		-- The kinds two to a row, quest objects and chests on the left, herbs and ore on the right at the
 		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
@@ -550,11 +573,11 @@ describe("gathering highlights on the options page", function()
 		for _, entry in ipairs(page.items) do
 			if entry.kind == "checkboxes" then
 				rows[#rows + 1] = entry
-			elseif entry.text == "Only Herbs and Ore You Can Gather" then
+			elseif entry.text == "Only What You Can Gather" then
 				option = entry
 			end
 		end
-		assert.same({ 2, "Quest Objects|Herbs", "Chests|Ore" }, { #rows, rows[1].text, rows[2].text })
+		assert.same({ 3, "Quest Objects|Herbs", "Chests|Ore", "Corpses to Skin" }, { #rows, rows[1].text, rows[2].text, rows[3].text })
 		local cells = rows[1].region.cells
 		assert.same({ 48, cells[1], cells[2] }, { rows[1].indent, cells[1].checkbox.parent, cells[2].checkbox.parent })
 		assert.same({ "TOPLEFT", rows[1].region, "TOPLEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 48, 0 }, cells[2].points[1])
@@ -566,7 +589,7 @@ describe("gathering highlights on the options page", function()
 		assert.is_false(ns.Storage:Get("Highlights", "ore"))
 		assert.is_true(ns.Modules:Get("Highlights"):Validate("chests", false))
 		-- Above the object: the choice, and the name's three settings under it, greyed without the name.
-		assert.is_truthy(table.concat(texts, "|"):find("Only Herbs and Ore You Can Gather|Above the Object|Opacity|Text Size|Text Color|Text Style",
+		assert.is_truthy(table.concat(texts, "|"):find("Only What You Can Gather|Above the Object|Opacity|Text Size|Text Color|Text Style",
 			1, true))
 		local kinds = {}
 		for _, entry in ipairs(page.items) do

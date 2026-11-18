@@ -5,7 +5,7 @@ describe("objects for gathering highlights", function()
 
 	-- Made-up cursor file IDs, plain and "Unable".
 	local FILES = { Mine = 1, UnableMine = 2, GatherHerbs = 3, UnableGatherHerbs = 4, PickLock = 5, UnablePickLock = 6,
-		Quest = 7, Fishing = 8, Mail = 9, Interact = 10 }
+		Quest = 7, Fishing = 8, Mail = 9, Interact = 10, Skin = 11, UnableSkin = 12, SkinHorde = 13 }
 
 	local function object(facts)
 		facts.isObject = true
@@ -129,6 +129,31 @@ describe("objects for gathering highlights", function()
 			local chests = {}
 			assert.equals(1, Objects.Learn(chests, { 5, 6 }, { [6] = true }))
 			assert.same({ [5] = true }, chests)
+		end)
+	end)
+
+	describe("corpses to skin", function()
+		local function corpse(cursor)
+			return { Objects.Classify({ isObject = false, isDead = true, cursor = cursor, name = "Plainstrider" }, known) }
+		end
+
+		it("know a corpse that can be skinned now by the skinning cursor, and too little skill by the Unable one", function()
+			assert.same({ "skinning", false }, corpse(11))
+			assert.same({ "skinning", true }, corpse(12))
+			assert.same({ "skinning", true }, corpse("Cursor Crosshair_UnableSkin_64"))
+			assert.same({ "skinning", false }, corpse("Cursor Crosshair_Skin_64"))
+		end)
+
+		it("leave every other unit out: a corpse with loot, a dead player in PvP, a living one with the cursor", function()
+			assert.same({ nil, "unit" }, corpse(5))
+			assert.same({ nil, "unit" }, corpse(nil))
+			assert.same({ nil, "unit" }, corpse(13))
+			assert.same({ nil, "unit" }, corpse("Cursor Crosshair_SkinAlliance_64"))
+			assert.same({ nil, "unit" }, { Objects.Classify({ isObject = false, isDead = false, cursor = 11 }, known) })
+		end)
+
+		it("make no game object a corpse", function()
+			assert.same({ nil, "other" }, { Objects.Classify(object({ cursor = 11 }), known) })
 		end)
 	end)
 end)

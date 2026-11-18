@@ -25,7 +25,7 @@ local GameSettings = ns.Highlights.GameSettings
 local Objects = ns.Rules.Objects
 
 local function eitherGathering()
-	return Storage:Get("Highlights", "herbs") or Storage:Get("Highlights", "ore")
+	return Storage:Get("Highlights", "herbs") or Storage:Get("Highlights", "ore") or Storage:Get("Highlights", "skinning")
 end
 
 local function showsName()
@@ -41,7 +41,7 @@ local Highlights = ns.Modules:Register({
 	title = L["Gathering highlights"],
 	switchLabel = L["Highlight Lootable Objects"],
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
-	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true,
+	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, skinning = true, gatherable = true,
 		intensity = 100, starColor = "ffd100", label = "name", labelOpacity = 100, textSize = 12, textColor = "ffffff", textStyle = "outline" },
 	-- Right under the switch, how the stars look; then what to highlight, the
 	-- kinds in two columns (quest objects and chests on the left, herbs and ore
@@ -56,9 +56,12 @@ local Highlights = ns.Modules:Register({
 			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
 			{ kind = "checkbox", key = "chests", label = L["Chests"], tooltip = L["Chests, crates and other containers you can loot."] },
 			{ kind = "checkbox", key = "ore", label = L["Ore"] },
+			{ kind = "checkbox", key = "skinning", label = L["Corpses to Skin"],
+				tooltip = L["Corpses you can skin now: looted, or with no loot."] },
 		} },
-		{ kind = "checkbox", key = "gatherable", level = 2, label = L["Only Herbs and Ore You Can Gather"], gap = 14,
-			tooltip = L["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."], enabledWhen = eitherGathering },
+		{ kind = "checkbox", key = "gatherable", level = 2, label = L["Only What You Can Gather"], gap = 14,
+			tooltip = L["Herbs need Herbalism, ore needs Mining and corpses need Skinning. Turn it off to see them anyway."],
+			enabledWhen = eitherGathering },
 		-- Above the object: nothing, its icon, or its icon and name; the name's
 		-- size, colour and style only with the name.
 		{ kind = "choice", key = "label", label = L["Above the Object"], gap = 16,
@@ -165,7 +168,8 @@ function Highlights:Wants(kind)
 	if not self:Get(kind) then
 		return false, "kind off"
 	end
-	if (kind == "herbs" or kind == "ore") and self:Get("gatherable") and Compat.GetGatheringSkills()[kind] == false then
+	if (kind == "herbs" or kind == "ore" or kind == "skinning") and self:Get("gatherable")
+		and Compat.GetGatheringSkills()[kind] == false then
 		return false, "no profession"
 	end
 	return true
@@ -377,6 +381,6 @@ ns.SelfTest.AddReport(function()
 		end
 	end
 	local skill = Compat.GetGatheringSkills()
-	return ("Highlights: %s; %s; cursors %d of %d; herbalism %s, mining %s"):format(table.concat(functions, ", "),
-		table.concat(settings, ", "), cursors, total, tostring(skill.herbs), tostring(skill.ore))
+	return ("Highlights: %s; %s; cursors %d of %d; herbalism %s, mining %s, skinning %s"):format(table.concat(functions, ", "),
+		table.concat(settings, ", "), cursors, total, tostring(skill.herbs), tostring(skill.ore), tostring(skill.skinning))
 end)

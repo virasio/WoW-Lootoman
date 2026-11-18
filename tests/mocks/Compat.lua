@@ -290,9 +290,9 @@ function Compat.GetLootSourceObjects()
 	return state.lootSources
 end
 
--- state.gatheringSkills: { herbs, ore }.
+-- state.gatheringSkills: { herbs, ore, skinning }.
 function Compat.GetGatheringSkills()
-	return { herbs = state.gatheringSkills.herbs, ore = state.gatheringSkills.ore }
+	return { herbs = state.gatheringSkills.herbs, ore = state.gatheringSkills.ore, skinning = state.gatheringSkills.skinning }
 end
 
 -- state.position: { x, y }, or nil where the client gives none.

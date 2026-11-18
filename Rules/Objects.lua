@@ -22,13 +22,16 @@ ns.Rules = ns.Rules or {}
 local Objects = {}
 ns.Rules.Objects = Objects
 
-Objects.KINDS = { "herbs", "ore", "chests", "quest" }
+Objects.KINDS = { "herbs", "ore", "chests", "quest", "skinning" }
 
 -- The game's cursor files (Interface\Cursor\<name>) and what they mark.
--- "bobber" and "service" (a mailbox, a vendor) are never highlighted.
+-- "bobber" and "service" (a mailbox, a vendor) are never highlighted, nor
+-- "insignia", the cursor over a dead player in PvP. "skinning" marks a
+-- corpse that can be skinned now: looted, or with no loot.
 Objects.CURSORS = {
 	Mine = "ore",
 	GatherHerbs = "herbs",
+	Skin = "skinning", SkinHorde = "insignia", SkinAlliance = "insignia",
 	PickLock = "chests", LootAll = "chests", Pickup = "chests",
 	Quest = "quest", QuestRepeatable = "quest", QuestTurnIn = "quest", QuestInteract = "quest",
 	CampaignQuest = "quest", CampaignQuestTurnIn = "quest", LegendaryQuest = "quest", LegendaryQuestTurnIn = "quest",
@@ -43,6 +46,7 @@ Objects.CURSORS = {
 -- ("Cursor_Crosshair_UnableMine_64") instead of a file ID: the first word found
 -- wins, so "questinteract" is a quest object.
 Objects.KEYWORDS = {
+	{ "skinhorde", "insignia" }, { "skinalliance", "insignia" }, { "skin", "skinning" },
 	{ "gather", "herbs" }, { "mine", "ore" },
 	{ "quest", "quest" }, { "important", "quest" }, { "recurring", "quest" }, { "wrapper", "quest" },
 	{ "lootall", "chests" }, { "pickup", "chests" }, { "picklock", "chests" },
@@ -158,6 +162,8 @@ end
 -- "unit" (a creature, a player or a corpse), "bobber", "service", "other".
 -- known: { cursors = CursorFiles(…), chests = { [objectID] = true },
 -- objectives = ObjectiveTexts(…) }.
+-- A unit is never one of the kinds but a corpse with the skinning cursor
+-- ("skinning"), which the Interact key would skin.
 -- Gathering needs the skill, so a herb or a vein a quest also wants stays a
 -- herb or a vein; any other object the game says a quest wants is a quest
 -- object. An objective's words never make a mailbox or a vendor one (Lueur
@@ -167,11 +173,17 @@ function Objects.Classify(facts, known)
 	if not facts then
 		return nil, "none"
 	end
-	if facts.isObject ~= true then
-		return nil, "unit"
-	end
 	known = known or {}
 	local kind, unable = fromCursor(facts.cursor, known.cursors)
+	if facts.isObject ~= true then
+		if facts.isDead == true and kind == "skinning" then
+			return "skinning", unable
+		end
+		return nil, "unit"
+	end
+	if kind == "skinning" or kind == "insignia" then
+		return nil, "other"
+	end
 	if kind == "herbs" or kind == "ore" then
 		return kind, unable
 	end

@@ -693,10 +693,10 @@ function Compat.GetLootSourceObjects()
 	return ids
 end
 
--- Whether the character has Herbalism and Mining: { herbs, ore }, each true,
--- false, or nil when the client cannot say yet, read as Lueur does on WoW
--- Forever. Yes from any source is enough: the tracking spell each profession
--- teaches (Find Herbs, Find Minerals), the skill line with a rank, the
+-- Whether the character has Herbalism, Mining and Skinning: { herbs, ore,
+-- skinning }, each true, false, or nil when the client cannot say yet, read
+-- as Lueur does on WoW Forever. Yes from any source is enough: a spell the
+-- profession teaches (Find Herbs, Find Minerals, Skinning's ranks), the skill line with a rank, the
 -- professions list. No only when a source that can answer says so; while the
 -- client has not loaded the skill lines yet (just after logging in), it
 -- cannot say. The professions list only ever says yes: on WoW Forever it may
@@ -704,6 +704,7 @@ end
 local GATHERING = {
 	herbs = { line = 182, spells = { 2383, 8387 } },
 	ore = { line = 186, spells = { 2580, 8388 } },
+	skinning = { line = 393, spells = { 8613, 8617, 8618, 10768 } },
 }
 
 local function professionLines()
@@ -762,7 +763,8 @@ end
 function Compat.GetGatheringSkills()
 	local known = Compat.Has("C_SpellBook.IsSpellKnown") and C_SpellBook.IsSpellKnown or nil
 	local lines = professionLines()
-	return { herbs = gatheringSkill(GATHERING.herbs, known, lines), ore = gatheringSkill(GATHERING.ore, known, lines) }
+	return { herbs = gatheringSkill(GATHERING.herbs, known, lines), ore = gatheringSkill(GATHERING.ore, known, lines),
+		skinning = gatheringSkill(GATHERING.skinning, known, lines) }
 end
 
 -- The player's position in the world, two coordinates in yards as the client
