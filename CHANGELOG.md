@@ -13,6 +13,7 @@ Junk management suggests what else can go, and the junk windows are easier to us
 - **A button by the bags** opens the toss window: small in the bag window's title, large above it, or large on its own, placed and sized in Edit Mode.
 - **The junk list window** shows your bags and both lists in tabs. Add an item by dropping it there, Shift-clicking it or pasting its link or ID.
 - **Share your junk list** as a text, alone or with a profile; import it merged with your list or in its place, and settle each item marked otherwise.
+- **Fixed:** a corpse to skin no longer shows a nameplate addon's plate (Platynator's health bar and name) under its sparkles.
 
 ## 0.5.7
 

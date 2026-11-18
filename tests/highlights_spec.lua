@@ -552,6 +552,30 @@ describe("gathering highlights' sparkles", function()
 		assert.equals("herbs", module.lit.kind)
 		assert.equals(plate, (Sparkles.Current()))
 		assert.equals("1", Test.state.consoleVars.SoftTargetNameplateInteract)
+		-- On an object's plate they stay as they are.
+		assert.same({ 1, 1 }, { nameplateAddon.alpha, glow.alpha })
+	end)
+
+	it("hide what a nameplate addon draws on a corpse's plate, but nothing protected, until they leave", function()
+		-- A nameplate addon draws a unit's whole plate on a corpse's: health bar, name.
+		local display = _G.CreateFrame("Frame", nil, plate)
+		display:SetAlpha(0.8)
+		local secure = _G.CreateFrame("Frame", nil, plate)
+		function secure:IsProtected() return true end
+		plate.children = { plate.UnitFrame, display, secure }
+		Test.state.gatheringSkills.skinning = true
+		target({ isObject = false, isDead = true, cursor = "Cursor Crosshair_Skin_64", name = "Plainstrider", inReach = true })
+		assert.equals("skinning", module.lit.kind)
+		local frame = Sparkles.Create()
+		assert.same({ 0, 0, 1, 1 }, { plate.UnitFrame.alpha, display.alpha, secure.alpha, frame.alpha })
+		-- The addon updates its plate: it stays hidden, and its wish is kept.
+		display:SetAlpha(0.5)
+		assert.equals(0, display.alpha)
+		target(nil)
+		assert.same({ 1, 0.5, 1 }, { plate.UnitFrame.alpha, display.alpha, secure.alpha })
+		-- Then a herb on the same plate: the addon's frame shows.
+		target(HERB)
+		assert.same({ 0, 0.5 }, { plate.UnitFrame.alpha, display.alpha })
 	end)
 end)
 
