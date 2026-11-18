@@ -9,9 +9,8 @@
 # start no workflow, and the packager builds nothing for a branch push whose
 # commit is tagged ("Found future tag"), so the release runs as a manual run
 # of release.yml on the tag with publish set: a manual run is the one event
-# the token may start. The repository's tag ruleset must let GitHub Actions
-# create tags. If the tag is refused, nothing is published, and a tag pushed
-# by hand publishes as before.
+# the token may start. If the tag is refused, nothing is published, and a tag
+# pushed by hand publishes as before.
 #
 # Every action is pinned to a commit, its version in the comment.
 name: Tag
