@@ -1,6 +1,6 @@
 # Static analysis and unit tests. Same commands as the local /check.
-# The release workflow calls it for a tag before it publishes, so a pushed tag
-# does not run it a second time here.
+# The tag and release workflows call it before they tag or publish, so a
+# pushed tag does not run it a second time here.
 name: Check
 
 on:

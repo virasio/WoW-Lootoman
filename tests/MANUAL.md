@@ -45,13 +45,15 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 
 - [ ] **Main page.** Options → AddOns → Lootoman.
   - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
-    - *Enable fast autoloot*, with its bind-on-pickup option under it (greyed out while autoloot is off);
-    - *Enable junk management*, with *Set up the junk list* right under it, then *Sort window button*, *Style* under it (greyed out while the button is *Never*) and *At merchants*, all greyed out while junk is off;
-    - *Show the loot feed*, with *Feed look* under it (greyed out while the feed is off).
+    - *Enable Fast Autoloot*, a small white hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
+    - *Enable Junk Management*, with *Set Up the Junk List* right under it, then *Sort Window Button*, *Style* under it (greyed out while the button is *Never*) and *At Merchants*, all greyed out while junk is off;
+    - *Show the Loot Feed*, with *Feed Look* under it (greyed out while the feed is off);
+    - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only Herbs and Ore You Can Gather*.
+  - Every title on the page is capitalized as the game's own are (short words such as *when*, *at*, *the* lowercase); the dropdowns' choices, the tooltips and the Russian texts stay as they were.
   - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
   - There are no subpages under Lootoman.
   - When the page is taller than the panel (WoW Forever with the Auto Loot box, or a small window), everything under the profile's divider scrolls, with the mouse wheel and the scroll bar, and the last checkbox can be reached; the title, the profile and its divider stay.
-  - Hovering a checkbox highlights only its row.
+  - Hovering a checkbox's row lights the whole row: the checkbox, its label, its hint and the empty space up to the right edge, and nothing else. A click anywhere in that lit area toggles it; outside it, nothing. In the two columns of gathering highlights, each half lights and clicks on its own.
   - The panel's *Defaults* button is hidden on Lootoman's page and back on others.
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.
 - [ ] **Two characters.** Give two characters different profiles. *Expected:* each keeps its own after relog.
@@ -98,21 +100,30 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
 - [ ] **Bind on pickup.**
   - Alone: a bind-on-pickup item is looted without asking.
   - In a group: the window opens and asks.
-  - With *Confirm bind-on-pickup items when alone* off, alone: the game asks.
+  - With *Confirm Bind-on-Pickup Items when Alone* off, alone: the game asks.
 
-### The game's Auto Loot box (0.4.5)
+### The game's Auto Loot box (0.4.5, 0.5.6)
 
-- [ ] **Shown when Auto Loot is off.** Turn the game's *Auto Loot* off (Options → Gameplay → Controls), then open Lootoman's page.
-  - *Expected:* under fast autoloot, a box with a red header asking to tick Auto Loot below for easier looting, without saying where the game keeps it.
-  - In it, *Auto Loot* and *Auto Loot Key* with the key the game has.
+The box holds, top to bottom: a message; the game's *Auto Loot* checkbox and *Auto Loot Key* choice; a small grey line «These are standard game settings. You can find them in Options > Gameplay > Controls.».
+
+- [ ] **Shown when Auto Loot is off.** Turn the game's *Auto Loot* off (Options → Gameplay → Controls), then open Lootoman's page with fast autoloot on.
+  - *Expected:* under fast autoloot, the box with the red message «Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot.», the checkbox unticked, *Auto Loot Key* with the key the game has, and the grey line at the bottom.
   - With *Auto Loot* on when the page opens, there is no box.
 - [ ] **Changing the game's settings.** Tick *Auto Loot* in the box, then choose another key.
-  - *Expected:* the box stays; its header turns green and says all is set, the box will be hidden next time, and where the settings are, in the game's own names (Options > Gameplay > Controls); the key's label becomes *Loot Key*; the game's Controls page shows the same values.
-  - Untick it in the box: the red header is back.
+  - *Expected:* the box stays; the message turns white: «All set. Next time this box will be hidden.»; the key's label becomes *Loot Key*; the grey line stays; the game's Controls page shows the same values.
+  - Untick it in the box: the red message and *Auto Loot Key* are back.
+  - Tick it again, click another options page (*Controls*) and come back to Lootoman: the box is gone.
   - After closing and opening the options with Auto Loot on, the box is gone.
+- [ ] **Shown whenever the page shows Auto Loot off.** `/reload`, open the options on the game's *Controls* page, untick *Auto Loot* there, then click Lootoman. *Expected:* the box is there at once, with the red message.
+- [ ] **Only while fast autoloot is on.** Auto Loot off in the game.
+  - Untick *Enable Fast Autoloot*. *Expected:* the box is hidden at once; closing and opening the options keeps it hidden.
+  - Tick it again. *Expected:* the box is back.
+  - Tick *Auto Loot* in the box, untick *Enable Fast Autoloot*, tick it again. *Expected:* no box (Auto Loot is on now).
+  - Switch to a profile with fast autoloot off. *Expected:* no box; back to a profile with it on, the box is back while Auto Loot is off.
 - [ ] **In combat.** Open the options in a fight and change the box's controls. *Expected:* nothing changes, a chat line says why; no errors.
 - [ ] **Taint.** After setting the key, press Escape in the world and cast. *Expected:* no `ADDON_ACTION_FORBIDDEN` or `ADDON_ACTION_BLOCKED`; key bindings still save from the game's own page.
-- [ ] **Where an addon may not change it.** If the client keeps *Auto Loot* from addons, the box asks to turn it on with *Open the game's setting* instead, which opens the Controls page at Auto Loot. (Note whether this ever happens.)
+- [ ] **Where an addon may not change it.** If the client keeps *Auto Loot* from addons, the box shows the same message and the grey line, with *Open the Game's Setting* instead of the checkbox and the key, which opens the Controls page at Auto Loot; back with Auto Loot on, the box is gone. (Note whether this ever happens.)
+- [ ] **Russian client.** *Expected:* «Включить быстрый автолут», the hint «При включении окно добычи остаётся скрытым…», the red message «Автоматический сбор добычи в игре выключен. Быстрый автолут работает только вместе с автоматическим сбором добычи.», the white «Всё настроено. В следующий раз эта рамка будет скрыта.», the grey line «Это стандартные настройки игры. Их можно найти здесь: …»; nothing cut or overlapping.
 
 ## Loot feed
 
@@ -135,7 +146,7 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Edit Mode.** Open Edit Mode.
   - *Expected:* the loot feed is listed as *Loot Feed* with sample rows. The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
   - It can be moved, and keeps its position per Edit Mode layout and across `/reload`.
-  - Its dialog is titled *Loot Feed* and holds only the *Feed look* dropdown, with the look menu; there is no *Reset To Default* button (other frames' dialogs still have theirs).
+  - Its dialog is titled *Loot Feed* and holds only the *Feed Look* dropdown, with the look menu; there is no *Reset To Default* button (other frames' dialogs still have theirs).
 - [ ] **Look.** The Default look. *Expected:* a big icon with its quality border, a glow on rare and better items, no owned count, one shared background fading to the right.
 
 ### Feed looks and their window (0.4.5)
@@ -247,11 +258,11 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 ### Sort window button and the sort window
 
-- [ ] **Button, when the bags are full.** Default options (*Sort window button: When the bags are full*, *Style: Large, next to the window*).
+- [ ] **Button, when the bags are full.** Default options (*Sort Window Button: When the bags are full*, *Style: Large, next to the window*).
   - Loot with free general slots: no button.
   - Fill the general bags (a free slot in a herb bag does not count) and loot: a square button with an empty-slot border, as big as the loot window's items, just right of the window's top right corner.
   - With fast autoloot on, also when an item of the loot did not fit.
-- [ ] **Always and never.** *Sort window button: Always*, then *Never*. *Expected:* with every loot window, then with none; with *Never*, *Style* is greyed out.
+- [ ] **Always and never.** *Sort Window Button: Always*, then *Never*. *Expected:* with every loot window, then with none; with *Never*, *Style* is greyed out.
 - [ ] **Small button.** *Style: Small, in the window's title*. *Expected:* the button on the loot window's title bar, left of the close button, not over the title.
 - [ ] **Following the loot window.** Move the loot window in Edit Mode. *Expected:* the button follows; in Edit Mode it shows where it will be and does nothing.
 - [ ] **Sort window.** Click the button.
@@ -282,7 +293,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
   - Drag an item and let it go on the window's title or bottom: nothing changes.
 
   *Expected:* nothing goes onto the game's cursor during a drag.
-- [ ] **Junk list.** *Set up the junk list* on the options page, and *Junk list* in the sort window's title bar. *Expected:*
+- [ ] **Junk list.** *Set Up the Junk List* on the options page, and *Junk list* in the sort window's title bar. *Expected:*
   - a window of its own, which closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight;
   - the marked items under *Marked as junk* and the kept gray ones under *Not junk*, by name;
   - *Remove* takes one away (it moves in the sort window at once);
@@ -291,12 +302,12 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 ### Selling
 
-- [ ] **Sell-junk button.** Open a merchant with *At merchants: The sell button opens the sort window* (the default).
+- [ ] **Sell-junk button.** Open a merchant with *At Merchants: The sell button opens the sort window* (the default).
   - *Expected:* Lootoman's button in the place of the game's, with the same look, grey without junk; its tooltip lists the junk's count and value, and what a click and Shift-click do.
   - A click only opens the sort window and sells nothing; Shift-click sells the junk without a question, one stack at a time.
   - With *Sell with the sell button*, a click sells the junk and Shift-click opens the window.
   - With a guild repair button, both buttons move together; on the buyback tab it hides.
-- [ ] **Selling automatically.** *At merchants: Sell automatically*. *Expected:* the junk is sold as the window opens, with a chat line «Sold … items for …»; the button still opens the window with a click.
+- [ ] **Selling automatically.** *At Merchants: Sell automatically*. *Expected:* the junk is sold as the window opens, with a chat line «Sold … items for …»; the button still opens the window with a click.
 - [ ] **Ignore for junk selling.** Tick the game's *Ignore for junk selling* on a bag (its bag menu) with junk in it. *Expected:* that junk stays, by the button, on opening and with the sort window's *Sell junk* (it shows darker there).
 - [ ] **Sort window at a merchant.**
   - *Expected:* titled *Sort junk*, it opens to the right of the merchant's window and closes with it.
@@ -310,7 +321,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 ### The switch
 
-- [ ] **Turning junk off.** Untick *Enable junk management*. *Expected:* the settings under it are greyed out; no button at the loot window; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/lootoman toss` says it is off. Tick it again: all is back.
+- [ ] **Turning junk off.** Untick *Enable Junk Management*. *Expected:* the settings under it are greyed out; no button at the loot window; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/lootoman toss` says it is off. Tick it again: all is back.
 
 ## Gathering highlights (0.5)
 
@@ -321,11 +332,11 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **The look.** *Expected:* only a few small gold stars twinkling around the object, on every kind; no glow, frame or ring.
 - [ ] **States.** *Expected:* full sparkles in reach, quieter out of reach, faint on a locked chest or a node that needs more skill; no flicker at the edge of reach.
 - [ ] **Where they sit.** *Expected:* on the object, a little below where its name would be; note tall and flat objects where they miss.
-- [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* the kinds stand in two columns (quest objects and chests on the left, herbs and ore on the right), hovering one lights only its half, and *Only herbs and ore you can gather* sits a little apart under them; each applies at once; with all off, nothing sparkles; *Only herbs and ore you can gather* greys out while both herbs and ore are off.
-- [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only herbs and ore you can gather* off, they sparkle; with Herbs on and Ore off, only herbs.
+- [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* the kinds stand in two columns (quest objects and chests on the left, herbs and ore on the right), hovering one lights only its half, and *Only Herbs and Ore You Can Gather* sits a little apart under them; each applies at once; with all off, nothing sparkles; *Only Herbs and Ore You Can Gather* greys out while both herbs and ore are off.
+- [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only Herbs and Ore You Can Gather* off, they sparkle; with Herbs on and Ore off, only herbs.
 - [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar, name or icon either.
 - [ ] **Interact icons.** With *Interact Key Icons* on in the game's options. *Expected:* no herb leaf or pickaxe over a sparkling herb or vein; walk on to an NPC: its icon shows as before. Turn highlights off: `SoftTargetIconInteract` is back at `1`.
-- [ ] **No icon without sparkles.** On a character without Mining, with *Only herbs and ore you can gather* on, walk up to an ore vein. *Expected:* no sparkles and no pickaxe over it (unless *Interact Key Icons* was your own setting before).
+- [ ] **No icon without sparkles.** On a character without Mining, with *Only Herbs and Ore You Can Gather* on, walk up to an ore vein. *Expected:* no sparkles and no pickaxe over it (unless *Interact Key Icons* was your own setting before).
 - [ ] **Self-cast.** With *Enable Interact Key* off before highlights: stand next to an NPC, then next to a player, and cast a friendly spell (a heal) without a target, out of combat and as a fight begins. *Expected:* it lands on you. Note whether soft targeting pauses as a fight begins (debug line, or `SoftTargetInteract` at 0).
 - [ ] **Your own interact key.** With *Enable Interact Key* on before highlights. *Expected:* the key keeps working on NPCs; nothing pauses it.
 - [ ] **Game settings.** Turn highlights off. *Expected:* every setting noted above is back. Turn them on, change *Enable Interact Key* by hand, turn them off: yours stays. Turn them on and log out: back again after logging in with highlights off.

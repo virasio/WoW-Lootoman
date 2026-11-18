@@ -35,13 +35,14 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/AutoLoot/AutoLoot.lua
 	["Fast autoloot"] = "Быстрый автолут",
-	["Enable fast autoloot"] = "Включить быстрый автолут",
+	["Enable Fast Autoloot"] = "Включить быстрый автолут",
+	["When enabled, the loot window stays hidden and opens only for what cannot be picked up."] = "При включении окно добычи остаётся скрытым и открывается только для того, что подобрать нельзя.",
 	["When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up."] = "Когда игра забирает добычу автоматически, подбирает всё сразу. Окно лута открывается только для того, что подобрать нельзя.",
-	["Confirm bind-on-pickup items when alone"] = "Не спрашивать о персональных предметах вне группы",
-	["Auto Loot is off in the game. Tick it below for easier looting: fast autoloot then takes all the loot at once, without the loot window."] = "Автоматический сбор добычи в игре выключен. Поставьте галочку ниже — так удобнее: быстрый автолут будет забирать всю добычу сразу, без окна добычи.",
-	["Auto Loot is off in the game. Turn it on with the button below for easier looting: fast autoloot then takes all the loot at once, without the loot window."] = "Автоматический сбор добычи в игре выключен. Включите его кнопкой ниже — так удобнее: быстрый автолут будет забирать всю добычу сразу, без окна добычи.",
-	["All set. Next time this box will be hidden; you can find these settings in %s."] = "Всё настроено. В следующий раз эта рамка будет скрыта, а эти настройки можно найти здесь: %s.",
-	["Open the game's setting"] = "Открыть настройку игры",
+	["Confirm Bind-on-Pickup Items when Alone"] = "Не спрашивать о персональных предметах вне группы",
+	["Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot."] = "Автоматический сбор добычи в игре выключен. Быстрый автолут работает только вместе с автоматическим сбором добычи.",
+	["All set. Next time this box will be hidden."] = "Всё настроено. В следующий раз эта рамка будет скрыта.",
+	["These are standard game settings. You can find them in %s."] = "Это стандартные настройки игры. Их можно найти здесь: %s.",
+	["Open the Game's Setting"] = "Открыть настройку игры",
 	["The game's Auto Loot settings can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
 	["Picks up items that bind when picked up without asking, unless you are in a group."] = "Подбирает предметы, которые становятся персональными при получении, без вопроса, если вы не в группе.",
 
@@ -60,7 +61,7 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Modules/LootFeed/LootFeed.lua
 	["Loot feed"] = "Лента лута",
 	["Loot Feed"] = "Лента лута",
-	["Show the loot feed"] = "Показывать ленту лута",
+	["Show the Loot Feed"] = "Показывать ленту лута",
 	["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."] = "Показывает, что вы подбираете: предметы, валюту, деньги, репутацию и, по желанию, опыт.",
 	["What the feed shows"] = "Что показывает лента",
 	["Items"] = "Предметы",
@@ -104,7 +105,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
 	["Design"] = "Оформление",
-	["Feed look"] = "Вид ленты",
+	["Feed Look"] = "Вид ленты",
 	["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
 	["Use look “%s”"] = "Использовать вид «%s»",
 	["Loot feed looks"] = "Виды ленты лута",
@@ -228,10 +229,10 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/Junk/Junk.lua
 	["Junk"] = "Хлам",
-	["Enable junk management"] = "Включить управление хламом",
+	["Enable Junk Management"] = "Включить управление хламом",
 	["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."] = "Хлам выбрасывается из окна добычи и продаётся у торговцев через окно сортировки Lootoman. Если выключить, вернётся кнопка продажи хлама самой игры.",
 	["Sort junk"] = "Сортировка хлама",
-	["Sort window button"] = "Кнопка окна сортировки",
+	["Sort Window Button"] = "Кнопка окна сортировки",
 	["The button by the loot window opens a window of your bags with the junk on top, to throw things away."] = "Кнопка у окна добычи открывает окно с содержимым сумок, хлам сверху, — чтобы выбросить лишнее.",
 	["Always"] = "Всегда",
 	["When the bags are full"] = "Когда сумки полны",
@@ -239,7 +240,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Style"] = "Вид кнопки",
 	["Small, in the window's title"] = "Маленькая, в заголовке окна",
 	["Large, next to the window"] = "Крупная, рядом с окном",
-	["At merchants"] = "У торговца",
+	["At Merchants"] = "У торговца",
 	["Sell automatically"] = "Продавать автоматически",
 	["Sell with the sell button"] = "Продавать кнопкой продажи",
 	["The sell button opens the sort window"] = "Кнопка продажи открывает окно сортировки",
@@ -301,7 +302,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Junk list"] = "Список хлама",
 	["Clear list"] = "Очистить список",
 	["Remove every mark of profile “%s” from the junk list?"] = "Убрать из списка хлама все пометки профиля «%s»?",
-	["Set up the junk list"] = "Настроить список хлама",
+	["Set Up the Junk List"] = "Настроить список хлама",
 	["Every item you marked as junk or as not junk, to remove marks."] = "Все предметы, помеченные как хлам или как не хлам, — чтобы снять пометки.",
 
 	-- Modules/LootFeed/LootFeed.lua
@@ -318,13 +319,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["Free reagent bag slots: %d"] = "Свободных ячеек в сумке для реагентов: %d",
 	["Few free bag slots"] = "Мало свободных ячеек",
 	["Gathering highlights"] = "Подсветка добычи",
-	["Highlight lootable objects"] = "Подсвечивать объекты с добычей",
+	["Highlight Lootable Objects"] = "Подсвечивать объекты с добычей",
 	["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."] = "Искрится объект, который вы вот-вот обыщете: тот, с которым сработает клавиша взаимодействия, примерно в пределах 15 метров.",
 	["Herbs"] = "Травы",
 	["Ore"] = "Руда",
 	["Chests"] = "Сундуки",
 	["Chests, crates and other containers you can loot."] = "Сундуки, ящики и другие хранилища, которые можно обыскать.",
-	["Quest objects"] = "Объекты заданий",
-	["Only herbs and ore you can gather"] = "Только травы и руду, которые можно собрать",
+	["Quest Objects"] = "Объекты заданий",
+	["Only Herbs and Ore You Can Gather"] = "Только травы и руду, которые можно собрать",
 	["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."] = "Для трав нужно травничество, для руды — горное дело. Выключите, чтобы видеть их в любом случае.",
 })

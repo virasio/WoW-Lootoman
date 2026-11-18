@@ -90,6 +90,11 @@ function methods:SetDesaturated(desaturated) self.desaturated = desaturated end
 function methods:SetColorTexture(r, g, b, a) self.colorTexture = { r, g, b, a } end
 function methods:SetFrameLevel(level) self.level = level end
 function methods:SetWidth(width) self.width = width end
+-- A frame's size: what SetSize, SetWidth and SetHeight gave (anchors set none).
+function methods:GetWidth() return self.width end
+function methods:GetHeight() return self.height end
+-- Positive insets shrink the area that takes the mouse, negative ones grow it.
+function methods:SetHitRectInsets(left, right, top, bottom) self.hitRectInsets = { left, right, top, bottom } end
 function methods:SetHeight(height) self.height = height end
 function methods:EnableMouseWheel(enabled) self.wheel = enabled end
 function methods:SetMouseClickEnabled(enabled) self.mouseClicks = enabled end

@@ -20,7 +20,7 @@ Bus:OnEvent("PLAYER_LOGIN", "Startup", function()
 	Storage:SetCharacter(Compat.GetCharacterKey())
 	if Storage.readOnlyReason == "failed" then
 		ns.Print(L["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."])
-	elseif Storage.readOnly then
+	elseif Storage:IsReadOnly() then
 		ns.Print(L["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."])
 	end
 	Bus:Send("Ready")

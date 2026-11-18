@@ -10,7 +10,8 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - Before taking an item it checks that there is room: a partial stack of the same item, a free slot in a general bag, a profession bag that takes the item, or the reagent bag for crafting reagents (on WoW Forever, a herb bag in the reagent bag's slot takes only herbs).
 - What does not fit stays in the loot window, which then opens with the items that are left. So does everything after an error, such as full bags or a roll that is still going on.
 - Items that bind when picked up are confirmed for you when you are not in a group (an option, on by default). In a group, the loot window opens and you decide.
-- If the game's own Auto Loot is off when you open the options, a box under fast autoloot asks in red to turn it on, and holds the game's Auto Loot checkbox and Auto Loot key, as on the game's Controls page (or, where the game does not let addons change them, a button that opens that page). Once it is on, the box says in green that all is set and where the game keeps these settings, and next time it is not shown.
+- Fast autoloot works for every loot the game would take by itself: corpses, containers, herbs, ore and fish. A short note under its switch on the options page says that the loot window stays hidden.
+- If the game's own Auto Loot is off while fast autoloot is on, a box under fast autoloot says in red that fast autoloot needs it, and holds the game's Auto Loot checkbox and Auto Loot key, as on the game's Controls page (or, where the game does not let addons change them, a button that opens that page); a grey line says where the game keeps these settings. Once it is on, the box says all is set, and next time it is not shown. With fast autoloot off, there is no box.
 
 ### Loot feed
 

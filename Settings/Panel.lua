@@ -10,7 +10,8 @@ local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 -- Panel.AddToMain (the profile), a divider, then every module's block: its
 -- switch, a checkbox with its label after it, or its title for a module
 -- without one. Under it, indented: the module's main settings
--- (module.mainSettings), which can be changed only while the module is on.
+-- (module.mainSettings), which can be changed only while the module is on,
+-- and notes: short texts that say more about the switch or setting above.
 -- The page reads Storage again when it is shown and whenever a value or the
 -- profile changes.
 local Panel = {
@@ -28,6 +29,11 @@ end
 Panel.LEFT = 20
 Panel.INDENT = 24
 Panel.CONTROL_X = 260
+-- A checkbox's size (SettingsCheckboxTemplate), and where its label starts,
+-- after it and a little room.
+Panel.CHECKBOX_WIDTH = 30
+Panel.CHECKBOX_HEIGHT = 29
+Panel.LABEL_X = 34
 -- The room the page's scroll bar takes on the right.
 Panel.SCROLL_BAR = 26
 -- The size of the page's dropdowns but the profile's: room for the longest
@@ -64,13 +70,18 @@ local function newMainPage()
 	page.body = CreateFrame("Frame", nil, page.scroll)
 	page.body:SetSize(1, 1)
 	page.scroll:SetScrollChild(page.body)
+	-- A wrapped text's height depends on the width: lay out again when it changes.
 	page.scroll:SetScript("OnSizeChanged", function(_, width)
-		page.body:SetWidth(width)
+		if width ~= page.width then
+			page.width = width
+			page.body:SetWidth(width)
+			page:Layout()
+		end
 	end)
 	page.top = -56
 	page.area = "body"
-	-- The options panel calls it when it shows the page (and when it opens on
-	-- another page).
+	-- The options panel calls it whenever it shows the page: as the window
+	-- opens on it, and as the player comes back from another options page.
 	function frame.OnRefresh()
 		for _, open in ipairs(page.openers) do
 			xpcall(open, Compat.ReportError)
@@ -108,6 +119,10 @@ local function place(page, area, container, y)
 				frame:SetPoint("TOPLEFT", container, "TOPLEFT", Panel.LEFT + item.indent, y)
 				if item.wide then
 					frame:SetPoint("TOPRIGHT", container, "TOPRIGHT", -Panel.LEFT, y)
+					-- Once its width is known, an item that wraps text measures itself.
+					if item.measure then
+						item.height = item.measure()
+					end
 					frame:SetHeight(item.height)
 				end
 				frame:Show()
@@ -134,8 +149,8 @@ end
 
 -- Puts a region gap pixels under the last item, indent pixels further in.
 -- options.frame is placed instead of the region when it holds the region; a
--- wide one reaches to the page's right edge; visible(), when given, says
--- whether it shows now.
+-- wide one reaches to the page's right edge, and measure(), when given, gives
+-- its height at each layout; visible(), when given, says whether it shows now.
 function MainPage:Add(kind, region, height, options)
 	options = options or {}
 	self.items[#self.items + 1] = {
@@ -146,6 +161,7 @@ function MainPage:Add(kind, region, height, options)
 		gap = options.gap or GAP,
 		indent = options.indent or 0,
 		wide = options.wide,
+		measure = options.measure,
 		text = options.text,
 		visible = options.visible,
 		area = self.area,
@@ -165,7 +181,8 @@ function MainPage:OnRefresh(update)
 	self.refreshers[#self.refreshers + 1] = update
 end
 
--- open() runs when the options panel shows the page, before it refreshes.
+-- open() runs whenever the options window shows the page (it was closed, or
+-- on another page), before the page refreshes.
 function MainPage:OnOpen(open)
 	self.openers[#self.openers + 1] = open
 end
@@ -183,8 +200,8 @@ local function enabled(requires, enabledWhen)
 	return (requires == nil or Storage:Get(requires, "enabled")) and (enabledWhen == nil or enabledWhen())
 end
 
-local function setTextEnabled(text, isEnabled, font)
-	text:SetFontObject(isEnabled and (font or "GameFontNormal") or "GameFontDisable")
+local function setTextEnabled(text, isEnabled, font, disabledFont)
+	text:SetFontObject(isEnabled and (font or "GameFontNormal") or (disabledFont or "GameFontDisable"))
 end
 
 -- A tooltip in the options panel's own style while the pointer is over a frame.
@@ -203,19 +220,34 @@ local function addTooltip(frame, title, text)
 end
 
 -- A checkbox in the options panel's own style with its label after it, in
--- parent, bound to a boolean module setting; a click on the label toggles it
--- too. With requires, it can be changed only while that module is on; with
--- enabledWhen, only while that says so. The template's hover background fills
--- the checkbox's parent, so only the parent lights up.
-local function newCheckbox(page, parent, module, key, label, tooltip, requires, enabledWhen)
+-- parent, bound to a boolean module setting; with a note, a short white text
+-- under the label that says more. With requires, it can be changed only while
+-- that module is on; with enabledWhen, only while that says so.
+-- The template's hover background fills the checkbox's parent, from 10 pixels
+-- left of it to 5 pixels short of its right edge (HoverBackgroundTemplate):
+-- only the parent lights up, the note with it. The checkbox's hit rect covers
+-- the same: the label, the note and the empty space light up and toggle it.
+local function newCheckbox(page, parent, module, key, label, tooltip, requires, enabledWhen, note)
 	local row = parent
 	local checkbox = CreateFrame("CheckButton", nil, row, "SettingsCheckboxTemplate")
-	checkbox:SetPoint("LEFT", row, "LEFT", 0, 0)
+	checkbox:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
 	local text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	text:SetPoint("LEFT", checkbox, "RIGHT", 4, 0)
+	text:SetPoint("LEFT", checkbox, "RIGHT", Panel.LABEL_X - Panel.CHECKBOX_WIDTH, 0)
 	text:SetText(label)
 	checkbox.label = text
-	checkbox:SetHitRectInsets(0, -(text:GetUnboundedStringWidth() + 4), 0, 0)
+	if note then
+		checkbox.note = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+		checkbox.note:SetJustifyH("LEFT")
+		checkbox.note:SetPoint("TOPLEFT", row, "TOPLEFT", Panel.LABEL_X, -Panel.CHECKBOX_HEIGHT)
+		checkbox.note:SetPoint("TOPRIGHT", row, "TOPRIGHT", -5, -Panel.CHECKBOX_HEIGHT)
+		checkbox.note:SetText(note)
+	end
+	local function fitHitRect()
+		local width, height = row:GetWidth() or 0, row:GetHeight() or 0
+		checkbox:SetHitRectInsets(-10, math.min(0, Panel.CHECKBOX_WIDTH + 5 - width), 0, math.min(0, Panel.CHECKBOX_HEIGHT - height))
+	end
+	row:SetScript("OnSizeChanged", fitHitRect)
+	fitHitRect()
 	checkbox:SetTooltipFunc(function()
 		Settings.InitTooltip(label, tooltip)
 	end)
@@ -227,16 +259,28 @@ local function newCheckbox(page, parent, module, key, label, tooltip, requires, 
 		local isEnabled = enabled(requires, enabledWhen)
 		checkbox:SetEnabled(isEnabled)
 		setTextEnabled(text, isEnabled)
+		if checkbox.note then
+			setTextEnabled(checkbox.note, isEnabled, "GameFontHighlightSmall", "GameFontDisableSmall")
+		end
 	end)
 	return checkbox
 end
 
 -- A checkbox (newCheckbox) in a row of its own, as on the panel's list pages;
--- gap, the room above it, for a group of its own.
-function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, enabledWhen, gap)
+-- gap, the room above it, for a group of its own; note, a text under it. The
+-- row is as tall as the checkbox and the note's lines, measured again at each
+-- layout.
+function MainPage:AddCheckbox(module, key, label, tooltip, indent, requires, enabledWhen, gap, note)
 	local row = CreateFrame("Frame", nil, self:Area())
-	local checkbox = newCheckbox(self, row, module, key, label, tooltip, requires, enabledWhen)
-	return self:Add("checkbox", checkbox, 29, { indent = indent, text = label, frame = row, wide = true, gap = gap })
+	local checkbox = newCheckbox(self, row, module, key, label, tooltip, requires, enabledWhen, note)
+	local measure
+	if checkbox.note then
+		measure = function()
+			return Panel.CHECKBOX_HEIGHT + math.ceil(checkbox.note:GetStringHeight()) + 4
+		end
+	end
+	return self:Add("checkbox", checkbox, Panel.CHECKBOX_HEIGHT, { indent = indent, text = label, frame = row, wide = true, gap = gap,
+		measure = measure })
 end
 
 -- Checkboxes side by side, columns of them to a row: the first at the left,
@@ -360,12 +404,13 @@ function MainPage:AddBox(header, height, options)
 	return self:Add("box", box, height, { indent = options.indent, text = header, wide = true, visible = options.visible, gap = 8 })
 end
 
--- A module's block on the main page: its switch, or its title for a module
--- that has none (switchLabel = false); then what goes under it, indented:
--- the module's main settings, which can be changed only while it is on.
--- A main setting is a checkbox (with gap, the room above it), checkboxes in
--- columns (items, columns), a choice (a dropdown), a button, or a custom
--- builder(page, indent, module), each with an optional enabledWhen().
+-- A module's block on the main page: its switch (with switchNote, a text
+-- under it), or its title for a module that has none (switchLabel = false);
+-- then what goes under it, indented: the module's main settings, which can be
+-- changed only while it is on. A main setting is a checkbox (with gap, the
+-- room above it, and note), checkboxes in columns (items, columns), a choice
+-- (a dropdown), a button, or a custom builder(page, indent, module), each with
+-- an optional enabledWhen().
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
@@ -373,13 +418,14 @@ local function addModule(page, module)
 		title:SetText(module.title)
 		page:Add("title", title, 20, { text = module.title, gap = 10 })
 	else
-		page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0)
+		page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0, nil, nil, nil, module.switchNote)
 		requires = module.name
 	end
 	for _, setting in ipairs(module.mainSettings or {}) do
 		local indent = Panel.INDENT * (setting.level or 1)
 		if setting.kind == "checkbox" then
-			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen, setting.gap)
+			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen, setting.gap,
+				setting.note)
 		elseif setting.kind == "checkboxes" then
 			page:AddCheckboxes(module.name, setting.items, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
 				columns = setting.columns })

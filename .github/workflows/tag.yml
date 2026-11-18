@@ -1,0 +1,86 @@
+# Tags a release when it is merged into main. On every push to main (a merged
+# pull request) it reads the changelog's first entry; if no tag has that name
+# yet, it proves the merge commit a release (.github/scripts/verify-release.sh)
+# and runs the checks (check.yml), then tags the commit with the version and
+# starts the release workflow on that tag, which publishes it. A merge whose
+# changelog brings no new version publishes nothing.
+#
+# The tag is pushed with the workflow's own token. Events made with that token
+# start no workflow, and the packager builds nothing for a branch push whose
+# commit is tagged ("Found future tag"), so the release runs as a manual run
+# of release.yml on the tag with publish set: a manual run is the one event
+# the token may start. If the tag is refused, nothing is published, and a tag
+# pushed by hand publishes as before.
+#
+# Every action is pinned to a commit, its version in the comment.
+name: Tag
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tag-main
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: The changelog's version, unless it is tagged already
+        id: version
+        run: |
+          version=$(tr -d '\r' < CHANGELOG.md | sed -n 's/^## //p' | head -n 1)
+          if [ -n "$version" ] && git ls-remote --exit-code --tags origin "refs/tags/${version}" >/dev/null; then
+            echo "::notice::${version} is tagged already: nothing to publish."
+            exit 0
+          fi
+          bash .github/scripts/verify-release.sh "$version" "$GITHUB_SHA"
+          echo "tag=${version}" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: version
+    if: needs.version.outputs.tag != ''
+    uses: ./.github/workflows/check.yml
+
+  tag:
+    needs: [version, check]
+    if: needs.version.outputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      TAG: ${{ needs.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Tag the merge commit
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null; then
+            # Run again after the tag went up: it must be this commit's.
+            git fetch -q origin "refs/tags/${TAG}:refs/tags/${TAG}"
+            if [ "$(git rev-parse "${TAG}^{commit}")" != "$GITHUB_SHA" ]; then
+              echo "::error::${TAG} already tags another commit."
+              exit 1
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Lootoman ${TAG}" "$GITHUB_SHA"
+            git push origin "refs/tags/${TAG}"
+          fi
+
+      - name: Publish it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$TAG" -f publish=true

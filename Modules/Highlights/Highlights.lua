@@ -31,7 +31,7 @@ end
 local Highlights = ns.Modules:Register({
 	name = "Highlights",
 	title = L["Gathering highlights"],
-	switchLabel = L["Highlight lootable objects"],
+	switchLabel = L["Highlight Lootable Objects"],
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
 	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true },
 	-- The kinds in two columns, quest objects and chests on the left, herbs and
@@ -39,12 +39,12 @@ local Highlights = ns.Modules:Register({
 	-- fill from the left.
 	mainSettings = {
 		{ kind = "checkboxes", columns = 2, items = {
-			{ kind = "checkbox", key = "quest", label = L["Quest objects"] },
+			{ kind = "checkbox", key = "quest", label = L["Quest Objects"] },
 			{ kind = "checkbox", key = "herbs", label = L["Herbs"] },
 			{ kind = "checkbox", key = "chests", label = L["Chests"], tooltip = L["Chests, crates and other containers you can loot."] },
 			{ kind = "checkbox", key = "ore", label = L["Ore"] },
 		} },
-		{ kind = "checkbox", key = "gatherable", label = L["Only herbs and ore you can gather"], gap = 14,
+		{ kind = "checkbox", key = "gatherable", label = L["Only Herbs and Ore You Can Gather"], gap = 14,
 			tooltip = L["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."], enabledWhen = eitherGathering },
 	},
 })

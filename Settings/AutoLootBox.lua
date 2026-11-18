@@ -1,13 +1,16 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 
--- Fast autoloot works only while the game loots automatically. When the
--- game's own Auto Loot is off as the options page opens, a box under the fast
--- autoloot block asks in red to turn it on, and holds the game's Auto Loot
--- settings: the checkbox and the Auto Loot key, as on the game's Controls
--- page, where an addon may change them; else a button that opens that page.
--- Once Auto Loot is on, its header says in green that all is set, and where
--- the game keeps these settings; the box stays until the page opens again.
+-- Fast autoloot works only while the game loots automatically. While fast
+-- autoloot is on and the game's own Auto Loot is off, a box under the fast
+-- autoloot block says in red that Auto Loot is off and that fast autoloot
+-- needs it, and holds the game's Auto Loot settings: the checkbox and the
+-- Auto Loot key, as on the game's Controls page, where an addon may change
+-- them; else a button that opens that page. A grey line at the bottom says
+-- these are the game's own settings and where it keeps them. Once Auto Loot is
+-- on, the message says in white that all is set; the box stays until the
+-- player leaves the page (closes the options or goes to another options page)
+-- or turns the switch off.
 local AutoLootBox = {}
 ns.AutoLootBox = AutoLootBox
 
@@ -23,16 +26,19 @@ local function path()
 	return table.concat({ SETTINGS_TITLE, SETTING_GROUP_GAMEPLAY, CONTROLS_LABEL }, " > ")
 end
 
--- The box's header and its font: while Auto Loot is off, a call to turn it on
--- with what the box holds (canSet: the checkbox, else the button); once it is
--- on, that all is set and where the settings are.
-function AutoLootBox.Header(canSet)
+-- The box's message and its font: while Auto Loot is off, that it is off and
+-- that fast autoloot needs it; once it is on, that all is set. The same with
+-- the checkbox or with the button.
+function AutoLootBox.Message()
 	if Compat.GetAutoLoot() then
-		return L["All set. Next time this box will be hidden; you can find these settings in %s."]:format(path()), "GameFontGreen"
-	elseif canSet then
-		return L["Auto Loot is off in the game. Tick it below for easier looting: fast autoloot then takes all the loot at once, without the loot window."], "GameFontRed"
+		return L["All set. Next time this box will be hidden."], "GameFontHighlight"
 	end
-	return L["Auto Loot is off in the game. Turn it on with the button below for easier looting: fast autoloot then takes all the loot at once, without the loot window."], "GameFontRed"
+	return L["Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot."], "GameFontRed"
+end
+
+-- The grey line at the bottom: these are the game's settings, and where.
+function AutoLootBox.Where()
+	return L["These are standard game settings. You can find them in %s."]:format(path())
 end
 
 -- Opens the game's Controls page at its Auto Loot setting.
@@ -49,11 +55,21 @@ end
 
 -- The box on the options page (Panel.lua's MainPage), indented like the
 -- module's settings.
-function AutoLootBox.Build(page, indent)
-	-- Decided as the page opens; changes made in the box keep it.
+function AutoLootBox.Build(page, indent, module)
+	-- Shown as soon as the page shows Auto Loot off with the switch on, and
+	-- kept once Auto Loot is turned on, until the page is shown anew (from a
+	-- closed window or another options page) or the switch is turned off (by
+	-- a click or with the profile).
 	local shown = false
 	page:OnOpen(function()
-		shown = not Compat.GetAutoLoot()
+		shown = false
+	end)
+	page:OnRefresh(function()
+		if not Storage:Get(module.name, "enabled") then
+			shown = false
+		elseif not Compat.GetAutoLoot() then
+			shown = true
+		end
 	end)
 	local box = page:AddBox("", AutoLootBox.HEIGHT, { indent = indent, headerFont = "GameFontRed", visible = function()
 		return shown
@@ -98,24 +114,40 @@ function AutoLootBox.Build(page, indent)
 
 	-- Where an addon may not change one of them.
 	box.open = CreateFrame("Button", nil, box, "UIPanelButtonTemplate")
-	box.open:SetText(L["Open the game's setting"])
+	box.open:SetText(L["Open the Game's Setting"])
 	box.open:SetSize(math.max(160, (box.open.GetTextWidth and box.open:GetTextWidth() or 0) + 24), 22)
 	box.open:SetScript("OnClick", AutoLootBox.OpenGameSetting)
 
-	page:OnRefresh(function()
-		local canSet = Compat.CanSetAutoLoot() and Compat.CanSetAutoLootKey()
-		local text, font = AutoLootBox.Header(canSet)
-		box.header:SetFontObject(font)
-		box.header:SetText(text)
-		-- The controls under the header, however many lines it takes; the box
-		-- as high as what it holds.
+	box.where = box:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+	box.where:SetJustifyH("LEFT")
+
+	-- Whether an addon may change both settings: the checkbox and the key,
+	-- else the button.
+	local canSet = true
+
+	-- Lays out what the box holds under a message of however many lines, the
+	-- grey line last, and gives the box's height. The page calls it at every
+	-- layout, once the box's width is known.
+	item.measure = function()
 		local top = 8 + math.ceil(box.header:GetStringHeight()) + 8
 		row:ClearAllPoints()
 		row:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -top)
 		row:SetPoint("TOPRIGHT", box, "TOPRIGHT", -10, -top)
 		box.open:ClearAllPoints()
 		box.open:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -top)
-		item.height = top + (canSet and 28 + 4 + 30 or 22) + 10
+		local bottom = top + (canSet and 28 + 4 + 30 or 22) + 8
+		box.where:ClearAllPoints()
+		box.where:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -bottom)
+		box.where:SetPoint("TOPRIGHT", box, "TOPRIGHT", -10, -bottom)
+		return bottom + math.ceil(box.where:GetStringHeight()) + 10
+	end
+
+	page:OnRefresh(function()
+		canSet = Compat.CanSetAutoLoot() and Compat.CanSetAutoLootKey()
+		local text, font = AutoLootBox.Message()
+		box.header:SetFontObject(font)
+		box.header:SetText(text)
+		box.where:SetText(AutoLootBox.Where())
 		row:SetShown(canSet)
 		keyRow:SetShown(canSet)
 		box.open:SetShown(not canSet)

@@ -249,14 +249,26 @@ local function toLibSetting(module, setting)
 	return object
 end
 
+-- LibEditMode's own dialog, and the Reset To Default button in it. The library
+-- offers no public way to either, so both are found through its internals, here
+-- and nowhere else: an update of the library is what is likely to move them,
+-- and the self-test report looks them up the same way.
+local function dialogOf(library)
+	local dialog = library and library.internal and library.internal.dialog
+	return type(dialog) == "table" and dialog or nil
+end
+
+local function resetButtonOf(dialog)
+	return dialog and dialog.Settings and dialog.Settings.ResetButton or nil
+end
+
 -- LibEditMode's dialog always has a Reset To Default button, which sets every
 -- setting to the default it was given, and offers no option to leave it out.
 -- For a frame whose settings reset otherwise (the loot feed's look, reset in
--- the look's menu) it is hidden while the dialog shows that frame, through the
--- library's own dialog (lib.internal.dialog: there is no public way), and
--- shown again for the frames of other addons, which share the dialog.
+-- the look's menu) it is hidden while the dialog shows that frame, and shown
+-- again for the frames of other addons, which share the dialog.
 local function hideReset(dialog, selection)
-	local reset = dialog.Settings and dialog.Settings.ResetButton
+	local reset = resetButtonOf(dialog)
 	if reset and selection then
 		local hide = noReset[selection.parent] == true
 		reset:SetShown(not hide)
@@ -267,8 +279,8 @@ local function hideReset(dialog, selection)
 end
 
 local function watchDialog()
-	local dialog = lib.internal and lib.internal.dialog
-	if type(dialog) == "table" and type(dialog.Update) == "function" and hookedDialog ~= dialog then
+	local dialog = dialogOf(lib)
+	if dialog and type(dialog.Update) == "function" and hookedDialog ~= dialog then
 		hookedDialog = dialog
 		hooksecurefunc(dialog, "Update", hideReset)
 	end
@@ -359,8 +371,7 @@ ns.SelfTest.AddReport(function()
 	if not library then
 		return "Edit Mode: LibEditMode not found"
 	end
-	local dialog = library.internal and library.internal.dialog
-	local reset = type(dialog) == "table" and dialog.Settings and dialog.Settings.ResetButton
+	local dialog = dialogOf(library)
 	return ("Edit Mode: LibEditMode %s; dialog %s, reset button %s, hooked %s"):format(tostring(minor),
-		type(dialog) == "table" and "found" or "NOT found", reset and "found" or "NOT found", hookedDialog and "yes" or "no")
+		dialog and "found" or "NOT found", resetButtonOf(dialog) and "found" or "NOT found", hookedDialog and "yes" or "no")
 end)
