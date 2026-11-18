@@ -2,15 +2,15 @@ local _, ns = ...
 local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 
 -- Fast autoloot works only while the game loots automatically. While fast
--- autoloot is on, and the game's own Auto Loot was off when the options page
--- opened or the switch was turned on, a box under the fast autoloot block
--- says in red that Auto Loot is off and that fast autoloot needs it, and
--- holds the game's Auto Loot settings: the checkbox and the Auto Loot key, as
--- on the game's Controls page, where an addon may change them; else a button
--- that opens that page. A grey line at the bottom says these are the game's
--- own settings and where it keeps them. Once Auto Loot is on, the message says
--- in white that all is set; the box stays while the options window is open
--- and the switch on.
+-- autoloot is on and the game's own Auto Loot is off, a box under the fast
+-- autoloot block says in red that Auto Loot is off and that fast autoloot
+-- needs it, and holds the game's Auto Loot settings: the checkbox and the
+-- Auto Loot key, as on the game's Controls page, where an addon may change
+-- them; else a button that opens that page. A grey line at the bottom says
+-- these are the game's own settings and where it keeps them. Once Auto Loot is
+-- on, the message says in white that all is set; the box stays until the
+-- player leaves the page (closes the options or goes to another options page)
+-- or turns the switch off.
 local AutoLootBox = {}
 ns.AutoLootBox = AutoLootBox
 
@@ -56,18 +56,19 @@ end
 -- The box on the options page (Panel.lua's MainPage), indented like the
 -- module's settings.
 function AutoLootBox.Build(page, indent, module)
-	-- Decided as the options window opens on the page and whenever the switch
-	-- changes (by a click or with the profile); changes made in the box keep
-	-- it, also while the player looks at another options page and comes back.
-	local shown, switchOn = false, nil
+	-- Shown as soon as the page shows Auto Loot off with the switch on, and
+	-- kept once Auto Loot is turned on, until the page is shown anew (from a
+	-- closed window or another options page) or the switch is turned off (by
+	-- a click or with the profile).
+	local shown = false
 	page:OnOpen(function()
-		switchOn = nil
+		shown = false
 	end)
 	page:OnRefresh(function()
-		local on = Storage:Get(module.name, "enabled") and true or false
-		if on ~= switchOn then
-			switchOn = on
-			shown = on and not Compat.GetAutoLoot()
+		if not Storage:Get(module.name, "enabled") then
+			shown = false
+		elseif not Compat.GetAutoLoot() then
+			shown = true
 		end
 	end)
 	local box = page:AddBox("", AutoLootBox.HEIGHT, { indent = indent, headerFont = "GameFontRed", visible = function()

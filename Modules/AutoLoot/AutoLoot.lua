@@ -16,9 +16,9 @@ local AutoLoot = ns.Modules:Register({
 	title = L["Fast autoloot"],
 	switchLabel = L["Enable Fast Autoloot"],
 	description = L["When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up."],
+	switchNote = L["When enabled, the loot window stays hidden and opens only for what cannot be picked up."],
 	defaults = { enabled = true, confirmBind = true },
 	mainSettings = {
-		{ kind = "note", text = L["When enabled, the loot window stays hidden and opens only for what cannot be picked up."] },
 		{ kind = "checkbox", key = "confirmBind", label = L["Confirm Bind-on-Pickup Items when Alone"],
 			tooltip = L["Picks up items that bind when picked up without asking, unless you are in a group."] },
 	},

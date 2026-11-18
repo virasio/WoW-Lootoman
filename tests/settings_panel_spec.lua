@@ -151,7 +151,7 @@ describe("settings panel, a module with a broken main setting", function()
 			mainSettings = { { kind = "slider", key = "rows", label = "Rows" } } })
 		ns.Modules:Register({ name = "Feed", defaults = { enabled = true } })
 		Loader.Start(ns)
-		assert.matches("Broken.rows: the main page takes checkboxes, notes, choices, buttons and custom blocks", ns.Compat.Test.state.errors[1])
+		assert.matches("Broken.rows: the main page takes checkboxes, choices, buttons and custom blocks", ns.Compat.Test.state.errors[1])
 		local last = ns.SettingsPanel.main.items[#ns.SettingsPanel.main.items]
 		assert.equals("Feed", last.text)
 	end)
@@ -191,10 +191,8 @@ describe("settings panel main page controls", function()
 				end },
 			},
 		})
-		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", defaults = { enabled = true }, mainSettings = {
-			{ kind = "note", text = "Rows fade out." },
-			{ kind = "note", text = ("A long line. "):rep(10), gap = 4, level = 1 },
-		} })
+		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", switchNote = "Rows fade out.", defaults = { enabled = true, glow = true },
+			mainSettings = { { kind = "checkbox", key = "glow", label = "Glow", note = ("A long line. "):rep(10) } } })
 		Loader.Start(ns)
 		page = ns.SettingsPanel.main
 	end)
@@ -205,27 +203,39 @@ describe("settings panel main page controls", function()
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
 		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
-			"box:Watch out:24", "checkbox:Show the feed:0", "note:Rows fade out.:34", "note:" .. ("A long line. "):rep(10) .. ":58" }, list)
+			"box:Watch out:24", "checkbox:Show the feed:0", "checkbox:Glow:24" }, list)
 	end)
 
-	it("show a note under the switch's label in the small grey font, as wide as the page and as tall as its lines", function()
-		local short, long = itemOf("Rows fade out."), itemOf(("A long line. "):rep(10))
-		assert.same({ "GameFontDisableSmall", "LEFT", true, 0, 14 }, { short.region.fontObject, short.region.justify, short.wide, short.gap,
-			short.height })
-		-- The switch's row ends where the note starts.
-		local switch = itemOf("Show the feed")
-		assert.equals(switch.frame.points[1][5] - 29, short.region.points[1][5])
-		assert.same({ 4, 28, 28 }, { long.gap, long.height, long.region.height })
-		long.region.text = "Short now."
+	it("show a checkbox's note under its label in the small white font, as tall as its lines, the row with it", function()
+		local switch, glow = itemOf("Show the feed"), itemOf("Glow")
+		local note = switch.region.note
+		assert.same({ "Rows fade out.", "GameFontHighlightSmall", "LEFT" }, { note.text, note.fontObject, note.justify })
+		assert.same({ { "TOPLEFT", switch.frame, "TOPLEFT", 34, -29 }, { "TOPRIGHT", switch.frame, "TOPRIGHT", -5, -29 } }, note.points)
+		assert.same({ 29 + 14 + 4, 29 + 14 + 4 }, { switch.height, switch.frame.height })
+		assert.equals(29 + 28 + 4, glow.height)
+		glow.region.note.text = "Short now."
 		page:Layout()
-		assert.equals(14, long.height)
+		assert.equals(29 + 14 + 4, glow.height)
+		-- An option's note greys out with it; the switch's stays white.
+		ns.Storage:Set("Feed", "enabled", false)
+		assert.same({ "GameFontDisableSmall", "GameFontHighlightSmall" }, { glow.region.note.fontObject, note.fontObject })
+	end)
+
+	it("let the whole row of a checkbox take the mouse, as far as its hover background reaches", function()
+		local switch = itemOf("Show the feed")
+		local row, checkbox = switch.frame, switch.region
+		row.width, row.height = 600, 47
+		row.scripts.OnSizeChanged(row)
+		-- 10 pixels left of the row, to 5 pixels short of its right edge, and
+		-- down over the note.
+		assert.same({ -10, 30 + 5 - 600, 0, 29 - 47 }, checkbox.hitRectInsets)
 	end)
 
 	it("lay the page out again when its width changes, for the notes that wrap", function()
-		local long = itemOf(("A long line. "):rep(10))
-		long.region.text = "Short now."
+		local glow = itemOf("Glow")
+		glow.region.note.text = "Short now."
 		page.scroll.scripts.OnSizeChanged(page.scroll, 600)
-		assert.same({ 600, 14 }, { page.body.width, long.height })
+		assert.same({ 600, 29 + 14 + 4 }, { page.body.width, glow.height })
 	end)
 
 	-- The dropdown in a choice's row, and its menu's radios: "text" with a star

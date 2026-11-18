@@ -13,18 +13,9 @@ describe("the game's Auto Loot box on the options page", function()
 		end
 	end
 
-	-- The options window closes, then opens on the page.
+	-- The options window shows the page: as it opens, or as the player comes
+	-- back from another options page.
 	local function open()
-		api.panel.shown = false
-		page.frame.scripts.OnHide(page.frame)
-		api.panel.shown = true
-		page.frame.OnRefresh()
-	end
-
-	-- The player looks at another options page and comes back to this one,
-	-- the window open all along.
-	local function back()
-		page.frame.scripts.OnHide(page.frame)
 		page.frame.OnRefresh()
 	end
 
@@ -63,7 +54,7 @@ describe("the game's Auto Loot box on the options page", function()
 			kinds[index] = entry.kind .. ":" .. tostring(entry.text)
 		end
 		assert.same({ "checkbox:Enable Fast Autoloot", "checkbox:Confirm Bind-on-Pickup Items when Alone", "box:" },
-			{ kinds[3], kinds[5], kinds[6] })
+			{ kinds[3], kinds[4], kinds[5] })
 		assert.same({ false, true, "GameFontRed" }, { item().hidden, box.shown, box.header.fontObject })
 		-- One message, which points nowhere; where the game keeps the settings
 		-- is in the grey line at the bottom.
@@ -82,9 +73,27 @@ describe("the game's Auto Loot box on the options page", function()
 		assert.is_true(item().hidden)
 	end)
 
-	it("stays while the player looks at another options page and comes back, until the window opens again", function()
+	it("shows as soon as the page is shown with Auto Loot off, after it was shown with Auto Loot on", function()
+		Test.state.cvars.autoLootDefault = true
+		open()
+		assert.is_true(item().hidden)
+		-- Turned off on the game's Controls page, then back to this page.
+		Test.state.cvars.autoLootDefault = false
+		open()
+		assert.same({ false, "GameFontRed" }, { item().hidden, box.header.fontObject })
+	end)
+
+	it("shows as soon as Auto Loot is off while the page is shown", function()
+		Test.state.cvars.autoLootDefault = true
+		open()
+		Test.state.cvars.autoLootDefault = false
+		ns.Storage:Set("AutoLoot", "confirmBind", false)
+		assert.is_false(item().hidden)
+	end)
+
+	it("stays once Auto Loot is on while the page is shown, and goes when the page is shown anew", function()
 		click(box.check, true)
-		back()
+		page:Refresh()
 		assert.same({ false, "All set. Next time this box will be hidden." }, { item().hidden, box.header.text })
 		open()
 		assert.is_true(item().hidden)
@@ -159,9 +168,15 @@ describe("the game's Auto Loot box on the options page", function()
 		assert.is_true(item().height < full)
 		box.open.scripts.OnClick(box.open)
 		assert.same({ api.controls:GetID(), "Auto Loot" }, { api.opened, api.scrolledTo })
-		-- Back from the game's page with Auto Loot on.
+		-- Back from the game's page with Auto Loot on: the page is shown anew.
 		Test.state.cvars.autoLootDefault = true
-		back()
+		open()
+		assert.is_true(item().hidden)
+		-- The white message, should Auto Loot come on while the page is shown.
+		Test.state.cvars.autoLootDefault = false
+		open()
+		Test.state.cvars.autoLootDefault = true
+		page:Refresh()
 		assert.same({ false, "All set. Next time this box will be hidden.", "GameFontHighlight" },
 			{ item().hidden, box.header.text, box.header.fontObject })
 		Test.state.secureCVars.autoLootDefault = nil

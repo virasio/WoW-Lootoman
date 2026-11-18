@@ -10,15 +10,15 @@ describe("fast autoloot settings", function()
 		local shown, items = {}, ns.SettingsPanel.main.items
 		for index, item in ipairs(items) do
 			if item.text == "Enable Fast Autoloot" then
-				for _, entry in ipairs({ item, items[index + 1], items[index + 2] }) do
-					shown[#shown + 1] = ("%s:%s@%d=%s"):format(entry.kind, entry.text, entry.indent, tostring(entry.region.checked))
+				for _, entry in ipairs({ item, items[index + 1] }) do
+					shown[#shown + 1] = ("%s:%s@%d=%s:%s"):format(entry.kind, entry.text, entry.indent, tostring(entry.region.checked),
+						tostring(entry.region.note and entry.region.note.text))
 				end
 			end
 		end
 		assert.same({
-			"checkbox:Enable Fast Autoloot@0=true",
-			"note:When enabled, the loot window stays hidden and opens only for what cannot be picked up.@34=nil",
-			"checkbox:Confirm Bind-on-Pickup Items when Alone@24=true",
+			"checkbox:Enable Fast Autoloot@0=true:When enabled, the loot window stays hidden and opens only for what cannot be picked up.",
+			"checkbox:Confirm Bind-on-Pickup Items when Alone@24=true:nil",
 		}, shown)
 		assert.is_nil(api.FindCategory("Fast autoloot"))
 		assert.is_true(ns.Modules:Get("AutoLoot"):IsActive())

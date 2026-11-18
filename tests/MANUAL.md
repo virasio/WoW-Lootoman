@@ -45,7 +45,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 
 - [ ] **Main page.** Options → AddOns → Lootoman.
   - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
-    - *Enable Fast Autoloot*, a small grey hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
+    - *Enable Fast Autoloot*, a small white hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
     - *Enable Junk Management*, with *Set Up the Junk List* right under it, then *Sort Window Button*, *Style* under it (greyed out while the button is *Never*) and *At Merchants*, all greyed out while junk is off;
     - *Show the Loot Feed*, with *Feed Look* under it (greyed out while the feed is off);
     - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only Herbs and Ore You Can Gather*.
@@ -53,7 +53,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
   - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
   - There are no subpages under Lootoman.
   - When the page is taller than the panel (WoW Forever with the Auto Loot box, or a small window), everything under the profile's divider scrolls, with the mouse wheel and the scroll bar, and the last checkbox can be reached; the title, the profile and its divider stay.
-  - Hovering a checkbox highlights only its row.
+  - Hovering a checkbox's row lights the whole row: the checkbox, its label, its hint and the empty space up to the right edge, and nothing else. A click anywhere in that lit area toggles it; outside it, nothing. In the two columns of gathering highlights, each half lights and clicks on its own.
   - The panel's *Defaults* button is hidden on Lootoman's page and back on others.
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.
 - [ ] **Two characters.** Give two characters different profiles. *Expected:* each keeps its own after relog.
@@ -112,8 +112,9 @@ The box holds, top to bottom: a message; the game's *Auto Loot* checkbox and *Au
 - [ ] **Changing the game's settings.** Tick *Auto Loot* in the box, then choose another key.
   - *Expected:* the box stays; the message turns white: «All set. Next time this box will be hidden.»; the key's label becomes *Loot Key*; the grey line stays; the game's Controls page shows the same values.
   - Untick it in the box: the red message and *Auto Loot Key* are back.
-  - Tick it again, click another options page (*Controls*) and come back to Lootoman: the box is still there, with the white message.
+  - Tick it again, click another options page (*Controls*) and come back to Lootoman: the box is gone.
   - After closing and opening the options with Auto Loot on, the box is gone.
+- [ ] **Shown whenever the page shows Auto Loot off.** `/reload`, open the options on the game's *Controls* page, untick *Auto Loot* there, then click Lootoman. *Expected:* the box is there at once, with the red message.
 - [ ] **Only while fast autoloot is on.** Auto Loot off in the game.
   - Untick *Enable Fast Autoloot*. *Expected:* the box is hidden at once; closing and opening the options keeps it hidden.
   - Tick it again. *Expected:* the box is back.
@@ -121,7 +122,7 @@ The box holds, top to bottom: a message; the game's *Auto Loot* checkbox and *Au
   - Switch to a profile with fast autoloot off. *Expected:* no box; back to a profile with it on, the box is back while Auto Loot is off.
 - [ ] **In combat.** Open the options in a fight and change the box's controls. *Expected:* nothing changes, a chat line says why; no errors.
 - [ ] **Taint.** After setting the key, press Escape in the world and cast. *Expected:* no `ADDON_ACTION_FORBIDDEN` or `ADDON_ACTION_BLOCKED`; key bindings still save from the game's own page.
-- [ ] **Where an addon may not change it.** If the client keeps *Auto Loot* from addons, the box shows the same message and the grey line, with *Open the Game's Setting* instead of the checkbox and the key, which opens the Controls page at Auto Loot; back with Auto Loot on, the message is white. (Note whether this ever happens.)
+- [ ] **Where an addon may not change it.** If the client keeps *Auto Loot* from addons, the box shows the same message and the grey line, with *Open the Game's Setting* instead of the checkbox and the key, which opens the Controls page at Auto Loot; back with Auto Loot on, the box is gone. (Note whether this ever happens.)
 - [ ] **Russian client.** *Expected:* «Включить быстрый автолут», the hint «При включении окно добычи остаётся скрытым…», the red message «Автоматический сбор добычи в игре выключен. Быстрый автолут работает только вместе с автоматическим сбором добычи.», the white «Всё настроено. В следующий раз эта рамка будет скрыта.», the grey line «Это стандартные настройки игры. Их можно найти здесь: …»; nothing cut or overlapping.
 
 ## Loot feed
