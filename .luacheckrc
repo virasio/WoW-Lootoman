@@ -22,6 +22,8 @@ files["Locales/Locales.lua"] = {
 files["Compat/"] = {
 	globals = { "SlashCmdList" },
 	read_globals = {
+		"UnitLevel",
+		"C_PlayerInfo",
 		"SetModifiedClick",
 		"SaveBindings",
 		"GetModifiedClick",

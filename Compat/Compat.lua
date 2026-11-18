@@ -286,7 +286,7 @@ end
 
 -- What decides whether the item in a bag slot can be used right now:
 -- { itemID, questID (the quest it starts, if any), questTaken (that quest is
--- in the log), recipe (a recipe item), known (a recipe the character knows,
+-- in the log), questItem (a quest item), recipe (a recipe item), known (a recipe the character knows,
 -- from its tooltip's "Already known"), openable (it holds loot), usable }, or
 -- nil for an empty slot.
 function Compat.GetBagItemUse(bag, slot)
@@ -308,6 +308,7 @@ function Compat.GetBagItemUse(bag, slot)
 		itemID = info.itemID,
 		questID = quest and quest.questID or nil,
 		questTaken = quest ~= nil and quest.isActive == true,
+		questItem = quest ~= nil and quest.isQuestItem == true,
 		recipe = recipe,
 		known = known,
 		openable = info.hasLoot == true,
@@ -414,10 +415,12 @@ function Compat.GetItemFamily(item)
 end
 
 -- Item data by ID, link or name: name, link, quality, stackSize, sellPrice (a
--- merchant's price for one, in copper), isCraftingReagent. Nil while the
+-- merchant's price for one, in copper), isCraftingReagent, requiredLevel,
+-- classID and subclassID (Enum.ItemClass and its subclasses). Nil while the
 -- client has not loaded the item yet.
 function Compat.GetItemInfo(item)
-	local name, link, quality, _, _, _, _, stackSize, _, _, sellPrice, _, _, _, _, _, isCraftingReagent = C_Item.GetItemInfo(item)
+	local name, link, quality, _, requiredLevel, _, _, stackSize, _, _, sellPrice, classID, subclassID, _, _, _,
+		isCraftingReagent = C_Item.GetItemInfo(item)
 	if not name then
 		return nil
 	end
@@ -428,6 +431,9 @@ function Compat.GetItemInfo(item)
 		stackSize = stackSize,
 		sellPrice = sellPrice,
 		isCraftingReagent = isCraftingReagent,
+		requiredLevel = requiredLevel,
+		classID = classID,
+		subclassID = subclassID,
 	}
 end
 
@@ -637,6 +643,76 @@ function Compat.GetQuestObjectiveTexts()
 		end
 	end
 	return texts
+end
+
+-- The client's name of an item class (Enum.ItemClass), such as "Trade Goods",
+-- or nil.
+function Compat.GetItemClassName(classID)
+	return try(C_Item.GetItemClassInfo, classID)
+end
+
+-- Whether an item can be equipped at all (by anyone), and whether this
+-- character can use it now: nil where the client cannot say.
+function Compat.IsEquippableItem(item)
+	return try(C_Item.IsEquippableItem, item) == true
+end
+
+function Compat.CanUseItem(itemID)
+	if not Compat.Has("C_PlayerInfo.CanUseItem") then
+		return nil
+	end
+	return try(C_PlayerInfo.CanUseItem, itemID)
+end
+
+-- Whether the character has done a quest, or nil where the client cannot say.
+function Compat.IsQuestDone(questID)
+	if type(questID) ~= "number" or not Compat.Has("C_QuestLog.IsQuestFlaggedCompleted") then
+		return nil
+	end
+	return try(C_QuestLog.IsQuestFlaggedCompleted, questID)
+end
+
+-- The character's level.
+function Compat.GetPlayerLevel()
+	return try(UnitLevel, "player") or 0
+end
+
+-- The item on the cursor (picked up from the bags or dragged), or nil.
+function Compat.GetCursorItemID()
+	local kind, itemID = GetCursorInfo()
+	if kind == "item" and type(itemID) == "number" then
+		return itemID
+	end
+	return nil
+end
+
+-- The texts of the objectives to collect or use of every quest in the log,
+-- by quest, finished ones too: { [questID] = { "Waterlogged Saw: 1/1", … } }.
+-- Read before a quest is turned in, they say which items it wanted. A text
+-- the client keeps secret is left out; without the quest log functions, none.
+function Compat.GetQuestItemObjectives()
+	local quests = {}
+	if not (Compat.Has("C_QuestLog.GetNumQuestLogEntries") and Compat.Has("C_QuestLog.GetQuestIDForLogIndex")
+		and Compat.Has("C_QuestLog.GetQuestObjectives")) then
+		return quests
+	end
+	for index = 1, try(C_QuestLog.GetNumQuestLogEntries) or 0 do
+		local questID = try(C_QuestLog.GetQuestIDForLogIndex, index)
+		if type(questID) == "number" and questID > 0 then
+			local objectives = try(C_QuestLog.GetQuestObjectives, questID)
+			local texts = {}
+			for _, objective in ipairs(type(objectives) == "table" and objectives or {}) do
+				local text, kind = plain(true, objective.text), plain(true, objective.type)
+				if type(text) == "string" and (kind == nil or OBJECTIVE_TYPES[kind]) then
+					texts[#texts + 1] = text
+				end
+			end
+			if #texts > 0 then
+				quests[questID] = texts
+			end
+		end
+	end
+	return quests
 end
 
 -- The file ID of one of the game's cursors (Interface\Cursor\<name>), or nil.
