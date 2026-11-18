@@ -55,7 +55,7 @@ describe("loot feed module", function()
 		assert.is_nil(api.FindCategory("Loot feed"))
 		local page = ns.SettingsPanel.main
 		local switch, look = page.items[#page.items - 1], page.items[#page.items]
-		assert.same({ "checkbox", "Show the loot feed", "row", "Feed look", 24 }, { switch.kind, switch.text, look.kind, look.text, look.indent })
+		assert.same({ "checkbox", "Show the Loot Feed", "row", "Feed Look", 24 }, { switch.kind, switch.text, look.kind, look.text, look.indent })
 		assert.equals(ns.Feed.LookMenu.Build, page.look.menu)
 		assert.same({ "Default", 5, true, 3 }, { ns.Storage:Get("LootFeed", "look"), module:Get("maxRows"), module:Get("xp"), module:Get("warnGeneralAt") })
 		-- It follows the look renamed elsewhere.
@@ -169,7 +169,7 @@ describe("loot feed module", function()
 		local frame = module.feed.frame
 		assert.same({ "Loot Feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
 		local settings = lib.settings[frame]
-		assert.same({ 1, 0, "Feed look", ns.Feed.LookMenu.Build }, { #settings, settings[1].kind, settings[1].name, settings[1].generator })
+		assert.same({ 1, 0, "Feed Look", ns.Feed.LookMenu.Build }, { #settings, settings[1].kind, settings[1].name, settings[1].generator })
 		assert.is_nil(lib.buttons and lib.buttons[frame])
 		lib.Fire("enter")
 		assert.is_true(frame.shown)

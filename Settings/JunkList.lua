@@ -2,7 +2,7 @@ local _, ns = ...
 local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 
 -- The junk list: a window of its own with every item the profile marks,
--- opened from the main page (Set up the junk list) and from the sort windows.
+-- opened from the main page (Set Up the Junk List) and from the sort windows.
 -- Two lists, Marked as junk and Not junk (gray items kept out of the junk),
 -- each item with its icon, its name and a Remove button; Clear list removes
 -- them all after a question. The window follows the marks and the profile

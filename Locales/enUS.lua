@@ -65,7 +65,7 @@ ns.Locales.AddEnglish({
 	-- Modules/LootFeed/LootFeed.lua
 	"Loot feed",
 	"Loot Feed",
-	"Show the loot feed",
+	"Show the Loot Feed",
 	"Shows what you pick up: items, currencies, money, reputation and, if you want, experience.",
 	"What the feed shows",
 	"Items",
@@ -109,7 +109,7 @@ ns.Locales.AddEnglish({
 	"Rare and better items glow in their quality colour.",
 
 	"Design",
-	"Feed look",
+	"Feed Look",
 	"The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit.",
 	"Use look “%s”",
 	"Loot feed looks",
@@ -234,10 +234,10 @@ ns.Locales.AddEnglish({
 
 	-- Modules/Junk/Junk.lua
 	"Junk",
-	"Enable junk management",
+	"Enable Junk Management",
 	"Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back.",
 	"Sort junk",
-	"Sort window button",
+	"Sort Window Button",
 	"The button by the loot window opens a window of your bags with the junk on top, to throw things away.",
 	"Always",
 	"When the bags are full",
@@ -245,7 +245,7 @@ ns.Locales.AddEnglish({
 	"Style",
 	"Small, in the window's title",
 	"Large, next to the window",
-	"At merchants",
+	"At Merchants",
 	"Sell automatically",
 	"Sell with the sell button",
 	"The sell button opens the sort window",
@@ -307,7 +307,7 @@ ns.Locales.AddEnglish({
 	"Junk list",
 	"Clear list",
 	"Remove every mark of profile “%s” from the junk list?",
-	"Set up the junk list",
+	"Set Up the Junk List",
 	"Every item you marked as junk or as not junk, to remove marks.",
 
 	-- Modules/LootFeed/LootFeed.lua
@@ -324,13 +324,13 @@ ns.Locales.AddEnglish({
 	"Free reagent bag slots: %d",
 	"Few free bag slots",
 	"Gathering highlights",
-	"Highlight lootable objects",
+	"Highlight Lootable Objects",
 	"The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards.",
 	"Herbs",
 	"Ore",
 	"Chests",
 	"Chests, crates and other containers you can loot.",
-	"Quest objects",
-	"Only herbs and ore you can gather",
+	"Quest Objects",
+	"Only Herbs and Ore You Can Gather",
 	"Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway.",
 })

@@ -402,7 +402,7 @@ describe("gathering highlights on the options page", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_truthy(table.concat(texts, "|"):find(
-			"Highlight lootable objects|Quest objects|Herbs|Chests|Ore|Only herbs and ore you can gather", 1, true))
+			"Highlight Lootable Objects|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather", 1, true))
 		-- The kinds two to a row, quest objects and chests on the left, herbs and ore on the right at the
 		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
 		-- profession option a little apart.
@@ -410,11 +410,11 @@ describe("gathering highlights on the options page", function()
 		for _, entry in ipairs(page.items) do
 			if entry.kind == "checkboxes" then
 				rows[#rows + 1] = entry
-			elseif entry.text == "Only herbs and ore you can gather" then
+			elseif entry.text == "Only Herbs and Ore You Can Gather" then
 				option = entry
 			end
 		end
-		assert.same({ 2, "Quest objects|Herbs", "Chests|Ore" }, { #rows, rows[1].text, rows[2].text })
+		assert.same({ 2, "Quest Objects|Herbs", "Chests|Ore" }, { #rows, rows[1].text, rows[2].text })
 		local cells = rows[1].region.cells
 		assert.same({ 24, cells[1], cells[2] }, { rows[1].indent, cells[1].checkbox.parent, cells[2].checkbox.parent })
 		assert.same({ "TOPLEFT", rows[1].region, "TOPLEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - 24, 0 }, cells[2].points[1])
@@ -431,6 +431,6 @@ describe("gathering highlights on the options page", function()
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
 			texts[#texts + 1] = tostring(entry.text)
 		end
-		assert.is_falsy(table.concat(texts, "|"):find("Highlight lootable objects", 1, true))
+		assert.is_falsy(table.concat(texts, "|"):find("Highlight Lootable Objects", 1, true))
 	end)
 end)

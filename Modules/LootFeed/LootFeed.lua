@@ -11,7 +11,7 @@ local Looks = Feed.Looks
 local LootFeed = ns.Modules:Register({
 	name = "LootFeed",
 	title = L["Loot feed"],
-	switchLabel = L["Show the loot feed"],
+	switchLabel = L["Show the Loot Feed"],
 	description = L["Shows what you pick up: items, currencies, money, reputation and, if you want, experience."],
 	defaults = {
 		enabled = true,
@@ -24,7 +24,7 @@ local LootFeed = ns.Modules:Register({
 		local row = page:NewRow()
 		local dropdown = page:NewDropdown(row)
 		dropdown:SetupMenu(Feed.LookMenu.Build)
-		page:AddRow(L["Feed look"], dropdown, { indent = indent, height = 30,
+		page:AddRow(L["Feed Look"], dropdown, { indent = indent, height = 30,
 			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
 		page.look = dropdown
 		page:OnRefresh(function()
@@ -277,7 +277,7 @@ function LootFeed:OnEnable()
 			-- Its look resets in the look's menu.
 			noReset = true,
 			-- Only the look: it holds every other setting, and its menu edits it.
-			settings = { { kind = "dropdown", key = "look", label = L["Feed look"],
+			settings = { { kind = "dropdown", key = "look", label = L["Feed Look"],
 				tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."],
 				generator = Feed.LookMenu.Build } },
 			onEditMode = function(active)
