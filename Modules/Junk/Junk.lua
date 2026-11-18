@@ -12,6 +12,12 @@ local Junk = ns.Modules:Register({
 	title = L["Junk"],
 	switchLabel = L["Enable Junk Management"],
 	description = L["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."],
+	-- Only while QuestieDB is not working, decided as the options page is built.
+	switchNote = function()
+		if not ns.Integrations.QuestieDB.Working() then
+			return L["Suggestions about quests are better with QuestieDB, which knows every quest an item is for."]
+		end
+	end,
 	defaults = {
 		enabled = true,
 		-- The sort window's button on the loot window: "never", "always" or "full".
@@ -32,8 +38,18 @@ local Junk = ns.Modules:Register({
 		suggestKnown = true,
 		suggestOutgrown = true,
 	},
-	-- Under the switch the junk list first, then how the sort window opens.
+	-- Under the switch QuestieDB's address (with the note), the junk list, how
+	-- the windows open, then the suggestions.
 	mainSettings = {
+		{ kind = "button", label = L["Copy the QuestieDB Address"],
+			tooltip = L["The game cannot open a browser: copy the address and open it in yours."],
+			visible = function()
+				return not ns.Integrations.QuestieDB.Working()
+			end,
+			click = function()
+				ns.SettingsPanel.CopyText("QuestieDB", L["Copy the address (Ctrl+C, or Cmd+C on a Mac) and open it in your browser."],
+					ns.Integrations.QuestieDB.ADDRESS)
+			end },
 		{ kind = "button", label = L["Set Up the Junk List"],
 			tooltip = L["Every item you marked as junk or as not junk, to remove marks."],
 			click = function()
@@ -54,6 +70,20 @@ local Junk = ns.Modules:Register({
 		{ kind = "choice", key = "selling", label = L["At Merchants"],
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
 				{ "window", L["The sell button opens the sort window"] } } },
+		-- The rules of Rules/Suggest.lua, by their switches (Sections.SWITCHES).
+		{ kind = "heading", label = L["Suggestions"], gap = 16 },
+		{ kind = "checkboxes", level = 2, columns = 2, items = {
+			{ kind = "checkbox", key = "suggestQuestDone", label = L["Quest Done"],
+				tooltip = L["Items that start a quest you have done, and quest items no quest of yours needs any more."] },
+			{ kind = "checkbox", key = "suggestLeftovers", label = L["Leftovers from Quests"],
+				tooltip = L["Items your finished quests wanted, when the auction house pays little more for them than a merchant."] },
+			{ kind = "checkbox", key = "suggestUnusable", label = L["Your Class Can't Use It"],
+				tooltip = L["Soulbound gear your class cannot use."] },
+			{ kind = "checkbox", key = "suggestKnown", label = L["Already Known"],
+				tooltip = L["Recipes you know, and mounts, pets, toys and heirlooms you already have."] },
+			{ kind = "checkbox", key = "suggestOutgrown", label = L["Outgrown"],
+				tooltip = L["Food, drink, potions, elixirs, flasks and bandages for characters %d levels or more below yours."]:format(ns.Rules.Suggest.OUTGROWN) },
+		} },
 	},
 })
 

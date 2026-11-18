@@ -97,6 +97,7 @@ Modules\Highlights\Highlights.lua
 Settings\Panel.lua
 Settings\Profiles.lua
 Settings\Share.lua
+Settings\CopyText.lua
 Settings\JunkList.lua
 Settings\AutoLootBox.lua
 

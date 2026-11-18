@@ -570,8 +570,11 @@ describe("gathering highlights on the options page", function()
 		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
 		-- profession option a little apart.
 		local page, rows, option = ns.SettingsPanel.main, {}, nil
+		local highlights = false
 		for _, entry in ipairs(page.items) do
-			if entry.kind == "checkboxes" then
+			if entry.text == "What to Highlight" then
+				highlights = true
+			elseif entry.kind == "checkboxes" and highlights then
 				rows[#rows + 1] = entry
 			elseif entry.text == "Only What You Can Gather" then
 				option = entry
