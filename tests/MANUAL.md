@@ -335,7 +335,7 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **The switches.** Turn each kind off and on, without `/reload`. *Expected:* the kinds stand in two columns (quest objects and chests on the left, herbs and ore on the right), hovering one lights only its half, and *Only Herbs and Ore You Can Gather* sits a little apart under them; each applies at once; with all off, nothing sparkles; *Only Herbs and Ore You Can Gather* greys out while both herbs and ore are off.
 - [ ] **Professions.** On a character without Herbalism or Mining. *Expected:* herbs and ore stay dark; with *Only Herbs and Ore You Can Gather* off, they sparkle; with Herbs on and Ore off, only herbs.
 - [ ] **Never sparkle.** NPCs, players, corpses, a mailbox and the fishing bobber. *Expected:* no sparkles, and no nameplate, bar, name or icon from Lootoman over them; the object under the sparkles shows no bar, name or icon either.
-- [ ] **Interact icons.** With *Interact Key Icons* on in the game's options. *Expected:* no herb leaf or pickaxe over a sparkling herb or vein; walk on to an NPC: its icon shows as before. Turn highlights off: `SoftTargetIconInteract` is back at `1`.
+- [ ] **Interact icons.** With *Interact Key Icons* on in the game's options and *Above the Object: Nothing*. *Expected:* no herb leaf or pickaxe over a sparkling herb or vein; walk on to an NPC: its icon shows as before. Turn highlights off: `SoftTargetIconInteract` is back at `1`.
 - [ ] **No icon without sparkles.** On a character without Mining, with *Only Herbs and Ore You Can Gather* on, walk up to an ore vein. *Expected:* no sparkles and no pickaxe over it (unless *Interact Key Icons* was your own setting before).
 - [ ] **Self-cast.** With *Enable Interact Key* off before highlights: stand next to an NPC, then next to a player, and cast a friendly spell (a heal) without a target, out of combat and as a fight begins. *Expected:* it lands on you. Note whether soft targeting pauses as a fight begins (debug line, or `SoftTargetInteract` at 0).
 - [ ] **Your own interact key.** With *Enable Interact Key* on before highlights. *Expected:* the key keeps working on NPCs; nothing pauses it.
@@ -346,6 +346,19 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **Profile texts.** Share a profile on WoW Forever and import it on retail. *Expected:* it reads, with the highlights' part left out.
 - [ ] **A quest object's quest changes (0.5.5).** Stand at a quest object until it sparkles; finish the objective it is for (or abandon the quest), and accept a quest that wants an object you stand at. *Expected:* the sparkles follow at once: the object you no longer need stops sparkling as a quest object, the one you now need starts.
 - [ ] **After a client update.** *Expected:* the object's nameplate still stays hidden under the sparkles (no name, bar or interact icon from the game), and the self-test's `Highlights:` line shows every function `yes`.
+
+### The icon and the name over a sparkling object (0.5.7)
+
+On WoW Forever, with the default settings unless the check says otherwise.
+
+- [ ] **The default.** Walk up to a herb, an ore vein, a chest and a quest object. *Expected:* over the stars, the object's interaction icon (the herb leaf, the pickaxe, the hand) and its name under it, in gold with an outline, about the size of the game's normal text; one icon only, ours (the game's own stays off); NPCs keep the game's icon.
+- [ ] **On the options page.** *Above the Object* under *Only Herbs and Ore You Can Gather*, set to *Icon and name*; under it *Text Size* (a slider with its value, 12), *Text Color* (a gold swatch) and *Text Style* (*Outline*). Choose *Icon*, then *Nothing*: *Expected:* the three greyed; over the object the icon alone at the centre, then nothing. Each change applies at once.
+- [ ] **Size, colour and style.** With *Icon and name*: move *Text Size* to 8 and 24; pick a colour with the swatch, then open it again and press *Cancel*; try *Shadow*, *Outline*, *Thick outline* and *Backdrop* over grass, snow, stone and water. *Expected:* the name follows each change at once; Cancel puts the colour before back; the backdrop is a dark strip just around the name; note which style reads best.
+- [ ] **Brightness.** Out of reach, then a locked chest or a node that needs more skill. *Expected:* the icon and name dim with the stars.
+- [ ] **In a fight.** *Expected:* the icon and the name keep showing (the name may be one the game hides from addons: it still shows); no errors.
+- [ ] **A nameplate addon.** With Platynator. *Expected:* our icon and name over the stars; the addon's own plate stays its own; no second icon from the game.
+- [ ] **Kept.** `/reload`, and a profile text shared and imported. *Expected:* the four settings kept; a new character gets *Icon and name*.
+- [ ] **Russian client.** *Expected:* «Над объектом», «Ничего», «Значок», «Значок и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
 
 ## Saved diagnostics (0.5.5)
 
