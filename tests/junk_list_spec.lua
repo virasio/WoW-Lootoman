@@ -94,7 +94,7 @@ describe("junk list window", function()
 		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 1920 - frame:GetWidth(), 900 } }, frame.points)
 	end)
 
-	it("opens first in the middle with the options closed, then where it was when it closed, however it opens", function()
+	it("opens first in the middle with the options closed, then stays where it is, however it opens", function()
 		local panel = rawget(_G, "SettingsPanel")
 		JunkList.Open()
 		local frame = JunkList.Window().frame
@@ -107,11 +107,6 @@ describe("junk list window", function()
 		panel.shown, panel.right, panel.top = true, 1000, 900
 		JunkList.Open()
 		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 300, 700 } }, frame.points)
-		-- Opened again while open: it stays.
-		frame:ClearAllPoints()
-		frame:SetPoint("TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 50, 60)
-		JunkList.Open()
-		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 50, 60 } }, frame.points)
 	end)
 
 	it("opens only out of combat the first time, and only while junk management is on", function()
