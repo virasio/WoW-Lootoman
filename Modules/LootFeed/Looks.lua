@@ -56,6 +56,8 @@ Looks.DEFAULTS = {
 	direction = "up",
 	duration = 6,
 	fade = 1,
+	-- Seconds between rows coming in, when much is looted at once.
+	stagger = 0.15,
 	size = 12,
 	backgroundOpacity = 0,
 	glow = true,
@@ -182,6 +184,9 @@ function Looks.Settings(view)
 		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
 	}
 	local timings = {
+		{ kind = "slider", key = "stagger", label = L["Delay between rows"],
+			tooltip = L["When much is looted at once, each row comes in this long after the one before it, and leaves as long after it."],
+			min = 0, max = 0.5, step = 0.05, format = L["%.2f s"] },
 		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
 			min = 2, max = 30, step = 1, format = L["%d s"] },
 		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },

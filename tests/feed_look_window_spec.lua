@@ -352,8 +352,9 @@ describe("loot feed look window", function()
 				end
 			end
 			assert.same({ "What the feed shows", "Kept usable items", "Low-space warning" }, headers)
-			assert.same({ "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings" },
-				{ tabs.items, tabs.warnGeneral, tabs.direction, tabs.maxRows, tabs.size, tabs.backgroundOpacity, tabs.duration, tabs.fade })
+			assert.same({ "content", "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings", "timings" },
+				{ tabs.items, tabs.warnGeneral, tabs.junkRow, tabs.direction, tabs.maxRows, tabs.size, tabs.backgroundOpacity, tabs.stagger,
+					tabs.duration, tabs.fade })
 			-- The view stands just before the fill direction, on Appearance.
 			for index, control in ipairs(window.settings) do
 				if control.setting.key == "direction" then

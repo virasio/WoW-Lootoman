@@ -154,6 +154,7 @@ function LootFeed:ModelOptions()
 		maxRows = self:Get("maxRows"),
 		duration = self:Get("duration"),
 		fade = self:Get("fade"),
+		stagger = self:Get("stagger"),
 		minQuality = self:Get("minQuality"),
 		kinds = {
 			item = self:Get("items"),

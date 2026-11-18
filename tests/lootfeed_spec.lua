@@ -180,7 +180,8 @@ describe("loot feed module", function()
 		Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LINK .. "x2", "Tester")
 		Test.SetMoney(150)
 		assert.is_true(module.feed.frame.shown)
-		module.feed:Draw(Test.state.time)
+		-- The second row comes in a moment after the first.
+		module.feed:Draw(Test.state.time + 0.2)
 		local shown = {}
 		for _, rowFrame in pairs(module.feed.frameOf) do
 			shown[rowFrame.Label.text] = rowFrame.Amount.text
