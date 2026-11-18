@@ -35,7 +35,7 @@ describe("profile texts", function()
 			list[index] = (entry.parent and (entry.parent .. " > ") or "") .. entry.name .. "=" .. Share.Label(entry.name, { look = "Raid" })
 		end
 		assert.same({
-			"module:AutoLoot=Fast autoloot settings", "module:Junk=Junk settings", "module:LootFeed=Loot feed settings",
+			"module:AutoLoot=Fast autoloot settings", "module:Junk=Junk settings", "module:Junk > marks=Junk List", "module:LootFeed=Loot feed settings",
 			"module:LootFeed > positions:LootFeed=Position", "module:LootFeed > look:LootFeed=Use look “Raid”",
 		}, list)
 		assert.same({ "looks", "Loot feed looks" }, { Share.Collections()[1].name, Share.Collections()[1].label })
@@ -151,6 +151,58 @@ describe("profile texts", function()
 		local read = assert(Share.Read(text({ format = 2, collections = { looks = { Future = { schema = 99 }, Now = { base = "huge", extra = 1 } } } })))
 		assert.same({ { "Now" }, { "Future" } }, { read.collections.looks.names, read.newer })
 		assert.same({}, read.collections.looks.items.Now)
+	end)
+
+	describe("of the junk list", function()
+		local Marks
+
+		-- The text of a junk list: Zebra (10) junk, Apple (20) and Boot (30) not junk.
+		local function theirs()
+			Marks.Set(10, "junk")
+			Marks.Set(20, "notJunk")
+			Marks.Set(30, "notJunk")
+			local exported = Share.Export({ parts = { "marks" } })
+			Marks.Clear()
+			return Share.Read(exported)
+		end
+
+		before_each(function()
+			Marks = ns.Marks
+		end)
+
+		it("hold the profile's marks as two lists of item IDs", function()
+			Marks.Set(30, "notJunk")
+			Marks.Set(10, "junk")
+			Marks.Set(5, "junk")
+			assert.same({ junk = { 5, 10 }, notJunk = { 30 } }, Share.Get("marks"))
+		end)
+
+		it("merge with the marks by default: what is new is added, an item marked otherwise keeps its mark", function()
+			local read = theirs()
+			Marks.Set(10, "notJunk")
+			Marks.Set(20, "notJunk")
+			Marks.Set(40, "junk")
+			local _, _, _, results = Share.Import(read, { parts = { "marks" } })
+			assert.same({ { itemID = 10, mark = "notJunk" }, { itemID = 20, mark = "notJunk" }, { itemID = 30, mark = "notJunk" },
+				{ itemID = 40, mark = "junk" } }, Marks.List())
+			assert.same({ conflicts = { { itemID = 10, mine = "notJunk", theirs = "junk" } } }, results.marks)
+		end)
+
+		it("replace the marks when asked", function()
+			local read = theirs()
+			Marks.Set(10, "notJunk")
+			Marks.Set(40, "junk")
+			local _, _, _, results = Share.Import(read, { parts = { "marks" }, ways = { marks = "replace" } })
+			assert.same({ { itemID = 10, mark = "junk" }, { itemID = 20, mark = "notJunk" }, { itemID = 30, mark = "notJunk" } }, Marks.List())
+			assert.same({ conflicts = {} }, results.marks)
+		end)
+
+		it("take item IDs only, each in the first list it is in", function()
+			local read = Share.Read(text({ format = 2, sections = { marks = {
+				junk = { 10, 10, -1, 2.5, "x", 20 }, notJunk = { 20, 30 }, other = { 40 } } } }))
+			assert.same({ junk = { 10, 20 }, notJunk = { 30 } }, read.sections.marks)
+			assert.is_nil(Share.Read(text({ format = 2, sections = { marks = "junk" } })))
+		end)
 	end)
 
 	describe("of 0.1 to 0.4 (format 1)", function()

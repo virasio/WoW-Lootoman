@@ -284,6 +284,8 @@ function UI.Install()
 
 	local tooltip = { shown = false, lines = {} }
 	function tooltip:SetOwner(owner) self.owner, self.lines, self.bagItem, self.compared = owner, {}, nil, false end
+	function tooltip:ClearAllPoints() self.points = {} end
+	function tooltip:SetPoint(...) self.points = self.points or {}; self.points[#self.points + 1] = { ... } end
 	function tooltip:SetBagItem(bag, slot) self.bagItem = { bag, slot } end
 	function tooltip:AddLine(text) self.lines[#self.lines + 1] = text end
 	function tooltip:AddDoubleLine(left, right) self.lines[#self.lines + 1] = tostring(left) .. " | " .. tostring(right) end

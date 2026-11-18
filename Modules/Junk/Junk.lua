@@ -98,6 +98,82 @@ ns.Share.RegisterUpgrade(1, function(data)
 	end
 end)
 
+-- The junk list (the profile's marks) as a part of profile texts, under the
+-- module's settings: { junk = { itemID, … }, notJunk = { itemID, … } }. It
+-- merges with the profile's marks (what is new is added; an item marked
+-- otherwise here keeps its mark and comes back as a conflict for the player
+-- to settle: { itemID, mine, theirs }), or replaces them.
+local MARK_LISTS = { "junk", "notJunk" }
+
+local function savedMarks(profile)
+	local sections = type(profile.sections) == "table" and profile.sections or nil
+	return sections and type(sections.marks) == "table" and sections.marks or nil
+end
+
+ns.Share.RegisterPart({
+	name = "marks",
+	module = "Junk",
+	label = L["Junk List"],
+	ways = { { "merge", L["Merge with my list"] }, { "replace", L["Replace my list"] } },
+	get = function(profile)
+		local data = { junk = {}, notJunk = {} }
+		for itemID, mark in pairs(savedMarks(profile) or {}) do
+			if type(itemID) == "number" and data[mark] then
+				table.insert(data[mark], itemID)
+			end
+		end
+		table.sort(data.junk)
+		table.sort(data.notJunk)
+		return data
+	end,
+	set = function(profile, data, _, way)
+		local marks, conflicts = {}, {}
+		if way ~= "replace" then
+			for itemID, mark in pairs(savedMarks(profile) or {}) do
+				if type(itemID) == "number" and ns.Marks.KINDS[mark] then
+					marks[itemID] = mark
+				end
+			end
+		end
+		for _, mark in ipairs(MARK_LISTS) do
+			for _, itemID in ipairs(data[mark]) do
+				local mine = marks[itemID]
+				if mine == nil then
+					marks[itemID] = mark
+				elseif mine ~= mark then
+					conflicts[#conflicts + 1] = { itemID = itemID, mine = mine, theirs = mark }
+				end
+			end
+		end
+		profile.sections = type(profile.sections) == "table" and profile.sections or {}
+		profile.sections.marks = marks
+		table.sort(conflicts, function(a, b)
+			return a.itemID < b.itemID
+		end)
+		return { conflicts = conflicts }
+	end,
+	-- The items marked otherwise here than in the text, for the player to settle
+	-- (the junk list window).
+	imported = function(result)
+		if #result.conflicts > 0 and ns.JunkList then
+			ns.JunkList.ShowConflicts(result.conflicts)
+		end
+	end,
+	-- Item IDs only, each in one list (the first it is in).
+	clean = function(data)
+		local cleaned, seen = { junk = {}, notJunk = {} }, {}
+		for _, mark in ipairs(MARK_LISTS) do
+			for _, itemID in ipairs(type(data[mark]) == "table" and data[mark] or {}) do
+				if type(itemID) == "number" and itemID > 0 and itemID == math.floor(itemID) and not seen[itemID] then
+					seen[itemID] = true
+					table.insert(cleaned[mark], itemID)
+				end
+			end
+		end
+		return cleaned
+	end,
+})
+
 -- The module's parts (the toss button and window, the sale, the sell button
 -- and window), started in order with the module and stopped in reverse:
 -- part.Enable() and part.Disable(). Disable also undoes a part that started

@@ -11,7 +11,11 @@ local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 -- list from the bags, or through the field over the list: Shift-click an
 -- item anywhere while the field is active (the game puts the link there, as
 -- it does into the chat), or paste a link or type an item ID, then Add.
--- Clear List removes every mark of the profile after a question.
+-- Clear List removes every mark of the profile after a question. Share and
+-- Import make and read profile texts of the junk list alone (Share.lua, the
+-- part "marks"); importing merges with the list or replaces it. Merged, an
+-- item marked otherwise here than in the text keeps its mark, and a window
+-- shows these one by one, with the item's tooltip: Keep mine or Take theirs.
 --
 -- It opens from the main page (Set Up the Junk List) and from the toss and
 -- sell windows, while junk management is on; it is built the first time, out
@@ -23,6 +27,7 @@ ns.JunkList = JunkList
 
 -- The window's global name, for UISpecialFrames.
 JunkList.NAME = "LootomanJunkList"
+JunkList.CONFLICTS_NAME = "LootomanJunkConflicts"
 JunkList.BAGS, JunkList.JUNK, JunkList.NOT_JUNK = 1, 2, 3
 JunkList.ROW_HEIGHT = 26
 -- Over the list: the field and its hint.
@@ -32,7 +37,7 @@ JunkList.LIST_TOP = 64
 local TAB_MARKS = { [JunkList.JUNK] = "junk", [JunkList.NOT_JUNK] = "notJunk" }
 
 local Junk = ns.Modules:Get("Junk")
-local window
+local window, conflicts
 local active, hooked = false, false
 
 -- The items with a mark, sorted by name: { itemID, mark, name, text, icon }.
@@ -275,6 +280,22 @@ local function build()
 		end)
 	end)
 
+	-- Profile texts of the junk list alone.
+	window.import = CreateFrame("Button", nil, grid.footer, "UIPanelButtonTemplate")
+	window.import:SetSize(90, 22)
+	window.import:SetPoint("RIGHT", 0, 0)
+	window.import:SetText(L["Import"])
+	window.import:SetScript("OnClick", function()
+		ns.SettingsPanel.Share.OpenImport("part:marks")
+	end)
+	window.share = CreateFrame("Button", nil, grid.footer, "UIPanelButtonTemplate")
+	window.share:SetSize(90, 22)
+	window.share:SetPoint("RIGHT", window.import, "LEFT", -4, 0)
+	window.share:SetText(L["Share"])
+	window.share:SetScript("OnClick", function()
+		ns.SettingsPanel.Share.OpenShare("part:marks")
+	end)
+
 	-- The tabs, under the window as on the game's own.
 	local tabs = {}
 	for id, text in ipairs({ L["Bags"], L["Junk"], L["Not Junk"] }) do
@@ -315,9 +336,128 @@ function JunkList.Open(tab)
 	return true
 end
 
--- The window, for tests: { grid, frame, list, field, add, rows, lines, tab, clear }.
+-- The window, for tests: { grid, frame, list, field, add, rows, lines, tab,
+-- clear, share, import }.
 function JunkList.Window()
 	return window
+end
+
+local MARK_NAMES = { junk = L["Junk"], notJunk = L["Not Junk"] }
+
+local function showTooltip(owner, itemID)
+	GameTooltip:SetOwner(owner, "ANCHOR_NONE")
+	GameTooltip:ClearAllPoints()
+	GameTooltip:SetPoint("TOPLEFT", conflicts, "TOPRIGHT", 4, 0)
+	GameTooltip:SetItemByID(itemID)
+	GameTooltip:Show()
+end
+
+-- Shows the conflict at conflicts.index, or closes the window after the last.
+local function showConflict()
+	local conflict = conflicts.list[conflicts.index]
+	if not conflict then
+		conflicts:Hide()
+		return
+	end
+	local info = Compat.GetItemInfo(conflict.itemID)
+	conflicts.count:SetText(L["%d of %d"]:format(conflicts.index, #conflicts.list))
+	conflicts.icon:SetTexture(Compat.GetItemLook(conflict.itemID))
+	conflicts.name:SetText(info and info.link or L["Item %d"]:format(conflict.itemID))
+	conflicts.here:SetText(L["Here: %s"]:format(MARK_NAMES[conflict.mine]))
+	conflicts.there:SetText(L["In the text: %s"]:format(MARK_NAMES[conflict.theirs]))
+	showTooltip(conflicts, conflict.itemID)
+end
+
+local function settle(takeTheirs)
+	local conflict = conflicts.list[conflicts.index]
+	-- The marks are the profile's: after a switch, nothing is changed.
+	if ns.Profiles.GetCurrent() ~= conflicts.profile then
+		conflicts:Hide()
+		return
+	end
+	if conflict and takeTheirs then
+		Marks.Set(conflict.itemID, conflict.theirs)
+	end
+	conflicts.index = conflicts.index + 1
+	showConflict()
+end
+
+local function buildConflicts()
+	local frame = CreateFrame("Frame", JunkList.CONFLICTS_NAME, UIParent, "DefaultPanelFlatTemplate")
+	frame:Hide()
+	frame:SetSize(360, 170)
+	frame:SetPoint("CENTER")
+	frame:SetFrameStrata("DIALOG")
+	frame:SetToplevel(true)
+	frame:SetClampedToScreen(true)
+	frame:EnableMouse(true)
+	frame:SetTitle(L["Marked Otherwise"])
+	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")
+	close:SetPoint("TOPRIGHT", 1, 0)
+	close:SetScript("OnClick", function()
+		frame:Hide()
+	end)
+	-- Escape closes it as it closes the game's own windows: the items left keep
+	-- their marks.
+	table.insert(UISpecialFrames, JunkList.CONFLICTS_NAME)
+	frame.count = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	frame.count:SetPoint("TOPRIGHT", -24, -34)
+	frame.item = CreateFrame("Frame", nil, frame)
+	frame.item:SetSize(300, 32)
+	frame.item:SetPoint("TOPLEFT", 20, -50)
+	frame.item:EnableMouse(true)
+	frame.item:SetScript("OnEnter", function()
+		local conflict = frame.list and frame.list[frame.index]
+		if conflict then
+			showTooltip(frame, conflict.itemID)
+		end
+	end)
+	frame.icon = frame.item:CreateTexture(nil, "ARTWORK")
+	frame.icon:SetSize(30, 30)
+	frame.icon:SetPoint("LEFT")
+	frame.name = frame.item:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	frame.name:SetPoint("LEFT", frame.icon, "RIGHT", 8, 0)
+	frame.name:SetPoint("RIGHT")
+	frame.name:SetJustifyH("LEFT")
+	frame.here = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	frame.here:SetPoint("TOPLEFT", 20, -92)
+	frame.there = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	frame.there:SetPoint("TOPLEFT", frame.here, "BOTTOMLEFT", 0, -6)
+	frame.keep = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.keep:SetSize(130, 22)
+	frame.keep:SetPoint("BOTTOMRIGHT", frame, "BOTTOM", -4, 14)
+	frame.keep:SetText(L["Keep mine"])
+	frame.keep:SetScript("OnClick", function()
+		settle(false)
+	end)
+	frame.take = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.take:SetSize(130, 22)
+	frame.take:SetPoint("BOTTOMLEFT", frame, "BOTTOM", 4, 14)
+	frame.take:SetText(L["Take theirs"])
+	frame.take:SetScript("OnClick", function()
+		settle(true)
+	end)
+	frame:SetScript("OnHide", function()
+		if GameTooltip:IsOwned(frame --[[@as Frame]]) then
+			GameTooltip:Hide()
+		end
+	end)
+	return frame
+end
+
+-- The items an imported junk list marks otherwise than the profile does, one
+-- by one: { { itemID, mine, theirs }, … }.
+function JunkList.ShowConflicts(list)
+	conflicts = conflicts or buildConflicts()
+	conflicts.list, conflicts.index = list, 1
+	conflicts.profile = ns.Profiles.GetCurrent()
+	conflicts:Show()
+	showConflict()
+end
+
+-- The conflicts window, for tests.
+function JunkList.Conflicts()
+	return conflicts
 end
 
 -- Without the junk module (a build that leaves it out) the window never opens.

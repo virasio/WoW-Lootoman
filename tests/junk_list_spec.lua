@@ -193,4 +193,47 @@ describe("junk list window", function()
 		ns.Profiles.Switch("Default")
 		assert.is_not_nil(rowFor(10))
 	end)
+
+	it("shares and imports the junk list alone", function()
+		JunkList.Open()
+		local window, Dialogs = JunkList.Window(), ns.SettingsPanel.Share
+		click(window.share)
+		assert.same({ true, "part:marks" }, { Dialogs.shareFrame:IsShown(), Dialogs.shareFrame.mode })
+		click(window.import)
+		assert.same({ true, "part:marks" }, { Dialogs.importFrame:IsShown(), Dialogs.importFrame.mode })
+	end)
+
+	describe("items marked otherwise in an imported list", function()
+		local conflicts
+
+		before_each(function()
+			Marks.Set(10, "notJunk")
+			Marks.Set(20, "junk")
+			JunkList.ShowConflicts({ { itemID = 10, mine = "notJunk", theirs = "junk" }, { itemID = 20, mine = "junk", theirs = "notJunk" } })
+			conflicts = JunkList.Conflicts()
+		end)
+
+		it("shows them one by one, with the item's tooltip: what it is here and in the text", function()
+			assert.same({ true, "1 of 2", "|Hitem:10|h[Zebra Hide]|h", 1010, "Here: Not Junk", "In the text: Junk" },
+				{ conflicts:IsShown(), conflicts.count.text, conflicts.name.text, conflicts.icon.texture, conflicts.here.text, conflicts.there.text })
+			assert.same({ true, 10, conflicts }, { Loader.ui.tooltip.shown, Loader.ui.tooltip.item, Loader.ui.tooltip.owner })
+		end)
+
+		it("keeps mine or takes theirs, then closes after the last", function()
+			click(conflicts.take)
+			assert.same({ "junk", "2 of 2" }, { Marks.Get(10), conflicts.count.text })
+			click(conflicts.keep)
+			assert.same({ "junk", false }, { Marks.Get(20), conflicts:IsShown() })
+		end)
+
+		it("changes nothing once the profile is another", function()
+			ns.Profiles.Create("Alt")
+			ns.Profiles.Switch("Alt")
+			click(conflicts.take)
+			assert.same({ false, nil }, { conflicts:IsShown(), Marks.Get(10) })
+			ns.Profiles.Switch("Default")
+			assert.equals("notJunk", Marks.Get(10))
+		end)
+	end)
 end)
+
