@@ -345,6 +345,7 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **In a fight.** *Expected:* the sparkles keep working; a switch changed in the fight applies at once, game settings after it; no errors and no blocked action.
 - [ ] **Profile texts.** Share a profile on WoW Forever and import it on retail. *Expected:* it reads, with the highlights' part left out.
 - [ ] **A quest object's quest changes (0.5.5).** Stand at a quest object until it sparkles; finish the objective it is for (or abandon the quest), and accept a quest that wants an object you stand at. *Expected:* the sparkles follow at once: the object you no longer need stops sparkling as a quest object, the one you now need starts.
+- [ ] **Quest objects before the first one (0.5.7).** Debug on (`/lootoman debug on`). Accept a quest that asks to collect objects from the world, and walk up to one before collecting any. *Expected:* it sparkles at once, as a quest object; the debug line says `quest by game`, `quest by tooltip` or `quest by objective`. Collect them all (or abandon the quest), walk up to another: no sparkles. A mailbox, a vendor and an object the quest does not want: no sparkles. Note the quest and the debug line of any quest object that stays dark.
 - [ ] **After a client update.** *Expected:* the object's nameplate still stays hidden under the sparkles (no name, bar or interact icon from the game), and the self-test's `Highlights:` line shows every function `yes`.
 
 ### The icon and the name over a sparkling object (0.5.7)
