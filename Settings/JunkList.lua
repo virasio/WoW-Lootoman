@@ -32,6 +32,9 @@ JunkList.BAGS, JunkList.JUNK, JunkList.NOT_JUNK = 1, 2, 3
 JunkList.ROW_HEIGHT = 26
 -- Over the list: the field and its hint.
 JunkList.LIST_TOP = 64
+-- Where it opens: where the game opens its bags, at the bottom right of the
+-- screen 85 up (ContainerFrame.lua), a little higher for the tabs under it.
+JunkList.PLACE = { point = "BOTTOMRIGHT", x = -20, y = 115 }
 
 -- The mark each list tab holds.
 local TAB_MARKS = { [JunkList.JUNK] = "junk", [JunkList.NOT_JUNK] = "notJunk" }
@@ -263,7 +266,7 @@ local function build()
 	})
 	local frame = grid.frame
 	-- The grid leaves its place to its owner; a frame with none is not drawn.
-	frame:SetPoint("CENTER")
+	frame:SetPoint(JunkList.PLACE.point, UIParent, JunkList.PLACE.point, JunkList.PLACE.x, JunkList.PLACE.y)
 	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
 	buildList(frame)
 
