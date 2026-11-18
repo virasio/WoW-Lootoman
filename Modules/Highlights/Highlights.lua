@@ -28,12 +28,17 @@ local function eitherGathering()
 	return Storage:Get("Highlights", "herbs") or Storage:Get("Highlights", "ore")
 end
 
+local function showsName()
+	return Storage:Get("Highlights", "label") == "name"
+end
+
 local Highlights = ns.Modules:Register({
 	name = "Highlights",
 	title = L["Gathering highlights"],
 	switchLabel = L["Highlight Lootable Objects"],
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
-	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true },
+	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true,
+		label = "name", textSize = 12, textColor = "ffd100", textStyle = "outline" },
 	-- The kinds in two columns, quest objects and chests on the left, herbs and
 	-- ore on the right, over the profession option a little apart. The rows
 	-- fill from the left.
@@ -46,6 +51,16 @@ local Highlights = ns.Modules:Register({
 		} },
 		{ kind = "checkbox", key = "gatherable", label = L["Only Herbs and Ore You Can Gather"], gap = 14,
 			tooltip = L["Herbs need Herbalism and ore needs Mining. Turn it off to see them anyway."], enabledWhen = eitherGathering },
+		-- Above the object: nothing, its icon, or its icon and name; the name's
+		-- size, colour and style only with the name.
+		{ kind = "choice", key = "label", label = L["Above the Object"],
+			tooltip = L["What shows above the sparkling object: its interaction icon, and its name under it."],
+			choices = { { "none", L["Nothing"] }, { "icon", L["Icon"] }, { "name", L["Icon and name"] } } },
+		{ kind = "slider", key = "textSize", label = L["Text Size"], level = 2, min = 8, max = 24, step = 1, enabledWhen = showsName },
+		{ kind = "color", key = "textColor", label = L["Text Color"], level = 2, enabledWhen = showsName },
+		{ kind = "choice", key = "textStyle", label = L["Text Style"], level = 2, enabledWhen = showsName,
+			choices = { { "shadow", L["Shadow"] }, { "outline", L["Outline"] }, { "thick", L["Thick outline"] },
+				{ "backdrop", L["Backdrop"] } } },
 	},
 })
 ns.Highlights.Module = Highlights
@@ -81,6 +96,30 @@ function Highlights.State(facts, unable)
 		return facts.inReach == true and "locked" or "far"
 	end
 	return "ready"
+end
+
+-- What the label over a sparkling object shows (Sparkles.Label), from the
+-- settings; a value out of range or unknown, as a profile text may bring,
+-- falls back to the default.
+Highlights.TEXT_SIZE = { min = 8, max = 24 }
+Highlights.TEXT_COLOR = "ffd100"
+local STYLES = { shadow = true, outline = true, thick = true, backdrop = true }
+
+function Highlights:Look()
+	local mode = self:Get("label")
+	if mode ~= "icon" and mode ~= "name" then
+		return nil
+	end
+	local look = { icon = true }
+	if mode == "name" then
+		look.name, look.hasName = Compat.GetSoftInteractName()
+		local size = Highlights.TEXT_SIZE
+		look.size = Storage.OnStep(tonumber(self:Get("textSize")) or 12, size.min, size.max, 1)
+		look.color = { ns.Text.RGB(self:Get("textColor"), Highlights.TEXT_COLOR) }
+		local style = self:Get("textStyle")
+		look.style = STYLES[style] and style or "outline"
+	end
+	return look
 end
 
 -- Whether a kind lights: its switch, and for herbs and ore the profession
@@ -167,7 +206,7 @@ function Highlights:Evaluate(tick)
 	self.lit = lit and { kind = kind, state = state, plate = plate } or nil
 	if ns.Highlights.Sparkles then
 		if lit and plate then
-			ns.Highlights.Sparkles.Show(plate, state)
+			ns.Highlights.Sparkles.Show(plate, state, self:Look())
 		else
 			ns.Highlights.Sparkles.Hide()
 		end

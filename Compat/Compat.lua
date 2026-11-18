@@ -588,6 +588,29 @@ function Compat.GetSoftInteract(skipQuest)
 	return facts
 end
 
+-- Puts the soft interact target's cursor on a texture, the icon the game
+-- would show over it (low-priority cursors too); whether it has one.
+function Compat.SetSoftInteractCursor(texture)
+	return try(SetUnitCursorTexture, texture, SOFT, nil, true) == true
+end
+
+-- The soft interact target's name, for showing it, and whether it has one.
+-- The name may be a value the client keeps secret: give it only to a font
+-- string's SetText, which takes secrets; never compare or measure it.
+function Compat.GetSoftInteractName()
+	local ok, name = pcall(UnitName, SOFT)
+	if not ok then
+		return nil, false
+	end
+	if Compat.IsSecret(name) then
+		return name, true
+	end
+	if type(name) == "string" and name ~= "" then
+		return name, true
+	end
+	return nil, false
+end
+
 -- The file ID of one of the game's cursors (Interface\Cursor\<name>), or nil.
 function Compat.GetCursorFileID(name)
 	local path = "Interface\\Cursor\\" .. name

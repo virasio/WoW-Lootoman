@@ -1,4 +1,5 @@
 local _, ns = ...
+local Compat = ns.Compat
 
 -- The sparkles of gathering highlights: one look for every kind of object, in
 -- the default UI's gold, and light: six small stars that light up at random
@@ -18,6 +19,15 @@ local _, ns = ...
 -- so the sparkles don't flicker at the edge of reach (Lueur's lesson), and
 -- the brightness fades to it.
 --
+-- Above the stars, at the plate's centre, a label may show the object's
+-- icon (the cursor the game would show over it) and its name under it, as
+-- Lueur does: our own, as the game's icon stays off over a sparkling object
+-- (GameSettings) and the plate's own frame, which holds the game's name, is
+-- invisible. The label is a child of the effect, so it takes the stars'
+-- brightness and fade. The name may be a secret value: it goes only to
+-- SetText, and the backdrop is anchored to the text's edges, not sized from
+-- its width.
+--
 -- What other addons hang on the plate is not looked at: a nameplate addon
 -- draws on every plate, and another addon that lights objects simply shows
 -- beside the stars.
@@ -33,6 +43,17 @@ Sparkles.STARS = 6
 Sparkles.ALPHA = { ready = 1, far = 0.6, locked = 0.3 }
 Sparkles.HOLD = 0.15
 Sparkles.FADE = 0.25
+-- The label's icon, about the size of the game's own.
+Sparkles.ICON = 24
+-- The name's styles: the font's flags, whether it keeps the game's shadow,
+-- and whether a dark strip goes behind it.
+Sparkles.STYLES = {
+	shadow = { flags = "", shadow = true },
+	outline = { flags = "OUTLINE" },
+	thick = { flags = "THICKOUTLINE" },
+	backdrop = { flags = "", shadow = true, backdrop = true },
+}
+Sparkles.BACKDROP = { 0, 0, 0, 0.6 }
 
 local effect
 -- The plate's own frame hidden under the sparkles, and whether we are hiding
@@ -112,6 +133,27 @@ local function animate(frame, elapsed)
 	end
 end
 
+-- The label over the stars, at the plate's centre: the backdrop, the name in
+-- the game's normal font, and the icon over it.
+local function createLabel(frame)
+	local label = CreateFrame("Frame", nil, frame)
+	label:SetSize(1, 1)
+	label:SetPoint("CENTER", frame, "CENTER", 0, -Sparkles.OFFSET)
+	label.backdrop = label:CreateTexture(nil, "BACKGROUND")
+	local backdrop = Sparkles.BACKDROP
+	label.backdrop:SetColorTexture(backdrop[1], backdrop[2], backdrop[3], backdrop[4])
+	label.name = label:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	label.name:SetPoint("CENTER", label, "CENTER", 0, 0)
+	label.backdrop:SetPoint("TOPLEFT", label.name, "TOPLEFT", -4, 2)
+	label.backdrop:SetPoint("BOTTOMRIGHT", label.name, "BOTTOMRIGHT", 4, -2)
+	label.icon = label:CreateTexture(nil, "OVERLAY")
+	label.icon:SetSize(Sparkles.ICON, Sparkles.ICON)
+	-- The game's font for the client's alphabet; the size and flags are ours.
+	label.font = label.name:GetFont()
+	label:Hide()
+	frame.label = label
+end
+
 -- The effect frame, made once, out of combat (the module's start).
 function Sparkles.Create()
 	if effect then
@@ -131,13 +173,50 @@ function Sparkles.Create()
 		effect.stars[index] = star
 	end
 	effect.state, effect.level, effect.pendingFor = "ready", 0, 0
+	createLabel(effect)
 	effect:SetScript("OnUpdate", animate)
 	return effect
 end
 
--- The sparkles on this plate, in this state ("ready", "far", "locked"). A new
--- plate starts faint and brightens; a new state waits until it has held.
-function Sparkles.Show(plate, state)
+-- What the label shows. look: nil for nothing, else { icon, name, hasName,
+-- size, color = { r, g, b }, style }: the icon when look.icon and the target
+-- has a cursor; the name when look.hasName, in its size, colour and style,
+-- with the icon over it; the icon alone at the centre.
+function Sparkles.Label(look)
+	local label = Sparkles.Create().label
+	if not look then
+		label:Hide()
+		return
+	end
+	local hasIcon = look.icon == true and Compat.SetSoftInteractCursor(label.icon)
+	local hasName = look.hasName == true
+	label.icon:SetShown(hasIcon)
+	label.name:SetShown(hasName)
+	label.icon:ClearAllPoints()
+	if hasName then
+		local style = Sparkles.STYLES[look.style] or Sparkles.STYLES.outline
+		label.name:SetFont(label.font, look.size, style.flags)
+		if style.shadow then
+			label.name:SetShadowOffset(1, -1)
+			label.name:SetShadowColor(0, 0, 0, 1)
+		else
+			label.name:SetShadowOffset(0, 0)
+		end
+		label.name:SetTextColor(look.color[1], look.color[2], look.color[3])
+		label.name:SetText(look.name)
+		label.backdrop:SetShown(style.backdrop == true)
+		label.icon:SetPoint("BOTTOM", label.name, "TOP", 0, 4)
+	else
+		label.backdrop:Hide()
+		label.icon:SetPoint("CENTER", label, "CENTER", 0, 0)
+	end
+	label:SetShown(hasIcon or hasName)
+end
+
+-- The sparkles on this plate, in this state ("ready", "far", "locked"), with
+-- the label look gives (Sparkles.Label). A new plate starts faint and
+-- brightens; a new state waits until it has held.
+function Sparkles.Show(plate, state, look)
 	local frame = Sparkles.Create()
 	if frame.plate ~= plate then
 		Sparkles.Hide()
@@ -156,6 +235,7 @@ function Sparkles.Show(plate, state)
 	else
 		frame.pending = nil
 	end
+	Sparkles.Label(look)
 end
 
 -- The sparkles leave, and the plate's own frame shows again.

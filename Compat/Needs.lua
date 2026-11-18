@@ -92,6 +92,7 @@ ns.Compat.NEEDS = {
 		"UnitIsInInteractRange",
 		"issecretvalue",
 	} },
+	GetSoftInteractName = { "UnitName", optional = { "issecretvalue" } },
 	GetSoftInteractPlate = { "C_NamePlate.GetNamePlateForUnit", "UnitIsGameObject", "UnitIsUnit", optional = {
 		"issecretvalue",
 	} },
@@ -120,6 +121,7 @@ ns.Compat.NEEDS = {
 	SetAutoLootKey = { "InCombatLockdown", optional = { "GetCurrentBindingSet", "SaveBindings", "SetModifiedClick" } },
 	SetCVar = { "C_CVar.SetCVar", "InCombatLockdown" },
 	SetSaved = {},
+	SetSoftInteractCursor = { "SetUnitCursorTexture", optional = { "issecretvalue" } },
 	UnregisterEvent = {},
 	UseBagItem = { "C_Container.UseContainerItem" },
 }

@@ -227,6 +227,32 @@ function Compat.GetSoftInteract(skipQuest)
 	return copy
 end
 
+-- The cursor of state.softInteract on the texture, if it has one.
+function Compat.SetSoftInteractCursor(texture)
+	local facts = state.softInteract
+	if not (facts and facts.cursor) then
+		return false
+	end
+	texture:SetTexture(facts.cursor)
+	return true
+end
+
+-- state.softInteractName (a secret is { secret = true }), else the name in
+-- state.softInteract; and whether there is one.
+function Compat.GetSoftInteractName()
+	local name = state.softInteractName
+	if name == nil and state.softInteract then
+		name = state.softInteract.name
+	end
+	if Compat.IsSecret(name) then
+		return name, true
+	end
+	if type(name) == "string" and name ~= "" then
+		return name, true
+	end
+	return nil, false
+end
+
 -- state.cursorFiles: the file IDs of the game's cursors by name.
 function Compat.GetCursorFileID(name)
 	return state.cursorFiles[name]

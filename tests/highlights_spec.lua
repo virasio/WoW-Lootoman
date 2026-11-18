@@ -381,6 +381,72 @@ describe("gathering highlights' sparkles", function()
 		assert.equals(0.3, frame.level)
 	end)
 
+	it("show the object's icon and its name over the stars by default, at the plate's centre", function()
+		Test.state.consoleVars.SoftTargetIconInteract = "1"
+		target(HERB)
+		local frame = Sparkles.Create()
+		local label = frame.label
+		-- A child of the stars' frame: it takes their brightness and fade.
+		assert.same({ true, frame, { "CENTER", frame, "CENTER", 0, 45 } }, { label.shown, label.parent, label.points[1] })
+		assert.same({ true, 3, { Sparkles.ICON, Sparkles.ICON } }, { label.icon.shown, label.icon.texture, { label.icon.width, label.icon.height } })
+		assert.same({ true, "Peacebloom", { "Fonts\\FRIZQT__.TTF", 12, "OUTLINE" }, { 0, 0 } },
+			{ label.name.shown, label.name.text, label.name.font, label.name.shadowOffset })
+		assert.same({ 1, 209 / 255, 0 }, label.name.color)
+		assert.same({ "BOTTOM", label.name, "TOP", 0, 4 }, label.icon.points[1])
+		assert.is_false(label.backdrop.shown)
+		-- The game's own icon stays off over it.
+		assert.equals("0", Test.state.consoleVars.SoftTargetIconInteract)
+	end)
+
+	it("show the icon alone at the centre, or nothing, as the player chooses", function()
+		target(HERB)
+		local label = Sparkles.Create().label
+		module:Set("label", "icon")
+		assert.same({ true, true, false }, { label.shown, label.icon.shown, label.name.shown })
+		assert.same({ "CENTER", label, "CENTER", 0, 0 }, label.icon.points[1])
+		module:Set("label", "none")
+		assert.is_false(label.shown)
+		module:Set("label", "name")
+		assert.same({ true, true }, { label.shown, label.name.shown })
+	end)
+
+	it("write the name in the chosen size, colour and style", function()
+		target(HERB)
+		local name, backdrop = Sparkles.Create().label.name, Sparkles.Create().label.backdrop
+		module:Set("textSize", 18)
+		module:Set("textColor", "33ccff")
+		assert.same({ 18, { 0.2, 0.8, 1 } }, { name.font[2], name.color })
+		module:Set("textStyle", "shadow")
+		assert.same({ "", { 1, -1 }, false }, { name.font[3], name.shadowOffset, backdrop.shown })
+		module:Set("textStyle", "thick")
+		assert.same({ "THICKOUTLINE", { 0, 0 } }, { name.font[3], name.shadowOffset })
+		module:Set("textStyle", "backdrop")
+		assert.same({ "", { 1, -1 }, true }, { name.font[3], name.shadowOffset, backdrop.shown })
+		-- Around the text's own edges, whatever its width.
+		assert.same({ { "TOPLEFT", name, "TOPLEFT", -4, 2 }, { "BOTTOMRIGHT", name, "BOTTOMRIGHT", 4, -2 } }, backdrop.points)
+	end)
+
+	it("fall back to the defaults for a size, colour or style a profile text brought that is not valid", function()
+		target(HERB)
+		local name = Sparkles.Create().label.name
+		module:Set("textSize", 40)
+		module:Set("textColor", "gold")
+		module:Set("textStyle", "glitter")
+		assert.same({ 24, { 1, 209 / 255, 0 }, "OUTLINE" }, { name.font[2], name.color, name.font[3] })
+	end)
+
+	it("show a name the client keeps secret, and the icon alone when there is no name", function()
+		local secret = { secret = true }
+		Test.state.softInteractName = secret
+		target(HERB)
+		local label = Sparkles.Create().label
+		assert.same({ true, secret }, { label.name.shown, label.name.text })
+		Test.state.softInteractName = ""
+		target({ isObject = true, isDead = false, cursor = 3, inReach = true })
+		assert.same({ true, true, false }, { label.shown, label.icon.shown, label.name.shown })
+		assert.same({ "CENTER", label, "CENTER", 0, 0 }, label.icon.points[1])
+	end)
+
 	it("light an object whatever other addons draw on its plate: a nameplate addon's frames, another glow", function()
 		-- A nameplate addon puts its own frames on every plate; another addon may light the object too.
 		local nameplateAddon = _G.CreateFrame("Frame", nil, plate)
@@ -425,6 +491,29 @@ describe("gathering highlights on the options page", function()
 		ore.scripts.OnClick(ore)
 		assert.is_false(ns.Storage:Get("Highlights", "ore"))
 		assert.is_true(ns.Modules:Get("Highlights"):Validate("chests", false))
+		-- Above the object: the choice, and the name's three settings under it, greyed without the name.
+		assert.is_truthy(table.concat(texts, "|"):find("Only Herbs and Ore You Can Gather|Above the Object|Text Size|Text Color|Text Style", 1, true))
+		local kinds = {}
+		for _, entry in ipairs(page.items) do
+			if entry.text == "Above the Object" or entry.text == "Text Size" or entry.text == "Text Color" or entry.text == "Text Style" then
+				kinds[#kinds + 1] = entry.kind .. "@" .. entry.indent
+			end
+		end
+		assert.same({ "choice@24", "slider@48", "color@48", "choice@48" }, kinds)
+		local function label(text)
+			for _, entry in ipairs(page.items) do
+				if entry.text == text then
+					return entry.region.label
+				end
+			end
+		end
+		assert.equals("GameFontNormal", label("Text Size").fontObject)
+		ns.Storage:Set("Highlights", "label", "icon")
+		assert.same({ "GameFontDisable", "GameFontDisable", "GameFontDisable" },
+			{ label("Text Size").fontObject, label("Text Color").fontObject, label("Text Style").fontObject })
+		assert.same({ "name", 12, "ffd100", "outline" }, { ns.Modules:Get("Highlights").defaults.label,
+			ns.Modules:Get("Highlights").defaults.textSize, ns.Modules:Get("Highlights").defaults.textColor,
+			ns.Modules:Get("Highlights").defaults.textStyle })
 		SettingsAPI.Install()
 		ns = Loader.Start(Loader.LoadAddon({ skip = {} }))
 		texts = {}
