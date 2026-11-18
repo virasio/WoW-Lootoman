@@ -262,6 +262,8 @@ local function build()
 		strata = "DIALOG",
 	})
 	local frame = grid.frame
+	-- The grid leaves its place to its owner; a frame with none is not drawn.
+	frame:SetPoint("CENTER")
 	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
 	buildList(frame)
 

@@ -64,7 +64,8 @@ describe("junk list window", function()
 		click(mainButton())
 		local frame = JunkList.Window().frame
 		assert.same({ true, "Junk List", "LootomanJunkList" }, { frame.shown, frame.title, frame.name })
-		-- Over the game's options window, which is HIGH.
+		-- In the middle of the screen, over the game's options window, which is HIGH.
+		assert.same({ { "CENTER" } }, frame.points)
 		assert.equals("DIALOG", frame.strata)
 		-- No button of its own to open itself.
 		assert.is_nil(JunkList.Window().grid.listButton)
