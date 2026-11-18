@@ -453,13 +453,22 @@ describe("loot feed look window", function()
 end)
 
 describe("loot feed look window, opened from", function()
-	it("Edit in the look menu, on the options page and in its Edit Mode dialog", function()
-		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 }, settings = {} }
-		function lib:AddFrame() end
+	it("Edit in the look menu, Edit on the options page, and the feed picked in Edit Mode", function()
+		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 }, settings = {}, frameSelections = {} }
+		-- The library's selection of a frame, which its click picks, and its dialog.
+		function lib:AddFrame(frame)
+			local selection = { parent = frame, scripts = {} }
+			function selection:HookScript(name, fn) self.scripts[name] = fn end
+			function selection:ShowSelected(selected) self.selected = selected end
+			self.frameSelections[frame] = selection
+		end
 		function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 		function lib:AddFrameSettingsButtons() end
 		function lib:RegisterCallback() end
 		function lib:IsInEditMode() return false end
+		lib.internal = { dialog = { shown = false } }
+		function lib.internal.dialog:Update(selection) self.selection, self.shown = selection, true end
+		function lib.internal.dialog:Hide() self.shown = false end
 		rawset(_G, "LibStub", function(name) return name == "LibEditMode" and lib or nil end)
 		local api = SettingsAPI.Install()
 		local ns = Loader.LoadAddon({ skip = {} })
@@ -473,11 +482,25 @@ describe("loot feed look window, opened from", function()
 		api.OpenMenu(ns.SettingsPanel.main.look).entries[1].entries[1].callback()
 		assert.is_true(LookWindow.window.shown)
 		LookWindow.window:Hide()
-		-- The dialog's dropdown builds the look menu; Edit opens the window.
-		local dropdown = { menu = lib.settings[ns.Modules:Get("LootFeed").feed.frame][1].generator }
-		local root = api.OpenMenu(dropdown)
-		root.entries[1].entries[1].callback()
+		-- Edit beside the dropdown: the profile's look, also when another one was edited.
+		ns.Feed.Looks.Create("Raid")
+		LookWindow.Open("Raid")
+		LookWindow.window:Hide()
+		local edit = ns.SettingsPanel.main.lookEdit
+		assert.same({ "Edit", true }, { edit.text, edit.enabled })
+		edit.scripts.OnClick(edit)
 		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
+		LookWindow.window:Hide()
+		-- In Edit Mode the library's dialog does not show for the feed: its window opens, and the
+		-- feed stays picked and movable, to be dragged.
+		local frame = ns.Modules:Get("LootFeed").feed.frame
+		local selection = lib.frameSelections[frame]
+		lib.internal.dialog:Update(selection)
+		selection.scripts.OnMouseDown(selection)
+		assert.same({ false, true, true, true }, { lib.internal.dialog.shown, selection.selected, frame.movable == true, LookWindow.window.shown })
+		-- Another addon's frame keeps the dialog.
+		lib.internal.dialog:Update({ parent = {} })
+		assert.is_true(lib.internal.dialog.shown)
 	end)
 end)
 
@@ -503,6 +526,11 @@ describe("loot feed look window's buttons and view", function()
 
 	it("has no Reset or Share buttons: both are in the look's menu", function()
 		assert.same({ nil, nil }, { window.reset, window.share })
+	end)
+
+	it("has Reset Position at the far end of its top row, greyed while no Edit Mode layout is known", function()
+		assert.same({ "Reset Position", { "TOPRIGHT", -24, -34 }, false },
+			{ window.resetPosition.text, window.resetPosition.points[1], window.resetPosition:IsEnabled() })
 	end)
 
 	it("edits the look chosen in its dropdown, and Apply makes the profile use it", function()

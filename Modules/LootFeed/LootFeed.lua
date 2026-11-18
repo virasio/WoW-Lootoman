@@ -27,9 +27,29 @@ local LootFeed = ns.Modules:Register({
 		page:AddRow(L["Feed Look"], dropdown, { indent = indent, height = 30,
 			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
 		page.look = dropdown
+		-- Edit: the window of the look the profile uses.
+		local edit = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+		edit:SetSize(90, 22)
+		edit:SetPoint("LEFT", dropdown, "RIGHT", 8, 0)
+		edit:SetText(L["Edit"])
+		edit:SetScript("OnClick", function()
+			Feed.LookWindow.Open()
+		end)
+		edit:SetScript("OnEnter", function(button)
+			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+			GameTooltip_SetTitle(GameTooltip, L["Edit"])
+			GameTooltip_AddNormalLine(GameTooltip, L["Opens the window of the look this profile uses: its settings, its row design and the feed's position."])
+			GameTooltip:Show()
+		end)
+		edit:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		page.lookEdit = edit
 		page:OnRefresh(function()
 			dropdown:GenerateMenu()
-			dropdown:SetEnabled(ns.Storage:Get("LootFeed", "enabled"))
+			local enabled = ns.Storage:Get("LootFeed", "enabled")
+			dropdown:SetEnabled(enabled)
+			edit:SetEnabled(enabled)
 		end)
 	end } },
 })
@@ -280,12 +300,11 @@ function LootFeed:OnEnable()
 			-- In Edit Mode's title case, as its own frames are named.
 			name = L["Loot Feed"],
 			default = self.DEFAULT_POSITION,
-			-- Its look resets in the look's menu.
-			noReset = true,
-			-- Only the look: it holds every other setting, and its menu edits it.
-			settings = { { kind = "dropdown", key = "look", label = L["Feed Look"],
-				tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."],
-				generator = Feed.LookMenu.Build } },
+			-- Picked in Edit Mode, the feed opens its look's window, which holds every
+			-- setting, the choice of look and the position's reset.
+			window = function()
+				self.LookWindow.Open()
+			end,
 			onEditMode = function(active)
 				self.feed:SetPreview(active)
 			end,

@@ -62,6 +62,8 @@ function methods:IsShown() return self.shown end
 function methods:IsVisible() return self.shown and (self.parent == nil or self.parent:IsVisible()) end
 function methods:SetAlpha(alpha) self.alpha = alpha end
 function methods:GetAlpha() return self.alpha end
+function methods:SetMovable(movable) self.movable = movable end
+function methods:IsMovable() return self.movable == true end
 function methods:SetIgnoreParentAlpha(ignore) self.ignoresParentAlpha = ignore end
 function methods:SetScript(name, fn) self.scripts[name] = fn end
 function methods:GetScript(name) return self.scripts[name] end
