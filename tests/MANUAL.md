@@ -340,7 +340,7 @@ The same groups in all three junk windows.
 
 ### The junk list window (0.5.8)
 
-- [ ] **Opening.** *Edit the Junk List* on the options page, and *Junk List* in the toss and sort windows' title bars. *Expected:* a window titled *Junk List* at the bottom right, where the game opens its bags, with three tabs under it, *Bags* first; it closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight. Turning junk management off closes it.
+- [ ] **Opening.** *Edit the Junk List* on the options page, and *Junk List* in the toss and sort windows' title bars. *Expected:* a window titled *Junk List* with three tabs under it, *Bags* first: from the options right of the options window, level with its top (over its right edge on a narrow screen or a large UI scale), from the other windows in the middle of the screen; it closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight. Turning junk management off closes it.
 - [ ] **Bags.** *Expected:* the groups; every click and drag marks for good, as in the toss window, with no Shift; items dragged out are not deleted.
 - [ ] **Junk and Not Junk.** *Expected:* every item with that mark, in the bags or not, by name, each with its icon, its tooltip on hover and *Remove*; *None* for an empty list. *Remove* takes one away (it moves in the open junk windows at once).
 - [ ] **Adding.** On *Junk*, then on *Not Junk*:

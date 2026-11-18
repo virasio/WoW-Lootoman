@@ -200,9 +200,14 @@ function SettingsAPI.Install()
 		table.insert(self.hooks[script], hook)
 	end
 	api.defaultsButton = defaults
-	local panel = { list = { Header = { DefaultsButton = defaults } } }
+	-- Where it is on screen (shown, right, top), as a test puts it.
+	local panel = { list = { Header = { DefaultsButton = defaults } }, shown = false }
 	function panel:GetSettingsList() return self.list end
 	function panel:GetCurrentCategory() return self.current end
+	function panel:IsVisible() return self.shown end
+	function panel:GetRight() return self.right end
+	function panel:GetTop() return self.top end
+	function panel:GetEffectiveScale() return self.scale or 1 end
 	rawset(_G, "SettingsPanel", panel)
 	rawset(_G, "CreateSettingsListSectionHeaderInitializer", function(name, tooltip)
 		return { kind = "header", name = name, tooltip = tooltip }

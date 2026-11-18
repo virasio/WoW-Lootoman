@@ -64,8 +64,7 @@ describe("junk list window", function()
 		click(mainButton())
 		local frame = JunkList.Window().frame
 		assert.same({ true, "Junk List", "LootomanJunkList" }, { frame.shown, frame.title, frame.name })
-		-- Where the game opens its bags, over the game's options window, which is HIGH.
-		assert.same({ { "BOTTOMRIGHT", Loader.ui.UIParent, "BOTTOMRIGHT", -20, 115 } }, frame.points)
+		-- Over the game's options window, which is HIGH.
 		assert.equals("DIALOG", frame.strata)
 		-- No button of its own to open itself.
 		assert.is_nil(JunkList.Window().grid.listButton)
@@ -75,6 +74,22 @@ describe("junk list window", function()
 		assert.equals("Junk List", grid.listButton.text)
 		click(grid.listButton)
 		assert.is_true(frame.shown)
+	end)
+
+	it("opens right of the game's options window, level with its top, over it when the screen has no room", function()
+		local panel = rawget(_G, "SettingsPanel")
+		panel.shown, panel.right, panel.top = true, 1000, 900
+		Loader.ui.UIParent.GetRight = function() return 1920 end
+		JunkList.Open()
+		local frame = JunkList.Window().frame
+		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 1004, 900 } }, frame.points)
+		panel.right = 1800
+		JunkList.Open()
+		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 1920 - frame:GetWidth(), 900 } }, frame.points)
+		-- With the options closed (from the toss or sell window): in the middle.
+		panel.shown = false
+		JunkList.Open()
+		assert.same({ { "CENTER" } }, frame.points)
 	end)
 
 	it("opens only out of combat the first time, and only while junk management is on", function()

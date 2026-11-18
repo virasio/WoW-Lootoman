@@ -17,8 +17,11 @@ local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 -- item marked otherwise here than in the text keeps its mark, and a window
 -- shows these one by one, with the item's tooltip: Keep mine or Take theirs.
 --
--- It opens from the main page (Edit the Junk List) and from the toss and
--- sell windows, while junk management is on; it is built the first time, out
+-- It opens from the main page (Edit the Junk List), right of the game's
+-- options window and level with its top (over the options' right edge when
+-- the screen has no room for it there), and from the toss and sell windows,
+-- in the middle of the screen while the options are closed; only while junk
+-- management is on; it is built the first time, out
 -- of combat. While shown it follows the bags, the marks and the profile; it
 -- closes when junk management is turned off. Escape and its close button
 -- hide it.
@@ -32,9 +35,8 @@ JunkList.BAGS, JunkList.JUNK, JunkList.NOT_JUNK = 1, 2, 3
 JunkList.ROW_HEIGHT = 26
 -- Over the list: the field and its hint.
 JunkList.LIST_TOP = 64
--- Where it opens: where the game opens its bags, at the bottom right of the
--- screen 85 up (ContainerFrame.lua), a little higher for the tabs under it.
-JunkList.PLACE = { point = "BOTTOMRIGHT", x = -20, y = 115 }
+-- Its gap to the game's options window.
+JunkList.GAP = 4
 
 -- The mark each list tab holds.
 local TAB_MARKS = { [JunkList.JUNK] = "junk", [JunkList.NOT_JUNK] = "notJunk" }
@@ -265,8 +267,6 @@ local function build()
 		strata = "DIALOG",
 	})
 	local frame = grid.frame
-	-- The grid leaves its place to its owner; a frame with none is not drawn.
-	frame:SetPoint(JunkList.PLACE.point, UIParent, JunkList.PLACE.point, JunkList.PLACE.x, JunkList.PLACE.y)
 	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
 	buildList(frame)
 
@@ -324,6 +324,26 @@ local function build()
 	end
 end
 
+-- Puts the window right of the game's options window, level with its top,
+-- moved left over it as far as the screen needs; in the middle of the screen
+-- while the options are closed. (The grid leaves its place to its owner; a
+-- frame with none is not drawn.)
+function JunkList.Place()
+	local frame = window.frame
+	frame:ClearAllPoints()
+	local panel = SettingsPanel
+	local right, top = panel and panel:IsVisible() and panel:GetRight(), panel and panel:GetTop()
+	local screen = UIParent:GetRight()
+	if not (right and top and screen) then
+		frame:SetPoint("CENTER")
+		return
+	end
+	-- The options window may have a scale of its own: in UIParent's units.
+	local scale = panel:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	local x = math.min(right * scale + JunkList.GAP, screen - frame:GetWidth())
+	frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, top * scale)
+end
+
 -- Opens the window, on a tab (Bags by default); it is built the first time,
 -- which waits for the end of combat.
 function JunkList.Open(tab)
@@ -338,6 +358,7 @@ function JunkList.Open(tab)
 		end
 		build()
 	end
+	JunkList.Place()
 	window.grid:Open()
 	JunkList.ShowTab(tab or window.tab)
 	return true
