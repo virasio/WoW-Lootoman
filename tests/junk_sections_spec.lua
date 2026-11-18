@@ -56,15 +56,15 @@ describe("junk sections", function()
 	it("put the junk on top and everything else below, each cheapest first, with totals", function()
 		local sections = Sections.Build("toss")
 		assert.same({ "Cracked Bone 3", "Cracked Bone 3", "Broken Tooth 21", "Ancient Coin 50" }, names(sections.junk))
-		assert.same({ "Vendor Pet 100", "Linen Cloth 260", "Sword 5000" }, names(sections.rest))
+		assert.same({ "Letter 0", "Vendor Pet 100", "Linen Cloth 260", "Sword 5000" }, names(sections.rest))
 		assert.same({ 77, 5360 }, { sections.junk.total, sections.rest.total })
 	end)
 
-	it("never list quest items and items in equipment sets", function()
+	it("never list items in equipment sets; quest items only to throw away, as no merchant buys them", function()
 		for _, kind in ipairs({ "toss", "sell" }) do
-			for _, section in ipairs({ "junk", "rest" }) do
+			for _, section in ipairs({ "junk", "suggested", "rest" }) do
 				for _, entry in ipairs(Sections.Build(kind)[section].entries) do
-					assert.is_false(entry.item.name == "Letter" or entry.item.name == "Tank Helm", entry.item.name)
+					assert.is_false(entry.item.name == "Tank Helm" or (kind == "sell" and entry.item.name == "Letter"), entry.item.name)
 				end
 			end
 		end
@@ -85,7 +85,7 @@ describe("junk sections", function()
 		ns.Marks.Set(8, "notJunk")
 		local sections = Sections.Build("toss")
 		assert.same({ "Cracked Bone 3", "Cracked Bone 3", "Broken Tooth 21", "Linen Cloth 260" }, names(sections.junk))
-		assert.same({ "Ancient Coin 50", "Vendor Pet 100", "Sword 5000" }, names(sections.rest))
+		assert.same({ "Letter 0", "Ancient Coin 50", "Vendor Pet 100", "Sword 5000" }, names(sections.rest))
 		assert.same({ "marked", "gray" }, { sections.junk.entries[4].decision.reason, sections.junk.entries[1].decision.reason })
 	end)
 
@@ -114,5 +114,54 @@ describe("junk sections", function()
 			found = found or line:match("Junk: .*")
 		end
 		assert.equals("Junk: 3 stacks to sell for 284 copper (1 in bags kept from junk selling); marks: 1 junk, 1 not junk", found)
+	end)
+
+	describe("groups", function()
+		local function groupNames(groups)
+			local list = {}
+			for index, group in ipairs(groups) do
+				list[index] = ("%s %d"):format(group.name, #group.entries)
+			end
+			return list
+		end
+
+		it("put the rest into kinds of item, by the client's names, and the unknown under Other", function()
+			Test.state.itemClasses = { [7] = "Trade Goods", [2] = "Weapon" }
+			Test.state.items[3].classID, Test.state.items[4].classID = 7, 2
+			local rest = Sections.Build("toss").rest
+			assert.same({ "Other 2", "Trade Goods 1", "Weapon 1" }, groupNames(rest.groups))
+			assert.same({ 260, 5000 }, { rest.groups[2].total, rest.groups[3].total })
+		end)
+
+		it("put what the rules suggest into a group per rule, in the rules' order", function()
+			Test.state.items[3] = { name = "Linen Cloth", sellPrice = 13, classID = 0, subclassID = 5, requiredLevel = 1 }
+			Test.state.items[4] = { name = "Sword", sellPrice = 5000, equippable = true, usable = false, requiredLevel = 10 }
+			local bags = Test.state.bags
+			bags[0].items[4].bound = true
+			Test.SetBags(bags)
+			Test.state.playerLevel = 40
+			local built = Sections.Build("toss")
+			assert.same({ "unusable 1", "outgrown 1" }, groupNames(built.suggested.groups))
+			assert.same({ "Letter 0", "Vendor Pet 100" }, names(built.rest))
+			assert.equals(5260, built.suggested.total)
+			-- A rule switched off suggests nothing; a mark keeps an item from them all.
+			ns.Modules:Get("Junk"):Set("suggestOutgrown", false)
+			ns.Marks.Set(4, "notJunk")
+			assert.same({}, groupNames(Sections.Build("toss").suggested.groups))
+		end)
+
+		it("put the junk a quest in the log still wants last, as a hint", function()
+			Test.state.questObjectives = { "Broken Tooth: 0/3" }
+			Test.FireEvent("QUEST_LOG_UPDATE")
+			local junk = Sections.Build("toss").junk
+			assert.same({ "Cracked Bone 3", "Cracked Bone 3", "Ancient Coin 50", "Broken Tooth 21" }, names(junk))
+			assert.same({ 1, true }, { junk.hinted, junk.entries[4].hint })
+		end)
+
+		it("take the sell window's decisions for this sale", function()
+			local built = Sections.Build("sell", { junk = { [3] = true }, keep = { [1] = true } })
+			assert.same({ "Cracked Bone 3", "Cracked Bone 3", "Ancient Coin 50", "Linen Cloth 260" }, names(built.junk))
+			assert.same({ "Broken Tooth 21", "Sword 5000" }, names(built.rest))
+		end)
 	end)
 end)

@@ -71,6 +71,11 @@ end
 --   clean(data)                    what may be imported, or nil
 --   owns        optional: a module setting only this part carries
 --   needs(data) optional: the collection and item it needs, as two values
+--   ways        optional: how it may go into a profile that has one already,
+--               { { way, label }, … }, the first the default; set gets the
+--               chosen way, and what it returns comes back from Import
+--   imported(result, profile)  optional: called after an import put it into
+--               a profile, with what set returned
 function Share.RegisterPart(part)
 	assert(not partsByName[part.name], "part " .. tostring(part.name) .. " is already registered")
 	parts[#parts + 1] = part
@@ -153,6 +158,12 @@ function Share.Label(name, data)
 		return part.label(data or {})
 	end
 	return part.label
+end
+
+-- The ways a part may be imported (RegisterPart), or nil.
+function Share.Ways(name)
+	local part = partsByName[name]
+	return part and part.ways or nil
 end
 
 -- The collection and item a part with this data needs, if any.
@@ -393,13 +404,14 @@ local function importItems(read, choices)
 end
 
 -- Puts a read text into the account and a profile. choice = { parts = { name,
--- … }, collections = { [collection] = { [item] = how } }, newName = <name> }:
--- the items first, then the parts into the current profile (they replace
--- what it had) or, with newName, into a new profile the character then uses.
--- Returns the profile's name (nil when no part was chosen), renamed (see
--- importItems) and, when the character could not switch to the new profile,
--- the reason (Profiles.Switch); or nil and an error code of Profiles for the
--- new name.
+-- … }, collections = { [collection] = { [item] = how } }, ways = { [part] =
+-- way }, newName = <name> }: the items first, then the parts into the current
+-- profile (they replace what it had, or go in by their chosen way) or, with
+-- newName, into a new profile the character then uses. Returns the profile's
+-- name (nil when no part was chosen), renamed (see importItems), when the
+-- character could not switch to the new profile the reason (Profiles.Switch),
+-- and what each part with ways returned, by part; or nil and an error code of
+-- Profiles for the new name.
 function Share.Import(read, choice)
 	local names = choice.parts or {}
 	local target, profile
@@ -428,10 +440,12 @@ function Share.Import(read, choice)
 			profile.modules[module.name] = next(values) and values or nil
 		end
 	end
+	local results = {}
 	for _, name in ipairs(names) do
 		local data, part = read.sections[name], partsByName[name]
 		if data and part then
-			part.set(profile, deepCopy(data), renamed)
+			local way = part.ways and (choice.ways and choice.ways[name] or part.ways[1][1]) or nil
+			results[name] = part.set(profile, deepCopy(data), renamed, way)
 		end
 	end
 	if profile and profile.modules and next(profile.modules) == nil then
@@ -443,5 +457,13 @@ function Share.Import(read, choice)
 	elseif target then
 		Bus:Send("ProfileChanged", target, target)
 	end
-	return target, renamed, not switched and why or nil
+	for _, name in ipairs(names) do
+		local part = partsByName[name]
+		if part and part.imported and results[name] ~= nil then
+			xpcall(function()
+				part.imported(results[name], target)
+			end, Compat.ReportError)
+		end
+	end
+	return target, renamed, not switched and why or nil, results
 end

@@ -58,13 +58,7 @@ local function place()
 		end
 		return
 	end
-	local size = TossButton.LARGE
-	button:SetSize(size, size)
-	-- Blizzard's 36 px slot button has a 64 px slot texture at -13, 14.
-	local k = size / 36
-	button.slot:ClearAllPoints()
-	button.slot:SetPoint("TOPLEFT", -13 * k, 14 * k)
-	button.slot:SetPoint("BOTTOMRIGHT", 15 * k, -14 * k)
+	TossButton.Fit(button, TossButton.LARGE)
 	button:SetPoint("TOPLEFT", LootFrame, "TOPRIGHT", TossButton.GAP, -TossButton.DROP)
 end
 
@@ -76,33 +70,49 @@ local function update()
 	button:SetShown(active and LootFrame:IsShown() and TossButton.Wanted())
 end
 
-local function create()
-	button = CreateFrame("Button", nil, LootFrame)
-	button:SetFrameLevel((LootFrame.ClosePanelButton or LootFrame):GetFrameLevel() + (LootFrame.ClosePanelButton and 0 or 5))
-	-- The large button looks like the merchant's sell-junk button: an empty slot
-	-- around the icon.
-	button.slot = button:CreateTexture(nil, "BACKGROUND")
-	button.slot:SetTexture("Interface\\Buttons\\UI-EmptySlot")
-	button.icon = button:CreateTexture(nil, "ARTWORK")
-	button.icon:SetAtlas(TossButton.ICON)
-	button.icon:SetAllPoints()
-	button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-	button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-	button:SetScript("OnClick", function()
-		if not inEditMode() and Junk.Toss then
-			Junk.Toss.Toggle()
-		end
-	end)
-	button:SetScript("OnEnter", function(self)
+-- A button with the toss icon, the look of the merchant's sell-junk button
+-- (an empty slot around the icon, shown when large), and the tooltip;
+-- onClick runs on a click. The bag button (BagButton.lua) is one too.
+function TossButton.New(parent, onClick)
+	local new = CreateFrame("Button", nil, parent)
+	new.slot = new:CreateTexture(nil, "BACKGROUND")
+	new.slot:SetTexture("Interface\\Buttons\\UI-EmptySlot")
+	new.icon = new:CreateTexture(nil, "ARTWORK")
+	new.icon:SetAtlas(TossButton.ICON)
+	new.icon:SetAllPoints()
+	new:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	new:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+	new:SetScript("OnClick", onClick)
+	new:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 		GameTooltip_SetTitle(GameTooltip, L["Throw away junk"])
 		GameTooltip_AddNormalLine(GameTooltip, L["Opens your bags with the junk on top. Drag an item out of the window to delete it."])
 		GameTooltip:Show()
 	end)
-	button:SetScript("OnLeave", function()
+	new:SetScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
-	button:Hide()
+	new:Hide()
+	return new
+end
+
+-- A large button of the given size, its slot around it.
+function TossButton.Fit(target, size)
+	target:SetSize(size, size)
+	-- Blizzard's 36 px slot button has a 64 px slot texture at -13, 14.
+	local k = size / 36
+	target.slot:ClearAllPoints()
+	target.slot:SetPoint("TOPLEFT", -13 * k, 14 * k)
+	target.slot:SetPoint("BOTTOMRIGHT", 15 * k, -14 * k)
+end
+
+local function create()
+	button = TossButton.New(LootFrame, function()
+		if not inEditMode() and Junk.Toss then
+			Junk.Toss.Toggle(true)
+		end
+	end)
+	button:SetFrameLevel((LootFrame.ClosePanelButton or LootFrame):GetFrameLevel() + (LootFrame.ClosePanelButton and 0 or 5))
 end
 
 -- The button, once the module has started on a client with a loot window.

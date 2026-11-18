@@ -3,9 +3,10 @@ local Bus, Compat, L, NameMenu, Profiles, Share = ns.Bus, ns.Compat, ns.L, ns.Na
 local Panel = ns.SettingsPanel
 
 -- The Share and Import dialogs of profile texts. They
--- open from the profile menu for a whole profile ("profile"), or from a
+-- open from the profile menu for a whole profile ("profile"), from a
 -- menu of named items, such as the loot feed's looks, for the items only
--- ("looks", the name of the collection).
+-- ("looks", the name of the collection), or from a window for one part only
+-- ("part:marks", the junk list window), which goes into the current profile.
 --
 -- Both list what a text can hold, with a checkbox each: every module's
 -- settings, and indented under them the parts of the module, which can be
@@ -18,8 +19,10 @@ local Panel = ns.SettingsPanel
 -- keeps the clipboard to itself). Import: a box to paste a text into; it says
 -- what the text holds, all ticked. An item whose name is taken has a choice on
 -- its row: keep both (the imported one gets a free name), replace, or keep
--- mine. Parts go into a new profile, which the character then uses, or, after
--- a confirmation, into the current profile. Both dialogs are the player's own
+-- mine. A part that can go into a profile in more than one way (Share's
+-- ways: merge or replace the junk list) has a choice on its row when it goes
+-- into the current profile. Parts go into a new profile, which the character
+-- then uses, or, after a confirmation, into the current profile. Both dialogs are the player's own
 -- frames, built the first time they open, never in combat.
 local Dialogs = {}
 Panel.Share = Dialogs
@@ -38,8 +41,7 @@ local ERRORS = {
 }
 
 -- What to do with an imported item whose name is taken, in the order shown.
-local HOW = { "both", "replace", "keep" }
-local HOW_NAMES = { both = L["Keep both"], replace = L["Replace"], keep = L["Keep mine"] }
+local HOW = { { "both", L["Keep both"] }, { "replace", L["Replace"] }, { "keep", L["Keep mine"] } }
 
 local share, import
 
@@ -119,13 +121,16 @@ local function row(frame, index)
 	end)
 	if frame == import then
 		entry.how = CreateFrame("DropdownButton", nil, frame, "WowStyle1DropdownTemplate")
-		entry.how:SetWidth(130)
+		entry.how:SetWidth(150)
+		-- The row's choices (an item's for its taken name, or a part's ways), in
+		-- frame.how under the row's howKey.
 		entry.how:SetupMenu(function(_, root)
-			for _, how in ipairs(HOW) do
-				root:CreateRadio(HOW_NAMES[how], function()
-					return frame.how[entry.item] == how
+			for _, option in ipairs(entry.choices or {}) do
+				local value = option[1]
+				root:CreateRadio(option[2], function()
+					return frame.how[entry.howKey] == value
 				end, function()
-					frame.how[entry.item] = how
+					frame.how[entry.howKey] = value
 				end)
 			end
 		end)
@@ -178,9 +183,12 @@ local function layout(frame, lines, y)
 			entry.check:Show()
 			entry.check.label:Show()
 			if entry.how then
+				local ways = line.ways and frame.intoCurrent and line.ways or nil
+				entry.choices = line.taken ~= nil and HOW or ways
+				entry.howKey = line.taken ~= nil and line.item or ("part/" .. tostring(line.key))
 				entry.how:ClearAllPoints()
 				entry.how:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -24, y)
-				entry.how:SetShown(line.taken ~= nil)
+				entry.how:SetShown(entry.choices ~= nil)
 				entry.how:GenerateMenu()
 			end
 			y = y - ROW
@@ -217,21 +225,28 @@ local function chosen(frame)
 	return result
 end
 
--- The lines of the parts, for the profile mode: each module's settings with
--- its parts indented under it. data(name) is a part's data, for its label.
-local function partLines(names, data)
+-- The part a mode is for ("part:marks"), or nil.
+local function partOf(mode)
+	return type(mode) == "string" and mode:match("^part:(.+)$") or nil
+end
+
+-- The lines of the parts: in the profile mode each module's settings with
+-- its parts indented under it; in a part's mode that part alone. data(name)
+-- is a part's data, for its label.
+local function partLines(names, data, only)
 	local lines = {}
 	for _, entry in ipairs(Share.Parts()) do
-		if not names or names[entry.name] then
+		if (not names or names[entry.name]) and (not only or only == entry.name) then
 			local value = data(entry.name)
 			local collection, item = Share.Needs(entry.name, value)
 			lines[#lines + 1] = {
 				kind = "part",
 				key = entry.name,
 				label = Share.Label(entry.name, value),
-				parent = entry.parent,
-				indent = entry.parent and 1 or 0,
+				parent = not only and entry.parent or nil,
+				indent = not only and entry.parent and 1 or 0,
 				needs = collection and item and itemKey(collection, item) or nil,
+				ways = Share.Ways(entry.name),
 			}
 		end
 	end
@@ -306,6 +321,7 @@ end
 -- Import: the lines, the place for the parts and the button follow what is
 -- ticked.
 function Dialogs.UpdateImport()
+	import.intoCurrent = import.mode ~= "profile" or import.replace:GetChecked() == true
 	local y = layout(import, import.lines, -210)
 	local choice = chosen(import)
 	local parts = #choice.parts > 0
@@ -337,14 +353,15 @@ function Dialogs.ReadImport()
 	local read, err = Share.Read(import.box.EditBox:GetText())
 	local lines = {}
 	if read then
-		if import.mode == "profile" then
+		local only = partOf(import.mode)
+		if import.mode == "profile" or only then
 			local names = {}
 			for _, name in ipairs(read.names) do
 				names[name] = true
 			end
 			lines = partLines(names, function(name)
 				return read.sections[name]
-			end)
+			end, only)
 		end
 		for _, collection in ipairs(Share.Collections()) do
 			local found = read.collections[collection.name]
@@ -362,6 +379,9 @@ function Dialogs.ReadImport()
 		end
 		if line.taken then
 			import.how[line.item] = "both"
+		end
+		if line.ways then
+			import.how["part/" .. line.key] = line.ways[1][1]
 		end
 	end
 	if read and #lines > 0 then
@@ -412,14 +432,29 @@ function Dialogs.Import()
 		return
 	end
 	local ticked = chosen(import)
-	local choice = { parts = ticked.parts, collections = {} }
+	local choice = { parts = ticked.parts, collections = {}, ways = {} }
 	for collectionName, items in pairs(ticked.items) do
 		choice.collections[collectionName] = {}
 		for _, item in ipairs(items) do
 			choice.collections[collectionName][item] = import.how[item] or "both"
 		end
 	end
-	if #choice.parts > 0 and import.replace:GetChecked() then
+	local replacing = false
+	for _, name in ipairs(choice.parts) do
+		choice.ways[name] = import.how["part/" .. name]
+		replacing = replacing or choice.ways[name] == "replace"
+	end
+	-- A part's own window: into the current profile, asked only when it replaces.
+	if partOf(import.mode) then
+		if replacing then
+			NameMenu.Confirm(L["Replace the ticked parts of profile “%s” with the imported ones?"],
+				Panel.ProfileTools.displayName(Profiles.GetCurrent()), L["Replace"], function()
+					finishImport(read, choice)
+				end)
+		else
+			finishImport(read, choice)
+		end
+	elseif #choice.parts > 0 and import.replace:GetChecked() then
 		local current = Profiles.GetCurrent()
 		NameMenu.Confirm(L["Replace the ticked parts of profile “%s” with the imported ones?"],
 			Panel.ProfileTools.displayName(current), L["Replace"], function()
@@ -487,12 +522,14 @@ function Dialogs.OpenShare(mode, item)
 	end
 	import:Hide()
 	share.mode = mode
+	local only = partOf(mode)
 	share.hint:SetText(mode == "profile"
 		and L["Copy this text with Ctrl+C and give it to another character or player: they paste it under Import in the profile menu. It holds the parts ticked below."]
+		or only and L["Copy this text with Ctrl+C and give it to another character or player: they paste it under Import in the same window. It holds the parts ticked below."]
 		or L["Copy this text with Ctrl+C and give it to another character or player: they paste it under Import in the same menu. It holds the parts ticked below."])
 	local lines = {}
-	if mode == "profile" then
-		lines = partLines(nil, Share.Get)
+	if mode == "profile" or only then
+		lines = partLines(nil, Share.Get, only)
 	end
 	-- Ticked at first: every part, and the items the profile uses.
 	share.checked = {}
@@ -506,6 +543,13 @@ function Dialogs.OpenShare(mode, item)
 		if mode == "profile" or mode == collection.name then
 			itemLines(lines, collection, collection.list())
 		end
+	end
+	if only then
+		-- The part alone: nothing else is ticked.
+		share.lines = lines
+		share:Show()
+		Dialogs.UpdateShare()
+		return
 	end
 	if mode ~= "profile" and item then
 		share.checked[itemKey(mode, item)] = true

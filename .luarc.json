@@ -18,6 +18,7 @@
   },
   "diagnostics.globals": [
     "Auctionator",
+    "LibQuestieDB",
     "CANCEL",
     "ALT_KEY",
     "AUTO_LOOT_DEFAULT_TEXT",
@@ -32,7 +33,10 @@
     "CLOSE",
     "ColorManager",
     "ColorPickerFrame",
+    "ContainerFrame1",
+    "ContainerFrameCombinedBags",
     "C_SkillInfo",
+    "ChatFrameUtil",
     "CreateMinimalSliderFormatter",
     "CreateSettingsButtonInitializer",
     "CreateSettingsListSectionHeaderInitializer",

@@ -40,7 +40,7 @@ describe("share and import dialogs", function()
 				local check = entry.check
 				local indent = (check.points[1][4] - 20) / 24
 				local state = not check.enabled and "(off)" or check.checked and "[x]" or "[ ]"
-				local how = entry.how and entry.how.shown and (" " .. frame.how[entry.item]) or ""
+				local how = entry.how and entry.how.shown and (" " .. tostring(frame.how[entry.howKey])) or ""
 				list[#list + 1] = { y = check.points[1][5], text = ("  "):rep(indent) .. check.label.text .. " " .. state .. how }
 			end
 		end
@@ -124,13 +124,13 @@ describe("share and import dialogs", function()
 
 		it("lists each module's settings with its parts under them, then the looks, with only the profile's own ticked", function()
 			assert.same({
-				"Fast autoloot settings [x]", "Junk settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” [x]",
+				"Fast autoloot settings [x]", "Junk settings [x]", "  Junk List [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” [x]",
 				"# Loot feed looks", "  Default [x]", "  Raid [ ]",
 			}, shown(frame))
 		end)
 
 		it("shows the text of the ticked lines, selected", function()
-			assert.same({ "module:AutoLoot", "module:Junk", "module:LootFeed", "positions:LootFeed", "look:LootFeed" }, read().names)
+			assert.same({ "module:AutoLoot", "module:Junk", "marks", "module:LootFeed", "positions:LootFeed", "look:LootFeed" }, read().names)
 			assert.same({ "Default" }, read().collections.looks.names)
 			assert.is_false(read().sections["module:AutoLoot"].confirmBind)
 			tick(frame, "Raid", true)
@@ -139,15 +139,15 @@ describe("share and import dialogs", function()
 
 		it("leaves the parts under the loot feed's settings out without them, and Use look without its look", function()
 			tick(frame, "Default", false)
-			assert.same({ "Fast autoloot settings [x]", "Junk settings [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” (off)",
+			assert.same({ "Fast autoloot settings [x]", "Junk settings [x]", "  Junk List [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” (off)",
 				"# Loot feed looks", "  Default [ ]", "  Raid [ ]" }, shown(frame))
-			assert.same({ "module:AutoLoot", "module:Junk", "module:LootFeed", "positions:LootFeed" }, read().names)
+			assert.same({ "module:AutoLoot", "module:Junk", "marks", "module:LootFeed", "positions:LootFeed" }, read().names)
 			tick(frame, "Default", true)
 			tick(frame, "Loot feed settings", false)
-			assert.same({ "Loot feed settings [ ]", "  Position (off)", "  Use look “Default” (off)" }, { unpack(shown(frame), 3, 5) })
-			assert.same({ "module:AutoLoot", "module:Junk" }, read().names)
+			assert.same({ "Loot feed settings [ ]", "  Position (off)", "  Use look “Default” (off)" }, { unpack(shown(frame), 4, 6) })
+			assert.same({ "module:AutoLoot", "module:Junk", "marks" }, read().names)
 			tick(frame, "Loot feed settings", true)
-			assert.same({ "  Position [x]", "  Use look “Default” [x]" }, { unpack(shown(frame), 4, 5) })
+			assert.same({ "  Position [x]", "  Use look “Default” [x]" }, { unpack(shown(frame), 5, 6) })
 		end)
 
 		it("keeps its text as it was made", function()
@@ -279,4 +279,75 @@ describe("share and import dialogs", function()
 				{ ns.Profiles.GetCurrent(), Looks.Current(), Looks.List() })
 		end)
 	end)
+
+	describe("of the junk list alone", function()
+		local Marks, text
+
+		local function howMenu(frame, label)
+			for _, entry in ipairs(frame.rows) do
+				if entry.check.shown and entry.check.label.text == label then
+					return entry.how.shown and api.OpenMenu(entry.how) or nil
+				end
+			end
+		end
+
+		before_each(function()
+			Marks = ns.Marks
+			Marks.Set(10, "junk")
+			Marks.Set(20, "notJunk")
+			text = ns.Share.Export({ parts = { "module:Junk", "marks", "module:LootFeed" } })
+			Marks.Clear()
+		end)
+
+		it("share the junk list and nothing else", function()
+			Marks.Set(10, "junk")
+			Dialogs.OpenShare("part:marks")
+			local frame = Dialogs.shareFrame
+			assert.same({ "Junk List [x]" }, shown(frame))
+			assert.matches("in the same window", frame.hint.text)
+			assert.same({ "marks" }, ns.Share.Read(frame.box.EditBox.text).names)
+		end)
+
+		it("import only the junk list of a profile text, into the current profile, merged by default", function()
+			Marks.Set(10, "notJunk")
+			Marks.Set(30, "junk")
+			Dialogs.OpenImport("part:marks")
+			local frame = Dialogs.importFrame
+			typeInto(frame.box.EditBox, text)
+			assert.same({ "Junk List [x] merge" }, shown(frame))
+			assert.same({ false, false }, { frame.name.shown, frame.replace.shown })
+			assert.same({ "Merge with my list", "Replace my list" }, { howMenu(frame, "Junk List").entries[1].text,
+				howMenu(frame, "Junk List").entries[2].text })
+			click(frame.importButton)
+			assert.same({ "Default", false, 0 }, { ns.Profiles.GetCurrent(), frame.shown, #api.popups })
+			assert.same({ { itemID = 10, mark = "notJunk" }, { itemID = 20, mark = "notJunk" }, { itemID = 30, mark = "junk" } }, Marks.List())
+			-- The item marked otherwise waits in the junk list's window.
+			local conflicts = ns.JunkList.Conflicts()
+			assert.same({ true, 10, "junk" }, { conflicts:IsShown(), conflicts.list[1].itemID, conflicts.list[1].theirs })
+		end)
+
+		it("replace the junk list after a confirmation", function()
+			Marks.Set(30, "junk")
+			Dialogs.OpenImport("part:marks")
+			local frame = Dialogs.importFrame
+			typeInto(frame.box.EditBox, text)
+			howMenu(frame, "Junk List").entries[2].setSelected()
+			assert.same({ "Junk List [x] replace" }, shown(frame))
+			click(frame.importButton)
+			assert.same({ { itemID = 30, mark = "junk" } }, Marks.List())
+			api.AcceptPopup()
+			assert.same({ { itemID = 10, mark = "junk" }, { itemID = 20, mark = "notJunk" } }, Marks.List())
+		end)
+
+		it("offer the choice in a profile text only when it goes into the current profile", function()
+			Dialogs.OpenImport("profile")
+			local frame = Dialogs.importFrame
+			typeInto(frame.box.EditBox, text)
+			assert.is_nil(howMenu(frame, "Junk List"))
+			frame.replace.checked = true
+			click(frame.replace)
+			assert.is_not_nil(howMenu(frame, "Junk List"))
+		end)
+	end)
 end)
+

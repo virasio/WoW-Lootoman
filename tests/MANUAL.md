@@ -46,7 +46,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 - [ ] **Main page.** Options → AddOns → Lootoman.
   - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
     - *Enable Fast Autoloot*, a small white hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
-    - *Enable Junk Management*, with *Set Up the Junk List* right under it, then *Sort Window Button*, *Style* under it (greyed out while the button is *Never*) and *At Merchants*, all greyed out while junk is off;
+    - *Enable Junk Management*, with *Edit the Junk List* right under it (and the QuestieDB note and button without QuestieDB), then *Loot Window Button*, *Style* under it (greyed out while the button is *Never*), *Bag Window Button*, *At Merchants* and the *Suggestions*, all greyed out while junk is off;
     - *Show the Loot Feed*, with *Feed Look* under it (greyed out while the feed is off);
     - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only What You Can Gather*.
   - Every title on the page is capitalized as the game's own are (short words such as *when*, *at*, *the* lowercase); the dropdowns' choices, the tooltips and the Russian texts stay as they were.
@@ -252,76 +252,116 @@ The feed draws on every frame only while something moves, and a few times a seco
 
 ## Junk
 
-Some gray items and some items above gray in the bags; Auctionator installed for the checks that name it.
+Some gray items and some items above gray in the bags; Auctionator installed for the checks that name it; QuestieDB installed for the checks that name it, and not installed for the others.
 
-- [ ] **Self-test.** `/lootoman selftest`. *Expected:* an `Auctionator:` line (`working` with it enabled, `not installed` without it), a `Junk:` line with the junk to sell and the marks, and `Last sale: none this session` before any sale.
+- [ ] **Self-test.** `/lootoman selftest`. *Expected:* an `Auctionator:` line and a `QuestieDB:` line (`working` with the addon enabled, `not installed` without it), a `Junk:` line with the junk to sell and the marks, and `Last sale: none this session` before any sale.
 
-### Sort window button and the sort window
+### The groups and the suggestions (0.5.8)
 
-- [ ] **Button, when the bags are full.** Default options (*Sort Window Button: When the bags are full*, *Style: Large, next to the window*).
+The same groups in all three junk windows.
+
+- [ ] **Groups.** Open any junk window. *Expected:* top to bottom:
+  - *Junk*: gray items and items marked as junk; at its bottom, under a highlighted *A quest in your log still wants these*, junk that a quest in your log still names (a gray quest item, say);
+  - *Suggested as Junk*, a subgroup per rule, each with its total and a *To Junk* button;
+  - *Not Junk*, a subgroup per kind of item in the client's own names (*Armor*, *Consumable*, *Trade Goods*, …; *Other* for the rest);
+  - each cheapest first, with the stack's price under it; a subgroup with nothing is not shown; each section scrolls on its own.
+- [ ] **Quest Done.** An item that starts a quest you have done; with QuestieDB a quest item whose quests are all done; without it a quest item no quest in your log names. *Expected:* under *Quest Done*, the tooltip saying why.
+- [ ] **Leftovers from Quests.** With QuestieDB, an item for quests you have all done; without it, turn in a quest that asked for an item and keep one more of it. *Expected:* under *Leftovers from Quests*, unless the auction pays more than 1.5 times the merchant's price for it.
+- [ ] **Your Class Can't Use It.** Soulbound gear your class cannot wear (plate on a mage). *Expected:* suggested; the same gear above your level is not.
+- [ ] **Already Known.** A recipe you know, a mount, pet or toy you have. *Expected:* suggested; a tradeable one only when it is not worth the auction.
+- [ ] **Outgrown.** Food, a potion or a bandage 20 levels or more below yours. *Expected:* suggested; one closer to your level is not.
+- [ ] **Never suggested.** An item with a mark, in an equipment set, refundable, an appearance you have not collected, and an item a quest in your log still wants. *Expected:* none of them under *Suggested as Junk*.
+- [ ] **Rules off.** Untick each rule under *Suggestions* on the options page with a window open. *Expected:* its subgroup goes at once, and comes back when ticked.
+
+### The toss window and the loot window's button
+
+- [ ] **Button, when the bags are full.** Default options (*Loot Window Button: When the bags are full*, *Style: Large, next to the window*).
   - Loot with free general slots: no button.
   - Fill the general bags (a free slot in a herb bag does not count) and loot: a square button with an empty-slot border, as big as the loot window's items, just right of the window's top right corner.
   - With fast autoloot on, also when an item of the loot did not fit.
-- [ ] **Always and never.** *Sort Window Button: Always*, then *Never*. *Expected:* with every loot window, then with none; with *Never*, *Style* is greyed out.
+- [ ] **Always and never.** *Loot Window Button: Always*, then *Never*. *Expected:* with every loot window, then with none; with *Never*, *Style* is greyed out.
 - [ ] **Small button.** *Style: Small, in the window's title*. *Expected:* the button on the loot window's title bar, left of the close button, not over the title.
 - [ ] **Following the loot window.** Move the loot window in Edit Mode. *Expected:* the button follows; in Edit Mode it shows where it will be and does nothing.
-- [ ] **Sort window.** Click the button.
-  - *Expected:* the window, titled *Sort junk*, to the right of the loot window (to its left near the right screen edge).
-  - Junk on top, the rest below, each cheapest first, with each stack's price under it and each section's total; each section scrolls on its own.
-  - *Junk list* in its title bar opens the junk list.
+- [ ] **Toss window.** Click the button.
+  - *Expected:* the window, titled *Throw Away Junk*, to the right of the loot window (to its left near the right screen edge), with the groups above.
+  - *Junk List* in its title bar opens the junk list.
   - It closes with the loot, with its X and with Escape.
   - `/lootoman toss` opens it in the middle of the screen, also without loot and also while a loot window is open; it then stays open when the loot closes.
+- [ ] **Cheaper than the loot (0.5.8).** Open it from the loot window with items left in the loot.
+  - *Expected:* a line at its top, *In the loot: [item], worth …*, naming the most valuable item left, and a green check on every junk item worth less; their tooltips say so.
+  - Take that item from the loot: the line names the next one, and the checks follow.
+  - With only money or items without a price left, no line and no checks; opened from the bags or with `/lootoman toss`, neither.
+- [ ] **Moves for good (0.5.8).** In the toss window:
+  - left-click a suggestion: it goes to *Junk*; right-click one: it goes to *Not Junk*; each stays after `/reload` (a mark);
+  - left-click a hinted junk item: it goes to *Not Junk*;
+  - drag an item from *Junk* to *Not Junk* and back, and a suggestion to either: the same; clicks do not move items between *Junk* and *Not Junk*;
+  - *To Junk* on a subgroup sends all of it to *Junk*;
+  - let a dragged item go on the window's title or bottom: nothing changes; nothing goes onto the game's cursor during a drag.
 - [ ] **Prices.** With and without Auctionator. *Expected:*
   - without it, merchant prices;
   - with it, an item with an auction price is weighed by it after the 5 % cut, and its tooltip shows *Auction price*;
   - a soulbound item (an equipped, then removed bind-on-equip piece) is weighed by the merchant's price only.
-- [ ] **Tooltips.** Point at items. *Expected:* the game's own tooltip for the bag item (with the comparison while Shift is held, or always with *Always compare items*), then what a right click and a drag do.
+- [ ] **Tooltips.** Point at items. *Expected:* the game's own tooltip for the bag item (with the comparison while Shift is held, or always with *Always compare items*), then why it is suggested or hinted, and what its clicks and drags do.
 - [ ] **Deleting.**
-  - Drag a gray stack out of the window and let it go over the game world. *Expected:* it is gone, with a chat line, and no "Interface action failed because of an AddOn" message. Deleting needs a mouse action, and the end of a drag should count, as it does for Blizzard's own buttons; note it if it does not.
+  - Drag a gray stack out of the window and let it go over the game world. *Expected:* it is gone, with a chat line, and no "Interface action failed because of an AddOn" message.
   - Let one go over another window (the bags, the loot window). *Expected:* deleted as well.
   - Drag a white or green item out. *Expected:* a question; *Cancel* keeps it, *Delete* deletes it.
   - Drag a rare or epic item out. *Expected:* the question asks for the game's word (DELETE, or the client's own word), and *Delete* stays off until it is typed; Enter in the field deletes.
   - Pick up an item from the bags and, holding it, drag another item out of the window. *Expected:* nothing is deleted, and a chat line says why.
-- [ ] **Never listed.** A quest item and an item of an equipment set. *Expected:* in the sort window neither at the loot window nor at a merchant.
+  - Drag out a quest item no quest wants any more (0.5.8: quest items are listed). *Expected:* deleted after the question.
+- [ ] **Never listed.** An item of an equipment set. *Expected:* in no junk window.
 
-### Junk marks
+### The bag window's button (0.5.8)
 
-- [ ] **Marking.**
-  - Right-click an item below: it moves up. Right-click it again: it moves down.
-  - Drag an item up, and back down: the same.
-  - Right-click or drag a gray item down: it stays below, also after `/reload`.
-  - Drag an item and let it go on the window's title or bottom: nothing changes.
+- [ ] **Small, in the title (the default).** Open the bags, combined, then separate (the bag menu's *Combine bags* option). *Expected:* a small toss button on the bag window's title, left of its close button; with separate bags, on the backpack only. A click opens the toss window in the middle of the screen, with no loot line; a second click closes it.
+- [ ] **Large, above the window.** *Bag Window Button: Large, above the window*. *Expected:* a large button with an empty-slot border above the bag window, over its close button; with separate bags, note whether it covers the bag above the backpack.
+- [ ] **Large, on its own.** *Bag Window Button: Large, on its own*. *Expected:* a large button on the screen with the bags closed too. In Edit Mode it is *Throw Away Junk*: it can be moved, its *Size* slider resizes it, and it stays where it was put after `/reload`, per Edit Mode layout. In Edit Mode a click does nothing.
+- [ ] **Never.** *Bag Window Button: Never*. *Expected:* no button by the bags and none on its own.
+- [ ] **With a bag addon.** With an addon that replaces the game's bags (if one is at hand). *Expected:* no button in its window; *Large, on its own* and `/lootoman toss` still open the toss window.
 
-  *Expected:* nothing goes onto the game's cursor during a drag.
-- [ ] **Junk list.** *Set Up the Junk List* on the options page, and *Junk list* in the sort window's title bar. *Expected:*
-  - a window of its own, which closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight;
-  - the marked items under *Marked as junk* and the kept gray ones under *Not junk*, by name;
-  - *Remove* takes one away (it moves in the sort window at once);
-  - *Clear list* asks, then empties both;
-  - another profile has its own list.
-
-### Selling
+### Selling and the sort window
 
 - [ ] **Sell-junk button.** Open a merchant with *At Merchants: The sell button opens the sort window* (the default).
   - *Expected:* Lootoman's button in the place of the game's, with the same look, grey without junk; its tooltip lists the junk's count and value, and what a click and Shift-click do.
-  - A click only opens the sort window and sells nothing; Shift-click sells the junk without a question, one stack at a time.
+  - A click only opens the sort window and sells nothing; Shift-click sells the junk (gray and marked items only) without a question, one stack at a time.
   - With *Sell with the sell button*, a click sells the junk and Shift-click opens the window.
   - With a guild repair button, both buttons move together; on the buyback tab it hides.
-- [ ] **Selling automatically.** *At Merchants: Sell automatically*. *Expected:* the junk is sold as the window opens, with a chat line «Sold … items for …»; the button still opens the window with a click.
-- [ ] **Ignore for junk selling.** Tick the game's *Ignore for junk selling* on a bag (its bag menu) with junk in it. *Expected:* that junk stays, by the button, on opening and with the sort window's *Sell junk* (it shows darker there).
+- [ ] **Selling automatically.** *At Merchants: Sell automatically*. *Expected:* the junk (gray and marked items only) is sold as the window opens, with a chat line «Sold … items for …»; the button still opens the window with a click.
+- [ ] **Ignore for junk selling.** Tick the game's *Ignore for junk selling* on a bag (its bag menu) with junk in it. *Expected:* that junk stays, by the button, on opening and with the sort window's *Sell Junk* (it shows darker there).
 - [ ] **Sort window at a merchant.**
-  - *Expected:* titled *Sort junk*, it opens to the right of the merchant's window and closes with it.
+  - *Expected:* titled *Sort Junk*, it opens to the right of the merchant's window and closes with it; the groups show the merchant's prices.
   - Refundable items and items without a sell price are not listed.
-  - *Sell junk* sells only the upper section and closes the window, and the sale goes on.
-  - A right click or a drag moves an item between the sections and sells nothing; an item dragged out of the window stays where it is.
+  - *Sell Junk* sells only the *Junk* section and closes the window, and the sale goes on.
   - More than 12 stacks of junk show the buyback warning, and selling them warns in chat.
+- [ ] **This sale only (0.5.8).** In the sort window, left-click a suggestion, right-click another, drag an item from *Not Junk* to *Junk*. *Expected:* each moves, sells with *Sell Junk* if it is in *Junk*, and leaves no mark: close the window and open it again, and they are back where the rules put them. The same moves with Shift held mark them for good, as in the toss window. The tooltip says which is which.
 - [ ] **Stopping.** Close the merchant's window in the middle of a sale. *Expected:* selling stops with a chat line, and no item is used, equipped or opened afterwards. Sell an item you can still trade to your group: the game's question shows and selling stops.
 - [ ] **Sell button away from merchants (0.5.5).** Loot and move items with no merchant open, then open a merchant with junk in the bags, and again with none. *Expected:* the button's icon is coloured with junk and grey without it from the moment the merchant opens; selling by the button, by the sort window and automatically on opening work as before.
 - [ ] **Sales log.** `/lootoman sales`. *Expected:* every stack sold this session with its price and the total; the same after `/reload`; empty after logging out and in.
 
+### The junk list window (0.5.8)
+
+- [ ] **Opening.** *Edit the Junk List* on the options page, and *Junk List* in the toss and sort windows' title bars. *Expected:* a window titled *Junk List* with three tabs under it, *Bags* first. The first time after a reload, from the options it opens right of the options window, level with its top (over its right edge on a narrow screen or a large UI scale), from the other windows in the middle of the screen; after that it opens where it was left, moved or not; it closes with its X and with Escape; opened for the first time in a fight, it refuses with a chat line, and opens afterwards even in a fight. Turning junk management off closes it.
+- [ ] **Bags.** *Expected:* the groups; every click and drag marks for good, as in the toss window, with no Shift; items dragged out are not deleted.
+- [ ] **Junk and Not Junk.** *Expected:* every item with that mark, in the bags or not, by name, each with its icon, its tooltip on hover and *Remove*; *None* for an empty list. *Remove* takes one away (it moves in the open junk windows at once).
+- [ ] **Adding.** On *Junk*, then on *Not Junk*:
+  - drag an item from the bags onto the list: it joins the list and goes back to its slot;
+  - click into the field, then Shift-click an item in the bags, a chat link or an item in the loot window: its link goes into the field; *Add* or Enter adds it;
+  - paste a link, or type an item ID, and *Add*; a word that is neither says so in chat.
+- [ ] **Clear List.** *Expected:* it asks, naming the profile, then empties both lists; another profile has its own lists.
+- [ ] **Share.** *Share* at the bottom. *Expected:* the share window with only *Junk List* ticked, and a text to copy.
+- [ ] **Import, merged.** On another character with other marks, *Import* and paste the text. *Expected:* only *Junk List*, with *Merge with my list* chosen; *Import* adds the new items without a question. An item marked otherwise here than in the text keeps its mark, and a window *Marked Otherwise* shows each such item, one by one (*1 of 3*), with its icon, its name, its tooltip beside the window, *Here: …* and *In the text: …*; *Keep mine* and *Take theirs* settle it and go to the next; after the last, it closes. Escape keeps the rest as they are.
+- [ ] **Import, replaced.** Choose *Replace my list* and *Import*. *Expected:* a question naming the profile; accepted, the list is the text's.
+- [ ] **In a profile text.** *Share* in the profile menu. *Expected:* *Junk List* under *Junk settings*. Importing a profile text: into a new profile, no choice on its row; with *Put the parts into the current profile instead*, the merge or replace choice on its row.
+
+### Options (0.5.8)
+
+- [ ] **Order.** *Expected:* under *Enable Junk Management*: *Edit the Junk List*, *Loot Window Button* with *Style*, *Bag Window Button*, *At Merchants*, then a heading *Suggestions* with the five rules two to a row: *Quest Done*, *Leftovers from Quests*, *Your Class Can't Use It*, *Already Known*, *Outgrown*; each rule's tooltip says what it finds.
+- [ ] **Without QuestieDB.** *Expected:* a note under the switch, «Suggestions about quests are better with QuestieDB…», and *Copy the QuestieDB Address* right under it; the button opens a small window with the address selected, to copy with Ctrl+C (Cmd+C on a Mac); typing changes nothing; Escape and *Close* close it.
+- [ ] **With QuestieDB.** *Expected:* neither the note nor the button.
+
 ### The switch
 
-- [ ] **Turning junk off.** Untick *Enable Junk Management*. *Expected:* the settings under it are greyed out; no button at the loot window; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/lootoman toss` says it is off. Tick it again: all is back.
+- [ ] **Turning junk off.** Untick *Enable Junk Management*. *Expected:* the settings under it are greyed out; no button at the loot window or by the bags; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/lootoman toss` says it is off. Tick it again: all is back.
 
 ## Gathering highlights (0.5)
 
@@ -347,6 +387,7 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **A quest object's quest changes (0.5.5).** Stand at a quest object until it sparkles; finish the objective it is for (or abandon the quest), and accept a quest that wants an object you stand at. *Expected:* the sparkles follow at once: the object you no longer need stops sparkling as a quest object, the one you now need starts.
 - [ ] **Quest objects before the first one (0.5.7).** Debug on (`/lootoman debug on`). Accept a quest that asks to collect objects from the world, and walk up to one before collecting any. *Expected:* it sparkles at once, as a quest object; the debug line says `quest by game`, `quest by tooltip` or `quest by objective`. Collect them all (or abandon the quest), walk up to another: no sparkles. A mailbox, a vendor and an object the quest does not want: no sparkles. Note the quest and the debug line of any quest object that stays dark.
 - [ ] **Corpses to skin (0.5.7).** On a character with Skinning, debug on. Walk up to a corpse you killed and have not looted, loot it, then walk up to it again; then to corpses others killed, looted and not. *Expected:* a corpse sparkles only once it can be skinned (looted, or with no loot), with its name and the skinning icon over it; faint with too little skill; no empty nameplates over the other corpses. Note each corpse's debug line (its cursor, and `no nameplate` if the game gave none). On a character without Skinning: no sparkles, unless *Only What You Can Gather* is off (note whether the skinning cursor shows at all). Untick *Corpses to Skin*: none.
+- [ ] **Corpses with a nameplate addon (0.5.8).** With Platynator (or another nameplate addon) enabled, walk up to a corpse that can be skinned. *Expected:* only the sparkles, the skinning icon and the corpse's name: no health bar, name or numbers from the nameplate addon over it. Walk away: other units' plates look as before. A herb or a vein still shows the nameplate addon's own icon, if it draws one.
 - [ ] **After a client update.** *Expected:* the object's nameplate still stays hidden under the sparkles (no name, bar or interact icon from the game), and the self-test's `Highlights:` line shows every function `yes`.
 
 ### The icon and the name over a sparkling object (0.5.7)
@@ -376,6 +417,6 @@ On WoW Forever, with the default settings unless the check says otherwise.
 
 ## Russian client
 
-- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка окна сортировки*, *У торговца*, *Сортировка хлама*, *Настроить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns.
+- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка у окна добычи*, *Кнопка у сумок*, *У торговца*, *Выбросить хлам*, *Разбор хлама*, *Список хлама*, *Предложения*, *Изменить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns.
 - [ ] **Feed messages.** Loot items and gain reputation. *Expected:* rows like «Репутация Штормграда +250» («Фракция «…»» for a faction name the message does not decline); the self-test still shows `20 of 20`.
 - [ ] **Numbers.** With a look of icons, loot money and gain experience in the thousands; point at the experience row. *Expected:* note the decimal point the client gives ("1.23" or "1,23"), the K and M, and the thousands separator in the tooltip.

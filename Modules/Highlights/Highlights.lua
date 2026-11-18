@@ -241,14 +241,16 @@ function Highlights:Evaluate(tick)
 			state = Highlights.State(facts, extra)
 		end
 	end
-	-- Other addons on the plate don't matter: nameplate addons draw on every
-	-- plate, and a player who runs another addon that lights objects sees both.
+	-- Other addons on an object's plate don't matter: a nameplate addon draws
+	-- at most an icon there, and a player who runs another addon that lights
+	-- objects sees both. On a corpse's plate a nameplate addon draws a whole
+	-- unit plate, so the sparkles hide it (Sparkles).
 	local plate = lit and Compat.GetSoftInteractPlate(plates) or nil
 	GameSettings.Gate(lit)
 	self.lit = lit and { kind = kind, state = state, plate = plate } or nil
 	if ns.Highlights.Sparkles then
 		if lit and plate then
-			ns.Highlights.Sparkles.Show(plate, state, self:Look(), self:Stars())
+			ns.Highlights.Sparkles.Show(plate, state, self:Look(), self:Stars(), kind == "skinning")
 		else
 			ns.Highlights.Sparkles.Hide()
 		end
