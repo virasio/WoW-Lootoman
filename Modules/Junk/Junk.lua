@@ -10,7 +10,7 @@ local Compat, L = ns.Compat, ns.L
 local Junk = ns.Modules:Register({
 	name = "Junk",
 	title = L["Junk"],
-	switchLabel = L["Enable junk management"],
+	switchLabel = L["Enable Junk Management"],
 	description = L["Throw junk away from the loot window and sell it at merchants, with Lootoman's sort window. Turned off, the game's own sell-junk button is back."],
 	defaults = {
 		enabled = true,
@@ -18,17 +18,17 @@ local Junk = ns.Modules:Register({
 		tossButton = "full",
 		-- Small on the loot window's title bar, or large next to it.
 		tossStyle = "large",
-		-- At merchants (SellButton.lua): "auto", "button" or "window".
+		-- At Merchants (SellButton.lua): "auto", "button" or "window".
 		selling = "window",
 	},
 	-- Under the switch the junk list first, then how the sort window opens.
 	mainSettings = {
-		{ kind = "button", label = L["Set up the junk list"],
+		{ kind = "button", label = L["Set Up the Junk List"],
 			tooltip = L["Every item you marked as junk or as not junk, to remove marks."],
 			click = function()
 				ns.JunkList.Open()
 			end },
-		{ kind = "choice", key = "tossButton", label = L["Sort window button"],
+		{ kind = "choice", key = "tossButton", label = L["Sort Window Button"],
 			tooltip = L["The button by the loot window opens a window of your bags with the junk on top, to throw things away."],
 			choices = { { "never", L["Never"] }, { "always", L["Always"] }, { "full", L["When the bags are full"] } } },
 		{ kind = "choice", key = "tossStyle", label = L["Style"], level = 2,
@@ -36,7 +36,7 @@ local Junk = ns.Modules:Register({
 			enabledWhen = function()
 				return ns.Storage:Get("Junk", "tossButton") ~= "never"
 			end },
-		{ kind = "choice", key = "selling", label = L["At merchants"],
+		{ kind = "choice", key = "selling", label = L["At Merchants"],
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
 				{ "window", L["The sell button opens the sort window"] } } },
 	},

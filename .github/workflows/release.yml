@@ -1,10 +1,13 @@
 # Packages the addon with the BigWigs packager.
-# A pushed tag publishes only once it has proven itself a release: its commit
-# is on main, the changelog starts with its entry and the TOC leaves the
-# version to the packager (.github/scripts/verify-release.sh), and the checks
-# pass (check.yml). Then the package is built and uploaded to CurseForge, Wago
-# and GitHub Releases; a tag containing "alpha" becomes an alpha file.
-# A manual run only builds the package and attaches the zip to the run.
+# A tag publishes only once it has proven itself a release: its commit is on
+# main, the changelog starts with its entry and the TOC leaves the version to
+# the packager (.github/scripts/verify-release.sh), and the checks pass
+# (check.yml). Then the package is built and uploaded to CurseForge, Wago and
+# GitHub Releases; a tag containing "alpha" becomes an alpha file.
+# A tag is published by a manual run on it with publish set, which the tag
+# workflow (tag.yml) starts after a merge into main, or by pushing it by hand.
+# A manual run without publish only builds the package and attaches the zip
+# to the run, for checking a branch before it is merged.
 #
 # Repository secrets: CF_API_TOKEN (CurseForge) and, optionally,
 # WAGO_API_TOKEN (Wago). The TOC needs ## X-Curse-Project-ID (and ## X-Wago-ID
@@ -19,13 +22,18 @@ on:
   push:
     tags: ["**"]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the tag this run is on (the tag workflow does it after a merge into main)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || inputs.publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,16 +41,21 @@ jobs:
           fetch-depth: 0
 
       - name: The tag is a release of main
-        run: bash .github/scripts/verify-release.sh "$GITHUB_REF_NAME"
+        run: |
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then
+            echo "::error::Only a tag is published, not ${GITHUB_REF}."
+            exit 1
+          fi
+          bash .github/scripts/verify-release.sh "$GITHUB_REF_NAME"
 
   check:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || inputs.publish
     uses: ./.github/workflows/check.yml
 
   release:
     needs: [verify, check]
-    # A tag goes on only when both passed; the manual run has neither.
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.verify.result == 'success' && needs.check.result == 'success')) }}
+    # A tag goes on only when both passed; a run that only builds has neither.
+    if: ${{ !cancelled() && ((github.event_name == 'workflow_dispatch' && !inputs.publish) || (needs.verify.result == 'success' && needs.check.result == 'success')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -53,7 +66,7 @@ jobs:
           fetch-depth: 0
 
       - name: Package and upload
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || inputs.publish
         uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -61,13 +74,13 @@ jobs:
           GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package only
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && !inputs.publish
         uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         with:
           args: -d
 
       - name: Attach the package
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && !inputs.publish
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Lootoman
