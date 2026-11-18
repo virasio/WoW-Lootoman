@@ -18,6 +18,11 @@ local Junk = ns.Modules:Register({
 		tossButton = "full",
 		-- Small on the loot window's title bar, or large next to it.
 		tossStyle = "large",
+		-- The bag button (BagButton.lua): "never", "small" (in the bag window's
+		-- title), "large" (above the bag window) or "own" (on its own, placed in
+		-- Edit Mode), and the size of the one on its own.
+		bagButton = "small",
+		bagButtonSize = 37,
 		-- At Merchants (SellButton.lua): "auto", "button" or "window".
 		selling = "window",
 		-- The suggestion rules (Rules/Suggest.lua, Sections.SWITCHES).
@@ -42,6 +47,10 @@ local Junk = ns.Modules:Register({
 			enabledWhen = function()
 				return ns.Storage:Get("Junk", "tossButton") ~= "never"
 			end },
+		{ kind = "choice", key = "bagButton", label = L["Bag Window Button"],
+			tooltip = L["The button by the bag window opens the same window. On its own, it is placed and sized in Edit Mode."],
+			choices = { { "never", L["Never"] }, { "small", L["Small, in the title"] },
+				{ "large", L["Large, above the window"] }, { "own", L["Large, on its own"] } } },
 		{ kind = "choice", key = "selling", label = L["At Merchants"],
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
 				{ "window", L["The sell button opens the sort window"] } } },

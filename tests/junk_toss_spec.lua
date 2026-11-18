@@ -72,7 +72,7 @@ describe("toss window", function()
 
 	it("opens from the toss button next to the loot window and closes with the loot", function()
 		LootFrame:Show()
-		Toss.Toggle()
+		Toss.Toggle(true)
 		local frame = Toss.Grid().frame
 		assert.is_true(frame:IsShown())
 		assert.same({ { "TOPLEFT", LootFrame, "TOPRIGHT", 4, 0 } }, frame.points)
@@ -84,7 +84,7 @@ describe("toss window", function()
 		LootFrame:Show()
 		LootFrame.parent = UI.NewFake(Loader.ui.UIParent)
 		LootFrame.parent:Hide()
-		Toss.Toggle()
+		Toss.Toggle(true)
 		assert.same({ { "CENTER" } }, Toss.Grid().frame.points)
 	end)
 
@@ -92,7 +92,7 @@ describe("toss window", function()
 		LootFrame.GetRight = function() return 1800 end
 		Loader.ui.UIParent.GetRight = function() return 1920 end
 		LootFrame:Show()
-		Toss.Toggle()
+		Toss.Toggle(true)
 		assert.same({ { "TOPRIGHT", LootFrame, "TOPLEFT", -4, 0 } }, Toss.Grid().frame.points)
 	end)
 
@@ -143,7 +143,7 @@ describe("toss window", function()
 
 		it("names the most valuable item left in the loot and checks the junk worth less", function()
 			LootFrame:Show()
-			Toss.Toggle()
+			Toss.Toggle(true)
 			local line = Toss.Grid().lootLine
 			assert.is_true(line:IsShown())
 			assert.equals("In the loot: " .. link(4, "Wool Cloth") .. ", worth 100 copper", line:GetText())
@@ -153,7 +153,7 @@ describe("toss window", function()
 
 		it("weighs the loot again when an item is taken, and drops the line when nothing priced is left", function()
 			LootFrame:Show()
-			Toss.Toggle()
+			Toss.Toggle(true)
 			Test.ClearLootSlot(2)
 			local line = Toss.Grid().lootLine
 			assert.equals("In the loot: " .. link(2, "Cracked Shell") .. ", worth 80 copper", line:GetText())
@@ -173,7 +173,7 @@ describe("toss window", function()
 			Test.SetLoot({ { kind = "item", link = link(3, "Ring"), quantity = { secret = true } },
 				{ kind = "item", link = link(4, "Wool Cloth"), quantity = 1 } })
 			LootFrame:Show()
-			Toss.Toggle()
+			Toss.Toggle(true)
 			assert.equals("In the loot: " .. link(4, "Wool Cloth") .. ", worth 50 copper", Toss.Grid().lootLine:GetText())
 		end)
 	end)

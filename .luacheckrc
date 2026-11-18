@@ -109,6 +109,8 @@ files["Modules/"] = {
 	read_globals = {
 		"CANCEL",
 		"ColorManager",
+		"ContainerFrame1",
+		"ContainerFrameCombinedBags",
 		"CreateAtlasMarkup",
 		"ColorPickerFrame",
 		"CreateColor",

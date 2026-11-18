@@ -233,12 +233,14 @@ function Toss.Open(nextToLoot)
 	grid:Open()
 end
 
--- The toss button: the window opens next to the loot window, or closes.
-function Toss.Toggle()
+-- The toss buttons: the window opens (next to the loot window with
+-- nextToLoot, from the loot window's button; else in the middle of the
+-- screen, from the bag button), or closes.
+function Toss.Toggle(nextToLoot)
 	if grid and grid:IsShown() then
 		grid:Close()
 	else
-		Toss.Open(true)
+		Toss.Open(nextToLoot)
 	end
 end
 
