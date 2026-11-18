@@ -14,11 +14,12 @@ local Bags, Bus, Compat, L = ns.Bags, ns.Bus, ns.Compat, ns.L
 local AutoLoot = ns.Modules:Register({
 	name = "AutoLoot",
 	title = L["Fast autoloot"],
-	switchLabel = L["Enable fast autoloot"],
+	switchLabel = L["Enable Fast Autoloot"],
 	description = L["When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up."],
 	defaults = { enabled = true, confirmBind = true },
 	mainSettings = {
-		{ kind = "checkbox", key = "confirmBind", label = L["Confirm bind-on-pickup items when alone"],
+		{ kind = "note", text = L["When enabled, the loot window stays hidden and opens only for what cannot be picked up."] },
+		{ kind = "checkbox", key = "confirmBind", label = L["Confirm Bind-on-Pickup Items when Alone"],
 			tooltip = L["Picks up items that bind when picked up without asking, unless you are in a group."] },
 	},
 })

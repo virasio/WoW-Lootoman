@@ -29,6 +29,9 @@ end
 Panel.LEFT = 20
 Panel.INDENT = 24
 Panel.CONTROL_X = 260
+-- Where a checkbox's label starts, after the checkbox (SettingsCheckboxTemplate
+-- is 30 wide) and a little room.
+Panel.LABEL_X = 34
 -- The room the page's scroll bar takes on the right.
 Panel.SCROLL_BAR = 26
 -- The size of the page's dropdowns but the profile's: room for the longest
@@ -223,7 +226,7 @@ local function newCheckbox(page, parent, module, key, label, tooltip, requires, 
 	local checkbox = CreateFrame("CheckButton", nil, row, "SettingsCheckboxTemplate")
 	checkbox:SetPoint("LEFT", row, "LEFT", 0, 0)
 	local text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	text:SetPoint("LEFT", checkbox, "RIGHT", 4, 0)
+	text:SetPoint("LEFT", checkbox, "RIGHT", Panel.LABEL_X - 30, 0)
 	text:SetText(label)
 	checkbox.label = text
 	checkbox:SetHitRectInsets(0, -(text:GetUnboundedStringWidth() + 4), 0, 0)
@@ -389,8 +392,9 @@ end
 -- that has none (switchLabel = false); then what goes under it, indented:
 -- the module's main settings, which can be changed only while it is on.
 -- A main setting is a checkbox (with gap, the room above it), checkboxes in
--- columns (items, columns), a note (text), a choice (a dropdown), a button, or
--- a custom builder(page, indent, module), each with an optional enabledWhen().
+-- columns (items, columns), a note (text, under the label of the switch, or
+-- of an option at its level), a choice (a dropdown), a button, or a custom
+-- builder(page, indent, module), each with an optional enabledWhen().
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
@@ -403,6 +407,9 @@ local function addModule(page, module)
 	end
 	for _, setting in ipairs(module.mainSettings or {}) do
 		local indent = Panel.INDENT * (setting.level or 1)
+		if setting.kind == "note" then
+			indent = Panel.INDENT * (setting.level or 0) + Panel.LABEL_X
+		end
 		if setting.kind == "checkbox" then
 			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen, setting.gap)
 		elseif setting.kind == "checkboxes" then

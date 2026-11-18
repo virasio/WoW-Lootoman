@@ -2,18 +2,24 @@ local Loader = require("tests.helpers.loader")
 local SettingsAPI = require("tests.mocks.SettingsAPI")
 
 describe("fast autoloot settings", function()
-	it("are on the options' main page: its switch and the bind-on-pickup option under it, both on by default", function()
+	it("are on the options' main page: its switch, a hint under it and the bind-on-pickup option, both on by default", function()
 		local api = SettingsAPI.Install()
 		rawset(_G, "StaticPopup_Hide", function() end)
 		local ns = Loader.LoadAddon({ skip = {} })
 		Loader.Start(ns)
-		local shown = {}
-		for _, item in ipairs(ns.SettingsPanel.main.items) do
-			if item.kind == "checkbox" and (item.text or ""):match("autoloot") or (item.text or ""):match("bind%-on%-pickup") then
-				shown[#shown + 1] = ("%s@%d=%s"):format(item.text, item.indent, tostring(item.region.checked))
+		local shown, items = {}, ns.SettingsPanel.main.items
+		for index, item in ipairs(items) do
+			if item.text == "Enable Fast Autoloot" then
+				for _, entry in ipairs({ item, items[index + 1], items[index + 2] }) do
+					shown[#shown + 1] = ("%s:%s@%d=%s"):format(entry.kind, entry.text, entry.indent, tostring(entry.region.checked))
+				end
 			end
 		end
-		assert.same({ "Enable fast autoloot@0=true", "Confirm bind-on-pickup items when alone@24=true" }, shown)
+		assert.same({
+			"checkbox:Enable Fast Autoloot@0=true",
+			"note:When enabled, the loot window stays hidden and opens only for what cannot be picked up.@34=nil",
+			"checkbox:Confirm Bind-on-Pickup Items when Alone@24=true",
+		}, shown)
 		assert.is_nil(api.FindCategory("Fast autoloot"))
 		assert.is_true(ns.Modules:Get("AutoLoot"):IsActive())
 	end)

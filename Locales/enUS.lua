@@ -35,13 +35,14 @@ ns.Locales.AddEnglish({
 
 	-- Modules/AutoLoot/AutoLoot.lua
 	"Fast autoloot",
-	"Enable fast autoloot",
+	"Enable Fast Autoloot",
+	"When enabled, the loot window stays hidden and opens only for what cannot be picked up.",
 	"When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up.",
-	"Confirm bind-on-pickup items when alone",
-	"Auto Loot is off in the game. Tick it below for easier looting: fast autoloot then takes all the loot at once, without the loot window.",
-	"Auto Loot is off in the game. Turn it on with the button below for easier looting: fast autoloot then takes all the loot at once, without the loot window.",
-	"All set. Next time this box will be hidden; you can find these settings in %s.",
-	"Open the game's setting",
+	"Confirm Bind-on-Pickup Items when Alone",
+	"Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot.",
+	"All set. Next time this box will be hidden.",
+	"These are standard game settings. You can find them in %s.",
+	"Open the Game's Setting",
 	"The game's Auto Loot settings can be changed out of combat.",
 	"Picks up items that bind when picked up without asking, unless you are in a group.",
 

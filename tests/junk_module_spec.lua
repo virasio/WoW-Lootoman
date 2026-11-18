@@ -65,7 +65,7 @@ describe("Junk module", function()
 		end
 		assert.is_true(table.concat(texts, "|"):find("Enable junk management|Set up the junk list|Sort window button|Style|At merchants", 1, true) ~= nil)
 		-- Fast autoloot's last item is the box of the game's Auto Loot settings.
-		assert.is_true(table.concat(texts, "|"):find("Confirm bind%-on%-pickup items when alone||Enable junk management") ~= nil)
+		assert.is_true(table.concat(texts, "|"):find("Confirm Bind%-on%-Pickup Items when Alone||Enable junk management") ~= nil)
 		local junk = ns.Modules:Get("Junk")
 		assert.same({ "full", "large", "window", true }, { junk:Get("tossButton"), junk:Get("tossStyle"), junk:Get("selling"), junk:IsActive() })
 		-- Turned off, everything under it is greyed out.

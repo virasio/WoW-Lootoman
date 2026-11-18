@@ -193,7 +193,7 @@ describe("settings panel main page controls", function()
 		})
 		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", defaults = { enabled = true }, mainSettings = {
 			{ kind = "note", text = "Rows fade out." },
-			{ kind = "note", text = ("A long line. "):rep(10), gap = 4 },
+			{ kind = "note", text = ("A long line. "):rep(10), gap = 4, level = 1 },
 		} })
 		Loader.Start(ns)
 		page = ns.SettingsPanel.main
@@ -205,10 +205,10 @@ describe("settings panel main page controls", function()
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
 		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
-			"box:Watch out:24", "checkbox:Show the feed:0", "note:Rows fade out.:24", "note:" .. ("A long line. "):rep(10) .. ":24" }, list)
+			"box:Watch out:24", "checkbox:Show the feed:0", "note:Rows fade out.:34", "note:" .. ("A long line. "):rep(10) .. ":58" }, list)
 	end)
 
-	it("show a note under the switch in the small grey font, as wide as the page and as tall as its lines", function()
+	it("show a note under the switch's label in the small grey font, as wide as the page and as tall as its lines", function()
 		local short, long = itemOf("Rows fade out."), itemOf(("A long line. "):rep(10))
 		assert.same({ "GameFontDisableSmall", "LEFT", true, 0, 14 }, { short.region.fontObject, short.region.justify, short.wide, short.gap,
 			short.height })

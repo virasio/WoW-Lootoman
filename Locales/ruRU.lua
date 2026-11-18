@@ -35,13 +35,14 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/AutoLoot/AutoLoot.lua
 	["Fast autoloot"] = "Быстрый автолут",
-	["Enable fast autoloot"] = "Включить быстрый автолут",
+	["Enable Fast Autoloot"] = "Включить быстрый автолут",
+	["When enabled, the loot window stays hidden and opens only for what cannot be picked up."] = "При включении окно добычи остаётся скрытым и открывается только для того, что подобрать нельзя.",
 	["When the game loots automatically, picks up everything at once. The loot window opens only for what cannot be picked up."] = "Когда игра забирает добычу автоматически, подбирает всё сразу. Окно лута открывается только для того, что подобрать нельзя.",
-	["Confirm bind-on-pickup items when alone"] = "Не спрашивать о персональных предметах вне группы",
-	["Auto Loot is off in the game. Tick it below for easier looting: fast autoloot then takes all the loot at once, without the loot window."] = "Автоматический сбор добычи в игре выключен. Поставьте галочку ниже — так удобнее: быстрый автолут будет забирать всю добычу сразу, без окна добычи.",
-	["Auto Loot is off in the game. Turn it on with the button below for easier looting: fast autoloot then takes all the loot at once, without the loot window."] = "Автоматический сбор добычи в игре выключен. Включите его кнопкой ниже — так удобнее: быстрый автолут будет забирать всю добычу сразу, без окна добычи.",
-	["All set. Next time this box will be hidden; you can find these settings in %s."] = "Всё настроено. В следующий раз эта рамка будет скрыта, а эти настройки можно найти здесь: %s.",
-	["Open the game's setting"] = "Открыть настройку игры",
+	["Confirm Bind-on-Pickup Items when Alone"] = "Не спрашивать о персональных предметах вне группы",
+	["Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot."] = "Автоматический сбор добычи в игре выключен. Быстрый автолут работает только вместе с автоматическим сбором добычи.",
+	["All set. Next time this box will be hidden."] = "Всё настроено. В следующий раз эта рамка будет скрыта.",
+	["These are standard game settings. You can find them in %s."] = "Это стандартные настройки игры. Их можно найти здесь: %s.",
+	["Open the Game's Setting"] = "Открыть настройку игры",
 	["The game's Auto Loot settings can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
 	["Picks up items that bind when picked up without asking, unless you are in a group."] = "Подбирает предметы, которые становятся персональными при получении, без вопроса, если вы не в группе.",
 
