@@ -7,6 +7,7 @@ Clearer fast autoloot options.
 - **A note under *Enable Fast Autoloot*** says that the loot window stays hidden and opens only for what can't be picked up.
 - **The game's Auto Loot box** shows only while fast autoloot is on. It says in one line that fast autoloot works only together with the game's Auto Loot, and a grey line at the bottom says where the game keeps these settings.
 - **Titles on the options page** are capitalized the way the game's own options are.
+- **A checkbox's whole row** lights up and takes the click on the options page, its label, its note and the empty space included.
 
 ## 0.5.5
 
