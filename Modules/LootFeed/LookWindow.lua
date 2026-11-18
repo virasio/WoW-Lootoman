@@ -266,6 +266,8 @@ function LookWindow.Refresh()
 	end
 	local layout = Design.Layout(design, Looks.Value(edited, "size"))
 	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = Looks.Value(edited, "glow") }
+	-- The warning's sample in the look's own text.
+	window.samples[#window.samples].row = Frames.SampleWarning(Looks.Value(edited, "slotsText"))
 	-- Rows one under another; icons side by side, wrapping at the preview's edge.
 	local left, top = 0, 0
 	local room = LookWindow.PREVIEW_WIDTH - 24
@@ -615,7 +617,7 @@ end
 -- out from the top: a header, a checkbox with its label, or a label over a
 -- slider (with the value beside it) or a dropdown. A setting with a parent
 -- sits indented under it and can be changed only while the parent is on.
-local SETTING_HEIGHT = { header = 30, checkbox = 28, slider = 46, dropdown = 50 }
+local SETTING_HEIGHT = { header = 30, checkbox = 28, slider = 46, dropdown = 50, text = 48 }
 local INDENT = 20
 
 -- The choices a dropdown setting offers now: the directions follow the view.
@@ -666,6 +668,39 @@ local function createSetting(parent, setting, y)
 		control.check:SetScript("OnClick", function(button)
 			LookWindow.Set(setting.key, button:GetChecked() and true or false)
 		end)
+	elseif setting.kind == "text" then
+		-- An edit box shows a "|" only doubled and gives a typed one back
+		-- doubled; the look keeps it single. Saved on Enter and when the box
+		-- loses the focus.
+		control.label:SetPoint("TOPLEFT", x + 4, y)
+		control.input = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+		control.input:SetPoint("TOPLEFT", x + 10, y - 18)
+		control.input:SetSize(300, 22)
+		control.input:SetAutoFocus(false)
+		control.input:SetMaxLetters(setting.maxLetters * 2)
+		local function save(input)
+			if not window.updating then
+				LookWindow.Set(setting.key, (input:GetText():gsub("||", "|")))
+			end
+		end
+		control.input:SetScript("OnEnterPressed", function(input)
+			input:ClearFocus()
+		end)
+		control.input:SetScript("OnEscapePressed", function(input)
+			input:ClearFocus()
+		end)
+		control.input:SetScript("OnEditFocusLost", save)
+		if setting.tooltip then
+			control.input:SetScript("OnEnter", function(input)
+				GameTooltip:SetOwner(input, "ANCHOR_RIGHT")
+				GameTooltip_SetTitle(GameTooltip, setting.label)
+				GameTooltip_AddNormalLine(GameTooltip, setting.tooltip)
+				GameTooltip:Show()
+			end)
+			control.input:SetScript("OnLeave", function()
+				GameTooltip:Hide()
+			end)
+		end
 	elseif setting.kind == "slider" then
 		control.label:SetPoint("TOPLEFT", x + 4, y)
 		control.slider = CreateFrame("Frame", nil, parent, "MinimalSliderWithSteppersTemplate")
@@ -708,6 +743,11 @@ local function createSetting(parent, setting, y)
 		if control.check then
 			control.check:SetChecked(value)
 			control.check:SetEnabled(enabled)
+		elseif control.input then
+			if not control.input:HasFocus() then
+				control.input:SetText((value:gsub("|", "||")))
+			end
+			control.input:SetEnabled(enabled)
 		elseif control.slider then
 			control.slider:Init(value, setting.min, setting.max, math.floor((setting.max - setting.min) / setting.step + 0.5))
 			control.slider:SetEnabled(enabled)

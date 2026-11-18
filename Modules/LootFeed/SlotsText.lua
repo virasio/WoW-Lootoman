@@ -2,7 +2,7 @@ local _, ns = ...
 
 -- The text of the feed's low-space warning: a template of tokens in braces,
 -- each with an optional colour, and the text between them, in the default
--- colour: "{general}+{reagent|33ff33}". Tokens are the same in every locale,
+-- colour: "{general}+{reagent|1eff00}". Tokens are the same in every locale,
 -- and stand for the free slots Bags.FreeSlots() counts. A colour is six hex
 -- digits (RRGGBB) or eight (AARRGGBB). A token the template does not know, or
 -- a broken colour, stays as typed, so a typo shows.
@@ -10,7 +10,9 @@ ns.Feed = ns.Feed or {}
 local SlotsText = {}
 ns.Feed.SlotsText = SlotsText
 
-SlotsText.DEFAULT = "{general}+{reagent|33ff33}"
+-- Today's warning: general slots white, reagent ones in the green of uncommon
+-- items, joined by "+".
+SlotsText.DEFAULT = "{general}+{reagent|1eff00}"
 
 -- Token names and the Bags.FreeSlots() value each one shows, in the order the
 -- template's tooltip lists them.

@@ -184,24 +184,35 @@ describe("loot feed frames", function()
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, frameWith("100 copper").points[1])
 		end)
 
-		local GENERAL = { kind = "general", count = 3, text = "Free bag slots: 3" }
-		local REAGENT = { kind = "reagent", count = 2, text = "Free reagent bag slots: 2" }
+		local GENERAL = { amount = "|cffffffff3|r", lines = { "General bags: 3 of 16 free" } }
+		local REAGENT = { amount = "|cff1eff002|r", lines = { "Reagent bag: 2 of 36 free" } }
+		local BOTH = { amount = "|cffffffff3|r+|cff1eff002|r", lines = { "General bags: 3 of 16 free", "Reagent bag: 2 of 36 free" } }
 
-		it("draws the warning as a row of the design: a bag with a red border, the warning as its name, each bag kind's free slots as its amount", function()
-			feed:SetWarnings({ GENERAL, REAGENT })
+		it("draws the warning as a row of the design: a bag with a red border, the warning as its name, its text as its amount", function()
+			feed:SetWarning(BOTH)
 			local warning = feed.warningRow
 			-- At the Large design's size: the icon as big as any row's.
 			assert.same({ true, Frames.WARNING_ICON, 35, 35 }, { warning.shown, warning.Icon.texture, warning.Icon.width, warning.Icon.height })
 			assert.same({ true, "loottoast-itemborder-white", { 1, 0.25, 0.25 } }, { warning.IconBorder.shown, warning.IconBorder.atlas,
 				warning.IconBorder.vertex })
 			assert.same({ "Few free bag slots", { 1, 0.25, 0.25 } }, { warning.Label.text, warning.Label.color })
-			-- General slots white, reagent ones green, joined by "+".
 			assert.same({ true, "|cffffffff3|r+|cff1eff002|r" }, { warning.Amount.shown, warning.Amount.text })
-			-- The tooltip names each kind in its colour.
+			-- The tooltip lists each kind of bag; not clickable, it says nothing of a click and lets clicks through.
 			warning.scripts.OnEnter(warning)
-			assert.same({ "Few free bag slots", "Free bag slots: 3", "Free reagent bag slots: 2" }, tooltip.lines)
-			feed:SetWarnings({ REAGENT })
+			assert.same({ "Few free bag slots", "General bags: 3 of 16 free", "Reagent bag: 2 of 36 free" }, tooltip.lines)
+			assert.is_false(warning.mouseClicks == true)
+			feed:SetWarning(REAGENT)
 			assert.equals("|cff1eff002|r", warning.Amount.text)
+			-- Clickable (the toss window, while junk management is on): its tooltip says so, a left click calls back.
+			local clicked = 0
+			feed.onWarningClick = function() clicked = clicked + 1 end
+			feed:SetWarning({ amount = "1", lines = { "General bags: 1 of 16 free" }, clickable = true })
+			assert.is_true(warning.mouseClicks)
+			warning.scripts.OnEnter(warning)
+			assert.same({ "Few free bag slots", "General bags: 1 of 16 free", "Click: throw away junk." }, tooltip.lines)
+			warning.scripts.OnMouseUp(warning, "RightButton")
+			warning.scripts.OnMouseUp(warning, "LeftButton")
+			assert.equals(1, clicked)
 			-- An item's border keeps its own colour.
 			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
 			feed:Draw(1)
@@ -212,7 +223,7 @@ describe("loot feed frames", function()
 			local Design = ns.Feed.Design
 			local icons = Design.Layout(Design.ICONS, 13)
 			feed:SetOptions(options({ direction = "right", layout = icons }))
-			feed:SetWarnings({ GENERAL, REAGENT })
+			feed:SetWarning(BOTH)
 			model:Add({ kind = "money", amount = 100 }, 0)
 			feed:Draw(1)
 			local warning = feed.warningRow
@@ -240,7 +251,7 @@ describe("loot feed frames", function()
 		end)
 
 		it("puts the stuck row after the warnings, before the other rows, with its marks and its clicks", function()
-			feed:SetWarnings({ GENERAL })
+			feed:SetWarning(GENERAL)
 			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
 			model:SetSticky(quest, "quest", 0)
 			local clam = model:Add({ kind = "item", id = 2, name = "Clam", link = LINK, icon = 2, amount = 1 }, 0)
@@ -275,7 +286,7 @@ describe("loot feed frames", function()
 			-- Without the warning, the stuck row takes the edge.
 			local letter2 = model:Add({ kind = "item", id = 3, name = "Note", link = LINK, icon = 3, amount = 1 }, 6.7)
 			model:SetSticky(letter2, "quest", 6.7)
-			feed:SetWarnings({})
+			feed:SetWarning(nil)
 			feed:Draw(13)
 			assert.same({ "Note@0", "100 copper@42" }, layout())
 		end)
@@ -312,7 +323,7 @@ describe("loot feed frames", function()
 			feed:Draw(6.5)
 			assert.same({ "Letter@0" }, layout())
 			ns.Compat.Test.SetCombat(true)
-			feed:SetWarnings({ GENERAL })
+			feed:SetWarning(GENERAL)
 			model:Add({ kind = "money", amount = 100 }, 6.6)
 			feed:Draw(6.7)
 			assert.same({ "Letter@0", "100 copper@84" }, layout())
@@ -324,7 +335,7 @@ describe("loot feed frames", function()
 			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningRow.points[1])
 			-- A warning that goes in a fight leaves its place empty until it ends.
 			ns.Compat.Test.SetCombat(true)
-			feed:SetWarnings({})
+			feed:SetWarning(nil)
 			feed:Draw(7.5)
 			assert.same({ "Letter@42", "100 copper@84" }, layout())
 			ns.Compat.Test.SetCombat(false)
@@ -333,7 +344,7 @@ describe("loot feed frames", function()
 		end)
 
 		it("puts the warning at the anchor edge, the rows after it, and stays shown for it", function()
-			feed:SetWarnings({ GENERAL })
+			feed:SetWarning(GENERAL)
 			assert.is_true(feed.frame.shown)
 			local warning = feed.warningRow
 			assert.same({ "Few free bag slots", { "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 } }, { warning.Label.text, warning.points[1] })
@@ -345,7 +356,7 @@ describe("loot feed frames", function()
 			-- With the rows gone, the warning keeps the feed shown.
 			feed:Draw(100)
 			assert.same({ {}, true }, { layout(), feed.frame.shown })
-			feed:SetWarnings({})
+			feed:SetWarning(nil)
 			assert.is_false(warning.shown)
 			feed:Draw(101)
 			assert.is_false(feed.frame.shown)
@@ -613,7 +624,7 @@ describe("loot feed frames", function()
 			end)
 
 			it("rests while it only shows a warning, and wakes for a new row at once", function()
-				feed:SetWarnings({ GENERAL })
+				feed:SetWarning(GENERAL)
 				run(1)
 				-- Nothing moves: a few draws a second.
 				local resting = #run(1)
@@ -640,7 +651,7 @@ describe("loot feed frames", function()
 				feed:Wake()
 				run(1)
 				-- A warning comes: the row slides after it over 0.15 seconds, nine frames.
-				feed:SetWarnings({ GENERAL })
+				feed:SetWarning(GENERAL)
 				assert.equals(9, #run(0.15))
 				assert.same({ "100 copper@42" }, layout())
 				local resting = #run(1)

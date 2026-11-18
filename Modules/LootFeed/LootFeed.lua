@@ -170,21 +170,25 @@ function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
 end
 
--- The low-space warnings that hold now, each { kind, count, text }: few free
--- general slots, few free reagent bag slots (only with a reagent bag), each
--- by its own threshold. Nothing before the client has told the bags (no
--- slots at all).
-function LootFeed:Warnings()
-	local slots, warnings = ns.Bags.FreeSlots(), {}
-	if self:Get("warnGeneral") and slots.generalTotal > 0 and slots.general <= self:Get("warnGeneralAt") then
-		warnings[#warnings + 1] = { kind = "general", count = slots.general,
-			text = slots.general == 0 and L["No free bag slots"] or L["Free bag slots: %d"]:format(slots.general) }
+-- The low-space warning, or nil: shown while any threshold switched on is
+-- reached (free slots in all bags, in the general bags, in a reagent bag the
+-- character has), with every kind of bag's count in its amount, as the
+-- look's template writes them, and in its tooltip. A click opens the toss
+-- window while junk management is on.
+function LootFeed:Warning()
+	local slots = ns.Bags.FreeSlots()
+	local reached = (self:Get("warnTotal") and slots.total > 0 and slots.free <= self:Get("warnTotalAt"))
+		or (self:Get("warnGeneral") and slots.generalTotal > 0 and slots.general <= self:Get("warnGeneralAt"))
+		or (self:Get("warnReagent") and slots.reagentTotal > 0 and slots.reagent <= self:Get("warnReagentAt"))
+	if not reached then
+		return nil
 	end
-	if self:Get("warnReagent") and slots.reagentTotal > 0 and slots.reagent <= self:Get("warnReagentAt") then
-		warnings[#warnings + 1] = { kind = "reagent", count = slots.reagent,
-			text = slots.reagent == 0 and L["No free reagent bag slots"] or L["Free reagent bag slots: %d"]:format(slots.reagent) }
-	end
-	return warnings
+	local junk = ns.Modules:Get("Junk")
+	return {
+		amount = Feed.SlotsText.Render(self:Get("slotsText"), slots, "ffffffff"),
+		lines = Feed.Frames.SlotLines(slots),
+		clickable = junk ~= nil and junk:IsActive(),
+	}
 end
 
 -- Asks for the junk module's toss window, the window that frees room in the
@@ -289,7 +293,7 @@ function LootFeed:Apply()
 		showOwned = Feed.Design.Current(self:DesignSection()).parts.owned.shown,
 		showGlow = self:Get("glow"),
 	})
-	self.feed:SetWarnings(self:Warnings())
+	self.feed:SetWarning(self:Warning())
 end
 
 function LootFeed:OnEnable()
@@ -310,6 +314,9 @@ function LootFeed:OnEnable()
 			end,
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
+		self.feed.onWarningClick = function()
+			self:OpenTossWindow()
+		end
 	end
 	self.feed.disabled = false
 	self.lowQuality = {}
@@ -356,18 +363,24 @@ function LootFeed:OnEnable()
 	-- So does what the character can use, read from the bags once they are read
 	-- again; and taking a quest from an item.
 	self:On("InventoryChanged", function()
-		self.feed:SetWarnings(self:Warnings())
+		self.feed:SetWarning(self:Warning())
 		self:CheckAll()
 	end)
 	self:OnEvent("QUEST_ACCEPTED", function()
 		self:CheckAll()
+	end)
+	-- The warning's click opens the toss window only while junk management is on.
+	self:On("ModuleToggled", function(_, name)
+		if name == "Junk" then
+			self.feed:SetWarning(self:Warning())
+		end
 	end)
 end
 
 function LootFeed:OnDisable()
 	if self.feed then
 		self.feed:SetPreview(false)
-		self.feed:SetWarnings({})
+		self.feed:SetWarning(nil)
 		self.feed.frame:Hide()
 		-- The use button hides now, or after the fight.
 		self.feed.disabled = true

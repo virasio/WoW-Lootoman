@@ -18,9 +18,11 @@ local Compat, L = ns.Compat, ns.L
 --
 -- Few free bag slots: one warning row takes the first place at the anchor
 -- edge, drawn by the design as any row: a bag icon with a red border, the
--- warning as its name, and as its amount the free slots of each kind of bag
--- that is low, each in its colour, joined by "+" (general white, reagent
--- green: "3+2"). Its tooltip names each. While it shows the feed stays shown.
+-- warning as its name, and as its amount the free slots as the look's
+-- template writes them (SlotsText.lua: "3+2" by default). Its tooltip lists
+-- every kind of bag; when it can be clicked (the toss window, while junk
+-- management is on) it says so, and a left click calls feed.onWarningClick.
+-- While it shows the feed stays shown.
 --
 -- A stuck row (Model.lua: an item the character can use) comes next, after the
 -- warning, and the fading rows stack after it. It shows a pin, or the bags'
@@ -46,7 +48,7 @@ local Compat, L = ns.Compat, ns.L
 --   feed:Wake()                              -- after model:Add
 --   feed:RefreshOwned()                      -- after the bags change
 --   feed:SetPreview(true)                    -- in Edit Mode
---   feed:SetWarnings({ { kind = "general", count = 2, text = "Free bag slots: 2" } }) -- or {} for none
+--   feed:SetWarning({ amount = "|cffffffff2|r", lines = { "General bags: 2 of 16 free" }, clickable = true }) -- or nil
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
@@ -162,16 +164,8 @@ function Frames.Describe(row, options)
 		end
 		return { icon = ICONS.reputation, label = phrase:format(row.name), labelColor = WHITE, amount = amount, amountColor = color }
 	elseif kind == "warning" then
-		local counts = {}
-		for _, warning in ipairs(row.warnings) do
-			local color = Frames.WARNING_KINDS[warning.kind] or WHITE
-			local function byte(value)
-				return math.floor(value * 255 + 0.5)
-			end
-			counts[#counts + 1] = ("|cff%02x%02x%02x%d|r"):format(byte(color[1]), byte(color[2]), byte(color[3]), warning.count or 0)
-		end
 		return { icon = Frames.WARNING_ICON, label = L["Few free bag slots"], labelColor = Frames.WARNING_COLOR,
-			amount = table.concat(counts, "+"), amountColor = WHITE, border = Frames.WARNING_BORDER, borderColor = Frames.WARNING_COLOR }
+			amount = row.amount, amountColor = WHITE, border = Frames.WARNING_BORDER, borderColor = Frames.WARNING_COLOR }
 	end
 	return { label = tostring(row.name or kind), labelColor = WHITE }
 end
@@ -208,9 +202,11 @@ local function showTooltip(rowFrame)
 	elseif row.kind == "warning" then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip_SetTitle(GameTooltip, L["Few free bag slots"])
-		for _, warning in ipairs(row.warnings) do
-			local color = Frames.WARNING_KINDS[warning.kind] or WHITE
-			GameTooltip:AddLine(warning.text, color[1], color[2], color[3])
+		for _, line in ipairs(row.lines or {}) do
+			GameTooltip:AddLine(line, 1, 1, 1)
+		end
+		if row.clickable then
+			GameTooltip:AddLine(L["Click: throw away junk."], 0.5, 1, 0.5)
 		end
 		GameTooltip:Show()
 	elseif row.kind == "money" or row.kind == "xp" or row.kind == "reputation" then
@@ -291,6 +287,8 @@ function Frames.CreateRow(parent)
 		-- A left click lets the stuck item go (its right click is the use button's).
 		if self.stuck and button == "LeftButton" and self.feed then
 			self.feed:Dismiss(self.data)
+		elseif self.feed and self == self.feed.warningRow and button == "LeftButton" and self.feed.onWarningClick then
+			self.feed.onWarningClick()
 		end
 	end)
 	rowFrame:SetScript("OnEnter", showTooltip)
@@ -447,17 +445,28 @@ Frames.WARNING_COLOR = { 1, 0.25, 0.25 }
 Frames.WARNING_ICON = [[Interface\Icons\INV_Misc_Bag_08]]
 -- The loot window's white quality border, tinted.
 Frames.WARNING_BORDER = "loottoast-itemborder-white"
--- Each kind of bag's colour in the warning's amount: general white, reagent
--- the green of uncommon items (#1eff00).
-Frames.WARNING_KINDS = { general = { 1, 1, 1 }, reagent = { 30 / 255, 1, 0 } }
+-- The look window's sample of the warning, in the look's template: two
+-- general slots and one reagent slot left.
+Frames.SAMPLE_SLOTS = { free = 3, total = 52, used = 49, general = 2, generalTotal = 16, reagent = 1, reagentTotal = 36,
+	profession = 0, professionTotal = 0 }
 
--- The look window's sample of the warning: two general slots and one reagent
--- slot left.
-function Frames.SampleWarning()
-	return { kind = "warning", warnings = {
-		{ kind = "general", count = 2, text = L["Free bag slots: %d"]:format(2) },
-		{ kind = "reagent", count = 1, text = L["Free reagent bag slots: %d"]:format(1) },
-	} }
+function Frames.SampleWarning(template)
+	return { kind = "warning", amount = ns.Feed.SlotsText.Render(template or ns.Feed.SlotsText.DEFAULT, Frames.SAMPLE_SLOTS, "ffffffff"),
+		lines = Frames.SlotLines(Frames.SAMPLE_SLOTS) }
+end
+
+-- The warning's tooltip: a line for each kind of bag the character has, free
+-- of how many.
+function Frames.SlotLines(slots)
+	local lines = {}
+	for _, kind in ipairs({ { "general", L["General bags: %d of %d free"] }, { "reagent", L["Reagent bag: %d of %d free"] },
+		{ "profession", L["Profession bags: %d of %d free"] } }) do
+		local total = slots[kind[1] .. "Total"] or 0
+		if total > 0 then
+			lines[#lines + 1] = kind[2]:format(slots[kind[1]] or 0, total)
+		end
+	end
+	return lines
 end
 
 local SIDEWAYS = { left = true, right = true }
@@ -603,7 +612,7 @@ function Frames.Create(model)
 		frameOf = {},
 		seen = setmetatable({}, { __mode = "k" }),
 		version = 0,
-		warnings = {},
+		warning = nil,
 		-- Whether the last draw left something moving, and when to draw next at rest.
 		moving = false,
 		nextDraw = 0,
@@ -632,26 +641,28 @@ local function placeWarnings(feed)
 	local rowFrame = feed.warningRow
 	if not feed.warning then
 		hideTooltip(rowFrame)
+		rowFrame:SetMouseClickEnabled(false)
 		rowFrame:Hide()
 		return
 	end
 	Frames.Fill(rowFrame, feed.warning, feed.options)
+	rowFrame:SetMouseClickEnabled(feed.warning.clickable == true)
 	place(feed, rowFrame, warningOffset(feed))
 	rowFrame:SetAlpha(1)
 	rowFrame:Show()
 end
 
--- Shows these warnings in one row at the anchor edge, each { kind, count,
--- text }: kind "general" or "reagent", count the free slots, text for the
--- tooltip. The rows move past it.
-function FeedMixin:SetWarnings(warnings)
-	self.warnings = warnings
-	self.warning = #warnings > 0 and { kind = "warning", warnings = warnings } or nil
+-- Shows the warning in one row at the anchor edge, or none with nil:
+-- { amount = the text of its amount, lines = the tooltip's lines, clickable =
+-- whether a click does something (feed.onWarningClick) }. The rows move past
+-- it.
+function FeedMixin:SetWarning(warning)
+	self.warning = warning and { kind = "warning", amount = warning.amount, lines = warning.lines, clickable = warning.clickable } or nil
 	settle(self)
 	placeWarnings(self)
 	self.version = self.version + 1
 	self.nextDraw = 0
-	if #warnings > 0 then
+	if warning then
 		self.frame:Show()
 	end
 end
@@ -719,7 +730,7 @@ function FeedMixin:SetPreview(active)
 	self.preview = active and Frames.PreviewRows() or nil
 	self.frame.PreviewBackground:SetShown(active)
 	self.nextDraw = 0
-	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or #self.warnings > 0)
+	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or self.warning ~= nil)
 end
 
 -- elapsed: the game frame's own time, as OnUpdate gives it, so a slide that
@@ -803,7 +814,7 @@ function FeedMixin:Draw(now, elapsed)
 
 	self.moving = moving
 	self.nextDraw = math.min(now + Frames.IDLE, model:NextChange(now) or math.huge)
-	if #views == 0 and not hovered and #self.warnings == 0 then
+	if #views == 0 and not hovered and not self.warning then
 		self.frame:Hide()
 	end
 end

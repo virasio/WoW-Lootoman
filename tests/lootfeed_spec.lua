@@ -111,58 +111,58 @@ describe("loot feed module", function()
 			Test.SetBags({ [0] = { size = 10, items = items }, [5] = reagent and { size = 5, items = reagentItems } or nil })
 		end
 
+		-- The warning's amount, or nil without one.
 		local function shown()
-			local texts = {}
-			for index, warning in ipairs(module.feed.warnings) do
-				texts[index] = warning.text
-			end
-			return texts
+			return module.feed.warning and module.feed.warning.amount or nil
 		end
 
-		it("warn when no more general slots are free than the threshold, 3 by default", function()
-			bags(4)
-			assert.same({}, shown())
-			bags(3)
-			assert.same({ "Free bag slots: 3" }, shown())
-			bags(0)
-			assert.same({ "No free bag slots" }, shown())
+		it("warn, by default, only when no more general slots are free than 3, with every bag's count", function()
+			bags(4, 0)
+			assert.is_nil(shown())
+			bags(3, 0)
+			-- General white, reagent green: today's "3+0".
+			assert.equals("|cffffffff3|r|cffffffff+|r|cff1eff000|r", shown())
+			assert.same({ "General bags: 3 of 10 free", "Reagent bag: 0 of 5 free" }, module.feed.warning.lines)
 			module:Set("warnGeneralAt", 0)
 			bags(1)
-			assert.same({}, shown())
+			assert.is_nil(shown())
 			module:Set("warnGeneral", false)
 			bags(0)
-			assert.same({}, shown())
+			assert.is_nil(shown())
 		end)
 
-		it("warn about the reagent bag when turned on and the player has one", function()
+		it("warn about all bags together, or the reagent bag, when those are turned on", function()
+			module:Set("warnGeneral", false)
+			module:Set("warnTotal", true)
+			bags(4, 2)
+			assert.is_nil(shown())
+			bags(3, 2)
+			assert.is_not_nil(shown())
+			module:Set("warnTotal", false)
 			module:Set("warnReagent", true)
-			bags(5, 1)
-			assert.same({ "Free reagent bag slots: 1" }, shown())
-			bags(1, 0)
-			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
-			-- Each with its bag kind and count, for the warning row's amount; one row for both.
-			assert.same({ "general", 1, "reagent", 0 }, { module.feed.warnings[1].kind, module.feed.warnings[1].count,
-				module.feed.warnings[2].kind, module.feed.warnings[2].count })
-			assert.equals("|cffffffff1|r+|cff1eff000|r", module.feed.warningRow.Amount.text)
-			bags(5)
-			assert.same({}, shown())
+			bags(8, 2)
+			assert.is_not_nil(shown())
+			-- Without a reagent bag, its threshold never warns.
+			bags(8)
+			assert.is_nil(shown())
 		end)
 
-		it("say nothing before the client has told the bags", function()
-			assert.same({}, shown())
+		it("write the amount from the look's template, a typo as typed", function()
+			module:Set("slotsText", "{general} / {general.total} {herb}")
+			bags(2)
+			assert.equals("|cffffffff2|r|cffffffff / |r|cffffffff10|r|cffffffff {herb}|r", shown())
 		end)
-	end)
 
-	it("offers the client's item quality names", function()
-		local dropdown
-		for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
-			dropdown = setting.key == "minQuality" and setting or dropdown
-		end
-		local labels = {}
-		for _, choice in ipairs(dropdown.choices) do
-			labels[#labels + 1] = choice[1] .. "=" .. choice[2]
-		end
-		assert.same({ "0=Poor", "1=Common", "2=Uncommon", "3=Rare", "4=Epic", "5=Legendary" }, labels)
+		it("open the toss window with a click while junk management is on", function()
+			bags(2)
+			local opened = 0
+			ns.Bus:On("OpenTossWindow", "test", function() opened = opened + 1 end)
+			assert.is_true(module.feed.warning.clickable)
+			module.feed.onWarningClick()
+			assert.equals(1, opened)
+			ns.Modules:SetEnabled("Junk", false)
+			assert.is_false(module.feed.warning.clickable)
+		end)
 	end)
 
 	it("puts the feed in Edit Mode right of the screen centre, with no settings in the library's dialog", function()

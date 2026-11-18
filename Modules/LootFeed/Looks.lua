@@ -57,10 +57,16 @@ Looks.DEFAULTS = {
 	size = 12,
 	backgroundOpacity = 0,
 	glow = true,
+	-- The low-space warning's thresholds: all bags, general bags, the reagent
+	-- bag (off: reagents go into the general bags when their bag is full), and
+	-- its amount's template (SlotsText.lua).
+	warnTotal = false,
+	warnTotalAt = 5,
 	warnGeneral = true,
 	warnGeneralAt = 3,
-	warnReagent = true,
+	warnReagent = false,
 	warnReagentAt = 2,
+	slotsText = ns.Feed.SlotsText.DEFAULT,
 }
 
 -- The fill direction a look of each view starts with.
@@ -144,13 +150,18 @@ function Looks.Settings(view)
 		content[#content + 1] = { kind = "checkbox", key = Looks.KEEP[kind][1], label = Looks.KEEP[kind][2], parent = "keepUsable" }
 	end
 	local warnings = {
-		{ kind = "header", key = "warnings", label = L["Low-space warnings"] },
-		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when few bag slots are free"],
-			tooltip = L["Shows a warning at the feed's edge while no more general bag slots are free than the number below."] },
-		{ kind = "slider", key = "warnGeneralAt", label = L["Bag slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnGeneral" },
-		{ kind = "checkbox", key = "warnReagent", label = L["Warn when few reagent bag slots are free"],
-			tooltip = L["Shows a warning at the feed's edge while no more reagent bag slots are free than the number below."] },
-		{ kind = "slider", key = "warnReagentAt", label = L["Reagent bag slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnReagent" },
+		{ kind = "header", key = "warnings", label = L["Low-space warning"] },
+		{ kind = "checkbox", key = "warnTotal", label = L["Warn when few slots are free in all bags"],
+			tooltip = L["Shows the warning while no more slots are free in all your bags together, the reagent and profession bags too, than the number below."] },
+		{ kind = "slider", key = "warnTotalAt", label = L["All slots"], min = 0, max = 40, step = 1, format = "%d", parent = "warnTotal" },
+		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when few general slots are free"],
+			tooltip = L["Shows the warning while no more general bag slots are free than the number below: only they take gear and junk."] },
+		{ kind = "slider", key = "warnGeneralAt", label = L["General slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnGeneral" },
+		{ kind = "checkbox", key = "warnReagent", label = L["Warn when few reagent slots are free"],
+			tooltip = L["Shows the warning while no more reagent bag slots are free than the number below. Reagents go into the general bags when their bag is full."] },
+		{ kind = "slider", key = "warnReagentAt", label = L["Reagent slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnReagent" },
+		{ kind = "text", key = "slotsText", label = L["Warning text"], maxLetters = 80,
+			tooltip = L["The warning's number, from tokens in braces: %s. A colour after a bar: {reagent|33ff33}."]:format(ns.Feed.SlotsText.TokenList()) },
 	}
 	for _, setting in ipairs(warnings) do
 		content[#content + 1] = setting
@@ -214,6 +225,8 @@ local function allows(view, key, value)
 			end
 		end
 		return false
+	elseif setting.kind == "text" then
+		return #value <= setting.maxLetters
 	end
 	return true
 end

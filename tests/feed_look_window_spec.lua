@@ -72,7 +72,7 @@ describe("loot feed look window", function()
 			-- Each row takes clicks on its free space, the stuck sample too.
 			assert.same({ true, true }, { window.rows[1].mouseClicks, window.rows[7].mouseClicks })
 			-- Last, the low-space warning, drawn by the design too.
-			assert.same({ "Few free bag slots", "|cffffffff2|r+|cff1eff001|r" }, { window.rows[8].Label.text, window.rows[8].Amount.text })
+			assert.same({ "Few free bag slots", "|cffffffff2|r|cffffffff+|r|cff1eff001|r" }, { window.rows[8].Label.text, window.rows[8].Amount.text })
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
@@ -351,7 +351,7 @@ describe("loot feed look window", function()
 					tabs[control.setting.key] = control.setting.tab
 				end
 			end
-			assert.same({ "What the feed shows", "Kept usable items", "Low-space warnings" }, headers)
+			assert.same({ "What the feed shows", "Kept usable items", "Low-space warning" }, headers)
 			assert.same({ "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings" },
 				{ tabs.items, tabs.warnGeneral, tabs.direction, tabs.maxRows, tabs.size, tabs.backgroundOpacity, tabs.duration, tabs.fade })
 			-- The view stands just before the fill direction, on Appearance.
@@ -365,6 +365,16 @@ describe("loot feed look window", function()
 			assert.equals("name", LookWindow.Selected())
 			window.tab3.scripts.OnClick(window.tab3)
 			assert.same({ 3, false, false, true, false }, shown())
+		end)
+
+		it("takes the warning's text in a field, a typed | kept single, and shows it in the sample", function()
+			local field = settingOf("slotsText")
+			assert.same({ "Warning text", "{general}+{reagent||1eff00}" }, { field.label.text, field.input:GetText() })
+			field.input:SetText("{free} || {general}")
+			field.input.scripts.OnEditFocusLost(field.input)
+			assert.equals("{free} | {general}", ns.Feed.Looks.Value("Default", "slotsText"))
+			assert.equals("{free} || {general}", field.input:GetText())
+			assert.equals("|cffffffff3|r|cffffffff || |r|cffffffff2|r", window.rows[#window.rows].Amount.text)
 		end)
 
 		it("sets the look's settings, and the feed follows at once", function()

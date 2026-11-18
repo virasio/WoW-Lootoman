@@ -18,7 +18,7 @@ describe("loot feed's slots text", function()
 	end)
 
 	it("gives today's \"3+2\" by default", function()
-		assert.equals("|cffffffff12|r|cffffffff+|r|cff33ff3314|r", SlotsText.Render(SlotsText.DEFAULT, VALUES, WHITE))
+		assert.equals("|cffffffff12|r|cffffffff+|r|cff1eff0014|r", SlotsText.Render(SlotsText.DEFAULT, VALUES, WHITE))
 	end)
 
 	it("knows every token, in any letter case, and colours with eight digits too", function()
