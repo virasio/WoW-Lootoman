@@ -627,7 +627,7 @@ describe("Compat for highlights", function()
 
 	it("tells whether a quest is done, an item's class name and use, the level and the cursor's item", function()
 		stub({
-			C_QuestLog = { IsQuestFlaggedCompleted = function(id) return id == 7 end },
+			C_QuestLog = { IsQuestFlaggedCompleted = function(id) return id == 7 end, IsOnQuest = function(id) return id == 9 end },
 			C_Item = {
 				GetItemClassInfo = function(id) return id == 7 and "Trade Goods" or nil end,
 				IsEquippableItem = function(id) return id == 1 end,
@@ -637,6 +637,7 @@ describe("Compat for highlights", function()
 			GetCursorInfo = function() return "item", 2589 end,
 		})
 		assert.same({ true, false, nil }, { Compat.IsQuestDone(7), Compat.IsQuestDone(8), Compat.IsQuestDone("x") })
+		assert.same({ true, false, nil }, { Compat.IsOnQuest(9), Compat.IsOnQuest(7), Compat.IsOnQuest(nil) })
 		assert.same({ "Trade Goods", true, false, true, false }, { Compat.GetItemClassName(7), Compat.IsEquippableItem(1),
 			Compat.IsEquippableItem(3), Compat.CanUseItem(1), Compat.CanUseItem(2) })
 		assert.same({ 42, 2589 }, { Compat.GetPlayerLevel(), Compat.GetCursorItemID() })

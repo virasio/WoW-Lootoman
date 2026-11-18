@@ -72,6 +72,7 @@ local state = {
 	-- By quest, finished ones too (GetQuestItemObjectives); quests done (IsQuestDone).
 	questItemObjectives = {},
 	questsDone = {},
+	questsInLog = {},
 	-- Item class names by class ID; the character's level; the item on the cursor.
 	itemClasses = {},
 	playerLevel = 60,
@@ -430,6 +431,14 @@ function Compat.IsQuestDone(questID)
 		return nil
 	end
 	return state.questsDone[questID] == true
+end
+
+-- state.questsInLog: { [questID] = true }.
+function Compat.IsOnQuest(questID)
+	if type(questID) ~= "number" then
+		return nil
+	end
+	return state.questsInLog[questID] == true
 end
 
 -- state.playerLevel.

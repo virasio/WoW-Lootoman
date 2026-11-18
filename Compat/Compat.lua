@@ -672,6 +672,14 @@ function Compat.IsQuestDone(questID)
 	return try(C_QuestLog.IsQuestFlaggedCompleted, questID)
 end
 
+-- Whether a quest is in the character's log, or nil where the client cannot say.
+function Compat.IsOnQuest(questID)
+	if type(questID) ~= "number" or not Compat.Has("C_QuestLog.IsOnQuest") then
+		return nil
+	end
+	return try(C_QuestLog.IsOnQuest, questID)
+end
+
 -- The character's level.
 function Compat.GetPlayerLevel()
 	return try(UnitLevel, "player") or 0

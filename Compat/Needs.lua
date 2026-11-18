@@ -119,6 +119,7 @@ ns.Compat.NEEDS = {
 	IsFishingLoot = { "IsFishingLoot" },
 	IsInGroup = { "IsInGroup" },
 	IsInteracting = { "Enum.PlayerInteractionType", optional = { "C_PlayerInteractionManager.IsInteractingWithNpcOfType" } },
+	IsOnQuest = { optional = { "C_QuestLog.IsOnQuest", "issecretvalue" } },
 	IsQuestDone = { optional = { "C_QuestLog.IsQuestFlaggedCompleted", "issecretvalue" } },
 	IsSecret = { optional = { "issecretvalue" } },
 	LootSlot = { "LootSlot" },
