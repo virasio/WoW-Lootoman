@@ -151,7 +151,7 @@ describe("settings panel, a module with a broken main setting", function()
 			mainSettings = { { kind = "slider", key = "rows", label = "Rows" } } })
 		ns.Modules:Register({ name = "Feed", defaults = { enabled = true } })
 		Loader.Start(ns)
-		assert.matches("Broken.rows: the main page takes checkboxes, choices, buttons and custom blocks", ns.Compat.Test.state.errors[1])
+		assert.matches("Broken.rows: the main page takes checkboxes, notes, choices, buttons and custom blocks", ns.Compat.Test.state.errors[1])
 		local last = ns.SettingsPanel.main.items[#ns.SettingsPanel.main.items]
 		assert.equals("Feed", last.text)
 	end)
@@ -191,7 +191,10 @@ describe("settings panel main page controls", function()
 				end },
 			},
 		})
-		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", defaults = { enabled = true } })
+		ns.Modules:Register({ name = "Feed", switchLabel = "Show the feed", defaults = { enabled = true }, mainSettings = {
+			{ kind = "note", text = "Rows fade out." },
+			{ kind = "note", text = ("A long line. "):rep(10), gap = 4 },
+		} })
 		Loader.Start(ns)
 		page = ns.SettingsPanel.main
 	end)
@@ -202,7 +205,27 @@ describe("settings panel main page controls", function()
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
 		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
-			"box:Watch out:24", "checkbox:Show the feed:0" }, list)
+			"box:Watch out:24", "checkbox:Show the feed:0", "note:Rows fade out.:24", "note:" .. ("A long line. "):rep(10) .. ":24" }, list)
+	end)
+
+	it("show a note under the switch in the small grey font, as wide as the page and as tall as its lines", function()
+		local short, long = itemOf("Rows fade out."), itemOf(("A long line. "):rep(10))
+		assert.same({ "GameFontDisableSmall", "LEFT", true, 0, 14 }, { short.region.fontObject, short.region.justify, short.wide, short.gap,
+			short.height })
+		-- The switch's row ends where the note starts.
+		local switch = itemOf("Show the feed")
+		assert.equals(switch.frame.points[1][5] - 29, short.region.points[1][5])
+		assert.same({ 4, 28, 28 }, { long.gap, long.height, long.region.height })
+		long.region.text = "Short now."
+		page:Layout()
+		assert.equals(14, long.height)
+	end)
+
+	it("lay the page out again when its width changes, for the notes that wrap", function()
+		local long = itemOf(("A long line. "):rep(10))
+		long.region.text = "Short now."
+		page.scroll.scripts.OnSizeChanged(page.scroll, 600)
+		assert.same({ 600, 14 }, { page.body.width, long.height })
 	end)
 
 	-- The dropdown in a choice's row, and its menu's radios: "text" with a star

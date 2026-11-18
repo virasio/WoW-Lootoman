@@ -10,7 +10,8 @@ local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 -- Panel.AddToMain (the profile), a divider, then every module's block: its
 -- switch, a checkbox with its label after it, or its title for a module
 -- without one. Under it, indented: the module's main settings
--- (module.mainSettings), which can be changed only while the module is on.
+-- (module.mainSettings), which can be changed only while the module is on,
+-- and notes: short texts that say more about the switch or setting above.
 -- The page reads Storage again when it is shown and whenever a value or the
 -- profile changes.
 local Panel = {
@@ -64,8 +65,13 @@ local function newMainPage()
 	page.body = CreateFrame("Frame", nil, page.scroll)
 	page.body:SetSize(1, 1)
 	page.scroll:SetScrollChild(page.body)
+	-- A wrapped text's height depends on the width: lay out again when it changes.
 	page.scroll:SetScript("OnSizeChanged", function(_, width)
-		page.body:SetWidth(width)
+		if width ~= page.width then
+			page.width = width
+			page.body:SetWidth(width)
+			page:Layout()
+		end
 	end)
 	page.top = -56
 	page.area = "body"
@@ -108,6 +114,10 @@ local function place(page, area, container, y)
 				frame:SetPoint("TOPLEFT", container, "TOPLEFT", Panel.LEFT + item.indent, y)
 				if item.wide then
 					frame:SetPoint("TOPRIGHT", container, "TOPRIGHT", -Panel.LEFT, y)
+					-- Once its width is known, an item that wraps text measures itself.
+					if item.measure then
+						item.height = item.measure()
+					end
 					frame:SetHeight(item.height)
 				end
 				frame:Show()
@@ -134,8 +144,8 @@ end
 
 -- Puts a region gap pixels under the last item, indent pixels further in.
 -- options.frame is placed instead of the region when it holds the region; a
--- wide one reaches to the page's right edge; visible(), when given, says
--- whether it shows now.
+-- wide one reaches to the page's right edge, and measure(), when given, gives
+-- its height at each layout; visible(), when given, says whether it shows now.
 function MainPage:Add(kind, region, height, options)
 	options = options or {}
 	self.items[#self.items + 1] = {
@@ -146,6 +156,7 @@ function MainPage:Add(kind, region, height, options)
 		gap = options.gap or GAP,
 		indent = options.indent or 0,
 		wide = options.wide,
+		measure = options.measure,
 		text = options.text,
 		visible = options.visible,
 		area = self.area,
@@ -272,6 +283,20 @@ function MainPage:AddCheckboxes(module, items, options)
 	end
 end
 
+-- A note: a short text in the options' small grey font, under the switch or
+-- setting it explains, as wide as the page and as tall as its lines.
+-- options: indent, gap, visible.
+function MainPage:AddNote(text, options)
+	options = options or {}
+	local note = self:Area():CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+	note:SetJustifyH("LEFT")
+	note:SetText(text)
+	return self:Add("note", note, 12, { indent = options.indent, text = text, wide = true, gap = options.gap or 0,
+		visible = options.visible, measure = function()
+			return math.ceil(note:GetStringHeight())
+		end })
+end
+
 -- A dropdown for the page, as the Edit Mode dialogs show them (the feed look's
 -- is in both); only the profile's has the options panel's own style.
 function MainPage:NewDropdown(parent)
@@ -364,8 +389,8 @@ end
 -- that has none (switchLabel = false); then what goes under it, indented:
 -- the module's main settings, which can be changed only while it is on.
 -- A main setting is a checkbox (with gap, the room above it), checkboxes in
--- columns (items, columns), a choice (a dropdown), a button, or a custom
--- builder(page, indent, module), each with an optional enabledWhen().
+-- columns (items, columns), a note (text), a choice (a dropdown), a button, or
+-- a custom builder(page, indent, module), each with an optional enabledWhen().
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
@@ -383,6 +408,8 @@ local function addModule(page, module)
 		elseif setting.kind == "checkboxes" then
 			page:AddCheckboxes(module.name, setting.items, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
 				columns = setting.columns })
+		elseif setting.kind == "note" then
+			page:AddNote(setting.text, { indent = indent, gap = setting.gap })
 		elseif setting.kind == "choice" then
 			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = indent, requires = requires,
 				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
@@ -392,7 +419,7 @@ local function addModule(page, module)
 		elseif setting.kind == "custom" then
 			setting.build(page, indent, module)
 		else
-			error(("%s.%s: the main page takes checkboxes, choices, buttons and custom blocks"):format(module.name, tostring(setting.key)))
+			error(("%s.%s: the main page takes checkboxes, notes, choices, buttons and custom blocks"):format(module.name, tostring(setting.key)))
 		end
 	end
 end
