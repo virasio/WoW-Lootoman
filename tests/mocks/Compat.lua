@@ -67,6 +67,8 @@ local state = {
 	-- nameplates by unit; the loot window's source object IDs; Herbalism and
 	-- Mining; the player's position { x, y }.
 	softInteract = nil,
+	-- The texts of the quests' objectives to collect or use (GetQuestObjectiveTexts).
+	questObjectives = {},
 	cursorFiles = {},
 	nameplates = {},
 	lootSources = {},
@@ -227,6 +229,41 @@ function Compat.GetSoftInteract(skipQuest)
 	return copy
 end
 
+-- The cursor of state.softInteract on the texture, if it has one.
+function Compat.SetSoftInteractCursor(texture)
+	local facts = state.softInteract
+	if not (facts and facts.cursor) then
+		return false
+	end
+	texture:SetTexture(facts.cursor)
+	return true
+end
+
+-- state.softInteractName (a secret is { secret = true }), else the name in
+-- state.softInteract; and whether there is one.
+function Compat.GetSoftInteractName()
+	local name = state.softInteractName
+	if name == nil and state.softInteract then
+		name = state.softInteract.name
+	end
+	if Compat.IsSecret(name) then
+		return name, true
+	end
+	if type(name) == "string" and name ~= "" then
+		return name, true
+	end
+	return nil, false
+end
+
+-- state.questObjectives, as the client gives them.
+function Compat.GetQuestObjectiveTexts()
+	local texts = {}
+	for index, text in ipairs(state.questObjectives) do
+		texts[index] = text
+	end
+	return texts
+end
+
 -- state.cursorFiles: the file IDs of the game's cursors by name.
 function Compat.GetCursorFileID(name)
 	return state.cursorFiles[name]
@@ -253,9 +290,9 @@ function Compat.GetLootSourceObjects()
 	return state.lootSources
 end
 
--- state.gatheringSkills: { herbs, ore }.
+-- state.gatheringSkills: { herbs, ore, skinning }.
 function Compat.GetGatheringSkills()
-	return { herbs = state.gatheringSkills.herbs, ore = state.gatheringSkills.ore }
+	return { herbs = state.gatheringSkills.herbs, ore = state.gatheringSkills.ore, skinning = state.gatheringSkills.skinning }
 end
 
 -- state.position: { x, y }, or nil where the client gives none.

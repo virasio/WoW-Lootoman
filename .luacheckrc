@@ -146,6 +146,7 @@ files["Settings/"] = {
 		"AUTO_LOOT_KEY_TEXT",
 		"CANCEL",
 		"CLOSE",
+		"ColorPickerFrame",
 		"CONTROLS_LABEL",
 		"CTRL_KEY",
 		"LOOT_KEY_TEXT",

@@ -61,6 +61,7 @@ function methods:Hide() self:SetShown(false) end
 function methods:IsShown() return self.shown end
 function methods:IsVisible() return self.shown and (self.parent == nil or self.parent:IsVisible()) end
 function methods:SetAlpha(alpha) self.alpha = alpha end
+function methods:SetIgnoreParentAlpha(ignore) self.ignoresParentAlpha = ignore end
 function methods:SetScript(name, fn) self.scripts[name] = fn end
 function methods:GetScript(name) return self.scripts[name] end
 function methods:ClearAllPoints()
@@ -110,6 +111,16 @@ function methods:SetFrameStrata(strata) self.strata = strata end
 function methods:GetFrameStrata() return self.strata end
 function methods:SetText(text) self.text = text end
 function methods:SetFont(file, size, flags) self.font = { file, size, flags } end
+-- A font string's font: what SetFont gave, else the template's (GameFontNormal's).
+function methods:GetFont()
+	if self.font then
+		return self.font[1], self.font[2], self.font[3]
+	end
+	return "Fonts\\FRIZQT__.TTF", 12, ""
+end
+function methods:SetShadowOffset(x, y) self.shadowOffset = { x, y } end
+function methods:SetShadowColor(r, g, b, a) self.shadowColor = { r, g, b, a } end
+function methods:SetColorTexture(r, g, b, a) self.colorTexture = { r, g, b, a } end
 -- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
 function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
 -- A text wraps every 520 pixels, 14 pixels a line.
