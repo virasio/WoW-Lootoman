@@ -116,6 +116,16 @@ function Frames.Describe(row, options)
 	options = options or {}
 	local kind = row.kind
 	local icons = options.layout ~= nil and Design.View(options.layout) == "icons"
+	if row.parts then
+		-- All junk in one row: one icon for junk, its name gray, the items' count.
+		local look = { iconAtlas = Frames.JUNK_ICON, label = L["Junk"], labelColor = qualityColor(0),
+			border = ColorManager.GetAtlasDataForLootBorderItemQuality(0) or "loottoast-itemborder-white" }
+		if (row.amount or 1) > 1 then
+			look.amount = icons and ns.Text.ShortNumber(row.amount, decimalPoint()) or ("×%d"):format(row.amount)
+			look.amountColor = WHITE
+		end
+		return look
+	end
 	if kind == "item" or kind == "currency" then
 		local look = { icon = row.icon, label = row.name, labelColor = qualityColor(row.quality) }
 		if (row.amount or 1) > 1 then
@@ -193,6 +203,13 @@ local function showTooltip(rowFrame)
 			else
 				GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use."], 0.5, 1, 0.5)
 			end
+		end
+		GameTooltip:Show()
+	elseif row.parts then
+		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
+		GameTooltip_SetTitle(GameTooltip, L["Junk"])
+		for _, part in ipairs(row.parts) do
+			GameTooltip:AddLine(part.amount > 1 and L["%s ×%d"]:format(part.link, part.amount) or part.link, 1, 1, 1)
 		end
 		GameTooltip:Show()
 	elseif row.kind == "currency" and row.id then
@@ -357,9 +374,15 @@ end
 function Frames.Fill(rowFrame, row, options, stuck)
 	local parts = options.layout.parts
 	local look = Frames.Describe(row, options)
-	local iconShown = parts.icon.shown and look.icon ~= nil
+	local iconShown = parts.icon.shown and (look.icon ~= nil or look.iconAtlas ~= nil)
 	rowFrame.Icon:SetShown(iconShown)
-	rowFrame.Icon:SetTexture(look.icon)
+	if look.iconAtlas then
+		rowFrame.Icon:SetAtlas(look.iconAtlas)
+	else
+		rowFrame.Icon:SetTexture(look.icon)
+		-- A frame that showed an atlas keeps its coordinates otherwise.
+		rowFrame.Icon:SetTexCoord(0, 1, 0, 1)
+	end
 	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil)
 	if look.border then
 		rowFrame.IconBorder:SetAtlas(look.border)
@@ -439,6 +462,9 @@ function Frames.PreviewRows()
 			owned = 1, sticky = "quest" }, alpha = 1, stuck = true, waiting = 1 },
 	}
 end
+
+-- The junk row's icon: the sell-junk icon Lootoman's toss and sell buttons use.
+Frames.JUNK_ICON = "SpellIcon-256x256-SellJunk"
 
 -- The warning's text and border colour: the default UI's red for errors.
 Frames.WARNING_COLOR = { 1, 0.25, 0.25 }

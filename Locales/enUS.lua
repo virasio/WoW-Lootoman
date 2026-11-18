@@ -73,6 +73,8 @@ ns.Locales.AddEnglish({
 	"Money",
 	"Reputation",
 	"Minimum quality",
+	"Junk in one row",
+	"Gray items and items you marked as junk merge into one row, “Junk”, which lists them in its tooltip.",
 	"Items of a lower quality are not shown.",
 	"Keep usable items",
 	"Kept usable items",

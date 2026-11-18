@@ -46,6 +46,15 @@ describe("loot feed frames", function()
 			assert.equals("loottoast-itemborder-white", Frames.Describe({ kind = "item", name = "Rag", quality = 0 }).border)
 		end)
 
+		it("shows all junk as one row: the sell-junk icon, its name gray, the items' count, a line for each in its tooltip", function()
+			local row = { kind = "item", name = "Junk", quality = 0, amount = 4,
+				parts = { { key = 700, link = "[Rag]", amount = 3 }, { key = 701, link = "[Bone]", amount = 1 } } }
+			local look = Frames.Describe(row)
+			assert.same({ "SpellIcon-256x256-SellJunk", nil, "Junk", "×4", "loottoast-itemborder-white" },
+				{ look.iconAtlas, look.icon, look.label, look.amount, look.border })
+			assert.same(Frames.Describe({ kind = "item", name = "Rag", quality = 0 }).labelColor, look.labelColor)
+		end)
+
 		it("gives rare and better items a glow in their quality colour, when asked", function()
 			assert.equals("bags-glow-3", Frames.Describe({ kind = "item", name = "Ring", quality = 3 }, { showGlow = true }).glow)
 			assert.is_nil(Frames.Describe({ kind = "item", name = "Cloth", quality = 2 }, { showGlow = true }).glow)
@@ -182,6 +191,16 @@ describe("loot feed frames", function()
 			feed:SetOptions(options({ direction = "left", layout = icons }))
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", -40, 0 }, frameWith("Experience").points[1])
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, frameWith("100 copper").points[1])
+		end)
+
+		it("draws the junk row with the sell-junk icon and lists its items in the tooltip; the next item gets its own icon back", function()
+			model:Add({ kind = "item", name = "Junk", quality = 0, amount = 4,
+				parts = { { key = 700, link = "[Rag]", amount = 3 }, { key = 701, link = "[Bone]", amount = 1 } } }, 0)
+			feed:Draw(1)
+			local junk = frameWith("Junk")
+			assert.equals("SpellIcon-256x256-SellJunk", junk.Icon.atlas)
+			junk.scripts.OnEnter(junk)
+			assert.same({ "Junk", "[Rag] ×3", "[Bone]" }, tooltip.lines)
 		end)
 
 		local GENERAL = { amount = "|cffffffff3|r", lines = { "General bags: 3 of 16 free" } }

@@ -191,6 +191,52 @@ function LootFeed:Warning()
 	}
 end
 
+-- An item looted that Lootoman's junk rule calls junk (gray, or marked junk,
+-- and not marked not junk) becomes part of the one junk row, while the look
+-- wants it: { kind = "item", parts = { { key, link, amount } }, the item's
+-- quality for the minimum quality }. Below the minimum quality it stays as it
+-- is, to be dropped, or kept if the character can use it.
+function LootFeed:AsJunk(entry)
+	if entry.kind ~= "item" or not entry.id or not self:Get("junkRow") then
+		return entry
+	end
+	if entry.quality ~= nil and entry.quality < self:Get("minQuality") then
+		return entry
+	end
+	if not ns.Rules.Junk.Decide({ itemID = entry.id, quality = entry.quality }).junk then
+		return entry
+	end
+	return {
+		kind = "item",
+		name = L["Junk"],
+		quality = entry.quality,
+		amount = entry.amount or 1,
+		parts = { { key = entry.id, link = entry.link or entry.name, amount = entry.amount or 1, entry = entry } },
+	}
+end
+
+-- A junk row's item the character turns out to be able to use, once the bags
+-- hold it (a picked lockbox, gray as it is), leaves the junk row for a row of
+-- its own, kept as any usable item; the junk row goes with its last item.
+function LootFeed:CheckJunk(row, now)
+	for index = #row.parts, 1, -1 do
+		local part = row.parts[index]
+		local kind, held, behind = ns.Rules.Usable.Find(part.key)
+		if held and not behind and kind and self:Keeps(kind) then
+			table.remove(row.parts, index)
+			row.amount = (row.amount or 0) - part.amount
+			part.entry.amount = part.amount
+			local own = self.model:Add(part.entry, now, true)
+			if own then
+				self:CheckUsable(own, now)
+			end
+		end
+	end
+	if #row.parts == 0 then
+		self.model:Release(row)
+	end
+end
+
 -- Asks for the junk module's toss window, the window that frees room in the
 -- bags; nothing opens while junk management is off.
 function LootFeed:OpenTossWindow()
@@ -234,6 +280,10 @@ end
 -- (or is no longer kept) fades out as any row, and sticks again if it becomes
 -- usable before it is gone.
 function LootFeed:CheckUsable(row, now)
+	if row.parts then
+		self:CheckJunk(row, now)
+		return
+	end
 	if row.kind ~= "item" or not row.id then
 		return
 	end
@@ -323,6 +373,7 @@ function LootFeed:OnEnable()
 	self:Apply()
 	Feed.Sources.Start(self, function(entry)
 		local now = Compat.GetTime()
+		entry = self:AsJunk(entry)
 		local row = self.model:Add(entry, now)
 		if row then
 			self:CheckUsable(row, now)

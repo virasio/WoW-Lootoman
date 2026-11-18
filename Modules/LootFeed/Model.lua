@@ -42,11 +42,13 @@ function Model.New(options, now)
 	return model
 end
 
--- What makes two entries one row.
+-- What makes two entries one row: all junk is one row (entry.parts).
 local function keyOf(entry)
 	local kind = entry.kind
 	if kind == "money" or kind == "xp" then
 		return kind
+	elseif entry.parts then
+		return "junk"
 	elseif kind == "reputation" then
 		return "reputation:" .. tostring(entry.name)
 	end
@@ -174,11 +176,29 @@ function ModelMixin:Add(entry, now, force)
 		if row.amount or entry.amount then
 			row.amount = (row.amount or 0) + (entry.amount or 0)
 		end
+		-- The junk row's items, each with its count, in the order they came.
+		local parts = row.parts
 		-- Everything else as the client knows it now: an item looted before its
 		-- data was loaded came without an icon or a quality.
 		for field, value in pairs(entry) do
 			if field ~= "amount" then
 				row[field] = value
+			end
+		end
+		if parts and entry.parts then
+			row.parts = parts
+			for _, part in ipairs(entry.parts) do
+				local found
+				for _, known in ipairs(parts) do
+					if known.key == part.key then
+						found = known
+					end
+				end
+				if found then
+					found.amount = found.amount + part.amount
+				else
+					parts[#parts + 1] = { key = part.key, link = part.link, amount = part.amount, entry = part.entry }
+				end
 			end
 		end
 	else

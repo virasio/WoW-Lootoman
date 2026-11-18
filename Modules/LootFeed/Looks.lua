@@ -50,6 +50,8 @@ Looks.DEFAULTS = {
 	keepToys = false,
 	keepSets = false,
 	keepHeirlooms = false,
+	-- Junk (gray items and items marked as junk) merges into one row.
+	junkRow = true,
 	maxRows = 5,
 	direction = "up",
 	duration = 6,
@@ -142,6 +144,8 @@ function Looks.Settings(view)
 		{ kind = "checkbox", key = "xp", label = L["Experience"] },
 		{ kind = "dropdown", key = "minQuality", label = L["Minimum quality"],
 			tooltip = L["Items of a lower quality are not shown."], choices = qualityChoices() },
+		{ kind = "checkbox", key = "junkRow", label = L["Junk in one row"],
+			tooltip = L["Gray items and items you marked as junk merge into one row, “Junk”, which lists them in its tooltip."] },
 		{ kind = "header", key = "kept", label = L["Kept usable items"] },
 		{ kind = "checkbox", key = "keepUsable", label = L["Keep usable items"],
 			tooltip = L["Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use."] },

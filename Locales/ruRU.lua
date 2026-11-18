@@ -69,6 +69,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Money"] = "Деньги",
 	["Reputation"] = "Репутация",
 	["Minimum quality"] = "Минимальное качество",
+	["Junk in one row"] = "Хлам одной строкой",
+	["Gray items and items you marked as junk merge into one row, “Junk”, which lists them in its tooltip."] = "Серые предметы и предметы, отмеченные как хлам, собираются в одну строку «Хлам», а её подсказка их перечисляет.",
 	["Items of a lower quality are not shown."] = "Предметы более низкого качества не показываются.",
 	["Keep usable items"] = "Не скрывать используемые предметы",
 	["Kept usable items"] = "Используемые предметы",

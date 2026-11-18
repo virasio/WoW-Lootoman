@@ -188,6 +188,78 @@ describe("loot feed module", function()
 		assert.same({ ["150 copper"] = "", ["Linen Cloth"] = "×2" }, shown)
 	end)
 
+	describe("junk in one row", function()
+		local RAG = "|cff9d9d9d|Hitem:700::|h[Rag]|h|r"
+		local BONE = "|cff9d9d9d|Hitem:701::|h[Bone]|h|r"
+		local TOOTH = "|cff9d9d9d|Hitem:702::|h[Tooth]|h|r"
+		local BOX = "|cff9d9d9d|Hitem:703::|h[Box]|h|r"
+
+		before_each(function()
+			Test.SetItems({
+				[2589] = { name = "Linen Cloth", icon = 132889, quality = 1, stackSize = 200 },
+				[700] = { name = "Rag", icon = 1, quality = 0 }, [701] = { name = "Bone", icon = 2, quality = 0 },
+				[702] = { name = "Tooth", icon = 3, quality = 0 }, [703] = { name = "Box", icon = 4, quality = 0 },
+			})
+		end)
+
+		local function loot(link, count)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. link .. (count and ("x" .. count) or ""), "Tester")
+		end
+
+		local function junkRow()
+			for _, row in ipairs(module.model.rows) do
+				if row.parts then
+					return row
+				end
+			end
+		end
+
+		it("gathers gray items and items marked as junk into one row, each counted", function()
+			ns.Marks.Set(2589, "junk")
+			loot(RAG, 2)
+			loot(BONE)
+			loot(LINK, 3)
+			loot(RAG)
+			local row = junkRow()
+			assert.same({ "Junk", 7, 1 }, { row.name, row.amount, #module.model.rows })
+			assert.same({ { 700, 3 }, { 701, 1 }, { 2589, 3 } }, { { row.parts[1].key, row.parts[1].amount },
+				{ row.parts[2].key, row.parts[2].amount }, { row.parts[3].key, row.parts[3].amount } })
+		end)
+
+		it("leaves apart a gray item marked not junk, an item not loaded yet, and everything with the setting off", function()
+			ns.Marks.Set(701, "notJunk")
+			loot(BONE)
+			loot("|Hitem:799::|h[Unknown]|h")
+			assert.is_nil(junkRow())
+			assert.equals(2, #module.model.rows)
+			module:Set("junkRow", false)
+			loot(RAG)
+			assert.is_nil(junkRow())
+		end)
+
+		it("drops junk below the minimum quality as before", function()
+			module:Set("minQuality", 1)
+			loot(TOOTH)
+			assert.same({}, module.model.rows)
+		end)
+
+		it("takes out an item the character can use once the bags hold it, as a kept row", function()
+			loot(RAG)
+			loot(BOX)
+			assert.equals(2, #junkRow().parts)
+			Test.SetBags({ [0] = { size = 16, items = { { itemID = 703, count = 1, use = { openable = true } } } } })
+			local row = junkRow()
+			assert.same({ 1, 1, 700 }, { #row.parts, row.amount, row.parts[1].key })
+			local kept
+			for _, other in ipairs(module.model.rows) do
+				if other.id == 703 then
+					kept = other
+				end
+			end
+			assert.equals("container", kept.sticky)
+		end)
+	end)
+
 	describe("usable items", function()
 		local LETTER = "|cffffffff|Hitem:500::|h[Letter]|h|r"
 		local CLAM = "|cffffffff|Hitem:600::|h[Clam]|h|r"
