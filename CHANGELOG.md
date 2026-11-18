@@ -1,5 +1,13 @@
 # Lootoman changelog
 
+## 0.5.6
+
+Clearer fast autoloot options.
+
+- **A note under *Enable Fast Autoloot*** says that the loot window stays hidden and opens only for what can't be picked up.
+- **The game's Auto Loot box** shows only while fast autoloot is on. It says in one line that fast autoloot works only together with the game's Auto Loot, and a grey line at the bottom says where the game keeps these settings.
+- **Titles on the options page** are capitalized the way the game's own options are.
+
 ## 0.5.5
 
 Safer settings, less work while you play, and easier bug reports.
