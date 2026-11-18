@@ -617,7 +617,7 @@ end
 -- out from the top: a header, a checkbox with its label, or a label over a
 -- slider (with the value beside it) or a dropdown. A setting with a parent
 -- sits indented under it and can be changed only while the parent is on.
-local SETTING_HEIGHT = { header = 30, checkbox = 28, slider = 46, dropdown = 50, text = 48 }
+local SETTING_HEIGHT = { header = 30, checkbox = 28, slider = 46, dropdown = 50, text = 48, color = 30 }
 local INDENT = 20
 
 -- The choices a dropdown setting offers now: the directions follow the view.
@@ -667,6 +667,33 @@ local function createSetting(parent, setting, y)
 		control.label:SetPoint("LEFT", control.check, "RIGHT", 4, 0)
 		control.check:SetScript("OnClick", function(button)
 			LookWindow.Set(setting.key, button:GetChecked() and true or false)
+		end)
+	elseif setting.kind == "color" then
+		-- The look's colour, as the game's options show one; a click opens the
+		-- game's color picker, each colour picked is saved at once, and Cancel
+		-- puts the one before back.
+		control.label:SetPoint("TOPLEFT", x + 4, y - 6)
+		control.swatch = CreateFrame("Button", nil, parent, "ColorSwatchTemplate")
+		control.swatch:SetPoint("LEFT", control.label, "RIGHT", 10, 0)
+		control.swatch:SetScript("OnClick", function()
+			if not ColorPickerFrame then
+				return
+			end
+			local r, g, b = Design.RGB(Looks.Value(edited, setting.key))
+			local function save(red, green, blue)
+				LookWindow.Set(setting.key, Design.Hex(red, green, blue))
+			end
+			ColorPickerFrame:SetupColorPickerAndShow({
+				r = r,
+				g = g,
+				b = b,
+				swatchFunc = function()
+					save(ColorPickerFrame:GetColorRGB())
+				end,
+				cancelFunc = function(previous)
+					save(previous.r, previous.g, previous.b)
+				end,
+			})
 		end)
 	elseif setting.kind == "text" then
 		-- An edit box shows a "|" only doubled and gives a typed one back
@@ -743,6 +770,9 @@ local function createSetting(parent, setting, y)
 		if control.check then
 			control.check:SetChecked(value)
 			control.check:SetEnabled(enabled)
+		elseif control.swatch then
+			control.swatch:SetColorRGB(Design.RGB(value))
+			control.swatch:SetEnabled(enabled and ColorPickerFrame ~= nil)
 		elseif control.input then
 			if not control.input:HasFocus() then
 				control.input:SetText((value:gsub("|", "||")))

@@ -60,6 +60,7 @@ Looks.DEFAULTS = {
 	stagger = 0.15,
 	size = 12,
 	backgroundOpacity = 0,
+	backgroundColor = "000000",
 	glow = true,
 	-- The low-space warning's thresholds: all bags, general bags, the reagent
 	-- bag (off: reagents go into the general bags when their bag is full), and
@@ -182,6 +183,8 @@ function Looks.Settings(view)
 			min = 10, max = 16, step = 1, format = "%d" },
 		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
 		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
+		{ kind = "color", key = "backgroundColor", label = L["Background color"],
+			tooltip = L["The background reaches a little past the rows on every side and fades out there."] },
 	}
 	local timings = {
 		{ kind = "slider", key = "stagger", label = L["Delay between rows"],
@@ -236,6 +239,8 @@ local function allows(view, key, value)
 		return false
 	elseif setting.kind == "text" then
 		return #value <= setting.maxLetters
+	elseif setting.kind == "color" then
+		return value:match("^%x%x%x%x%x%x$") ~= nil
 	end
 	return true
 end

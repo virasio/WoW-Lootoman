@@ -299,10 +299,9 @@ describe("loot feed frames", function()
 			assert.same({ "100 copper@40" }, layout())
 			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, warning.points[1])
 			assert.same({ false, true, 36 }, { warning.Label.shown, warning.Amount.shown, warning.Icon.width })
-			-- The background spans both, evenly behind icons.
-			local background = feed.frame.Background
-			assert.same({ 84, 44 }, { background.width, background.height })
-			assert.same({ 0.5, 0.5 }, { background.gradient[2].a, background.gradient[3].a })
+			-- The background spans both, and fades out past them by a third of an icon.
+			local back = feed.frame.Back
+			assert.same({ 76, 36, 12, 12 }, { back.width, back.height, back.pieces.left.width, back.pieces.top.height })
 			feed:SetOptions(options({ direction = "left", layout = icons }))
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, warning.points[1])
 			-- A stuck icon comes after the warning.
@@ -604,17 +603,34 @@ describe("loot feed frames", function()
 			assert.same({ true, "5" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
-		it("spans one background over the rows on screen, fading to the right", function()
+		it("spans one background over the rows on screen, past them by a third of a row where it fades, easing to their size", function()
+			local rows = feed.options.layout
+			local two, three = 2 * rows.height + rows.gap, 3 * rows.height + 2 * rows.gap
+			local margin = math.floor(rows.height / 3 + 0.5)
 			model:Add({ kind = "money", amount = 100 }, 0)
 			model:Add({ kind = "xp", amount = 50 }, 0)
 			feed:Draw(1)
-			local background = feed.frame.Background
-			assert.is_true(background.shown)
-			assert.same({ 314, 91 }, { background.width, background.height })
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -7, -7 }, background.points[1])
-			assert.same({ "HORIZONTAL", 0.5, 0 }, { background.gradient[1], background.gradient[2].a, background.gradient[3].a })
-			feed:Draw(7)
-			assert.is_false(background.shown)
+			local back, pieces = feed.frame.Back, feed.frame.Back.pieces
+			assert.same({ true, rows.width, two }, { back.shown, back.width, back.height })
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, back.points[1])
+			-- Nine pieces of the fade texture: corners whole, edges stretched along their length, a solid centre.
+			assert.same({ margin, margin, margin, margin }, { pieces.top.height, pieces.left.width, pieces.topLeft.width, pieces.topLeft.height })
+			assert.same({ { 0, 0.5, 0, 0.5 }, { 0.49, 0.51, 0, 0.5 }, { 0.49, 0.51, 0.49, 0.51 } },
+				{ pieces.topLeft.texCoord, pieces.top.texCoord, pieces.center.texCoord })
+			assert.same({ "Interface\\AddOns\\Lootoman\\Art\\Fade", 0.5, { 0, 0, 0 } }, { pieces.center.texture, back.alpha, pieces.center.vertex })
+			-- In the look's colour.
+			feed:SetOptions(options({ color = { 1, 0, 0 }, opacity = 0.3 }))
+			assert.same({ 0.3, { 1, 0, 0 } }, { back.alpha, pieces.bottomRight.vertex })
+			-- A third row: the background eases to it.
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 1)
+			feed:Draw(1)
+			assert.equals(two, back.height)
+			feed:Draw(1 + Frames.EASE / 2)
+			assert.is_true(back.height > two and back.height < three, back.height)
+			feed:Draw(1.5)
+			assert.equals(three, back.height)
+			feed:Draw(9)
+			assert.is_false(back.shown)
 		end)
 
 		it("shows sample rows in Edit Mode, also with no loot", function()

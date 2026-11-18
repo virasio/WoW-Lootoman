@@ -115,6 +115,8 @@ ns.Locales.AddEnglish({
 	"Size",
 	"The size of the text; the icons and rows follow it.",
 	"Background opacity",
+	"Background color",
+	"The background reaches a little past the rows on every side and fades out there.",
 	"%d %%",
 	"Owned count",
 	"Glow for rare items",

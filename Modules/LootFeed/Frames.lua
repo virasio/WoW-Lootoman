@@ -635,34 +635,118 @@ local function release(feed, row, rowFrame)
 end
 
 -- The shared background spans the rows on screen and the warning, from the
--- anchor edge to the farthest one, with the gap as a margin; it fades out to
--- the right, but for icons.
-local function placeBackground(feed)
+-- anchor edge to the farthest one, in the look's colour and opacity, and
+-- reaches past them on every side by a third of a row's height (or an icon's
+-- size), fading out there. It is nine pieces of one texture of Lootoman's
+-- own, made by a script in the project (Art/Fade.tga: white, its alpha
+-- falling off smoothly from its centre): the corners as they are, so the
+-- falloff is round there, the edges stretched only along their length, and a
+-- solid centre over the rows. Its size eases to the rows' in EASE seconds.
+Frames.FADE = [[Interface\AddOns\Lootoman\Art\Fade]]
+Frames.EASE = 0.15
+-- Each piece and its texture coordinates (left, right, top, bottom).
+local PIECES = {
+	center = { 0.49, 0.51, 0.49, 0.51 },
+	top = { 0.49, 0.51, 0, 0.5 },
+	bottom = { 0.49, 0.51, 0.5, 1 },
+	left = { 0, 0.5, 0.49, 0.51 },
+	right = { 0.5, 1, 0.49, 0.51 },
+	topLeft = { 0, 0.5, 0, 0.5 },
+	topRight = { 0.5, 1, 0, 0.5 },
+	bottomLeft = { 0, 0.5, 0.5, 1 },
+	bottomRight = { 0.5, 1, 0.5, 1 },
+}
+local CORNERS = { "topLeft", "topRight", "bottomLeft", "bottomRight" }
+
+-- The fade's width: a third of a row's height, or of an icon's size.
+function Frames.BackgroundMargin(layout)
+	return math.max(1, math.floor(layout.height / 3 + 0.5))
+end
+
+local function createBackground(frame)
+	local back = CreateFrame("Frame", nil, frame)
+	-- Under the rows, which are the feed frame's children too.
+	back:SetFrameLevel(frame:GetFrameLevel())
+	back.pieces = {}
+	for name, coords in pairs(PIECES) do
+		local piece = back:CreateTexture(nil, "BACKGROUND")
+		piece:SetTexture(Frames.FADE)
+		piece:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+		back.pieces[name] = piece
+	end
+	local pieces = back.pieces
+	pieces.center:SetAllPoints(back)
+	pieces.top:SetPoint("BOTTOMLEFT", back, "TOPLEFT")
+	pieces.top:SetPoint("BOTTOMRIGHT", back, "TOPRIGHT")
+	pieces.bottom:SetPoint("TOPLEFT", back, "BOTTOMLEFT")
+	pieces.bottom:SetPoint("TOPRIGHT", back, "BOTTOMRIGHT")
+	pieces.left:SetPoint("TOPRIGHT", back, "TOPLEFT")
+	pieces.left:SetPoint("BOTTOMRIGHT", back, "BOTTOMLEFT")
+	pieces.right:SetPoint("TOPLEFT", back, "TOPRIGHT")
+	pieces.right:SetPoint("BOTTOMLEFT", back, "BOTTOMRIGHT")
+	pieces.topLeft:SetPoint("BOTTOMRIGHT", back, "TOPLEFT")
+	pieces.topRight:SetPoint("BOTTOMLEFT", back, "TOPRIGHT")
+	pieces.bottomLeft:SetPoint("TOPRIGHT", back, "BOTTOMLEFT")
+	pieces.bottomRight:SetPoint("TOPLEFT", back, "BOTTOMRIGHT")
+	back:Hide()
+	return back
+end
+
+-- The look's margin, colour ({ r, g, b }) and opacity (0 to 1).
+local function styleBackground(back, margin, color, opacity)
+	local pieces = back.pieces
+	pieces.top:SetHeight(margin)
+	pieces.bottom:SetHeight(margin)
+	pieces.left:SetWidth(margin)
+	pieces.right:SetWidth(margin)
+	for _, name in ipairs(CORNERS) do
+		pieces[name]:SetSize(margin, margin)
+	end
+	for _, piece in pairs(pieces) do
+		piece:SetVertexColor(color[1], color[2], color[3])
+	end
+	back:SetAlpha(opacity)
+end
+
+-- Places the background over the rows on screen and the warning; returns true
+-- while its size is still easing to theirs.
+local function placeBackground(feed, now)
 	local layout = feed.options.layout
 	local length = sideways(feed) and layout.width or layout.height
 	local far = feed.warning and (warningOffset(feed) + length) or 0
 	for _, rowFrame in pairs(feed.frameOf) do
-		far = math.max(far, rowFrame.offset + length)
+		far = math.max(far, (rowFrame.target or rowFrame.offset) + length)
 	end
-	local background = feed.frame.Background
-	background:SetShown(far > 0)
-	if far > 0 then
-		local margin = layout.gap
-		local direction = feed.options.direction
-		background:ClearAllPoints()
-		if direction == "down" then
-			background:SetPoint("TOPLEFT", feed.frame, "TOPLEFT", -margin, margin)
-		elseif direction == "left" then
-			background:SetPoint("BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", margin, -margin)
-		else
-			background:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -margin, -margin)
-		end
-		if sideways(feed) then
-			background:SetSize(math.max(far, layout.width) + 2 * margin, layout.height + 2 * margin)
-		else
-			background:SetSize(layout.width + 2 * margin, far + 2 * margin)
-		end
+	local back = feed.frame.Back
+	if far <= 0 then
+		back:Hide()
+		feed.backSize = nil
+		return false
 	end
+	local width, height
+	if sideways(feed) then
+		width, height = math.max(far, layout.width), layout.height
+	else
+		width, height = layout.width, far
+	end
+	local direction = feed.options.direction
+	local point = direction == "down" and "TOPLEFT" or direction == "left" and "BOTTOMRIGHT" or "BOTTOMLEFT"
+	back:ClearAllPoints()
+	back:SetPoint(point, feed.frame, point, 0, 0)
+	local size = feed.backSize
+	if not size then
+		size = { width = width, height = height, fromWidth = width, fromHeight = height, toWidth = width, toHeight = height, at = now }
+	elseif size.toWidth ~= width or size.toHeight ~= height then
+		size.fromWidth, size.fromHeight = size.width, size.height
+		size.toWidth, size.toHeight, size.at = width, height, now
+	end
+	local done = math.min(1, math.max(0, (now - size.at) / Frames.EASE))
+	size.width = size.fromWidth + (size.toWidth - size.fromWidth) * done
+	size.height = size.fromHeight + (size.toHeight - size.fromHeight) * done
+	feed.backSize = size
+	back:SetSize(size.width, size.height)
+	back:Show()
+	return done < 1
 end
 
 function Frames.Create(model)
@@ -674,9 +758,7 @@ function Frames.Create(model)
 	frame.PreviewBackground:SetAllPoints()
 	frame.PreviewBackground:SetColorTexture(0, 0, 0, 0.2)
 	frame.PreviewBackground:Hide()
-	frame.Background = frame:CreateTexture(nil, "BACKGROUND")
-	frame.Background:SetColorTexture(1, 1, 1, 1)
-	frame.Background:Hide()
+	frame.Back = createBackground(frame)
 	local feed = setmetatable({
 		frame = frame,
 		model = model,
@@ -753,9 +835,7 @@ function FeedMixin:SetOptions(options)
 	end
 	Frames.ApplyLayout(self.warningRow, layout)
 	placeWarnings(self)
-	-- Behind icons the background is even; behind rows it fades out to the right.
-	local fadeTo = Design.View(layout) == "icons" and options.opacity or 0
-	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, fadeTo))
+	styleBackground(self.frame.Back, Frames.BackgroundMargin(layout), options.color or { 0, 0, 0 }, options.opacity or 0)
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 	end
@@ -876,6 +956,8 @@ function FeedMixin:Draw(now, elapsed)
 			moving = moving or rowFrame.offset ~= target
 		end
 		if rowFrame then
+			-- Where it is going: the background eases to the rows' places once.
+			rowFrame.target = target
 			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total
 				or rowFrame.version ~= self.version or rowFrame.stuck ~= (view.stuck == true)
 				or rowFrame.waiting ~= (view.waiting or 0) or rowFrame.sticky ~= row.sticky then
@@ -891,7 +973,8 @@ function FeedMixin:Draw(now, elapsed)
 			moving = moving or fadeIn < 1 or (view.alpha < 1 and not hovered)
 		end
 	end
-	placeBackground(self)
+	local easing = placeBackground(self, now)
+	moving = moving or easing
 	if self.useButton then
 		self.useButton:Sync(stuck and stuck.row or nil, stuck and stuckPlace(self) or nil)
 	end

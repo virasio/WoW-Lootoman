@@ -368,6 +368,18 @@ describe("loot feed look window", function()
 			assert.same({ 3, false, false, true, false }, shown())
 		end)
 
+		it("picks the background's color on Appearance in the game's color picker, the feed following", function()
+			local swatch, picker = settingOf("backgroundColor").swatch, Loader.ui.colorPicker
+			assert.equals("appearance", settingOf("backgroundColor").setting.tab)
+			swatch.scripts.OnClick(swatch)
+			assert.same({ true, 0, 0, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
+			picker:Pick(0, 0.5, 1)
+			assert.same({ "0080ff", { 0, 128 / 255, 1 } }, { ns.Feed.Looks.Value("Default", "backgroundColor"), swatch.color })
+			assert.same({ 0, 128 / 255, 1 }, module.feed.frame.Back.pieces.center.vertex)
+			picker:Cancel()
+			assert.equals("000000", ns.Feed.Looks.Value("Default", "backgroundColor"))
+		end)
+
 		it("takes the warning's text in a field, a typed | kept single, and shows it in the sample", function()
 			local field = settingOf("slotsText")
 			assert.same({ "Warning text", "{general}+{reagent||1eff00}" }, { field.label.text, field.input:GetText() })

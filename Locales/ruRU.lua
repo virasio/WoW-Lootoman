@@ -111,6 +111,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Size"] = "Размер",
 	["The size of the text; the icons and rows follow it."] = "Размер текста; значки и строки меняются вместе с ним.",
 	["Background opacity"] = "Непрозрачность фона",
+	["Background color"] = "Цвет фона",
+	["The background reaches a little past the rows on every side and fades out there."] = "Фон немного выходит за строки со всех сторон и там затухает.",
 	["%d %%"] = "%d %%",
 	["Owned count"] = "Сколько у вас есть",
 	["Glow for rare items"] = "Свечение редких предметов",

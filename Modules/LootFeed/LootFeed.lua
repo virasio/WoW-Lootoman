@@ -340,6 +340,7 @@ function LootFeed:Apply()
 		maxRows = self:Get("maxRows"),
 		layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size")),
 		opacity = self:Get("backgroundOpacity") / 100,
+		color = { ns.Text.RGB(self:Get("backgroundColor")) },
 		-- Whether the owned count shows is the design's (its part's Shown).
 		showOwned = Feed.Design.Current(self:DesignSection()).parts.owned.shown,
 		showGlow = self:Get("glow"),

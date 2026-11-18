@@ -135,6 +135,7 @@ function methods:SetJustifyH(justify) self.justify = justify end
 function methods:SetTexture(texture) self.texture = texture end
 function methods:SetAtlas(atlas) self.atlas = atlas end
 function methods:SetVertexColor(r, g, b) self.vertex = { r, g, b } end
+function methods:SetTexCoord(...) self.texCoord = { ... } end
 function methods:GetEffectiveScale() return self.scale or 1 end
 function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
