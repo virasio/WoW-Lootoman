@@ -74,3 +74,22 @@ describe("Text.ShortNumber and Text.ShortMoney", function()
 		assert.equals("1,02", (Text.ShortMoney(10245, ",")))
 	end)
 end)
+
+describe("Text colours", function()
+	local Text = require("tests.helpers.loader").LoadAddon().Text
+
+	it("read a colour kept as rrggbb, in either case", function()
+		assert.same({ 1, 128 / 255, 0 }, { Text.RGB("ff8000") })
+		assert.same({ 1, 128 / 255, 0 }, { Text.RGB("FF8000") })
+	end)
+
+	it("give the fallback, or black, for what is not a colour", function()
+		assert.same({ 1, 209 / 255, 0 }, { Text.RGB("gold", "ffd100") })
+		assert.same({ 0, 0, 0 }, { Text.RGB(nil) })
+		assert.same({ 0, 0, 0 }, { Text.RGB("12345") })
+	end)
+
+	it("write a colour as rrggbb, its parts kept between 0 and 1", function()
+		assert.same({ "ff8000", "00ff00" }, { Text.Hex(1, 0.5, 0), Text.Hex(-1, 2, 0) })
+	end)
+end)

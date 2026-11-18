@@ -148,10 +148,10 @@ describe("settings panel, a module with a broken main setting", function()
 		SettingsAPI.Install()
 		local ns = Loader.LoadAddon({ skip = { "Modules/" } })
 		ns.Modules:Register({ name = "Broken", defaults = { enabled = true, rows = 1 },
-			mainSettings = { { kind = "slider", key = "rows", label = "Rows" } } })
+			mainSettings = { { kind = "gauge", key = "rows", label = "Rows" } } })
 		ns.Modules:Register({ name = "Feed", defaults = { enabled = true } })
 		Loader.Start(ns)
-		assert.matches("Broken.rows: the main page takes checkboxes, choices, buttons and custom blocks", ns.Compat.Test.state.errors[1])
+		assert.matches("Broken.rows: the main page takes checkboxes, choices, sliders, colours, buttons and custom blocks", ns.Compat.Test.state.errors[1])
 		local last = ns.SettingsPanel.main.items[#ns.SettingsPanel.main.items]
 		assert.equals("Feed", last.text)
 	end)
@@ -177,7 +177,7 @@ describe("settings panel main page controls", function()
 			name = "Bin",
 			title = "Junk",
 			switchLabel = false,
-			defaults = { enabled = true, button = "full", style = "small", selling = "auto" },
+			defaults = { enabled = true, button = "full", style = "small", selling = "auto", size = 12, tint = "ff8000" },
 			mainSettings = {
 				{ kind = "choice", key = "button", label = "Button", choices = { { "never", "Never" }, { "always", "Always" }, { "full", "Full" } } },
 				{ kind = "choice", key = "style", label = "Style", level = 2, choices = { { "small", "Small" }, { "large", "Large" } },
@@ -185,6 +185,10 @@ describe("settings panel main page controls", function()
 				{ kind = "choice", key = "selling", label = "Selling",
 					choices = { { "auto", "Auto" }, { "button", "Button" }, { "window", "Window" } } },
 				{ kind = "button", key = "list", label = "Junk list", click = function() ns.listOpened = true end },
+				{ kind = "slider", key = "size", label = "Size", min = 8, max = 24, step = 1, tooltip = "How big.",
+					enabledWhen = function() return ns.Storage:Get("Bin", "button") ~= "never" end },
+				{ kind = "color", key = "tint", label = "Tint", level = 2,
+					enabledWhen = function() return ns.Storage:Get("Bin", "button") ~= "never" end },
 				{ kind = "custom", build = function(built, indent)
 					local box = built:AddBox("Watch out", 60, { indent = indent, visible = function() return shownBox end })
 					box.inside = true
@@ -203,7 +207,7 @@ describe("settings panel main page controls", function()
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
 		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
-			"box:Watch out:24", "checkbox:Show the feed:0", "checkbox:Glow:24" }, list)
+			"slider:Size:24", "color:Tint:48", "box:Watch out:24", "checkbox:Show the feed:0", "checkbox:Glow:24" }, list)
 	end)
 
 	it("show a checkbox's note under its label in the small white font, as tall as its lines, the row with it", function()
@@ -267,6 +271,52 @@ describe("settings panel main page controls", function()
 		assert.equals("never", ns.Storage:Get("Bin", "button"))
 		assert.same({ "Never*", "Always", "Full" }, radios(button))
 		assert.same({ "Auto*", "Button", "Window" }, radios(dropdownOf("Selling")))
+	end)
+
+	-- The control a row holds: the first frame made in it with this template.
+	local function controlOf(text, template)
+		local row = itemOf(text).region
+		for _, frame in ipairs(Loader.ui.frames) do
+			if frame.parent == row and frame.template == template then
+				return frame
+			end
+		end
+	end
+
+	it("show a number setting on a slider at the rows' control column, with its value after it", function()
+		local slider = controlOf("Size", "MinimalSliderWithSteppersTemplate")
+		assert.same({ 12, { 8, 24, 16 }, "12" }, { slider.value, slider.range, slider.valueLabel.text })
+	end)
+
+	it("save a slider's value on its step and within its range, and show the stored one", function()
+		local slider = controlOf("Size", "MinimalSliderWithSteppersTemplate")
+		slider.callbacks.OnValueChanged[1](nil, 15.4)
+		assert.equals(15, ns.Storage:Get("Bin", "size"))
+		slider.callbacks.OnValueChanged[1](nil, 99)
+		assert.equals(24, ns.Storage:Get("Bin", "size"))
+		ns.Storage:Set("Bin", "size", 3)
+		assert.same({ 8, "8" }, { slider.value, slider.valueLabel.text })
+	end)
+
+	it("show a colour on the game's swatch, and pick it with the game's colour picker", function()
+		local swatch = controlOf("Tint", "ColorSwatchTemplate")
+		assert.same({ 1, 128 / 255, 0 }, swatch.color)
+		swatch.scripts.OnClick(swatch)
+		local picker = Loader.ui.colorPicker
+		assert.same({ true, 1, 128 / 255, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
+		picker:Pick(0, 0.5, 1)
+		assert.same({ "0080ff", { 0, 128 / 255, 1 } }, { ns.Storage:Get("Bin", "tint"), swatch.color })
+		picker:Cancel()
+		assert.equals("ff8000", ns.Storage:Get("Bin", "tint"))
+	end)
+
+	it("grey out a slider and a colour while their condition does not hold", function()
+		local slider, swatch = controlOf("Size", "MinimalSliderWithSteppersTemplate"), controlOf("Tint", "ColorSwatchTemplate")
+		ns.Storage:Set("Bin", "button", "never")
+		assert.same({ false, false, 0.4, "GameFontDisable", "GameFontDisable" },
+			{ slider.enabled, swatch.enabled, swatch.alpha, itemOf("Size").region.label.fontObject, slider.valueLabel.fontObject })
+		ns.Storage:Set("Bin", "button", "full")
+		assert.same({ true, true, 1 }, { slider.enabled, swatch.enabled, swatch.alpha })
 	end)
 
 	it("grey out a control while its condition does not hold", function()

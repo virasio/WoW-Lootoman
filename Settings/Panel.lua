@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
+local Bus, Compat, Modules, Storage, Text = ns.Bus, ns.Compat, ns.Modules, ns.Storage, ns.Text
 
 -- The addon's page in the game options, registered with Blizzard's Settings
 -- API on Ready. It has no subpages: what does not fit is in the addon's own
@@ -350,6 +350,81 @@ function MainPage:AddChoice(module, key, label, choices, options)
 	return dropdown
 end
 
+-- A number setting: its label, then the game's slider with steppers at the
+-- control column and the value after it. spec: min, max, step and format (a
+-- format string or a function of the value; "%d" by default). A value out of
+-- range or off a step shows as the nearest one. options: indent, requires,
+-- enabledWhen, tooltip. Returns the slider.
+function MainPage:AddSlider(module, key, label, spec, options)
+	options = options or {}
+	local row = self:NewRow()
+	local slider = CreateFrame("Frame", nil, row, "MinimalSliderWithSteppersTemplate")
+	slider:SetSize(Panel.DROPDOWN_WIDTH - 50, 20)
+	local value = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	value:SetPoint("LEFT", slider, "RIGHT", 12, 0)
+	slider.valueLabel = value
+	-- Showing the stored value moves the slider too: not a change of the player's.
+	local updating = false
+	slider:RegisterCallback(MinimalSliderWithSteppersMixin.Event.OnValueChanged, function(_, number)
+		if not updating then
+			Storage:Set(module, key, Storage.OnStep(number, spec.min, spec.max, spec.step))
+		end
+	end, slider)
+	self:AddRow(label, slider, { indent = options.indent, height = Panel.DROPDOWN_HEIGHT, tooltip = options.tooltip, kind = "slider" })
+	local format = spec.format or "%d"
+	self:OnRefresh(function()
+		local current = Storage.OnStep(tonumber(Storage:Get(module, key)) or spec.min, spec.min, spec.max, spec.step)
+		local isEnabled = enabled(options.requires, options.enabledWhen)
+		updating = true
+		slider:Init(current, spec.min, spec.max, math.floor((spec.max - spec.min) / spec.step + 0.5))
+		updating = false
+		slider:SetEnabled(isEnabled)
+		value:SetText(type(format) == "function" and format(current) or format:format(current))
+		setTextEnabled(row.label, isEnabled)
+		setTextEnabled(value, isEnabled, "GameFontHighlight")
+	end)
+	return slider
+end
+
+-- A colour setting, kept as "rrggbb": its label, then the game's colour
+-- swatch at the control column. A click opens the game's colour picker; each
+-- colour picked is saved at once, and Cancel puts the one before back.
+-- options: indent, requires, enabledWhen, tooltip. Returns the swatch.
+function MainPage:AddColor(module, key, label, options)
+	options = options or {}
+	local row = self:NewRow()
+	local swatch = CreateFrame("Button", nil, row, "ColorSwatchTemplate")
+	local function save(r, g, b)
+		Storage:Set(module, key, Text.Hex(r, g, b))
+	end
+	swatch:SetScript("OnClick", function()
+		if not ColorPickerFrame then
+			return
+		end
+		local r, g, b = Text.RGB(Storage:Get(module, key))
+		ColorPickerFrame:SetupColorPickerAndShow({
+			r = r,
+			g = g,
+			b = b,
+			swatchFunc = function()
+				save(ColorPickerFrame:GetColorRGB())
+			end,
+			cancelFunc = function(previous)
+				save(previous.r, previous.g, previous.b)
+			end,
+		})
+	end)
+	self:AddRow(label, swatch, { indent = options.indent, height = 26, tooltip = options.tooltip, kind = "color" })
+	self:OnRefresh(function()
+		local isEnabled = enabled(options.requires, options.enabledWhen)
+		swatch:SetColorRGB(Text.RGB(Storage:Get(module, key)))
+		swatch:SetEnabled(isEnabled)
+		swatch:SetAlpha(isEnabled and 1 or 0.4)
+		setTextEnabled(row.label, isEnabled)
+	end)
+	return swatch
+end
+
 -- A button with text, which runs onClick. options: indent, requires,
 -- enabledWhen, tooltip.
 function MainPage:AddButton(text, onClick, options)
@@ -409,8 +484,8 @@ end
 -- then what goes under it, indented: the module's main settings, which can be
 -- changed only while it is on. A main setting is a checkbox (with gap, the
 -- room above it, and note), checkboxes in columns (items, columns), a choice
--- (a dropdown), a button, or a custom builder(page, indent, module), each with
--- an optional enabledWhen().
+-- (a dropdown), a slider (min, max, step, format), a colour, a button, or a
+-- custom builder(page, indent, module), each with an optional enabledWhen().
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
@@ -432,13 +507,19 @@ local function addModule(page, module)
 		elseif setting.kind == "choice" then
 			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = indent, requires = requires,
 				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
+		elseif setting.kind == "slider" then
+			page:AddSlider(module.name, setting.key, setting.label, setting, { indent = indent, requires = requires,
+				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
+		elseif setting.kind == "color" then
+			page:AddColor(module.name, setting.key, setting.label, { indent = indent, requires = requires,
+				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
 		elseif setting.kind == "button" then
 			page:AddButton(setting.label, setting.click, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
 				tooltip = setting.tooltip })
 		elseif setting.kind == "custom" then
 			setting.build(page, indent, module)
 		else
-			error(("%s.%s: the main page takes checkboxes, choices, buttons and custom blocks"):format(module.name, tostring(setting.key)))
+			error(("%s.%s: the main page takes checkboxes, choices, sliders, colours, buttons and custom blocks"):format(module.name, tostring(setting.key)))
 		end
 	end
 end
