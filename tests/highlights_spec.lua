@@ -519,7 +519,7 @@ describe("gathering highlights on the options page", function()
 			texts[#texts + 1] = tostring(entry.text)
 		end
 		assert.is_truthy(table.concat(texts, "|"):find(
-			"Highlight Lootable Objects|Sparkles|Intensity|Color|What to Highlight|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather",
+			"Highlight Lootable Objects|Intensity|Sparkle Color|What to Highlight|Quest Objects|Herbs|Chests|Ore|Only Herbs and Ore You Can Gather",
 			1, true))
 		-- The kinds two to a row, quest objects and chests on the left, herbs and ore on the right at the
 		-- rows' control column, each in a cell of its own (the hover lights only the cell); the
@@ -549,13 +549,14 @@ describe("gathering highlights on the options page", function()
 		local kinds = {}
 		for _, entry in ipairs(page.items) do
 			local text = entry.text
-			if text == "Sparkles" or text == "Intensity|Color" or text == "What to Highlight" or text == "Above the Object"
+			if text == "Intensity" or text == "Sparkle Color" or text == "What to Highlight" or text == "Above the Object"
 				or text == "Opacity" or text == "Text Size" or text == "Text Color" or text == "Text Style" then
 				kinds[#kinds + 1] = entry.kind .. "@" .. entry.indent .. "+" .. entry.gap
 			end
 		end
-		-- Three groups: the sparkles and what to highlight under headings, a bigger gap before each next group.
-		assert.same({ "heading@24+6", "controls@48+6", "heading@24+16", "choice@24+16", "slider@48+6", "slider@48+6", "color@48+6",
+		-- The stars' settings right under the switch; what to highlight under its heading, and what shows
+		-- above the object, a bigger gap before each.
+		assert.same({ "slider@24+6", "color@24+6", "heading@24+16", "choice@24+16", "slider@48+6", "slider@48+6", "color@48+6",
 			"choice@48+6" }, kinds)
 		local function label(text)
 			for _, entry in ipairs(page.items) do

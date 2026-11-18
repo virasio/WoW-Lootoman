@@ -41,7 +41,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 - The object you are about to loot sparkles with a few small gold stars: the one your Interact key would use, within about 15 yards. Herbs, ore veins, chests and quest objects all sparkle alike, each kind with its own switch under *Highlight Lootable Objects*. The sparkles are bright in reach, quieter further away, and faint on what you can't use yet (a locked chest, too little skill).
 - *Only Herbs and Ore You Can Gather* (on by default) lights herbs only with Herbalism and ore only with Mining; turn it off to see them anyway, say to help a friend who gathers.
-- Under *Sparkles*, *Intensity* and *Color* set how bright the stars are and their colour (gold by default); under *What to Highlight*, the kinds.
+- *Intensity* and *Sparkle Color*, right under the switch, set how bright the stars are and their colour (gold by default); the kinds are under *What to Highlight*.
 - Over the stars, the object's interaction icon and its name under it (*Above the Object*: *Icon and name* by default, *Icon*, or *Nothing*), at an opacity of their own. The name's size, colour (white by default) and style are yours: the game's shadow, an outline, a thick outline, or a dark backdrop, so it reads over any landscape. The game's own icon stays off over a sparkling object, so you see one icon only.
 - One object at a time: the game tells addons only about the one its soft targeting picks.
 - Chests are known by their cursor and name, and any object you loot that is none of the kinds counts as a chest from then on.

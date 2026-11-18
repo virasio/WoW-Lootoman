@@ -43,16 +43,13 @@ local Highlights = ns.Modules:Register({
 	description = L["The object you are about to loot sparkles: the one your Interact key would use, within about 15 yards."],
 	defaults = { enabled = true, herbs = true, ore = true, chests = true, quest = true, gatherable = true,
 		intensity = 100, starColor = "ffd100", label = "name", labelOpacity = 100, textSize = 12, textColor = "ffffff", textStyle = "outline" },
-	-- Three groups: the sparkles (their intensity and colour on one row); what
-	-- to highlight, the kinds in two columns (quest objects and chests on the
-	-- left, herbs and ore on the right; the rows fill from the left) over the
-	-- profession option a little apart; and what shows above the object.
+	-- Right under the switch, how the stars look; then what to highlight, the
+	-- kinds in two columns (quest objects and chests on the left, herbs and ore
+	-- on the right; the rows fill from the left) over the profession option a
+	-- little apart; then what shows above the object.
 	mainSettings = {
-		{ kind = "heading", label = L["Sparkles"] },
-		{ kind = "controls", level = 2, items = {
-			{ kind = "slider", key = "intensity", label = L["Intensity"], min = 10, max = 100, step = 10, format = L["%d %%"] },
-			{ kind = "color", key = "starColor", label = L["Color"] },
-		} },
+		{ kind = "slider", key = "intensity", label = L["Intensity"], min = 10, max = 100, step = 10, format = L["%d %%"] },
+		{ kind = "color", key = "starColor", label = L["Sparkle Color"] },
 		{ kind = "heading", label = L["What to Highlight"], gap = 16 },
 		{ kind = "checkboxes", level = 2, columns = 2, items = {
 			{ kind = "checkbox", key = "quest", label = L["Quest Objects"] },

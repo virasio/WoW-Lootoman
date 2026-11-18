@@ -351,8 +351,8 @@ function MainPage:AddChoice(module, key, label, choices, options)
 	return dropdown
 end
 
--- The value after a slider, as wide as "100 %": what follows it on the row
--- stays put while the value changes.
+-- The value after a slider, as wide as "100 %", so it does not jump while
+-- it changes.
 Panel.SLIDER_VALUE_WIDTH = 48
 
 -- The game's slider with steppers for a number setting, in row, with its
@@ -453,51 +453,6 @@ function MainPage:AddColor(module, key, label, options)
 	return swatch
 end
 
--- Settings side by side on one row: the first one's label on the left and
--- its control at the control column, as on a row of its own; each next one's
--- label after the control before it, and its control after the label. items:
--- { { kind = "slider" or "color", key, label, tooltip, enabledWhen, and a
--- slider's min, max, step, format }, … }. options: indent, gap, requires,
--- enabledWhen. The row's text is the labels joined by "|"; row.labels holds
--- them. Returns the row.
-function MainPage:AddControls(module, items, options)
-	options = options or {}
-	local row = self:NewRow()
-	row.labels, row.controls = {}, {}
-	local texts, previous = {}, nil
-	for index, item in ipairs(items) do
-		local label = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		label:SetText(item.label)
-		local function labelOf()
-			return label
-		end
-		local each = { requires = options.requires, enabledWhen = item.enabledWhen or options.enabledWhen }
-		local control, tail
-		if item.kind == "slider" then
-			control, tail = newSlider(self, row, module, item.key, item, each, labelOf)
-		elseif item.kind == "color" then
-			control = newColor(self, row, module, item.key, each, labelOf)
-			tail = control
-		else
-			error(("%s.%s: a row of settings takes sliders and colours"):format(module, tostring(item.key)))
-		end
-		if index == 1 then
-			label:SetPoint("LEFT", row, "LEFT", 0, 0)
-			control:SetPoint("LEFT", row, "LEFT", Panel.CONTROL_X - Panel.LEFT - (options.indent or 0), 0)
-			row.label = label
-		else
-			label:SetPoint("LEFT", previous, "RIGHT", 16, 0)
-			control:SetPoint("LEFT", label, "RIGHT", 8, 0)
-		end
-		addTooltip(control, item.label, item.tooltip)
-		row.labels[index], row.controls[index] = label, control
-		texts[index] = item.label
-		previous = tail
-	end
-	return self:Add("controls", row, Panel.DROPDOWN_HEIGHT, { indent = options.indent, text = table.concat(texts, "|"), wide = true,
-		gap = options.gap })
-end
-
 -- A heading over a group of a module's settings, in the font of the
 -- checkboxes' labels, greyed with its module (requires). options: indent,
 -- gap, requires.
@@ -574,9 +529,8 @@ end
 -- changed only while it is on. A main setting is a heading (label) over a
 -- group of them, a checkbox (with note), checkboxes in columns (items,
 -- columns), a choice (a dropdown), a slider (min, max, step, format), a
--- colour, sliders and colours side by side (controls, with items), a button,
--- or a custom builder(page, indent, module), each with an optional
--- enabledWhen() and gap, the room above it.
+-- colour, a button, or a custom builder(page, indent, module), each with an
+-- optional enabledWhen() and gap, the room above it.
 local function addModule(page, module)
 	local requires
 	if module.switchLabel == false then
@@ -591,9 +545,6 @@ local function addModule(page, module)
 		local indent = Panel.INDENT * (setting.level or 1)
 		if setting.kind == "heading" then
 			page:AddHeading(setting.label, { indent = indent, gap = setting.gap, requires = requires })
-		elseif setting.kind == "controls" then
-			page:AddControls(module.name, setting.items, { indent = indent, gap = setting.gap, requires = requires,
-				enabledWhen = setting.enabledWhen })
 		elseif setting.kind == "checkbox" then
 			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen, setting.gap,
 				setting.note)
@@ -615,7 +566,7 @@ local function addModule(page, module)
 		elseif setting.kind == "custom" then
 			setting.build(page, indent, module)
 		else
-			error(("%s.%s: the main page takes headings, checkboxes, choices, sliders, colours, rows of them, buttons and custom blocks"):format(module.name, tostring(setting.key)))
+			error(("%s.%s: the main page takes headings, checkboxes, choices, sliders, colours, buttons and custom blocks"):format(module.name, tostring(setting.key)))
 		end
 	end
 end
