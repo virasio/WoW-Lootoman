@@ -66,14 +66,15 @@ describe("loot feed look window", function()
 			window = LookWindow.window
 		end)
 
-		it("shows the sample rows, each in its box, and the row in the inspector", function()
+		it("shows the sample rows as the feed draws them, and the row in the inspector", function()
 			assert.is_true(window.shown)
 			assert.equals(8, #window.rows)
 			-- Each row takes clicks on its free space, the stuck sample too.
 			assert.same({ true, true }, { window.rows[1].mouseClicks, window.rows[7].mouseClicks })
 			-- Last, the low-space warning, drawn by the design too.
 			assert.same({ "Few free bag slots", "|cffffffff2|r|cffffffff+|r|cff1eff001|r" }, { window.rows[8].Label.text, window.rows[8].Amount.text })
-			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
+			-- Drawn as the feed's rows: with the design's background off, nothing behind them.
+			assert.is_false(window.rows[1].RowBackground.shown)
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
 			assert.same({ "Row Height: 35 in 12..80", "Width: 300 in 120..600", "With Background: false",
@@ -213,7 +214,6 @@ describe("loot feed look window", function()
 			assert.same({ 1, 1 }, edges)
 			LookWindow.Select("icon")
 			assert.same({ "TOPLEFT", row.Icon, "TOPLEFT", -2, 2 }, row.Selected.points[1])
-			assert.equals(0.5, row.Box.alpha)
 			-- The name's maximum width of 200 (185 drawn at 12 of 13), not the width of its text.
 			LookWindow.Select("name")
 			assert.same({ { "TOPLEFT", row.Label, "TOPLEFT", -2, 2 }, 189 }, { row.Selected.points[1], row.Selected.width })

@@ -343,7 +343,6 @@ function LookWindow.Refresh()
 		else
 			top = top + layout.height + layout.gap
 		end
-		rowFrame.Box:SetAlpha(selected == "row" and 1 or 0.5)
 		mark(rowFrame, layout)
 		window.layout = layout
 		for part, hit in pairs(rowFrame.hits) do
@@ -1165,11 +1164,9 @@ local function build()
 	frame.samples[#frame.samples + 1] = { row = Frames.SampleWarning(), alpha = 1 }
 	frame.rows = {}
 	for index = 1, #frame.samples do
+		-- Drawn as the feed draws its rows, with nothing behind them of their
+		-- own: the gold frame shows the chosen row's edges.
 		local rowFrame = Frames.CreateRow(frame.stage)
-		-- The row's box: the space its parts are placed in.
-		rowFrame.Box = rowFrame:CreateTexture(nil, "BACKGROUND")
-		rowFrame.Box:SetAllPoints()
-		rowFrame.Box:SetColorTexture(1, 1, 1, 0.12)
 		rowFrame.Selected = createBorder(rowFrame)
 		-- A click on the row's free space chooses the row; the feed's rows only
 		-- take the mouse for tooltips.
