@@ -198,6 +198,11 @@ end
 -- Over an item or a currency the game's tooltip; over money, experience and
 -- reputation what their row says in full, as an icon cannot.
 local function showTooltip(rowFrame)
+	-- The chat-link modifier read again: a Shift let go outside the game
+	-- (after alt-tab) sends no event, and would leave the rows taking clicks.
+	if rowFrame.feed then
+		rowFrame.feed:SetLinkModifier(Compat.IsChatLinkHeld())
+	end
 	local row = rowFrame.data
 	if not row then
 		return
@@ -348,7 +353,7 @@ function Frames.CreateRow(parent)
 		-- The game's modified clicks on an item (its link into the chat with
 		-- Shift), as in the bags; a right click equips gear.
 		if self.feed and row and row.kind == "item" and row.link and self ~= self.feed.warningRow then
-			if button == "LeftButton" and Frames.ModifiedClick(row.link) then
+			if button == "LeftButton" and Compat.ModifiedItemClick(row.link) then
 				return
 			elseif button == "RightButton" and not self.stuck and Frames.IsGear(row) then
 				Compat.EquipItem(row.link)
@@ -537,20 +542,6 @@ end
 function Frames.IsGear(row)
 	return row.kind == "item" and row.link ~= nil and not row.parts and Compat.IsEquippableItem(row.link)
 		and Compat.GetItemCount(row.link, true) > 0
-end
-
--- The game's modified click on an item, as its bags handle one (the chat link
--- with Shift, the dressing room with Ctrl); true when one was made. A client
--- without it still links with the chat-link modifier.
-function Frames.ModifiedClick(link)
-	if HandleModifiedItemClick then
-		return HandleModifiedItemClick(link) == true
-	end
-	if IsModifiedClick("CHATLINK") and ChatFrameUtil and ChatFrameUtil.InsertLink then
-		ChatFrameUtil.InsertLink(link)
-		return true
-	end
-	return false
 end
 
 -- The junk row's icon: the sell-junk icon Lootoman's toss and sell buttons use.

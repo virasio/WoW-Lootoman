@@ -190,10 +190,10 @@ describe("loot feed module", function()
 	end)
 
 	it("lets item rows take clicks while the chat-link modifier is held", function()
-		Loader.ui.modifiers.CHATLINK = true
+		Test.SetModifier("CHATLINK", true)
 		Test.FireEvent("MODIFIER_STATE_CHANGED", "LSHIFT", 1)
 		assert.is_true(module.feed.linkModifier)
-		Loader.ui.modifiers.CHATLINK = nil
+		Test.SetModifier("CHATLINK", nil)
 		Test.FireEvent("MODIFIER_STATE_CHANGED", "LSHIFT", 0)
 		assert.is_false(module.feed.linkModifier)
 	end)

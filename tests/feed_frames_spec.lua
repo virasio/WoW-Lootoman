@@ -243,13 +243,14 @@ describe("loot feed frames", function()
 			feed:SetLinkModifier(true)
 			feed:Draw(2)
 			assert.same({ true, true, false }, { sword.mouseClicks, cloth.mouseClicks, money.mouseClicks })
-			Loader.ui.modifiers.CHATLINK = true
+			ns.Compat.Test.SetModifier("CHATLINK", true)
 			cloth.scripts.OnMouseUp(cloth, "LeftButton")
-			assert.same({ LINK }, Loader.ui.modifiedClicks)
-			Loader.ui.modifiers.CHATLINK = nil
-			feed:SetLinkModifier(false)
+			assert.same({ LINK }, ns.Compat.Test.state.linked)
+			-- Shift let go outside the game sends no event: pointing at a row reads it again.
+			ns.Compat.Test.SetModifier("CHATLINK", nil)
+			sword.scripts.OnEnter(sword)
 			feed:Draw(3)
-			assert.is_false(cloth.mouseClicks)
+			assert.same({ false, true, false }, { feed.linkModifier, sword.mouseClicks, cloth.mouseClicks })
 		end)
 
 		local GENERAL = { amount = "|cffffffff3|r", lines = { "General bags: 3 of 16 free" } }

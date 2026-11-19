@@ -435,7 +435,7 @@ function LootFeed:OnEnable()
 	end)
 	-- Shift held: every item row takes clicks, for its link into the chat.
 	self:OnEvent("MODIFIER_STATE_CHANGED", function()
-		self.feed:SetLinkModifier(IsModifiedClick("CHATLINK") == true)
+		self.feed:SetLinkModifier(Compat.IsChatLinkHeld())
 	end)
 	-- The warning's click opens the toss window only while junk management is on.
 	self:On("ModuleToggled", function(_, name)
