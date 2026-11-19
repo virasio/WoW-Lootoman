@@ -1302,9 +1302,10 @@ function LookWindow.Open(name)
 	return true
 end
 
+-- The profile's look, or the look the window shows already.
 function LookWindow.OpenFromEditMode()
 	local wasShown = window ~= nil and window:IsShown()
-	if LookWindow.Open() and not wasShown then
+	if LookWindow.Open(wasShown and edited or nil) and not wasShown then
 		fromEditMode = true
 	end
 end

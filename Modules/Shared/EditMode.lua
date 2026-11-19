@@ -349,11 +349,18 @@ function EditMode.Register(module, frame, options)
 		windows[frame] = options.window
 		watchDialog()
 		-- The frame's selection, as the library keeps it: a click opens the window,
-		-- also on a frame picked already.
+		-- also on a frame picked already, but not a press that drags the frame.
 		local selection = type(lib.frameSelections) == "table" and lib.frameSelections[frame]
 		if selection and selection.HookScript then
+			local dragged = false
 			selection:HookScript("OnMouseDown", function()
-				if not Compat.InCombat() then
+				dragged = false
+			end)
+			selection:HookScript("OnDragStart", function()
+				dragged = true
+			end)
+			selection:HookScript("OnMouseUp", function()
+				if not dragged and not Compat.InCombat() then
 					options.window()
 				end
 			end)

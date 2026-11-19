@@ -264,14 +264,22 @@ describe("Edit Mode", function()
 		local own = newFrame()
 		ns.EditMode.Register(module, own, { default = { point = "CENTER", x = 0, y = 0 }, window = function() opened = opened + 1 end })
 		local dialog, selection = lib.internal.dialog, lib.frameSelections[own]
+		local function click(drag)
+			selection.scripts.OnMouseDown(selection)
+			if drag then
+				selection.scripts.OnDragStart(selection)
+			end
+			selection.scripts.OnMouseUp(selection)
+		end
 		-- The library shows the dialog as the frame is clicked; the click opens the window.
 		dialog:Update(selection)
-		selection.scripts.OnMouseDown(selection)
+		click()
 		assert.same({ false, true, true, 1 }, { dialog.shown, selection.selected, own.movable, opened })
-		-- A click on the picked frame opens it again; not in a fight.
-		selection.scripts.OnMouseDown(selection)
+		-- A click on the picked frame opens it again; not a drag, not in a fight.
+		click()
+		click(true)
 		ns.Compat.Test.SetCombat(true)
-		selection.scripts.OnMouseDown(selection)
+		click()
 		assert.equals(2, opened)
 		-- Other frames keep the dialog.
 		dialog:Update({ parent = newFrame() })

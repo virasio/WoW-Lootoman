@@ -756,13 +756,29 @@ describe("loot feed look window, opened from", function()
 		edit.scripts.OnClick(edit)
 		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
 		LookWindow.window:Hide()
-		-- In Edit Mode the library's dialog does not show for the feed: its window opens, and the
-		-- feed stays picked and movable, to be dragged.
+		-- In Edit Mode the library's dialog does not show for the feed: its window opens on a
+		-- click, and the feed stays picked and movable, to be dragged; a press that drags the
+		-- feed opens nothing.
 		local frame = ns.Modules:Get("LootFeed").feed.frame
 		local selection = lib.frameSelections[frame]
 		lib.internal.dialog:Update(selection)
 		selection.scripts.OnMouseDown(selection)
+		selection.scripts.OnDragStart(selection)
+		selection.scripts.OnMouseUp(selection)
+		assert.is_false(LookWindow.window.shown)
+		selection.scripts.OnMouseDown(selection)
+		selection.scripts.OnMouseUp(selection)
 		assert.same({ false, true, true, true }, { lib.internal.dialog.shown, selection.selected, frame.movable == true, LookWindow.window.shown })
+		-- A click on the feed keeps the look the window shows; opened by it, the window shows
+		-- the profile's look.
+		LookWindow.Open("Raid")
+		selection.scripts.OnMouseDown(selection)
+		selection.scripts.OnMouseUp(selection)
+		assert.equals("Raid", LookWindow.Edited())
+		LookWindow.window:Hide()
+		selection.scripts.OnMouseDown(selection)
+		selection.scripts.OnMouseUp(selection)
+		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
 		-- Another addon's frame keeps the dialog.
 		lib.internal.dialog:Update({ parent = {} })
 		assert.is_true(lib.internal.dialog.shown)
