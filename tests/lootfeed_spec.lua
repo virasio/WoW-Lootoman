@@ -156,7 +156,7 @@ describe("loot feed module", function()
 		it("open the toss window with a click while junk management is on", function()
 			bags(2)
 			local opened = 0
-			ns.Bus:On("OpenTossWindow", "test", function() opened = opened + 1 end)
+			ns.Bus:On("OpenJunkWindow", "test", function() opened = opened + 1 end)
 			assert.is_true(module.feed.warning.clickable)
 			module.feed.onWarningClick()
 			assert.equals(1, opened)

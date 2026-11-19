@@ -433,8 +433,12 @@ end
 
 -- LootomanCharDB
 Migrations.character = {
-	-- 1: an empty table; per-character data arrives with later releases.
+	-- 1: an empty table, and (0.4.5 to 0.5.9) the session's sales log.
 	function() end,
+	-- 2: the sales log is gone, with the command that listed it.
+	function(data)
+		data.session = nil
+	end,
 }
 
 -- Returns the data and a status: "new", "current", "upgraded", "newer" for

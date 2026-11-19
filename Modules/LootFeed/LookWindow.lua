@@ -4,7 +4,7 @@ local Feed = ns.Feed
 
 -- The feed look window: everything about one feed look (Looks.lua) in one
 -- window, opened from Edit in a look's menu (LookMenu.lua), or with
--- /lootoman design for the profile's look. At its top, a dropdown of the
+-- /ltm feed for the profile's look. At its top, a dropdown of the
 -- looks showing the look the window edits, with the look menu; choosing a
 -- look there edits it, and Apply beside it, shown while the profile uses
 -- another look, makes the profile use it. On the right, sample rows of every
@@ -1348,4 +1348,4 @@ function LookWindow.Toggle()
 	end
 end
 
-ns.Slash.Register("design", LookWindow.Toggle, L["/lootoman design: open the window of the loot feed's look"])
+ns.Slash.Register("feed", LookWindow.Toggle, L["/ltm feed: open the loot feed's look window"])

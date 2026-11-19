@@ -1,7 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
--- The toss button on Blizzard's loot window: it opens the toss window. It is a
+-- The toss button on Blizzard's loot window: it opens the junk window. It is a
 -- child of LootFrame, so it goes wherever the window goes: its show and hide
 -- animations, its place in Edit Mode, and fast autoloot's hidden holder.
 -- Nothing of Blizzard's is changed; the button only hooks the window's OnShow.

@@ -8,21 +8,16 @@ ns.Locales.AddTranslation("ruRU", {
 	["%sM"] = "%sM",
 
 	-- Core/Startup.lua
-	["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
-	["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
+	["Your options were saved by a newer version of Lootoman. They are kept as they are, and this version uses default options until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
+	["Lootoman could not upgrade your options to this version. They are kept as they were, and this session uses default options. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
 
 	-- Core/Slash.lua
-	["Debug messages are on for all characters."] = "Отладочные сообщения включены для всех персонажей.",
-	["Debug messages are off for all characters."] = "Отладочные сообщения выключены для всех персонажей.",
-	["Unknown value “%s”. Use /lootoman debug on, off or clear."] = "Неизвестное значение «%s». Используйте /lootoman debug on, off или clear.",
 	["Commands:"] = "Команды:",
-	["/lootoman or /ltm: open the settings"] = "/lootoman или /ltm: открыть настройки",
-	["/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones"] = "/lootoman debug [on | off | clear]: показать, включить или выключить отладочные сообщения либо очистить сохранённые",
-	["The saved debug messages and self-test are cleared."] = "Сохранённые отладочные сообщения и самопроверка очищены.",
-	["/lootoman selftest: check the addon against the game client"] = "/lootoman selftest: проверить работу аддона с клиентом игры",
+	["/ltm or /lootoman: open the options"] = "/ltm или /lootoman: открыть настройки",
+	["/ltm help: list the commands"] = "/ltm help: список команд",
 
 	-- Core/Share.lua
-	["%s settings"] = "Настройки: %s",
+	["%s options"] = "Настройки: %s",
 
 	-- Modules/Shared/EditMode.lua
 	["Position"] = "Положение",
@@ -41,9 +36,9 @@ ns.Locales.AddTranslation("ruRU", {
 	["Confirm Bind-on-Pickup Items when Alone"] = "Не спрашивать о персональных предметах вне группы",
 	["Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot."] = "Автоматический сбор добычи в игре выключен. Быстрый автолут работает только вместе с автоматическим сбором добычи.",
 	["All set. Next time this box will be hidden."] = "Всё настроено. В следующий раз эта рамка будет скрыта.",
-	["These are standard game settings. You can find them in %s."] = "Это стандартные настройки игры. Их можно найти здесь: %s.",
-	["Open the Game's Setting"] = "Открыть настройку игры",
-	["The game's Auto Loot settings can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
+	["These are the game's own options. You can find them in %s."] = "Это стандартные настройки игры. Их можно найти здесь: %s.",
+	["Open in the Game's Options"] = "Открыть настройку игры",
+	["The game's Auto Loot options can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
 	["Picks up items that bind when picked up without asking, unless you are in a group."] = "Подбирает предметы, которые становятся персональными при получении, без вопроса, если вы не в группе.",
 
 	-- Modules/LootFeed/Frames.lua
@@ -108,7 +103,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Apply"] = "Применить",
 	["This profile uses this look from now on."] = "Этот профиль теперь использует этот вид.",
 	["Reset Position"] = "Сбросить позицию",
-	["Opens the window of the look this profile uses: its settings, its row design and the feed's position."] = "Открывает окно вида, который использует этот профиль: его настройки, оформление строк и положение ленты.",
+	["Opens the window of the look this profile uses: its options, its row design and the feed's position."] = "Открывает окно вида, который использует этот профиль: его настройки, оформление строк и положение ленты.",
 	["Puts the loot feed back at its default place in the current Edit Mode layout."] = "Возвращает ленту добычи на место по умолчанию в текущей раскладке режима редактирования.",
 	["Size"] = "Размер",
 	["Background"] = "Фон",
@@ -123,7 +118,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
 	["Feed Look"] = "Вид ленты",
-	["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
+	["The feed look this profile uses: every option of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
 	["Use look “%s”"] = "Использовать вид «%s»",
 	["Loot feed looks"] = "Виды ленты лута",
 
@@ -144,14 +139,14 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete look “%s”? Profiles that use it switch to the Default look."] = "Удалить вид «%s»? Профили, которые его используют, переключатся на вид «По умолчанию».",
 	["Creates a copy of this look, and this profile uses it."] = "Создаёт копию этого вида, и этот профиль начинает его использовать.",
 	["Renames this look in every profile that uses it."] = "Переименовывает этот вид во всех профилях, которые его используют.",
-	["Returns every setting of this look to its default and starts its row design afresh."] = "Возвращает все настройки этого вида к значениям по умолчанию и начинает вид строк заново.",
+	["Returns every option of this look to its default and starts its row design afresh."] = "Возвращает все настройки этого вида к значениям по умолчанию и начинает вид строк заново.",
 	["Delete look"] = "Удалить вид",
 	["Edit"] = "Изменить",
-	["Opens the window of this look, to change its settings and its row design."] = "Открывает окно этого вида, чтобы изменить его настройки и вид строк.",
+	["Opens the window of this look, to change its options and its row design."] = "Открывает окно этого вида, чтобы изменить его настройки и вид строк.",
 	["Edit, copy or reset"] = "Изменить, копировать или сбросить",
 	["Edit, copy, rename or reset"] = "Изменить, копировать, переименовать или сбросить",
 	["New look"] = "Новый вид",
-	["Starts a look with every setting at its default, and this profile uses it."] = "Создаёт вид со всеми настройками по умолчанию, и этот профиль начинает его использовать.",
+	["Starts a look with every option at its default, and this profile uses it."] = "Создаёт вид со всеми настройками по умолчанию, и этот профиль начинает его использовать.",
 	["Makes a text of your looks to copy and give to another character or player."] = "Создаёт текст с вашими видами, чтобы скопировать его и передать другому персонажу или игроку.",
 	["With Background"] = "С фоном",
 	["With Border"] = "С рамкой",
@@ -191,12 +186,29 @@ ns.Locales.AddTranslation("ruRU", {
 	["Size, Percent of the Row Height"] = "Размер в процентах от высоты строки",
 	["Click a part to choose it, drag it to move it."] = "Щёлкните часть, чтобы выбрать её, и перетащите, чтобы сдвинуть.",
 	["The look window opens out of combat."] = "Окно вида открывается вне боя.",
-	["/lootoman design: open the window of the loot feed's look"] = "/lootoman design: открыть окно вида ленты лута",
+	["/ltm feed: open the loot feed's look window"] = "/ltm feed: открыть окно вида ленты лута",
 
 	-- Settings/Panel.lua
-	["The junk list opens out of combat."] = "Список хлама открывается вне боя.",
 
 	-- Settings/Profiles.lua
+	["Bug Report"] = "Отчёт об ошибке",
+	["Something went wrong? Copy this report and open a new issue at the address below: say what you did and what you saw."] = "Что-то пошло не так? Скопируйте этот отчёт и создайте новое обращение по адресу ниже: напишите, что вы делали и что увидели.",
+	["Extended Log"] = "Расширенный журнал",
+	["Records what Lootoman decides as it happens, for every character. Turn it on, do what goes wrong, and come back here."] = "Записывает, что Lootoman решает по ходу дела, для всех персонажей. Включите его, повторите то, что идёт не так, и вернитесь сюда.",
+	["Where to send it"] = "Куда отправить",
+	["Select All"] = "Выделить всё",
+	["Refresh"] = "Обновить",
+	["Clear the Log"] = "Очистить журнал",
+	["Errors from other addons, and some of Lootoman's, are in BugSack."] = "Ошибки других аддонов и часть ошибок Lootoman — в BugSack.",
+	["The bug report opens out of combat."] = "Отчёт об ошибке открывается вне боя.",
+	["/ltm report: open the bug report window"] = "/ltm report: открыть окно отчёта об ошибке",
+	["Options"] = "Настройки",
+	["Loot Feed Look"] = "Вид ленты лута",
+	["Click: options"] = "Щелчок: настройки",
+	["Right-click: menu"] = "Правый щелчок: меню",
+	["Drag: move"] = "Перетаскивание: переместить",
+	["Show the Minimap Icon"] = "Иконка у мини-карты",
+	["For this character."] = "Для этого персонажа.",
 	["Profile"] = "Профиль",
 	["Default"] = "По умолчанию",
 	["The profile this character uses. Every character can use its own profile."] = "Профиль этого персонажа. У каждого персонажа может быть свой профиль.",
@@ -210,8 +222,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Renames this profile for every character that uses it."] = "Переименовывает этот профиль для всех персонажей, которые его используют.",
 	["New name of “%s”:"] = "Новое название «%s»:",
 	["Reset"] = "Сбросить",
-	["Returns every setting of this profile to its default."] = "Возвращает все настройки этого профиля к значениям по умолчанию.",
-	["Reset profile “%s” to the default settings?"] = "Сбросить профиль «%s» к настройкам по умолчанию?",
+	["Returns every option of this profile to its default."] = "Возвращает все настройки этого профиля к значениям по умолчанию.",
+	["Reset profile “%s” to the default options?"] = "Сбросить профиль «%s» к настройкам по умолчанию?",
 	["Copy or reset"] = "Копировать или сбросить",
 	["Copy, rename or reset"] = "Копировать, переименовать или сбросить",
 	["Delete profile"] = "Удалить профиль",
@@ -266,7 +278,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["At Merchants"] = "У торговца",
 	["Sell automatically"] = "Продавать автоматически",
 	["Sell with the sell button"] = "Продавать кнопкой продажи",
-	["The sell button opens the sort window"] = "Кнопка продажи открывает окно сортировки",
+	["The sell button opens the junk window"] = "Кнопка продажи открывает окно хлама",
 
 	-- Modules/Junk/ItemGrid.lua
 	["Other"] = "Прочее",
@@ -306,7 +318,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["To Junk"] = "В хлам",
 	["A quest in your log still wants these"] = "Это ещё нужно заданиям в журнале",
 	["Junk List"] = "Список хлама",
-	["Bags"] = "Сумки",
 	["Add"] = "Добавить",
 	["Clear List"] = "Очистить список",
 	["Merge with my list"] = "Объединить с моим списком",
@@ -320,9 +331,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["That is neither an item link nor an item ID."] = "Это не ссылка на предмет и не его номер.",
 	["Drop an item here from your bags, Shift-click one while the field is active, or paste a link or an item ID."] = "Перетащите сюда предмет из сумок, щёлкните по предмету с Shift, пока поле активно, или вставьте ссылку либо номер предмета.",
 	["Throw Away Junk"] = "Выбросить хлам",
+	["Back to the bags"] = "Назад к сумкам",
+	["The junk list"] = "Список хлама",
 	["In the loot: %s, worth %s"] = "В добыче: %s, стоит %s",
 	["Worth less than what is left in the loot."] = "Стоит меньше, чем то, что осталось в добыче.",
-	["Sort Junk"] = "Разбор хлама",
 	["Sell Junk"] = "Продать хлам",
 	["This item is now in an equipment set; nothing was deleted."] = "Этот предмет теперь в комплекте экипировки, ничего не удалено.",
 	["Drag an item here to mark it as junk."] = "Перетащите сюда предмет, чтобы пометить его как хлам.",
@@ -341,7 +353,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",
 	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
-	["/lootoman toss: open the window to throw away junk"] = "/lootoman toss: открыть окно, чтобы выбросить хлам",
+	["/ltm junk: open the junk window"] = "/ltm junk: открыть окно хлама",
 	["Drag it out of the window to delete it."] = "Перетащите за пределы окна, чтобы удалить.",
 
 	-- Modules/Junk/SellQueue.lua
@@ -353,10 +365,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Sold %d items for %s."] = "Продано предметов: %d, за %s.",
 	["Only the last 12 sold items can be bought back."] = "Выкупить обратно можно только 12 последних проданных предметов.",
 	["Selling stopped: %s."] = "Продажа остановлена: %s.",
-	["Nothing was sold this session."] = "За этот сеанс ничего не продано.",
-	["%s ×%d: %s"] = "%s ×%d: %s",
-	["This session: %d items for %s."] = "За этот сеанс: предметов — %d, на %s.",
-	["/lootoman sales: list what was sold this session"] = "/lootoman sales: список проданного за этот сеанс",
 
 	-- Modules/Junk/SellButton.lua
 	["Sell junk"] = "Продать хлам",

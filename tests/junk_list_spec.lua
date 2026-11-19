@@ -58,22 +58,15 @@ describe("junk list window", function()
 		end
 	end
 
-	it("is a window of its own, opened from the options' main page and from the junk windows, closed with Escape", function()
+	it("is the junk window's lists, opened from the options' main page, closed with Escape", function()
 		assert.is_nil(api.FindCategory("Junk List"))
-		assert.is_nil(JunkList.Window())
 		click(mainButton())
 		local frame = JunkList.Window().frame
-		assert.same({ true, "Junk List", "LootomanJunkList" }, { frame.shown, frame.title, frame.name })
+		assert.same({ true, "Junk List", "LootomanJunkWindow" }, { frame.shown, frame.title, frame.name })
 		-- Over the game's options window, which is HIGH.
 		assert.equals("DIALOG", frame.strata)
-		-- No button of its own to open itself.
-		assert.is_nil(JunkList.Window().grid.listButton)
 		assert.is_true(Loader.ui.PressEscape())
 		assert.is_false(frame.shown)
-		local grid = ns.Modules:Get("Junk").ItemGrid.Create({ name = "LootomanTestGrid", title = "Sort junk", kind = "toss" })
-		assert.equals("Junk List", grid.listButton.text)
-		click(grid.listButton)
-		assert.is_true(frame.shown)
 	end)
 
 	it("opens right of the game's options window, level with its top, over it when the screen has no room", function()
@@ -94,26 +87,16 @@ describe("junk list window", function()
 		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 1920 - frame:GetWidth(), 900 } }, frame.points)
 	end)
 
-	it("opens first in the middle with the options closed, then stays where it is, however it opens", function()
-		local panel = rawget(_G, "SettingsPanel")
+	it("opens in the middle with the options closed", function()
 		JunkList.Open()
-		local frame = JunkList.Window().frame
-		assert.same({ { "CENTER" } }, frame.points)
-		-- The player moves it, and closes it.
-		frame:ClearAllPoints()
-		frame:SetPoint("TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 300, 700)
-		frame:Hide()
-		-- From the options now: where it was.
-		panel.shown, panel.right, panel.top = true, 1000, 900
-		JunkList.Open()
-		assert.same({ { "TOPLEFT", Loader.ui.UIParent, "BOTTOMLEFT", 300, 700 } }, frame.points)
+		assert.same({ { "CENTER" } }, JunkList.Window().frame.points)
 	end)
 
-	it("opens only out of combat the first time, and only while junk management is on", function()
+	it("opens only while junk management is on, also in a fight", function()
 		Test.SetCombat(true)
-		assert.is_false(JunkList.Open())
-		assert.matches("out of combat", Test.state.printed[#Test.state.printed])
+		assert.is_true(JunkList.Open())
 		Test.SetCombat(false)
+		JunkList.Window().frame:Hide()
 		ns.Modules:SetEnabled("Junk", false)
 		assert.is_false(JunkList.Open())
 		assert.matches("is off", Test.state.printed[#Test.state.printed])
@@ -123,15 +106,11 @@ describe("junk list window", function()
 		assert.is_false(JunkList.Window().frame:IsShown())
 	end)
 
-	it("shows the bags on its first tab, where every move marks the item for good", function()
+	it("shows two tabs, Junk and Not Junk, in place of the bags", function()
 		JunkList.Open()
 		local window = JunkList.Window()
-		assert.same({ 1, 3, true, false }, { window.frame.selectedTab, window.frame.numTabs,
-			window.grid.sections.junk.frame:IsShown(), window.list:IsShown() })
-		local entry = window.grid.built.junk.entries[1]
-		assert.equals(30, entry.item.itemID)
-		window.grid:MoveTo(entry, "rest", window.grid:ForGood())
-		assert.equals("notJunk", Marks.Get(30))
+		assert.same({ 1, 2, "Junk", "Not Junk", false, true }, { window.frame.selectedTab, window.frame.numTabs,
+			window.frame.Tabs[1].text, window.frame.Tabs[2].text, window.grid.sections.junk.frame:IsShown(), window.list:IsShown() })
 	end)
 
 	it("lists the items marked junk, and those marked not junk, each by name", function()
@@ -144,11 +123,11 @@ describe("junk list window", function()
 		assert.same({ "|Hitem:30|h[Old Boot]|h" }, texts("notJunk"))
 		JunkList.Open(JunkList.JUNK)
 		local window = JunkList.Window()
-		assert.same({ 2, false, true }, { window.frame.selectedTab, window.grid.sections.junk.frame:IsShown(), window.list:IsShown() })
+		assert.same({ 1, false, true }, { window.frame.selectedTab, window.grid.sections.junk.frame:IsShown(), window.list:IsShown() })
 		assert.is_not_nil(rowFor(10))
 		assert.is_nil(rowFor(30))
 		assert.is_false(window.empty:IsShown())
-		click(window.frame.Tabs[3])
+		click(window.frame.Tabs[2])
 		assert.same({ true, false }, { rowFor(30) ~= nil, rowFor(10) ~= nil })
 	end)
 
@@ -158,7 +137,7 @@ describe("junk list window", function()
 		Test.state.cursorItem = 10
 		window.list.scripts.OnReceiveDrag(window.list)
 		assert.same({ "notJunk", nil }, { Marks.Get(10), Test.state.cursorItem })
-		click(window.frame.Tabs[2])
+		click(window.frame.Tabs[1])
 		window.field:SetText("|cff9d9d9d|Hitem:20::::::::60:::::|h[Apple]|h|r")
 		click(window.add)
 		window.field:SetText(" 30 ")

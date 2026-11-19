@@ -113,11 +113,11 @@ describe("loot feed frames", function()
 			assert.same({ "-250", { 1, 0.13, 0.13 } }, { Frames.Describe({ kind = "reputation", name = "Stormwind", amount = -250 }, icons).amount,
 				Frames.Describe({ kind = "reputation", name = "Stormwind", amount = -250 }, icons).amountColor })
 			local money = Frames.Describe({ kind = "money", amount = 10245 }, icons)
-			assert.same({ "1.02|A:coin-gold|a", "10245 copper" }, { money.amount, money.label })
-			assert.equals("78|A:coin-copper|a", Frames.Describe({ kind = "money", amount = 78 }, icons).amount)
+			assert.same({ "1.02|A:coin-gold:13:13|a", "10245 copper" }, { money.amount, money.label })
+			assert.equals("78|A:coin-copper:13:13|a", Frames.Describe({ kind = "money", amount = 78 }, icons).amount)
 			-- The client's decimal point.
 			ns.Compat.Test.state.globalStrings.DECIMAL_SEPERATOR = ","
-			assert.equals("1,23|A:coin-silver|a", Frames.Describe({ kind = "money", amount = 123 }, icons).amount)
+			assert.equals("1,23|A:coin-silver:13:13|a", Frames.Describe({ kind = "money", amount = 123 }, icons).amount)
 			-- So are the owned count and a currency's total.
 			local owned = { layout = icons.layout, showOwned = true }
 			assert.equals("1,23M", Frames.Describe({ kind = "currency", name = "Crest", amount = 5, total = 1234567 }, owned).ownedText)
@@ -576,6 +576,32 @@ describe("loot feed frames", function()
 				-- The icon stays; only its border goes.
 				assert.same({ false, true }, { rowFrame.IconBorder.shown, rowFrame.Icon.shown }, row.kind)
 			end
+		end)
+
+		it("draws a text wider than its icon smaller until it fits, money's coin with it, and the next row at its own size", function()
+			local Design = ns.Feed.Design
+			local rowFrame = Frames.CreateRow(nil)
+			local icons = { layout = Design.Layout(Design.ICONS, 13), showOwned = true }
+			Frames.ApplyLayout(rowFrame, icons.layout)
+			-- Six letters of 7 pixels (the coin is one) on an icon of 36: 13 * 36 / 42.
+			Frames.Fill(rowFrame, { kind = "money", amount = 12345678 }, icons)
+			assert.same({ "1.23K|A:coin-gold:11:11|a", 11 }, { rowFrame.Amount.text, rowFrame.Amount.font[2] })
+			-- A warning's long text, a big owned count: each part alone.
+			Frames.Fill(rowFrame, { kind = "warning", amount = "12+34+5" }, icons)
+			assert.same({ "12+34+5", 9 }, { rowFrame.Amount.text, rowFrame.Amount.font[2] })
+			-- Never below the smallest size.
+			Frames.Fill(rowFrame, { kind = "warning", amount = "1+2+3+4+5+6+7" }, icons)
+			assert.equals(Frames.MIN_FONT_SIZE, rowFrame.Amount.font[2])
+			-- What fits keeps the design's size, after a smaller text too.
+			Frames.Fill(rowFrame, { kind = "money", amount = 12345 }, icons)
+			assert.same({ "1.23|A:coin-gold:13:13|a", 13 }, { rowFrame.Amount.text, rowFrame.Amount.font[2] })
+			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", icon = 1, quality = 1, amount = 2, owned = 12345678 }, icons)
+			assert.same({ "12.34M", 13, 8 }, { rowFrame.Owned.text, rowFrame.Amount.font[2], rowFrame.Owned.font[2] })
+			-- Rows: no fitting, the design's size.
+			local rows = { layout = Design.Layout(Design.LARGE) }
+			Frames.ApplyLayout(rowFrame, rows.layout)
+			Frames.Fill(rowFrame, { kind = "warning", amount = "1+2+3+4+5+6+7" }, rows)
+			assert.equals(rows.layout.parts.amount.fontSize, rowFrame.Amount.font[2])
 		end)
 
 		it("draws the amount's own background when the design asks, with its opacity", function()

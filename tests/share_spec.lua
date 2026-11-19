@@ -35,7 +35,7 @@ describe("profile texts", function()
 			list[index] = (entry.parent and (entry.parent .. " > ") or "") .. entry.name .. "=" .. Share.Label(entry.name, { look = "Raid" })
 		end
 		assert.same({
-			"module:AutoLoot=Fast autoloot settings", "module:Junk=Junk settings", "module:Junk > marks=Junk List", "module:LootFeed=Loot feed settings",
+			"module:AutoLoot=Fast autoloot options", "module:Junk=Junk options", "module:Junk > marks=Junk List", "module:LootFeed=Loot feed options",
 			"module:LootFeed > positions:LootFeed=Position", "module:LootFeed > look:LootFeed=Use look “Raid”",
 		}, list)
 		assert.same({ "looks", "Loot feed looks" }, { Share.Collections()[1].name, Share.Collections()[1].label })

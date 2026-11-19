@@ -2,12 +2,12 @@ local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
 -- Getting rid of junk (Rules/Junk.lua decides what it is, Rules/Suggest.lua
--- what else could go): buttons by the loot window and the bags open the toss
--- window, a bag-like window with the junk on top, to delete things; at a
--- merchant, Lootoman's sell-junk button sells the junk or opens the sort
--- window to pick what to sell; the junk list window holds the marks. In all
--- three the same groups (Sections.lua), and moving an item between them
--- marks it (ItemGrid.lua). Turned off, the game's own sell-junk button is
+-- what else could go): buttons by the loot window and the bags open the junk
+-- window (Window.lua), a bag-like window with the junk on top, to delete
+-- things; at a merchant, Lootoman's sell-junk button sells the junk or opens
+-- the window to pick what to sell; its gear shows the marks, the junk list.
+-- Throwing away and selling show the same groups (Sections.lua), and moving
+-- an item between them marks it (ItemGrid.lua). Turned off, the game's own sell-junk button is
 -- back.
 local Junk = ns.Modules:Register({
 	name = "Junk",
@@ -22,7 +22,7 @@ local Junk = ns.Modules:Register({
 	end,
 	defaults = {
 		enabled = true,
-		-- The toss window's button on the loot window: "never", "always" or "full".
+		-- The junk window's button on the loot window: "never", "always" or "full".
 		tossButton = "full",
 		-- Small on the loot window's title bar, or large next to it.
 		tossStyle = "large",
@@ -71,7 +71,7 @@ local Junk = ns.Modules:Register({
 				{ "large", L["Large, above the window"] }, { "own", L["Large, on its own"] } } },
 		{ kind = "choice", key = "selling", label = L["At Merchants"],
 			choices = { { "auto", L["Sell automatically"] }, { "button", L["Sell with the sell button"] },
-				{ "window", L["The sell button opens the sort window"] } } },
+				{ "window", L["The sell button opens the junk window"] } } },
 		-- The rules of Rules/Suggest.lua, by their switches (Sections.SWITCHES).
 		{ kind = "heading", label = L["Suggestions"], gap = 16 },
 		{ kind = "checkboxes", level = 2, columns = 2, items = {
@@ -155,7 +155,7 @@ ns.Share.RegisterPart({
 		return { conflicts = conflicts }
 	end,
 	-- The items marked otherwise here than in the text, for the player to settle
-	-- (the junk list window).
+	-- (the junk window's lists).
 	imported = function(result)
 		if #result.conflicts > 0 and ns.JunkList then
 			ns.JunkList.ShowConflicts(result.conflicts)

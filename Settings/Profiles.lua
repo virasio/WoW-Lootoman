@@ -76,7 +76,7 @@ local function rename(name)
 end
 
 local function reset(name)
-	NameMenu.Confirm(L["Reset profile “%s” to the default settings?"], displayName(name), L["Reset"], function()
+	NameMenu.Confirm(L["Reset profile “%s” to the default options?"], displayName(name), L["Reset"], function()
 		report(Profiles.Reset(name))
 	end)
 end
@@ -99,7 +99,7 @@ local function addProfile(root, name)
 			rename(name)
 		end }
 	end
-	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Returns every setting of this profile to its default."], run = function()
+	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Returns every option of this profile to its default."], run = function()
 		reset(name)
 	end }
 	NameMenu.AddName(root, {

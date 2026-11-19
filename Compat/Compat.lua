@@ -448,6 +448,22 @@ end
 
 -- An item's icon and quality, also before its full data is loaded; either can
 -- be nil.
+-- The date and time now, as "2026-11-19 14:05".
+function Compat.GetDate()
+	return date("%Y-%m-%d %H:%M")
+end
+
+-- Whether the client has a texture atlas of this name.
+function Compat.HasAtlas(name)
+	return C_Texture.GetAtlasInfo(name) ~= nil
+end
+
+-- Asks the server for an item's data; ITEM_DATA_LOAD_RESULT(itemID, success)
+-- tells when it came.
+function Compat.RequestItem(itemID)
+	C_Item.RequestLoadItemDataByID(itemID)
+end
+
 function Compat.GetItemLook(item)
 	return C_Item.GetItemIconByID(item), C_Item.GetItemQualityByID(item)
 end
@@ -945,7 +961,25 @@ function Compat.Print(text)
 	DEFAULT_CHAT_FRAME:AddMessage(text)
 end
 
--- Reports an error to the game's error handler (BugSack) without stopping the caller.
+-- The stack where an error was raised, as Blizzard's script errors show it:
+-- called from ReportError, which an xpcall calls as its handler, it starts at
+-- the function that raised the error.
+function Compat.GetStack()
+	return debugstack(3)
+end
+
+-- fn(err, stack) hears every error ReportError reports, before the game does.
+local errorListener
+
+function Compat.SetErrorListener(fn)
+	errorListener = fn
+end
+
+-- Reports an error to the game's error handler (BugSack) without stopping the
+-- caller; the listener keeps it first, and an error of its own stops nothing.
 function Compat.ReportError(err)
+	if errorListener then
+		pcall(errorListener, err, Compat.GetStack())
+	end
 	geterrorhandler()(err)
 end

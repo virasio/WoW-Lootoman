@@ -25,7 +25,7 @@ local LootFeed = ns.Modules:Register({
 		local dropdown = page:NewDropdown(row)
 		dropdown:SetupMenu(Feed.LookMenu.Build)
 		page:AddRow(L["Feed Look"], dropdown, { indent = indent, height = 30,
-			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
+			tooltip = L["The feed look this profile uses: every option of the feed and its row design. Its menu opens it to edit."] })
 		page.look = dropdown
 		-- Edit: the window of the look the profile uses.
 		local edit = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
@@ -38,7 +38,7 @@ local LootFeed = ns.Modules:Register({
 		edit:SetScript("OnEnter", function(button)
 			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 			GameTooltip_SetTitle(GameTooltip, L["Edit"])
-			GameTooltip_AddNormalLine(GameTooltip, L["Opens the window of the look this profile uses: its settings, its row design and the feed's position."])
+			GameTooltip_AddNormalLine(GameTooltip, L["Opens the window of the look this profile uses: its options, its row design and the feed's position."])
 			GameTooltip:Show()
 		end)
 		edit:SetScript("OnLeave", function()
@@ -182,6 +182,22 @@ function LootFeed:UpdatePreview()
 	end
 end
 
+-- A gain for the feed, from the game's events or from /ltm debug loot: junk
+-- merges into its row, below the minimum quality it waits in case it turns
+-- out usable.
+function LootFeed:Take(entry)
+	local now = Compat.GetTime()
+	entry = self:AsJunk(entry)
+	local row = self.model:Add(entry, now)
+	if row then
+		self:CheckUsable(row, now)
+		self.feed:Wake()
+	elseif entry.kind == "item" and entry.id and self:Get("keepUsable") and self:Get("items") then
+		-- Below the minimum quality: shown anyway if it turns out usable.
+		self.lowQuality[#self.lowQuality + 1] = { entry = entry, at = now }
+	end
+end
+
 -- The design of the rows: the look's (Looks.lua).
 function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
@@ -254,10 +270,10 @@ function LootFeed:CheckJunk(row, now)
 	end
 end
 
--- Asks for the junk module's toss window, the window that frees room in the
+-- Asks for the junk module's window, which frees room in the
 -- bags; nothing opens while junk management is off.
-function LootFeed:OpenTossWindow()
-	Bus:Send("OpenTossWindow")
+function LootFeed:OpenJunkWindow()
+	Bus:Send("OpenJunkWindow")
 end
 
 -- Whether the feed keeps items of a kind of usable item: not while it shows
@@ -391,7 +407,7 @@ function LootFeed:OnEnable()
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
 		self.feed.onWarningClick = function()
-			self:OpenTossWindow()
+			self:OpenJunkWindow()
 		end
 	end
 	self.feed.disabled = false
@@ -399,16 +415,7 @@ function LootFeed:OnEnable()
 	self:Apply()
 	self:UpdatePreview()
 	Feed.Sources.Start(self, function(entry)
-		local now = Compat.GetTime()
-		entry = self:AsJunk(entry)
-		local row = self.model:Add(entry, now)
-		if row then
-			self:CheckUsable(row, now)
-			self.feed:Wake()
-		elseif entry.kind == "item" and entry.id and self:Get("keepUsable") and self:Get("items") then
-			-- Below the minimum quality: shown anyway if it turns out usable.
-			self.lowQuality[#self.lowQuality + 1] = { entry = entry, at = now }
-		end
+		self:Take(entry)
 	end)
 	self:On("SettingChanged", function(_, module, key)
 		if module ~= self.name then
@@ -451,7 +458,7 @@ function LootFeed:OnEnable()
 	self:OnEvent("MODIFIER_STATE_CHANGED", function()
 		self.feed:SetLinkModifier(Compat.IsChatLinkHeld())
 	end)
-	-- The warning's click opens the toss window only while junk management is on.
+	-- The warning's click opens the junk window only while junk management is on.
 	self:On("ModuleToggled", function(_, name)
 		if name == "Junk" then
 			self.feed:SetWarning(self:Warning())

@@ -229,14 +229,15 @@ describe("gathering highlights", function()
 	end)
 
 	it("lights an object a quest's objective names at once, until the quest no longer wants it, and never learns it", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		Test.state.questObjectives = { "Waterlogged Saw: 0/1" }
 		Test.FireEvent("QUEST_LOG_UPDATE")
 		Test.Advance(0.2)
 		local saw = { isObject = true, cursor = 99, name = "Waterlogged Saw", objectID = 4242, inReach = true }
 		target(saw)
 		assert.equals("quest", lit())
-		assert.matches("Highlights: Waterlogged Saw (object 4242, cursor 99), quest by objective, ready", Test.state.printed[#Test.state.printed], 1, true)
+		local log = ns.Diagnostics.Section().log
+		assert.matches("Highlights: Waterlogged Saw (object 4242, cursor 99), quest by objective, ready", log[#log], 1, true)
 		-- Looted: not a chest from then on.
 		Test.state.lootSources = { 4242 }
 		Test.FireEvent("LOOT_READY", true)
@@ -272,19 +273,19 @@ describe("gathering highlights", function()
 	end)
 
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		Test.state.nameplates = {}
 		target(herb())
-		assert.matches("Highlights: Peacebloom %(object 1617, cursor 3%), herbs, ready, no nameplate",
-			Test.state.printed[#Test.state.printed])
+		local log = ns.Diagnostics.Section().log
+		assert.matches("Highlights: Peacebloom %(object 1617, cursor 3%), herbs, ready, no nameplate", log[#log])
 	end)
 
 	it("tells each new target once in the debug output, with its object ID and cursor", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		target({ isObject = true, cursor = 99, name = "Windstone", objectID = 3658 })
 		target({ isObject = true, cursor = 99, name = "Windstone", objectID = 3658 })
 		local lines = {}
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs(ns.Diagnostics.Section().log) do
 			if line:find("Highlights: Windstone", 1, true) then
 				lines[#lines + 1] = line
 			end
@@ -337,9 +338,8 @@ describe("gathering highlights", function()
 	end)
 
 	it("reports to the self-test", function()
-		Test.RunSlashCommand("LOOTOMAN", "selftest")
 		local report
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs((ns.SelfTest.Run())) do
 			if line:find("SoftTargetInteract=", 1, true) then
 				report = line
 			end
