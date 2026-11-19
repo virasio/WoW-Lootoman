@@ -307,7 +307,7 @@ describe("Edit Mode", function()
 	it("tells the self-test the library's version and whether the dialog's reset button is there", function()
 		local function line()
 			local found
-			for _, text in ipairs(ns.Compat.Test.state.printed) do
+			for _, text in ipairs(ns.Diagnostics.Section().selfTest.lines) do
 				found = text:match("Edit Mode: .*") or found
 			end
 			return found
@@ -339,6 +339,6 @@ describe("Edit Mode without LibEditMode", function()
 		local ns = Loader.LoadAddon()
 		Loader.Start(ns)
 		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
-		assert.matches("Edit Mode: LibEditMode not found", table.concat(ns.Compat.Test.state.printed, "\n"))
+		assert.matches("Edit Mode: LibEditMode not found", table.concat(ns.Diagnostics.Section().selfTest.lines, "\n"))
 	end)
 end)

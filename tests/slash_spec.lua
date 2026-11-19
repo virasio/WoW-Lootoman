@@ -206,37 +206,68 @@ describe("slash commands", function()
 	end)
 
 	describe("selftest", function()
+		-- Every line of the last run, as the journal keeps it.
+		local function report(target)
+			return table.concat((target or ns).Diagnostics.Section().selfTest.lines, "\n")
+		end
+
+		it("says in the chat only the verdict when every check passes, and keeps every line", function()
+			for _, need in pairs(ns.Compat.NEEDS) do
+				for _, path in ipairs(need) do
+					Test.state.capabilities[path] = true
+				end
+			end
+			run("debug selftest")
+			assert.same({ "All checks passed.", "The full report is in the bug report window." }, lines())
+			assert.matches("Has: OK", report())
+			assert.matches("Client 12%.1%.5", report())
+		end)
+
+		it("says in the chat the failed checks and their count, not what is not available", function()
+			for _, need in pairs(ns.Compat.NEEDS) do
+				for _, path in ipairs(need) do
+					Test.state.capabilities[path] = true
+				end
+			end
+			Test.state.build = {}
+			ns.Compat.CanEncode = function() return false end
+			run("debug selftest")
+			assert.same({ "  GetBuildInfo: FAILED, no interface number", "1 check(s) failed.",
+				"The full report is in the bug report window." }, lines())
+			assert.matches("Encode: not available", report())
+		end)
+
 		it("passes every check on a working client", function()
 			run(" debug SelfTest ")
-			assert.not_matches("FAILED", output())
-			assert.matches("All checks passed%.", output())
-			assert.matches("Has: OK", output())
-			assert.matches("RegisterEvent: OK", output())
+			assert.not_matches("FAILED", report())
+			assert.matches("All checks passed%.", report())
+			assert.matches("Has: OK", report())
+			assert.matches("RegisterEvent: OK", report())
 		end)
 
 		it("reports a failing check", function()
 			Test.state.capabilities["C_AddOns.GetAddOnMetadata"] = nil
 			run("debug selftest")
-			assert.matches("Has: FAILED, wrong answer", output())
-			assert.matches("1 check%(s%) failed%.", output())
+			assert.matches("Has: FAILED, wrong answer", report())
+			assert.matches("1 check%(s%) failed%.", report())
 		end)
 
 		it("reports a check that raises an error", function()
 			Test.state.build = {}
 			run("debug selftest")
-			assert.matches("GetBuildInfo: FAILED", output())
+			assert.matches("GetBuildInfo: FAILED", report())
 		end)
 
 		it("finishes the report when game calls raise errors", function()
 			ns.Compat.GetBuildInfo = function() error("broken build info") end
 			ns.Compat.GetAddOnMetadata = function() error("broken metadata") end
 			run("debug selftest")
-			assert.matches("GetBuildInfo: FAILED", output())
-			assert.matches("GetAddOnMetadata: FAILED", output())
-			assert.matches("%(.*broken build info%)", output())
-			assert.matches("%(.*broken metadata%)", output())
-			assert.matches("Character Tester%-Realm", output())
-			assert.equals("2 check(s) failed.", printed[#printed]:match("[%d]+ check%(s%) failed%."))
+			assert.matches("GetBuildInfo: FAILED", report())
+			assert.matches("GetAddOnMetadata: FAILED", report())
+			assert.matches("%(.*broken build info%)", report())
+			assert.matches("%(.*broken metadata%)", report())
+			assert.matches("Character Tester%-Realm", report())
+			assert.equals("2 check(s) failed.", lines()[#lines() - 1])
 		end)
 
 		it("tells which Compat functions miss what they need, and what this client lacks", function()
@@ -252,7 +283,7 @@ describe("slash commands", function()
 			end
 			local function line()
 				local found
-				for _, text in ipairs(printed) do
+				for _, text in ipairs(ns.Diagnostics.Section().selfTest.lines) do
 					found = text:match("Compat: .*") or found
 				end
 				return found
@@ -270,17 +301,17 @@ describe("slash commands", function()
 		it("reports a timer that cannot be scheduled", function()
 			ns.Compat.After = function() error("no timers") end
 			run("debug selftest")
-			assert.matches("After: FAILED, .*no timers", output())
-			assert.matches("1 check%(s%) failed%.", output())
+			assert.matches("After: FAILED, .*no timers", report())
+			assert.matches("1 check%(s%) failed%.", report())
 		end)
 
 		it("describes the client, the character, the data and the modules", function()
 			run("debug selftest")
-			assert.matches("Client 12%.1%.5 %(70575%), interface 120105\n", output())
-			assert.matches("Addon @project%-version@", output())
-			assert.matches("Character Tester%-Realm, profile Default", output())
-			assert.matches("Saved data: schema 4\n", output())
-			assert.matches("Game Standard, family Mainline, project 1; data set: Mainline; locale: enUS", output())
+			assert.matches("Client 12%.1%.5 %(70575%), interface 120105\n", report())
+			assert.matches("Addon @project%-version@", report())
+			assert.matches("Character Tester%-Realm, profile Default", report())
+			assert.matches("Saved data: schema 4\n", report())
+			assert.matches("Game Standard, family Mainline, project 1; data set: Mainline; locale: enUS", report())
 		end)
 
 		it("shows what WoW Forever calls itself and its data set", function()
@@ -290,7 +321,7 @@ describe("slash commands", function()
 			-- The project number Forever will have is not known yet.
 			fresh.Compat.Test.state.projectID = nil
 			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
-			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
+			local text = report(fresh)
 			assert.matches("Game Camelot, family Mainline, project nil; data set: Forever; locale: enUS", text)
 		end)
 
@@ -304,28 +335,28 @@ describe("slash commands", function()
 			})
 			Loader.Start(fresh)
 			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
-			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
+			local text = report(fresh)
 			assert.is_true(module:IsActive())
 			assert.matches("Module Feed: on, events: CHAT_MSG_LOOT", text)
 		end)
 
 		it("checks that a profile text reads back", function()
 			run("debug selftest")
-			assert.matches("Encode: OK", output())
+			assert.matches("Encode: OK", report())
 		end)
 
 		it("reports a profile text that does not read back", function()
 			ns.Compat.Decode = function() return nil end
 			run("debug selftest")
-			assert.matches("Encode: FAILED, a text did not read back", output())
-			assert.matches("1 check%(s%) failed%.", output())
+			assert.matches("Encode: FAILED, a text did not read back", report())
+			assert.matches("1 check%(s%) failed%.", report())
 		end)
 
 		it("does not count a client without an encoder as a failure", function()
 			Test.state.encoder = false
 			run("debug selftest")
-			assert.matches("Encode: not available, no C_EncodingUtil, so Import and Share are off", output())
-			assert.matches("All checks passed%.", output())
+			assert.matches("Encode: not available, no C_EncodingUtil, so Import and Share are off", report())
+			assert.matches("All checks passed%.", report())
 		end)
 
 		it("lists the equipped bags with their families", function()
@@ -336,18 +367,18 @@ describe("slash commands", function()
 			})
 			run("debug selftest")
 			assert.matches("Bags: 0 %(16 slots, 15 free%), 1 %(20 slots, 20 free, family 32%), "
-				.. "reagent 5 %(36 slots, 36 free%)\n", output())
+				.. "reagent 5 %(36 slots, 36 free%)\n", report())
 		end)
 
 		it("says when no bag is equipped", function()
 			run("debug selftest")
-			assert.matches("Bags: none\n", output())
+			assert.matches("Bags: none\n", report())
 		end)
 
 		it("counts the chat formats the loot feed can read", function()
 			Test.SetGlobalStrings(Formats.ruRU)
 			run("debug selftest")
-			assert.matches("Loot feed chat formats: 20 of 20\n", output())
+			assert.matches("Loot feed chat formats: 20 of 20\n", report())
 		end)
 
 		it("names the chat formats that are missing or unreadable", function()
@@ -360,15 +391,15 @@ describe("slash commands", function()
 			Test.SetGlobalStrings(strings)
 			run("debug selftest")
 			assert.matches("Loot feed chat formats: 18 of 20; LOOT_ITEM_SELF missing, "
-				.. "FACTION_STANDING_DECREASED unreadable\n", output())
-			assert.matches("All checks passed%.", output())
+				.. "FACTION_STANDING_DECREASED unreadable\n", report())
+			assert.matches("All checks passed%.", report())
 		end)
 
 		it("confirms timers once they run", function()
 			run("debug selftest")
-			assert.not_matches("After: OK", output())
+			assert.not_matches("After: OK", report())
 			Test.Advance(0)
-			assert.matches("After: OK", output())
+			assert.matches("After: OK", report())
 		end)
 	end)
 end)

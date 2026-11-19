@@ -29,9 +29,7 @@ describe("prices", function()
 	end
 
 	local function report()
-		Test.state.printed = {}
-		ns.SelfTest.Run()
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs((ns.SelfTest.Run())) do
 			local found = line:match("Auctionator: .*")
 			if found then
 				return found

@@ -213,9 +213,8 @@ describe("sale queue", function()
 		Test.Advance(SellQueue.PACE)
 		Test.SetInteracting("Merchant", false)
 		Test.state.printed = {}
-		ns.SelfTest.Run()
 		local found
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs((ns.SelfTest.Run())) do
 			found = found or line:match("Last sale: .*")
 		end
 		assert.equals("Last sale: 1 stacks, 2 copper, closed", found)

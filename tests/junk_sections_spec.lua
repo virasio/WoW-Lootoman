@@ -108,9 +108,8 @@ describe("junk sections", function()
 		ns.Marks.Set(3, "junk")
 		ns.Marks.Set(8, "notJunk")
 		Test.state.printed = {}
-		ns.SelfTest.Run()
 		local found
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs((ns.SelfTest.Run())) do
 			found = found or line:match("Junk: .*")
 		end
 		assert.equals("Junk: 3 stacks to sell for 284 copper (1 in bags kept from junk selling); marks: 1 junk, 1 not junk", found)

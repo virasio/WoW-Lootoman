@@ -136,7 +136,7 @@ ns.Slash.RegisterDebug("log", function(argument)
 end, "/ltm debug log [N | on | off | clear]: the journal's last 20 or N entries; turn the extended log on or off; clear the journal")
 
 ns.Slash.RegisterDebug("selftest", function()
-	ns.SelfTest.Run()
+	ns.SelfTest.Run({ print = true })
 end, "/ltm debug selftest: check the addon against the game client")
 
 Compat.RegisterSlashCommand("LOOTOMAN", { "/lootoman", "/ltm" }, function(message)

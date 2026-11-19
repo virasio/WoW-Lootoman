@@ -51,8 +51,7 @@ describe("diagnostics", function()
 
 	it("never stop the self-test, which runs to its end when the settings could not be loaded", function()
 		ns.Storage.db = nil
-		Test.RunSlashCommand("LOOTOMAN", "debug selftest")
-		local text = table.concat(Test.state.printed, "\n")
+		local text = table.concat((ns.SelfTest.Run()), "\n")
 		assert.matches("Self%-test", text)
 		assert.matches("check%(s%) failed%.", text)
 		-- Nothing to clear, and nothing breaks.

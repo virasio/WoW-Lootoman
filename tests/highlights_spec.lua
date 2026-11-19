@@ -338,9 +338,8 @@ describe("gathering highlights", function()
 	end)
 
 	it("reports to the self-test", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 		local report
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs((ns.SelfTest.Run())) do
 			if line:find("SoftTargetInteract=", 1, true) then
 				report = line
 			end

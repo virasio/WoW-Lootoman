@@ -90,10 +90,9 @@ describe("startup", function()
 		assert.equals(1, #Test.state.errors)
 		assert.equals(1, #Test.state.printed)
 		assert.matches("could not upgrade", Test.state.printed[1])
-		Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 		local line
-		for _, printed in ipairs(Test.state.printed) do
-			line = line or printed:match("Saved data: .*")
+		for _, text in ipairs((ns.SelfTest.Run())) do
+			line = line or text:match("Saved data: .*")
 		end
 		assert.matches("read%-only %(the upgrade failed%)", line)
 	end)
