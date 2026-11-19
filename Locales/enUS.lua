@@ -113,7 +113,6 @@ ns.Locales.AddEnglish({
 	"Opens the window of the look this profile uses: its settings, its row design and the feed's position.",
 	"Puts the loot feed back at its default place in the current Edit Mode layout.",
 	"Size",
-	"The size of the text; the icons and rows follow it.",
 	"Background",
 	"One background behind all the rows, in a colour of your choosing.",
 	"Color",

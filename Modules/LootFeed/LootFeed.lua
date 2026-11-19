@@ -168,7 +168,7 @@ end
 
 -- The rows' layout at the look's size, with its text style.
 function LootFeed:Layout()
-	local layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size"))
+	local layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()))
 	return layout
 end
 

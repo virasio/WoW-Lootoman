@@ -472,11 +472,9 @@ describe("loot feed module", function()
 	end)
 
 	it("applies changed settings at once", function()
-		module:Set("size", 13)
 		module:Set("maxRows", 3)
-		assert.equals(119, module.feed.frame.height)
-		module:Set("size", 16)
-		assert.equals(369, module.feed.frame.width)
+		-- Three rows of 32 and two gaps of 6: the Large design drawn at 12 of 13.
+		assert.same({ 108, 277 }, { module.feed.frame.height, module.feed.frame.width })
 		module:Set("backgroundOpacity", 80)
 		module:Set("backgroundColor", "ff8000")
 		-- No background until it is switched on.
@@ -502,11 +500,10 @@ describe("loot feed module", function()
 		local Looks = ns.Feed.Looks
 		Looks.Create("Small")
 		Looks.Set("Small", "maxRows", 4)
-		Looks.Set("Small", "size", 13)
 		ns.Profiles.Create("Small")
 		ns.Storage.db.profiles.Small.modules = { LootFeed = { look = "Small" } }
 		ns.Profiles.Switch("Small")
-		assert.equals(161, module.feed.frame.height)
+		assert.equals(146, module.feed.frame.height)
 	end)
 
 	it("stops reading events and hides when turned off", function()

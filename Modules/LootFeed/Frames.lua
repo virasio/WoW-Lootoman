@@ -47,7 +47,7 @@ local Compat, L = ns.Compat, ns.L
 -- hover pause may follow the pointer one rest step late.
 --
 --   local feed = Frames.Create(model)        -- out of combat, when the module starts
---   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design, size),
+--   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design),
 --       opacity = 0.5, showOwned = true, showGlow = true })
 --   feed:Wake()                              -- after model:Add
 --   feed:RefreshOwned()                      -- after the bags change
@@ -844,7 +844,7 @@ function Frames.Create(model)
 		end
 	end)
 	frame:Hide()
-	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE, Design.BASE_SIZE), opacity = 0.5 })
+	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE), opacity = 0.5 })
 	return feed
 end
 

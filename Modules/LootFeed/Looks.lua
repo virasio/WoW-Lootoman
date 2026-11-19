@@ -58,7 +58,6 @@ Looks.DEFAULTS = {
 	fade = 1,
 	-- Seconds between rows coming in, when much is looted at once.
 	stagger = 0.15,
-	size = 12,
 	-- The rows' texts: "none" (plain), "shadow", "outline" or "thick".
 	-- The background behind the rows: off; its colour, opacity and whether it
 	-- fades out past the rows.
@@ -184,8 +183,6 @@ function Looks.Settings(view)
 			choices = directionsOf(view) },
 		{ kind = "slider", key = "maxRows", label = L["Number of Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
 			min = 3, max = 20, step = 1, format = "%d" },
-		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
-			min = 10, max = 16, step = 1, format = "%d" },
 		{ kind = "checkbox", key = "glow", label = L["Glow for Rare Items"], tooltip = L["Rare and better items glow in their quality colour."] },
 		{ kind = "checkbox", key = "background", label = L["Background"],
 			tooltip = L["One background behind all the rows, in a colour of your choosing."] },
@@ -534,10 +531,15 @@ end
 
 -- A look from a profile text, as it may be kept: its design (Design.Clean)
 -- and the settings it may hold; nil and "newer" for a design of a newer schema.
+-- A text written before 0.5.9 may hold the look's size, which is folded into
+-- the design as the saved data's was.
 function Looks.Clean(data)
 	local look, err = Design.Clean(data)
 	if not look then
 		return nil, err
+	end
+	if type(data.values) == "table" and type(data.values.size) == "number" then
+		ns.Migrations.FoldSize(look, data.values.size)
 	end
 	local view = viewOf(look)
 	if type(data.values) == "table" then

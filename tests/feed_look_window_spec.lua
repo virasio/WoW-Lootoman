@@ -76,7 +76,7 @@ describe("loot feed look window", function()
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
-			assert.same({ "Row Height: 35 in 12..80", "Width: 300 in 120..600", "Gap Between Rows: 7 in 0..30", "With Background: false",
+			assert.same({ "Row Height: 35 in 12..80", "Width: 300 in 120..600", "With Background: false",
 				"Opacity: 60 in 0..100", "With Border: false", "Border Width: 1 in 1..4", "Opacity: 50 in 0..100" }, inspector())
 		end)
 
@@ -208,9 +208,9 @@ describe("loot feed look window", function()
 			LookWindow.Select("icon")
 			assert.same({ "TOPLEFT", row.Icon, "TOPLEFT", -2, 2 }, row.Selected.points[1])
 			assert.equals(0.5, row.Box.alpha)
-			-- The name's maximum width of 200, not the width of its text.
+			-- The name's maximum width of 200 (185 drawn at 12 of 13), not the width of its text.
 			LookWindow.Select("name")
-			assert.same({ { "TOPLEFT", row.Label, "TOPLEFT", -2, 2 }, 204 }, { row.Selected.points[1], row.Selected.width })
+			assert.same({ { "TOPLEFT", row.Label, "TOPLEFT", -2, 2 }, 189 }, { row.Selected.points[1], row.Selected.width })
 			LookWindow.Change("name", "align", "RIGHT")
 			assert.same({ "TOPRIGHT", row.Label, "TOPRIGHT", 2, 2 }, row.Selected.points[1])
 			-- Money has no amount to mark.
@@ -220,7 +220,8 @@ describe("loot feed look window", function()
 
 		it("changes the design from its sliders and checkboxes, and the feed follows at once", function()
 			window.controls[1].slider.callbacks.OnValueChanged[1](nil, 40.4)
-			assert.equals(40, module.feed.options.layout.height)
+			-- The design's 40 drawn at the feed's size, 12 of 13.
+			assert.equals(37, module.feed.options.layout.height)
 			assert.same({ row = { height = 40 } }, module:DesignSection().changes)
 			LookWindow.Select("icon")
 			window.partShown.checked = false
@@ -347,10 +348,9 @@ describe("loot feed look window", function()
 		it("lists only what an Icons layout lets change, with its samples side by side", function()
 			ns.Feed.Looks.Create("Strip")
 			ns.Feed.Looks.SetView("Strip", "icons")
-			ns.Feed.Looks.Set("Strip", "size", 13)
 			LookWindow.Open("Strip")
 			assert.equals("row", LookWindow.Selected())
-			assert.same({ "Icon Size: 36 in 12..80", "Gap Between Icons: 4 in 0..30" }, inspector())
+			assert.same({ "Icon Size: 36 in 12..80" }, inspector())
 			assert.same({ "Icon*", "Amount", "Owned Count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
 			LookWindow.Select("owned")
@@ -365,8 +365,8 @@ describe("loot feed look window", function()
 				"Text Style: none",
 				"Horizontal Offset: -2 in -60..36", "Vertical Offset: 2 in -36..59", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
-			-- Icons 36 wide and 4 apart, side by side.
-			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
+			-- Icons 36 wide and 4 apart (33 and 4 drawn at 12 of 13), side by side.
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 49, -12 }, window.rows[2].points[1])
 			-- The icon stands for the row; the name cannot be chosen.
 			local rowFrame = window.rows[1]
 			-- A hidden owned count has no hit area either.
@@ -422,7 +422,7 @@ describe("loot feed look window", function()
 			end
 			assert.same({ "What the Feed Shows", "Kept Usable Items", "Low-Space Warning" }, headers)
 			assert.same({ "content", "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings", "timings" },
-				{ tabs.items, tabs.warnGeneral, tabs.junkRow, tabs.direction, tabs.maxRows, tabs.size, tabs.backgroundOpacity, tabs.stagger,
+				{ tabs.items, tabs.warnGeneral, tabs.junkRow, tabs.direction, tabs.maxRows, tabs.gap, tabs.backgroundOpacity, tabs.stagger,
 					tabs.duration, tabs.fade })
 			-- The view stands just before the fill direction, on Appearance.
 			for index, control in ipairs(window.settings) do
@@ -461,6 +461,24 @@ describe("loot feed look window", function()
 			assert.same({ 0, 128 / 255, 1 }, module.feed.frame.Back.pieces.center.vertex)
 			picker:Cancel()
 			assert.equals("000000", ns.Feed.Looks.Value("Default", "backgroundColor"))
+		end)
+
+		it("sets the gap between rows on Appearance, after the number of rows, named after the view", function()
+			local gap = settingOf("gap")
+			assert.same({ "appearance", "Gap Between Rows", 7 }, { gap.setting.tab, gap.label.text, gap.slider.value })
+			for index, control in ipairs(window.settings) do
+				if control.setting.key == "gap" then
+					assert.equals("maxRows", window.settings[index - 1].setting.key)
+				end
+			end
+			gap.slider.callbacks.OnValueChanged[1](nil, 12)
+			assert.same({ 12, 11 }, { design().gap, module.feed.options.layout.gap })
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+				assert.is_not.equal("size", setting.key)
+			end
+			ns.Feed.Looks.SetView("Default", "icons")
+			LookWindow.Refresh()
+			assert.same({ "Gap Between Icons", 4 }, { gap.label.text, gap.slider.value })
 		end)
 
 		it("offers each text's style in the designer, after its size, and the samples follow it alone", function()

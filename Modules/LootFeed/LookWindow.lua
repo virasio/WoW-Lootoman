@@ -90,7 +90,6 @@ local CONTROLS = {
 	row = {
 		{ key = "height", label = L["Row Height"] },
 		{ key = "width", label = L["Width"] },
-		{ key = "gap", label = L["Gap Between Rows"] },
 	},
 	icon = {
 		{ key = "anchor", label = L["Anchor To"] },
@@ -149,7 +148,6 @@ local ON_THE_ICON = {
 local ICON_CONTROLS = {
 	row = {
 		{ key = "height", label = L["Icon Size"] },
-		{ key = "gap", label = L["Gap Between Icons"] },
 	},
 	amount = ON_THE_ICON,
 	owned = { COUNTS },
@@ -196,7 +194,7 @@ local function section()
 end
 
 local function scale()
-	return Looks.Value(edited, "size") / Design.BASE_SIZE
+	return Design.SIZE / Design.BASE_SIZE
 end
 
 -- The choices of a dropdown control for a part, as { value, text }.
@@ -293,7 +291,7 @@ function LookWindow.Refresh()
 	if not controlsOf(design)[selected] then
 		selected = "row"
 	end
-	local layout = Design.Layout(design, Looks.Value(edited, "size"))
+	local layout = Design.Layout(design)
 	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = Looks.Value(edited, "glow") }
 	-- The warning's sample in the look's own text.
 	window.samples[#window.samples].row = Frames.SampleWarning(Looks.Value(edited, "slotsText"))
@@ -702,7 +700,7 @@ end
 -- tab before the fill direction, whose choices follow it. Changing it starts the
 -- design afresh, so SetView asks first.
 local VIEW_SETTING = {
-	kind = "dropdown", key = "view", label = L["View"],
+	kind = "dropdown", key = "view", tab = "appearance", label = L["View"],
 	choices = { { "rows", L["Rows"] }, { "icons", L["Icons"] } },
 	get = function()
 		return Looks.View(edited)
@@ -711,6 +709,25 @@ local VIEW_SETTING = {
 		LookWindow.SetView(value)
 	end,
 }
+
+-- The gap between rows (or icons) is the design's, but a matter of the whole
+-- feed: on Appearance, after the number of rows.
+local GAP_SETTING = {
+	kind = "slider", key = "gap", tab = "appearance", min = Design.LIMITS.row.gap[1], max = Design.LIMITS.row.gap[2], step = 1, format = "%d",
+	label = function()
+		return Looks.View(edited) == "icons" and L["Gap Between Icons"] or L["Gap Between Rows"]
+	end,
+	get = function()
+		return Design.Current(section()).gap
+	end,
+	set = function(value)
+		LookWindow.Change("row", "gap", value)
+	end,
+}
+
+local function labelOf(setting)
+	return type(setting.label) == "function" and setting.label() or setting.label
+end
 
 local function createSetting(parent, setting, y)
 	local control = { setting = setting }
@@ -800,7 +817,12 @@ local function createSetting(parent, setting, y)
 		control.value:SetPoint("LEFT", control.slider, "RIGHT", 12, 0)
 		control.slider:RegisterCallback(MinimalSliderWithSteppersMixin.Event.OnValueChanged, function(_, value)
 			if not window.updating then
-				LookWindow.Set(setting.key, Storage.OnStep(value, setting.min, setting.max, setting.step))
+				local stepped = Storage.OnStep(value, setting.min, setting.max, setting.step)
+				if setting.set then
+					setting.set(stepped)
+				else
+					LookWindow.Set(setting.key, stepped)
+				end
 			end
 		end, control)
 	else
@@ -825,8 +847,9 @@ local function createSetting(parent, setting, y)
 			end
 		end)
 	end
-	control.label:SetText(setting.label)
+	control.label:SetText(labelOf(setting))
 	control.update = function()
+		control.label:SetText(labelOf(setting))
 		local value = setting.get and setting.get() or Looks.Value(edited, setting.key)
 		local enabled = not setting.parent or Looks.Value(edited, setting.parent) == true
 		control.label:SetFontObject(enabled and "GameFontHighlight" or "GameFontDisable")
@@ -871,6 +894,10 @@ local function buildSettingsTab(tab, which, controls)
 			end
 			controls[#controls + 1] = createSetting(content, setting, y)
 			y = y - SETTING_HEIGHT[setting.kind]
+			if setting.key == "maxRows" then
+				controls[#controls + 1] = createSetting(content, GAP_SETTING, y)
+				y = y - SETTING_HEIGHT.slider
+			end
 		end
 	end
 	content:SetHeight(-y + 10)

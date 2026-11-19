@@ -43,6 +43,10 @@ local Design = {}
 ns.Feed.Design = Design
 
 Design.BASE_SIZE = 13
+-- The size every look is drawn at: designs keep the pixels of size 13 and are
+-- drawn at 12, the default of the look's size that 0.5.9 folded into each
+-- design (saved data, schema 4).
+Design.SIZE = 12
 Design.SCHEMA = 1
 -- Parts move on a grid of this many design pixels.
 Design.GRID = 2
@@ -587,7 +591,7 @@ end
 -- A design's values in pixels for a size: every length scaled and rounded, and
 -- the icon's size in pixels worked out from the row's height (icon.pixels).
 function Design.Layout(design, size)
-	local scale = size / Design.BASE_SIZE
+	local scale = (size or Design.SIZE) / Design.BASE_SIZE
 	local layout = { parts = {} }
 	for key, value in pairs(design) do
 		if key ~= "parts" then

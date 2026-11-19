@@ -287,9 +287,9 @@ describe("loot feed designs", function()
 		end)
 
 		it("draws the design of the look the profile uses, saved for the whole account", function()
-			ns.Feed.Looks.Set("Default", "size", 13)
 			ns.Feed.Looks.SetDesign("Default", "row", "height", 40)
-			assert.equals(40, module.feed.options.layout.height)
+			-- Drawn at the feed's size, 12 of the design's 13.
+			assert.equals(37, module.feed.options.layout.height)
 			assert.same({ row = { height = 40 } }, ns.Storage:GetGlobalSection("feedLooks").Default.changes)
 		end)
 

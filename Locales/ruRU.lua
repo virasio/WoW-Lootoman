@@ -109,7 +109,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Opens the window of the look this profile uses: its settings, its row design and the feed's position."] = "Открывает окно вида, который использует этот профиль: его настройки, оформление строк и положение ленты.",
 	["Puts the loot feed back at its default place in the current Edit Mode layout."] = "Возвращает ленту добычи на место по умолчанию в текущей раскладке режима редактирования.",
 	["Size"] = "Размер",
-	["The size of the text; the icons and rows follow it."] = "Размер текста; значки и строки меняются вместе с ним.",
 	["Background"] = "Фон",
 	["One background behind all the rows, in a colour of your choosing."] = "Один фон за всеми строками, в цвете на ваш выбор.",
 	["Color"] = "Цвет",
