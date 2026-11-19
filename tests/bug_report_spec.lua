@@ -17,9 +17,9 @@ describe("bug report", function()
 		ns.Compat.ReportError("Interface/AddOns/Lootoman/Here.lua:1: broken")
 		local text = ns.BugReport.Build()
 		local first = text:match("^[^\n]+")
-		assert.equals("Lootoman @project-version@ · 12.1.5 (70575), interface 120105 · game Standard, project 1 · locale enUS · 2026-11-19 14:05", first)
+		assert.equals("Lootoman @project-version@; 12.1.5 (70575), interface 120105; game Standard, project 1; locale enUS; 2026-11-19 14:05", first)
 		for _, part in ipairs({ "\nSelf%-test\n", "\n  Has: ", "\nErrors this session %(1%)\n  12%.00 Interface/AddOns/Lootoman/Here%.lua:1: broken\n      Interface/AddOns/Lootoman/Here%.lua:1: in function <here>\n",
-			"\nExtended log: off\n", "\nOptions that differ from the defaults\n", "\n  Loot feed look “Default”: base large, view rows\n",
+			"\nExtended log: off\n", "\nOptions that differ from the defaults\n", "\n  Loot feed look \"Default\": base large, view rows\n",
 			"\nRelated addons loaded: none$" }) do
 			assert.matches(part, text)
 		end
@@ -48,6 +48,14 @@ describe("bug report", function()
 		assert.matches("\n  account%.debug = true\n", text)
 		assert.matches("\n  look%.maxRows = 9\n", text)
 		assert.matches("\nExtended log %(the last 1 lines%)\n  3%.00 one line\n", text)
+	end)
+
+	it("writes its own words in plain ASCII, which the report box's font draws", function()
+		ns.Modules:Get("AutoLoot"):Set("confirmBind", false)
+		ns.Feed.Looks.Set("Default", "maxRows", 9)
+		ns.Compat.ReportError("Interface/AddOns/Lootoman/Here.lua:1: broken")
+		local text = ns.BugReport.Build()
+		assert.is_nil(text:find("[\128-\255]"), text:match("[^\n]*[\128-\255][^\n]*"))
 	end)
 
 	it("names the related addons loaded, with their versions", function()

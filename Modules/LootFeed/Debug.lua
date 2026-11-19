@@ -185,7 +185,7 @@ end, "/ltm debug loot <pieces>: made-up loot in the feed (alone: the pieces it t
 ns.BugReport.AddPart(function()
 	local name = Feed.Looks.Current()
 	local look = Feed.Looks.Get(name) or {}
-	local lines = { ("Loot feed look “%s”: base %s, view %s"):format(name, tostring(look.base), Feed.Looks.View(name)) }
+	local lines = { ('Loot feed look "%s": base %s, view %s'):format(name, tostring(look.base), Feed.Looks.View(name)) }
 	local function add(prefix, values)
 		local keys = {}
 		for key in pairs(values or {}) do

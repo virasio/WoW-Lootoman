@@ -37,12 +37,14 @@ local function safe(fn, ...)
 	return ok and tostring(value) or "?"
 end
 
+-- The report's own words are plain ASCII: the font of the report box draws a
+-- box for marks such as the middle dot and curly quotes.
 local function head()
 	local ok, version, build, _, interface = pcall(Compat.GetBuildInfo)
 	if not ok then
 		version, build, interface = "?", "?", "?"
 	end
-	return ("Lootoman %s · %s (%s), interface %s · game %s, project %s · locale %s · %s"):format(
+	return ("Lootoman %s; %s (%s), interface %s; game %s, project %s; locale %s; %s"):format(
 		safe(Compat.GetAddOnMetadata, addonName, "Version"), tostring(version), tostring(build), tostring(interface),
 		safe(Compat.GetAddOnMetadata, addonName, "X-Game"), safe(Compat.GetProjectID), tostring(ns.Locales.current),
 		safe(Compat.GetDate))
