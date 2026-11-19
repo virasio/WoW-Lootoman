@@ -1181,7 +1181,7 @@ local function build()
 		frame.rows[index] = rowFrame
 	end
 
-	-- The tabs, over the panel; the designer's is titled by the look's view.
+	-- The tabs, over the panel; the designer's last, Layout, whatever the view.
 	local previous
 	for id, text in ipairs({ L["Content"], L["Appearance"], L["Timings"], L["Layout"] }) do
 		local tab = CreateFrame("Button", nil, frame, "PanelTopTabButtonTemplate")
