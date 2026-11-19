@@ -58,7 +58,6 @@ Looks.DEFAULTS = {
 	fade = 1,
 	-- Seconds between rows coming in, when much is looted at once.
 	stagger = 0.15,
-	-- The rows' texts: "none" (plain), "shadow", "outline" or "thick".
 	-- The background behind the rows: off; its colour, opacity and whether it
 	-- fades out past the rows.
 	background = false,

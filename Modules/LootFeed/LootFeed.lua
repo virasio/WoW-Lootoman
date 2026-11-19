@@ -18,8 +18,8 @@ local LootFeed = ns.Modules:Register({
 		-- The feed look the profile uses (Looks.lua).
 		look = "Default",
 	},
-	-- Under the switch, the look the profile uses, with the look menu: the
-	-- dropdown looks as it does in the feed's Edit Mode dialog, with the same menu.
+	-- Under the switch, the look the profile uses, with the look menu, and Edit,
+	-- which opens the look's window.
 	mainSettings = { { kind = "custom", build = function(page, indent)
 		local row = page:NewRow()
 		local dropdown = page:NewDropdown(row)
