@@ -15,7 +15,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 
 - [ ] **Loads everywhere.** Start retail, the PTR and WoW Forever in turn. *Expected:* Lootoman is in the AddOns list of each, not marked out of date, and loads without errors.
 - [ ] **Self-test on retail.** `/ltm debug selftest`, then the full report in *Bug Report* (the minimap icon's menu).
-  - *Expected:* in the chat only `All checks passed.` and where the full report is (0.5.10); in the report, every check `OK` (`Encode` included).
+  - *Expected:* in the chat only `All checks passed.` and where the full report is; in the report, every check `OK` (`Encode` included).
   - `Client …, interface …` with one of the TOC's `## Interface` numbers.
   - `Saved data: schema 4`.
   - `Game Standard, family Mainline, project 1; data set: Mainline; locale: …`.
@@ -28,7 +28,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
   - `Edit Mode: LibEditMode …; dialog found, reset button found, hooked yes`.
   - `All checks passed.`, then `After: OK`.
 - [ ] **Self-test on WoW Forever.** `/ltm debug selftest`. *Expected:* as on retail, but `Game Camelot` (or `Forever`, if the client renamed it), its own project number and `data set: Forever`; a herb bag in the reagent slot shows as `reagent 5 (…, family 32)`.
-- [ ] **Commands (0.5.10).** `/ltm` and `/lootoman` open the options; `/ltm help` lists `/ltm` or `/lootoman`, `/ltm feed`, `/ltm junk`, `/ltm report` and `/ltm help`, nothing of debug. `/ltm report` opens the bug report window. `/ltm feed` opens the loot feed's look window; `/ltm junk` the junk window (to sell at a merchant, to throw away elsewhere). *Expected:* `/ltm design`, `/ltm toss`, `/ltm sales`, `/ltm selftest` and `/ltm bars` are unknown commands and show the list. `/ltm debug` says to use `/ltm debug help`, which lists `bags`, `help`, `junk`, `log`, `loot`, `selftest` and, on WoW Forever, `target`, in English.
+- [ ] **Commands.** `/ltm` and `/lootoman` open the options; `/ltm help` lists `/ltm` or `/lootoman`, `/ltm feed`, `/ltm junk`, `/ltm report` and `/ltm help`, nothing of debug. `/ltm report` opens the bug report window. `/ltm feed` opens the loot feed's look window; `/ltm junk` the junk window (to sell at a merchant, to throw away elsewhere). *Expected:* `/ltm design`, `/ltm toss`, `/ltm sales`, `/ltm selftest` and `/ltm bars` are unknown commands and show the list. `/ltm debug` says to use `/ltm debug help`, which lists `bags`, `help`, `junk`, `log`, `loot`, `selftest` and, on WoW Forever, `target`, in English.
 - A saved-data upgrade that fails can't be checked in game without breaking saved data on purpose; the unit tests cover it (the data is kept as it was, the session runs on defaults, a chat message says so).
 - [ ] **Smoke test on the PTR and WoW Forever.** Loot with fast autoloot, watch the feed, open the junk window, sell junk at a merchant.
 - [ ] **Saved data with bars.** Log in with saved variables of 0.3 or 0.3.5 that have a bar set and the free-slot bar set up.
@@ -58,7 +58,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 - [ ] **Profile menu.** New profile, and for a profile: copy, rename, reset, delete. *Expected:* the character switches as each tooltip says; Default cannot be renamed or deleted.
 - [ ] **Two characters.** Give two characters different profiles. *Expected:* each keeps its own after relog.
 - [ ] **Share.** *Share* in the profile menu; untick some parts.
-  - *Expected:* the parts are *Fast autoloot options*, *Loot feed options* (with *Position* and *Use look …* under it) and *Junk options*, then the feed looks (0.5.10: *options*, not *settings*).
+  - *Expected:* the parts are *Fast autoloot options*, *Loot feed options* (with *Position* and *Use look …* under it) and *Junk options*, then the feed looks (*options*, not *settings*).
   - The position and the look are ticked only while *Loot feed options* is.
   - The text changes with the ticks and can be copied.
 - [ ] **Import into a new profile.** On another character, *Import*, paste, untick some parts. *Expected:* a new profile with the ticked parts only, and the character uses it.
@@ -102,7 +102,7 @@ The game's *Auto Loot* option on, Lootoman's fast autoloot on.
   - In a group: the window opens and asks.
   - With *Confirm Bind-on-Pickup Items when Alone* off, alone: the game asks.
 
-### The game's Auto Loot box (0.4.5, 0.5.6)
+### The game's Auto Loot box
 
 The box holds, top to bottom: a message; the game's *Auto Loot* checkbox and *Auto Loot Key* choice; a small grey line «These are the game's own options. You can find them in Options > Gameplay > Controls.».
 
@@ -147,11 +147,11 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Edit Mode.** Open Edit Mode.
   - *Expected:* the loot feed is listed as *Loot Feed* with sample rows, drawn as the feed draws them: only the look's own background behind them, no dark box of Lootoman's (Edit Mode's own highlight marks the feed). The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
   - It can be moved, and keeps its position per Edit Mode layout and across `/reload`.
-  - Clicking it opens the look's window, not a small dialog (0.5.9); it stays picked and can still be dragged. Then pick or drag another frame, Blizzard's and another addon's: the window closes and that frame's own dialog shows. With the window opened with *Edit* on another look than the profile's, a click on the feed keeps the window and that look. Other frames, Blizzard's and other addons', keep their dialogs. Leaving Edit Mode closes the window it opened; a window opened with *Edit* stays.
-- [ ] **Looks from 0.5.8 (0.5.9).** Before updating, a look with *Size* 14 and one with a background (opacity 60 %). *Expected:* after the update both look as before: the first as big (its row height and texts larger in the *Layout* tab), the second with *Background* ticked at 60 %.
+  - Clicking it opens the look's window, not a small dialog; it stays picked and can still be dragged. Then pick or drag another frame, Blizzard's and another addon's: the window closes and that frame's own dialog shows. With the window opened with *Edit* on another look than the profile's, a click on the feed keeps the window and that look. Other frames, Blizzard's and other addons', keep their dialogs. Leaving Edit Mode closes the window it opened; a window opened with *Edit* stays.
+- [ ] **Looks from 0.5.8.** Before updating, a look with *Size* 14 and one with a background (opacity 60 %). *Expected:* after the update both look as before: the first as big (its row height and texts larger in the *Layout* tab), the second with *Background* ticked at 60 %.
 - [ ] **Look.** The Default look. *Expected:* a big icon with its quality border, a glow on rare and better items, no owned count, no background (*Background* is off until ticked).
 
-### Feed looks and their window (0.4.5)
+### Feed looks and their window
 
 - [ ] **Look menu.** On the options page and in the look window's dropdown.
   - *+ New look*: type a name and press *Done*; the profile uses it. Then copy, rename, reset and delete (the delete button appears on hover).
@@ -162,17 +162,17 @@ The Default look and default options unless a check says otherwise.
   - *Expected:* titled "Feed Look: …"; opened for the first time in a fight, it refuses with a message.
   - While the window is open, the feed shows its sample rows where it stands, as in Edit Mode, also with no loot, and follows each change of the profile's look at once; closing the window (Escape, the close button) puts the feed back as it was, but in Edit Mode, where the samples stay.
   - *Edit* on a look the profile does not use edits that look and leaves the feed alone; renaming it renames the title, deleting it closes the window.
-- [ ] **Tabs (0.5.9).** *Expected:* on the left four tabs standing on a frame around their area, each as wide as its title, in English and in Russian; *Content* first: *What the Feed Shows*, *Kept Usable Items* (its kinds under the switch, greyed out while it is off; on WoW Forever without *Appearance Sets* and *Heirlooms*) and *Low-Space Warning*; *Appearance* (with *View* before *Fill direction*); *Timings*; and the designer's tab, *Layout*. Every heading, switch, label and button of the window in title capitals, the choices and tooltips in sentences. The samples on the right. Choosing another *View* asks first, then starts the look's design afresh; with *Icons*, *Number of Rows* and *Gap Between Rows* become *Number of Icons* and *Gap Between Icons*, and back with *Rows*.
+- [ ] **Tabs.** *Expected:* on the left four tabs standing on a frame around their area, each as wide as its title, in English and in Russian; *Content* first: *What the Feed Shows*, *Kept Usable Items* (its kinds under the switch, greyed out while it is off; on WoW Forever without *Appearance Sets* and *Heirlooms*) and *Low-Space Warning*; *Appearance* (with *View* before *Fill direction*); *Timings*; and the designer's tab, *Layout*. Every heading, switch, label and button of the window in title capitals, the choices and tooltips in sentences. The samples on the right. Choosing another *View* asks first, then starts the look's design afresh; with *Icons*, *Number of Rows* and *Gap Between Rows* become *Number of Icons* and *Gap Between Icons*, and back with *Rows*.
 - [ ] **Samples.** *Expected:* sample rows of every kind, the experience row with a thousands amount, and the stuck quest item with the quest mark and "+1", centred in their area, drawn exactly as in the feed, with no lighter box behind each row (the gold frame on *Layout* shows the chosen row's edges). With *Background* on, the feed's background behind them as in the feed (its colour, opacity and fade). *Light Backdrop* over them turns their backdrop light and back.
-- [ ] **Resizing (0.5.9).** Drag the window's bottom right corner larger, then try to make it smaller than it started. Do it right after opening the window, after dragging a part of a sample, and after picking the background's colour.
+- [ ] **Resizing.** Drag the window's bottom right corner larger, then try to make it smaller than it started. Do it right after opening the window, after dragging a part of a sample, and after picking the background's colour.
   - *Expected:* the corner follows the pointer from where it was grabbed and never jumps; the samples' area fills all the room right of the tabs (the whole width when widened), with the same margins as before, and the samples stay centred in it; the tabs' area grows taller; the window never gets smaller than its first size. At 200 % with a taller window, all the samples fit.
   - Make the window as big as the screen, close it, raise the game's UI scale, and open it again. *Expected:* the window fits the screen, its corner on it, and cannot be dragged past the screen's edge.
-- [ ] **Zoom (0.5.9).** Over the samples, choose 150 % and 200 % in the dropdown, then click the maximize button beside it, and click it again.
+- [ ] **Zoom.** Over the samples, choose 150 % and 200 % in the dropdown, then click the maximize button beside it, and click it again.
   - *Expected:* the samples are drawn larger, centred while they fit and from the top left corner when they do not, cut at the area's edge (icons never wrap to a second line); parts are chosen and dragged as before, and a drag moves a part as far on screen as the pointer goes.
   - The maximize button widens the samples over the whole window, the tabs and their panel hidden; clicking again brings them back.
   - Close and reopen the window: the zoom, the width, the window's size and the backdrop are as you left them; after `/reload`, back to 100 %, narrow and dark.
-- [ ] **Text style (0.5.9).** On the *Layout* tab, for the name, the amount and the owned count, each *Text Style* after *Text Size*: *None*, *Shadow*, *Outline*, *Thick outline*.
-  - *Expected:* only that text follows, in the feed and in the samples, at once and after `/reload` (the stuck row's waiting count follows the owned count's); *None* (the default) looks as before 0.5.9. *Appearance* has no *Text Style* and no *Size*.
+- [ ] **Text style.** On the *Layout* tab, for the name, the amount and the owned count, each *Text Style* after *Text Size*: *None*, *Shadow*, *Outline*, *Thick outline*.
+  - *Expected:* only that text follows, in the feed and in the samples, at once and after `/reload` (the stuck row's waiting count follows the owned count's); *None* (the default) changes nothing. *Appearance* has no *Text Style* and no *Size*.
 - [ ] **Layout tab.** Choose each part (Row, Icon, Name, Amount, Owned count) by clicking it and from the *Part* list, and click a row's free space and the space between rows.
   - *Expected:* the *Layout* tab comes up; the clicked part, or the row, is chosen; a thin gold frame marks it (a text shows the most room it may take), and shows on this tab only. With a look of icons, click the amount on the icon: the amount is chosen, not the icon.
   - The first line sits clear of the tab's top edge: *Part* and, for a part but the row, *Shown* to its right with its checkbox first; a divider under it.
@@ -184,14 +184,14 @@ The Default look and default options unless a check says otherwise.
   - *Expected:* the swatch and *Opacity* are greyed out and do nothing until *With Background* is ticked; the default colour is black.
   - The feed follows each colour as it is picked; *Cancel* puts the old one back.
   - The row's background lies behind the whole row, under its icon and texts.
-- [ ] **Row border (0.5.9).** A look of rows, the *Row* part: tick *With Border*, pick a colour with the swatch beside it, then move *Border Width* (1 to 4) and *Opacity* under it; also with *With Background* ticked.
+- [ ] **Row border.** A look of rows, the *Row* part: tick *With Border*, pick a colour with the swatch beside it, then move *Border Width* (1 to 4) and *Opacity* under it; also with *With Background* ticked.
   - *Expected:* the swatch, *Border Width* and *Opacity* are greyed out until *With Border* is ticked; the default is a white 1-pixel border at half opacity.
   - Four thin edges along the row's box, inside it, over its own background and under its icon and texts; the feed and the samples follow each change at once, and after `/reload`.
   - A look of icons has no border controls.
-- [ ] **Quality border (0.5.9).** With a rare item, a junk row and the low-space warning in the feed, untick *Quality Border* on the *Icon* part (a look of rows), then on the *Icon* of a look of icons, and tick it again.
+- [ ] **Quality border.** With a rare item, a junk row and the low-space warning in the feed, untick *Quality Border* on the *Icon* part (a look of rows), then on the *Icon* of a look of icons, and tick it again.
   - *Expected:* ticked by default, in every look made before; unticked, the icons lose their borders, the item's quality colour, the junk row's gray and the warning's red one alike, and keep their glow; the warning's name stays red. The feed and the samples follow at once, and after `/reload`.
 - [ ] **Owned count per look.** Tick the owned count's *Shown* in one look, and set *Counts* to *Bags only* with some of an item in the bank and some in the bags; loot that item. *Expected:* with *Bags only* the bank's are not counted; the other looks keep their own.
-- [ ] **Top row (0.5.9).** *Expected:* the looks' dropdown at the top left with the look menu, the edited look chosen; no *Reset* or *Share* buttons (both are in the menu). Choose another look in it: the window edits it, the feed keeps the profile's look, and *Apply* appears beside the dropdown; *Apply* makes the profile use it and goes away. *Reset Position*, at the far right of the row, puts the feed back at its default place in the current Edit Mode layout.
+- [ ] **Top row.** *Expected:* the looks' dropdown at the top left with the look menu, the edited look chosen; no *Reset* or *Share* buttons (both are in the menu). Choose another look in it: the window edits it, the feed keeps the profile's look, and *Apply* appears beside the dropdown; *Apply* makes the profile use it and goes away. *Reset Position*, at the far right of the row, puts the feed back at its default place in the current Edit Mode layout.
 
 ### Compact view
 
@@ -243,7 +243,7 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Below the minimum quality.** Set the minimum quality to Uncommon and loot a common usable item. *Expected:* it shows and stays.
 - [ ] **WoW Forever's collections.** On WoW Forever, the kinds on the look window's *Content* tab. *Expected:* only the kinds whose collections the client has (note which).
 
-### Low-space warning (0.5.9)
+### Low-space warning
 
 - [ ] **Defaults.** Default options, with a reagent bag.
   - Fill the reagent bag; keep 20 general slots free: no warning.
@@ -261,7 +261,7 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Following the design.** Change the look's design (icon size and place, the name's and the amount's place and size, their backgrounds, the row's background), and check the warning sample in the look window. *Expected:* the warning row follows like any row.
 - [ ] **With icons.** With a look of icons, filling up, down and sideways. *Expected:* the warning is a bag icon in the first place, like the other icons, with a red border and its text as its amount; no name.
 
-### Junk, quest items, clicks, timing and the background (0.5.9)
+### Junk, quest items, clicks, timing and the background
 
 - [ ] **Junk in one row.** Loot several gray items and an item you marked as junk. *Expected:* one row, "Junk" in gray with the sell-junk icon and the items' count ("×5"); its tooltip lists each item with its count. A gray item marked not junk, and an item the client has not loaded yet, get rows of their own. Untick *Junk in one row* on *Content*: each item has its own row again.
 - [ ] **Usable junk.** Pick a lockbox (a junkbox, gray) and loot it if you can. *Expected:* it leaves the junk row and stays in the feed as a kept item.
@@ -271,7 +271,7 @@ The Default look and default options unless a check says otherwise.
 - [ ] **One after another.** Loot a corpse or a container with several items at once. *Expected:* the rows come in one after another, a short moment apart, and later leave one after another the same way. *Delay between rows* on *Timings* at 0: all at once; at 0.5: clearly apart. The pointer over the feed holds the rows still waiting.
 - [ ] **Background.** On *Appearance*, tick *Background* (its *Color*, *Opacity* and *Fade at the Edges* greyed until then), pick a *Color* (and *Cancel* once), keep *Opacity* at 50 %. *Expected:* the background in that colour covers the rows and reaches past them on every side by half a row (or half an icon), fading out there over the whole margin, round at the corners; with *Fade at the Edges* off, a plain box with sharp edges only 4 pixels past the rows; no seams where its pieces meet, at a few UI scales; as rows come and go it grows and shrinks smoothly. The same with a look of icons.
 
-### At rest (0.5.5)
+### At rest
 
 The feed draws on every frame only while something moves, and a few times a second otherwise.
 
@@ -285,7 +285,7 @@ Some gray items and some items above gray in the bags; Auctionator installed for
 
 - [ ] **Self-test.** `/ltm debug selftest`, and the report in *Bug Report*. *Expected:* an `Auctionator:` line and a `QuestieDB:` line (`working` with the addon enabled, `not installed` without it), a `Junk:` line with the junk to sell and the marks, and `Last sale: none this session` before any sale.
 
-### The groups and the suggestions (0.5.8)
+### The groups and the suggestions
 
 The same groups in all three junk windows.
 
@@ -311,16 +311,16 @@ The same groups in all three junk windows.
 - [ ] **Always and never.** *Loot Window Button: Always*, then *Never*. *Expected:* with every loot window, then with none; with *Never*, *Style* is greyed out.
 - [ ] **Small button.** *Style: Small, in the window's title*. *Expected:* the button on the loot window's title bar, left of the close button, not over the title.
 - [ ] **Following the loot window.** Move the loot window in Edit Mode. *Expected:* the button follows; in Edit Mode it shows where it will be and does nothing.
-- [ ] **The junk window from the loot (0.5.10).** Click the button.
+- [ ] **The junk window from the loot.** Click the button.
   - *Expected:* the junk window, titled *Throw Away Junk*, to the right of the loot window (to its left near the right screen edge), with the groups above; also at a merchant.
   - A gear left of its close button (the game's own gear, or an older one on a client without it) switches to *Junk List* and back.
   - It closes with the loot, in whatever mode, with its X and with Escape.
   - `/ltm junk` opens it in the middle of the screen, also without loot and also while a loot window is open; it then stays open when the loot closes.
-- [ ] **Cheaper than the loot (0.5.8).** Open it from the loot window with items left in the loot.
+- [ ] **Cheaper than the loot.** Open it from the loot window with items left in the loot.
   - *Expected:* a line at its top, *In the loot: [item], worth …*, naming the most valuable item left, and a green check on every junk item worth less; their tooltips say so.
   - Take that item from the loot: the line names the next one, and the checks follow.
   - With only money or items without a price left, no line and no checks; opened from the bags or with `/ltm junk`, neither.
-- [ ] **Moves for good (0.5.8).** Throwing away:
+- [ ] **Moves for good.** Throwing away:
   - left-click a suggestion: it goes to *Junk*; right-click one: it goes to *Not Junk*; each stays after `/reload` (a mark);
   - left-click a hinted junk item: it goes to *Not Junk*;
   - drag an item from *Junk* to *Not Junk* and back, and a suggestion to either: the same; clicks do not move items between *Junk* and *Not Junk*;
@@ -337,10 +337,10 @@ The same groups in all three junk windows.
   - Drag a white or green item out. *Expected:* a question; *Cancel* keeps it, *Delete* deletes it.
   - Drag a rare or epic item out. *Expected:* the question asks for the game's word (DELETE, or the client's own word), and *Delete* stays off until it is typed; Enter in the field deletes.
   - Pick up an item from the bags and, holding it, drag another item out of the window. *Expected:* nothing is deleted, and a chat line says why.
-  - Drag out a quest item no quest wants any more (0.5.8: quest items are listed). *Expected:* deleted after the question.
+  - Drag out a quest item no quest wants any more (quest items are listed). *Expected:* deleted after the question.
 - [ ] **Never listed.** An item of an equipment set. *Expected:* in no junk window.
 
-### The bag window's button (0.5.8)
+### The bag window's button
 
 - [ ] **Small, in the title (the default).** Open the bags, combined, then separate (the bag menu's *Combine bags* option). *Expected:* a small toss button on the bag window's title, left of its close button; with separate bags, on the backpack only. A click opens the junk window in the middle of the screen to throw away (to sell beside a merchant at one), with no loot line; a second click closes it.
 - [ ] **Large, above the window.** *Bag Window Button: Large, above the window*. *Expected:* a large button with an empty-slot border above the bag window, over its close button; with separate bags, note whether it covers the bag above the backpack.
@@ -357,18 +357,18 @@ The same groups in all three junk windows.
   - With a guild repair button, both buttons move together; on the buyback tab it hides.
 - [ ] **Selling automatically.** *At Merchants: Sell automatically*. *Expected:* the junk (gray and marked items only) is sold as the window opens, with a chat line «Sold … items for …»; the button still opens the window with a click.
 - [ ] **Ignore for junk selling.** Tick the game's *Ignore for junk selling* on a bag (its bag menu) with junk in it. *Expected:* that junk stays, by the button, on opening and with the junk window's *Sell Junk* (it shows darker there).
-- [ ] **Selling at a merchant (0.5.10).**
+- [ ] **Selling at a merchant.**
   - *Expected:* titled *Sell Junk*, the junk window opens to the right of the merchant's window and closes with it, in whatever mode; the groups show the merchant's prices; it is as big as when it throws away.
   - Refundable items and items without a sell price are not listed.
   - *Sell Junk* sells only the *Junk* section and closes the window, and the sale goes on.
   - More than 12 stacks of junk show the buyback warning, and selling them warns in chat.
-- [ ] **This sale only (0.5.8).** Selling, left-click a suggestion, right-click another, drag an item from *Not Junk* to *Junk*. *Expected:* each moves, sells with *Sell Junk* if it is in *Junk*, and leaves no mark: close the window and open it again, and they are back where the rules put them. The same moves with Shift held mark them for good, as throwing away does. The tooltip says which is which.
+- [ ] **This sale only.** Selling, left-click a suggestion, right-click another, drag an item from *Not Junk* to *Junk*. *Expected:* each moves, sells with *Sell Junk* if it is in *Junk*, and leaves no mark: close the window and open it again, and they are back where the rules put them. The same moves with Shift held mark them for good, as throwing away does. The tooltip says which is which.
 - [ ] **Stopping.** Close the merchant's window in the middle of a sale. *Expected:* selling stops with a chat line, and no item is used, equipped or opened afterwards. Sell an item you can still trade to your group: the game's question shows and selling stops.
-- [ ] **Sell button away from merchants (0.5.5).** Loot and move items with no merchant open, then open a merchant with junk in the bags, and again with none. *Expected:* the button's icon is coloured with junk and grey without it from the moment the merchant opens; selling by the button, by the junk window and automatically on opening work as before.
-- [ ] **Throwing away, then a merchant (0.5.10).** Open the junk window with `/ltm junk` away from a merchant, then talk to a merchant. *Expected:* the window turns to *Sell Junk* where it is; close the merchant: back to *Throw Away Junk*, still open.
-- [ ] **No sales log (0.5.10).** Sell junk. *Expected:* the chat line «Sold … items for …» as before; `/ltm sales` shows the list of commands.
+- [ ] **Sell button away from merchants.** Loot and move items with no merchant open, then open a merchant with junk in the bags, and again with none. *Expected:* the button's icon is coloured with junk and grey without it from the moment the merchant opens; selling by the button, by the junk window and automatically on opening work as before.
+- [ ] **Throwing away, then a merchant.** Open the junk window with `/ltm junk` away from a merchant, then talk to a merchant. *Expected:* the window turns to *Sell Junk* where it is; close the merchant: back to *Throw Away Junk*, still open.
+- [ ] **No sales log.** Sell junk. *Expected:* the chat line «Sold … items for …» as before; `/ltm sales` shows the list of commands.
 
-### The junk list (0.5.8, 0.5.10)
+### The junk list
 
 - [ ] **Opening.** *Edit the Junk List* on the options page, and the junk window's gear. *Expected:* the junk window titled *Junk List*, as big as in its other modes, with two tabs under it, *Junk* and *Not Junk*; no *Bags* tab. From the options it opens right of the options window, level with its top (over its right edge on a narrow screen or a large UI scale), over the options; with the gear, where the window is, and the gear goes back to the bags (*Sell Junk* at a merchant, *Throw Away Junk* elsewhere). It closes with its X and with Escape, also in a fight. Turning junk management off closes it.
 - [ ] **Junk and Not Junk.** *Expected:* every item with that mark, in the bags or not, by name, each with its icon, its tooltip on hover and *Remove*; *None* for an empty list. *Remove* takes one away (it moves in the open junk windows at once).
@@ -382,7 +382,7 @@ The same groups in all three junk windows.
 - [ ] **Import, replaced.** Choose *Replace my list* and *Import*. *Expected:* a question naming the profile; accepted, the list is the text's.
 - [ ] **In a profile text.** *Share* in the profile menu. *Expected:* *Junk List* under *Junk options*. Importing a profile text: into a new profile, no choice on its row; with *Put the parts into the current profile instead*, the merge or replace choice on its row.
 
-### Options (0.5.8)
+### Options
 
 - [ ] **Order.** *Expected:* under *Enable Junk Management*: *Edit the Junk List*, *Loot Window Button* with *Style*, *Bag Window Button*, *At Merchants*, then a heading *Suggestions* with the five rules two to a row: *Quest Done*, *Leftovers from Quests*, *Your Class Can't Use It*, *Already Known*, *Outgrown*; each rule's tooltip says what it finds.
 - [ ] **Without QuestieDB.** *Expected:* a note under the switch, «Suggestions about quests are better with QuestieDB…», and *Copy the QuestieDB Address* right under it; the button opens a small window with the address selected, to copy with Ctrl+C (Cmd+C on a Mac); typing changes nothing; Escape and *Close* close it.
@@ -392,7 +392,7 @@ The same groups in all three junk windows.
 
 - [ ] **Turning junk off.** Untick *Enable Junk Management*. *Expected:* the options under it are greyed out; no button at the loot window or by the bags; at a merchant the game's own sell-junk button works again and nothing is sold on opening; `/ltm junk` says it is off. Tick it again: all is back.
 
-## Gathering highlights (0.5)
+## Gathering highlights
 
 On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.GetCVar("SoftTargetInteract")`, and the same for `SoftTargetInteractRange`, `SoftTargetInteractArc`, `SoftTargetInteractOnlyInRange`, `SoftTargetIconGameObject`, `SoftTargetIconInteract`, `SoftTargetNameplateInteract` and `nameplateGameObjectMaxDistance`. Turn the extended log on (`/ltm debug log on`) to keep each target's line in the journal (`/ltm debug log`).
 
@@ -413,13 +413,13 @@ On WoW Forever. Before the first check, note the game settings: `/dump C_CVar.Ge
 - [ ] **The game's loot sparkle.** With `outlineModeShowLootEffectWhenDisabled` on (Forever Loot Sparkles, or by hand), look at a quest object. *Expected:* note how both sparkles look together.
 - [ ] **In a fight.** *Expected:* the sparkles keep working; a switch changed in the fight applies at once, game settings after it; no errors and no blocked action.
 - [ ] **Profile texts.** Share a profile on WoW Forever and import it on retail. *Expected:* it reads, with the highlights' part left out.
-- [ ] **A quest object's quest changes (0.5.5).** Stand at a quest object until it sparkles; finish the objective it is for (or abandon the quest), and accept a quest that wants an object you stand at. *Expected:* the sparkles follow at once: the object you no longer need stops sparkling as a quest object, the one you now need starts.
-- [ ] **Quest objects before the first one (0.5.7).** The extended log on (`/ltm debug log on`). Accept a quest that asks to collect objects from the world, and walk up to one before collecting any. *Expected:* it sparkles at once, as a quest object; the debug line says `quest by game`, `quest by tooltip` or `quest by objective`. Collect them all (or abandon the quest), walk up to another: no sparkles. A mailbox, a vendor and an object the quest does not want: no sparkles. Note the quest and the debug line of any quest object that stays dark.
-- [ ] **Corpses to skin (0.5.7).** On a character with Skinning, the extended log on (`/ltm debug log on`). Walk up to a corpse you killed and have not looted, loot it, then walk up to it again; then to corpses others killed, looted and not. *Expected:* a corpse sparkles only once it can be skinned (looted, or with no loot), with its name and the skinning icon over it; faint with too little skill; no empty nameplates over the other corpses. Note each corpse's line in `/ltm debug log` (its cursor, and `no nameplate` if the game gave none). On a character without Skinning: no sparkles, unless *Only What You Can Gather* is off (note whether the skinning cursor shows at all). Untick *Corpses to Skin*: none.
-- [ ] **Corpses with a nameplate addon (0.5.8).** With Platynator (or another nameplate addon) enabled, walk up to a corpse that can be skinned. *Expected:* only the sparkles, the skinning icon and the corpse's name: no health bar, name or numbers from the nameplate addon over it. Walk away: other units' plates look as before. A herb or a vein still shows the nameplate addon's own icon, if it draws one.
+- [ ] **A quest object's quest changes.** Stand at a quest object until it sparkles; finish the objective it is for (or abandon the quest), and accept a quest that wants an object you stand at. *Expected:* the sparkles follow at once: the object you no longer need stops sparkling as a quest object, the one you now need starts.
+- [ ] **Quest objects before the first one.** The extended log on (`/ltm debug log on`). Accept a quest that asks to collect objects from the world, and walk up to one before collecting any. *Expected:* it sparkles at once, as a quest object; the debug line says `quest by game`, `quest by tooltip` or `quest by objective`. Collect them all (or abandon the quest), walk up to another: no sparkles. A mailbox, a vendor and an object the quest does not want: no sparkles. Note the quest and the debug line of any quest object that stays dark.
+- [ ] **Corpses to skin.** On a character with Skinning, the extended log on (`/ltm debug log on`). Walk up to a corpse you killed and have not looted, loot it, then walk up to it again; then to corpses others killed, looted and not. *Expected:* a corpse sparkles only once it can be skinned (looted, or with no loot), with its name and the skinning icon over it; faint with too little skill; no empty nameplates over the other corpses. Note each corpse's line in `/ltm debug log` (its cursor, and `no nameplate` if the game gave none). On a character without Skinning: no sparkles, unless *Only What You Can Gather* is off (note whether the skinning cursor shows at all). Untick *Corpses to Skin*: none.
+- [ ] **Corpses with a nameplate addon.** With Platynator (or another nameplate addon) enabled, walk up to a corpse that can be skinned. *Expected:* only the sparkles, the skinning icon and the corpse's name: no health bar, name or numbers from the nameplate addon over it. Walk away: other units' plates look as before. A herb or a vein still shows the nameplate addon's own icon, if it draws one.
 - [ ] **After a client update.** *Expected:* the object's nameplate still stays hidden under the sparkles (no name, bar or interact icon from the game), and the self-test's `Highlights:` line shows every function `yes`.
 
-### The icon and the name over a sparkling object (0.5.7)
+### The icon and the name over a sparkling object
 
 On WoW Forever, with the default settings unless the check says otherwise.
 
@@ -434,7 +434,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
 - [ ] **Kept.** `/reload`, and a profile text shared and imported. *Expected:* the four settings kept; a new character gets *Icon and name*.
 - [ ] **Russian client.** *Expected:* «Яркость искр», «Цвет искр», «Что подсвечивать» with «Трупы для свежевания» and «Только то, что можно собрать», «Над объектом», «Непрозрачность», «Ничего», «Иконка», «Иконка и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
 
-## The journal and bug reports (0.5.10)
+## The journal and bug reports
 
 - [ ] **Errors kept.** Make an error Lootoman catches, if one is at hand (otherwise skip). *Expected:* `/ltm debug log` prints it with its time even while the extended log is off, then «The extended log is off: /ltm debug log on»; it is in *Bug Report* under *Errors this session*, with the start of its stack; BugSack has it too.
 - [ ] **Extended log.** `/ltm debug log on`, loot a few things, `/ltm debug log`. *Expected:* nothing in the chat while looting; the last 20 lines, each with its session time; `/ltm debug log 50` prints 50; `/ltm debug log off` says errors are still kept; `/ltm debug log maybe` says what it takes.
@@ -447,7 +447,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
   - Tick *Extended Log*: the report shows the log's lines; *Refresh* builds it again; *Clear the Log* empties it.
   - Escape closes it. Opened for the first time in a fight, it refuses with a chat line.
 
-## Debug commands (0.5.10)
+## Debug commands
 
 - [ ] **debug loot.** `/ltm debug loot` alone. *Expected:* the pieces it takes, in English. Then each set below; *Expected:* the rows come as for real loot (merged, the junk row, the minimum quality, the delay between rows), and a piece it cannot read is named in the chat:
   - every kind of row: `/ltm debug loot 2589x5, 2592, exp+12345, rep["Stormwind"]+250, rep["Stormwind"]-25, gold+1.2345`, and on retail `/ltm debug loot currency[3008]+50` (a currency the character has);
@@ -460,7 +460,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
-## Minimap icon (0.5.10)
+## Minimap icon
 
 - [ ] **The icon.** Log in. *Expected:* a round icon with the bag at the minimap's bottom left; its tooltip *Lootoman* and the version, *Click: options*, *Right-click: menu*, *Drag: move*. A click opens the options.
 - [ ] **The menu.** Right-click it. *Expected:* *Options*, *Loot Feed Look*, *Junk*, *Bug Report*, each opening its window; *Junk* is greyed while junk management is off.
