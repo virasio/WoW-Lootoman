@@ -124,6 +124,8 @@ describe("junk window", function()
 		it("is the game's own, left of the close button, a fallback where the client lacks it", function()
 			local gear = Window.Grid().gear
 			assert.same({ "questlog-icon-setting", { "RIGHT", Window.Grid().close, "LEFT", -2, 0 } }, { gear.normalAtlas, gear.points[1] })
+			-- Over the panel's title bar, as the close button is: under it, it neither shows nor takes clicks.
+			assert.equals(510, gear:GetFrameLevel())
 			Test.state.missingAtlases["questlog-icon-setting"] = true
 			local fresh = Loader.LoadAddon({ skip = {} })
 			fresh.Compat.Test.state.missingAtlases["questlog-icon-setting"] = true

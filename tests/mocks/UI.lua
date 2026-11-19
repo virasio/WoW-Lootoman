@@ -297,6 +297,9 @@ function UI.Install()
 			frame.ScrollBar = UI.NewFake(frame)
 		elseif template and template:match("DropdownTemplate$") then
 			frame.dropdown = true
+		elseif template == "UIPanelCloseButtonNoScripts" then
+			-- Above a panel's border and title bar (frame levels 500 and 510).
+			frame.level = 510
 		elseif template == "ColorSwatchTemplate" then
 			-- ColorSwatchMixin.
 			function frame:SetColorRGB(r, g, b) self.color = { r, g, b } end

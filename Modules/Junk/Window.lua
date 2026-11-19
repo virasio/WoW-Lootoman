@@ -191,6 +191,8 @@ local function createGear()
 	local gear = CreateFrame("Button", nil, grid.frame)
 	gear:SetSize(18, 18)
 	gear:SetPoint("RIGHT", grid.close, "LEFT", -2, 0)
+	-- At the close button's level: lower, the panel's title bar covers it.
+	gear:SetFrameLevel(grid.close:GetFrameLevel())
 	if Compat.HasAtlas(Window.GEAR) then
 		gear:SetNormalAtlas(Window.GEAR)
 		gear:SetHighlightAtlas(Window.GEAR, "ADD")
