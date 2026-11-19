@@ -119,6 +119,21 @@ describe("bug report window", function()
 		assert.matches("\nErrors this session %(0%)\n", frame.report.EditBox:GetText())
 	end)
 
+	it("opens with /ltm report, which the help lists", function()
+		frame:Hide()
+		local Test = ns.Compat.Test
+		Test.RunSlashCommand("LOOTOMAN", "report")
+		assert.is_true(frame.shown)
+		Test.state.printed = {}
+		Test.RunSlashCommand("LOOTOMAN", "help")
+		local help = {}
+		for _, line in ipairs(Test.state.printed) do
+			help[#help + 1] = (line:gsub("^|cff%x+Lootoman|r: ", ""))
+		end
+		assert.same({ "/ltm junk: open the junk window", "/ltm report: open the bug report window", "/ltm help: list the commands" },
+			{ help[#help - 2], help[#help - 1], help[#help] })
+	end)
+
 	it("closes with Escape, and opens the first time only out of combat", function()
 		assert.is_true(Loader.ui.PressEscape())
 		assert.is_false(frame.shown)

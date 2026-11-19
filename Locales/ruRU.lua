@@ -201,6 +201,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Clear the Log"] = "Очистить журнал",
 	["Errors from other addons, and some of Lootoman's, are in BugSack."] = "Ошибки других аддонов и часть ошибок Lootoman — в BugSack.",
 	["The bug report opens out of combat."] = "Отчёт об ошибке открывается вне боя.",
+	["/ltm report: open the bug report window"] = "/ltm report: открыть окно отчёта об ошибке",
 	["Options"] = "Настройки",
 	["Loot Feed Look"] = "Вид ленты лута",
 	["Click: options"] = "Щелчок: настройки",

@@ -218,7 +218,7 @@ describe("slash commands", function()
 				end
 			end
 			run("debug selftest")
-			assert.same({ "All checks passed.", "The full report is in the bug report window." }, lines())
+			assert.same({ "All checks passed.", "The full report is in the bug report window: /ltm report" }, lines())
 			assert.matches("Has: OK", report())
 			assert.matches("Client 12%.1%.5", report())
 		end)
@@ -233,7 +233,7 @@ describe("slash commands", function()
 			ns.Compat.CanEncode = function() return false end
 			run("debug selftest")
 			assert.same({ "  GetBuildInfo: FAILED, no interface number", "1 check(s) failed.",
-				"The full report is in the bug report window." }, lines())
+				"The full report is in the bug report window: /ltm report" }, lines())
 			assert.matches("Encode: not available", report())
 		end)
 

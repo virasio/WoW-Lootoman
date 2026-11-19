@@ -76,12 +76,13 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 - `/ltm` or `/lootoman`: open the options.
 - `/ltm feed`: open the loot feed's look window.
 - `/ltm junk`: open the junk window.
+- `/ltm report`: open the bug report window.
 - `/ltm help`: list the commands.
 - `/ltm debug help` lists the commands for testing and bug reports: `debug log` (the journal: errors and the extended log), `debug selftest`, `debug loot` (made-up loot in the feed), `debug junk` (why an item is junk or not), `debug bags` and, on WoW Forever, `debug target`.
 
 ### Bug reports
 
-*Bug Report* in the minimap icon's menu opens a window with the whole report, ready to copy: the versions, a self-test, this session's errors, the extended log and the options that differ from their defaults; it names neither your character nor your realm. Turn on *Extended Log* there, do what goes wrong, and come back. Lootoman keeps its own errors always, and never fills the chat with debug lines.
+*Bug Report* in the minimap icon's menu (or `/ltm report`) opens a window with the whole report, ready to copy: the versions, a self-test, this session's errors, the extended log and the options that differ from their defaults; it names neither your character nor your realm. Turn on *Extended Log* there, do what goes wrong, and come back. Lootoman keeps its own errors always, and never fills the chat with debug lines.
 
 ## Screenshots
 

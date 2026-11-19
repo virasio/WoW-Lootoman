@@ -6,7 +6,7 @@ local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 -- time the window opens and on Refresh, ready to copy. The report box is
 -- read-only: typing puts the report back. It is the player's own frame, built
 -- the first time it opens, never in combat; Escape and its close button hide
--- it. The minimap icon's menu and the addon compartment open it.
+-- it. /ltm report, the minimap icon's menu and the addon compartment open it.
 local Window = {}
 ns.BugReportWindow = Window
 
@@ -157,3 +157,5 @@ end
 function Window.Frame()
 	return frame
 end
+
+ns.Slash.Register("report", Window.Open, L["/ltm report: open the bug report window"])

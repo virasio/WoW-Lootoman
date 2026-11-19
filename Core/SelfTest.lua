@@ -190,7 +190,7 @@ function SelfTest.Run(options)
 
 	say(failed == 0 and "All checks passed." or (failed .. " check(s) failed."), true)
 	if toChat then
-		ns.Print("The full report is in the bug report window.")
+		ns.Print("The full report is in the bug report window: /ltm report")
 	end
 	return saved, failed
 end

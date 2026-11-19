@@ -204,6 +204,7 @@ ns.Locales.AddEnglish({
 	"Clear the Log",
 	"Errors from other addons, and some of Lootoman's, are in BugSack.",
 	"The bug report opens out of combat.",
+	"/ltm report: open the bug report window",
 
 	-- Settings/Minimap.lua
 	"Options",
