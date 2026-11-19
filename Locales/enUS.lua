@@ -8,8 +8,8 @@ ns.Locales.AddEnglish({
 	"%sM",
 
 	-- Core/Startup.lua
-	"Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update.",
-	"Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page.",
+	"Your options were saved by a newer version of Lootoman. They are kept as they are, and this version uses default options until you update.",
+	"Lootoman could not upgrade your options to this version. They are kept as they were, and this session uses default options. Please report it on the addon's page.",
 
 	-- Core/Slash.lua
 	"Commands:",
@@ -17,7 +17,7 @@ ns.Locales.AddEnglish({
 	"/ltm help: list the commands",
 
 	-- Core/Share.lua
-	"%s settings",
+	"%s options",
 
 	-- Modules/Shared/EditMode.lua
 	"Position",
@@ -36,9 +36,9 @@ ns.Locales.AddEnglish({
 	"Confirm Bind-on-Pickup Items when Alone",
 	"Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot.",
 	"All set. Next time this box will be hidden.",
-	"These are standard game settings. You can find them in %s.",
-	"Open the Game's Setting",
-	"The game's Auto Loot settings can be changed out of combat.",
+	"These are the game's own options. You can find them in %s.",
+	"Open in the Game's Options",
+	"The game's Auto Loot options can be changed out of combat.",
 	"Picks up items that bind when picked up without asking, unless you are in a group.",
 
 	-- Modules/LootFeed/Frames.lua
@@ -107,7 +107,7 @@ ns.Locales.AddEnglish({
 	"Apply",
 	"This profile uses this look from now on.",
 	"Reset Position",
-	"Opens the window of the look this profile uses: its settings, its row design and the feed's position.",
+	"Opens the window of the look this profile uses: its options, its row design and the feed's position.",
 	"Puts the loot feed back at its default place in the current Edit Mode layout.",
 	"Size",
 	"Background",
@@ -122,7 +122,7 @@ ns.Locales.AddEnglish({
 	"Rare and better items glow in their quality colour.",
 
 	"Feed Look",
-	"The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit.",
+	"The feed look this profile uses: every option of the feed and its row design. Its menu opens it to edit.",
 	"Use look “%s”",
 	"Loot feed looks",
 
@@ -143,14 +143,14 @@ ns.Locales.AddEnglish({
 	"Delete look “%s”? Profiles that use it switch to the Default look.",
 	"Creates a copy of this look, and this profile uses it.",
 	"Renames this look in every profile that uses it.",
-	"Returns every setting of this look to its default and starts its row design afresh.",
+	"Returns every option of this look to its default and starts its row design afresh.",
 	"Delete look",
 	"Edit",
-	"Opens the window of this look, to change its settings and its row design.",
+	"Opens the window of this look, to change its options and its row design.",
 	"Edit, copy or reset",
 	"Edit, copy, rename or reset",
 	"New look",
-	"Starts a look with every setting at its default, and this profile uses it.",
+	"Starts a look with every option at its default, and this profile uses it.",
 	"Makes a text of your looks to copy and give to another character or player.",
 	"With Background",
 	"With Border",
@@ -228,8 +228,8 @@ ns.Locales.AddEnglish({
 	"Renames this profile for every character that uses it.",
 	"New name of “%s”:",
 	"Reset",
-	"Returns every setting of this profile to its default.",
-	"Reset profile “%s” to the default settings?",
+	"Returns every option of this profile to its default.",
+	"Reset profile “%s” to the default options?",
 	"Copy or reset",
 	"Copy, rename or reset",
 	"Delete profile",

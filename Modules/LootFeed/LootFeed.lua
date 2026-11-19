@@ -25,7 +25,7 @@ local LootFeed = ns.Modules:Register({
 		local dropdown = page:NewDropdown(row)
 		dropdown:SetupMenu(Feed.LookMenu.Build)
 		page:AddRow(L["Feed Look"], dropdown, { indent = indent, height = 30,
-			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
+			tooltip = L["The feed look this profile uses: every option of the feed and its row design. Its menu opens it to edit."] })
 		page.look = dropdown
 		-- Edit: the window of the look the profile uses.
 		local edit = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
@@ -38,7 +38,7 @@ local LootFeed = ns.Modules:Register({
 		edit:SetScript("OnEnter", function(button)
 			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 			GameTooltip_SetTitle(GameTooltip, L["Edit"])
-			GameTooltip_AddNormalLine(GameTooltip, L["Opens the window of the look this profile uses: its settings, its row design and the feed's position."])
+			GameTooltip_AddNormalLine(GameTooltip, L["Opens the window of the look this profile uses: its options, its row design and the feed's position."])
 			GameTooltip:Show()
 		end)
 		edit:SetScript("OnLeave", function()

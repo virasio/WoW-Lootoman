@@ -59,7 +59,7 @@ describe("the game's Auto Loot box on the options page", function()
 		-- One message, which points nowhere; where the game keeps the settings
 		-- is in the grey line at the bottom.
 		assert.equals("Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot.", box.header.text)
-		assert.same({ "These are standard game settings. You can find them in Options > Gameplay > Controls.", "GameFontDisableSmall", "LEFT" },
+		assert.same({ "These are the game's own options. You can find them in Options > Gameplay > Controls.", "GameFontDisableSmall", "LEFT" },
 			{ box.where.text, box.where.fontObject, box.where.justify })
 		assert.same({ false, "Auto Loot", "Auto Loot Key" }, { box.check.checked, box.check.label.text, box.keyLabel.text })
 		assert.same({ "ALT key", "CTRL key", "SHIFT key*", "None" }, keys())
@@ -152,14 +152,14 @@ describe("the game's Auto Loot box on the options page", function()
 		click(box.check, true)
 		keys("ALT")
 		assert.same({ false, false, "SHIFT" }, { Test.state.cvars.autoLootDefault, box.check.checked, Test.state.modifiedClicks.AUTOLOOTTOGGLE })
-		assert.matches("The game's Auto Loot settings can be changed out of combat.", Test.state.printed[#Test.state.printed], 1, true)
+		assert.matches("The game's Auto Loot options can be changed out of combat.", Test.state.printed[#Test.state.printed], 1, true)
 	end)
 
 	it("offers the game's own setting where an addon may not change Auto Loot or its key", function()
 		local full = item().height
 		Test.state.secureCVars.autoLootDefault = true
 		open()
-		assert.same({ true, false, "Open the Game's Setting" }, { box.open.shown, box.check:GetParent().shown, box.open.text })
+		assert.same({ true, false, "Open in the Game's Options" }, { box.open.shown, box.check:GetParent().shown, box.open.text })
 		-- The same message as with the checkbox, and the grey line under the button.
 		assert.same({ "Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot.", "GameFontRed" },
 			{ box.header.text, box.header.fontObject })

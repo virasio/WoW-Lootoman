@@ -38,7 +38,7 @@ end
 
 -- The grey line at the bottom: these are the game's settings, and where.
 function AutoLootBox.Where()
-	return L["These are standard game settings. You can find them in %s."]:format(path())
+	return L["These are the game's own options. You can find them in %s."]:format(path())
 end
 
 -- Opens the game's Controls page at its Auto Loot setting.
@@ -50,7 +50,7 @@ function AutoLootBox.OpenGameSetting()
 end
 
 local function refused()
-	ns.Print(L["The game's Auto Loot settings can be changed out of combat."])
+	ns.Print(L["The game's Auto Loot options can be changed out of combat."])
 end
 
 -- The box on the options page (Panel.lua's MainPage), indented like the
@@ -114,7 +114,7 @@ function AutoLootBox.Build(page, indent, module)
 
 	-- Where an addon may not change one of them.
 	box.open = CreateFrame("Button", nil, box, "UIPanelButtonTemplate")
-	box.open:SetText(L["Open the Game's Setting"])
+	box.open:SetText(L["Open in the Game's Options"])
 	box.open:SetSize(math.max(160, (box.open.GetTextWidth and box.open:GetTextWidth() or 0) + 24), 22)
 	box.open:SetScript("OnClick", AutoLootBox.OpenGameSetting)
 

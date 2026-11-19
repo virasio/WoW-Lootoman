@@ -8,8 +8,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["%sM"] = "%sM",
 
 	-- Core/Startup.lua
-	["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
-	["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
+	["Your options were saved by a newer version of Lootoman. They are kept as they are, and this version uses default options until you update."] = "Настройки сохранены более новой версией Lootoman. Они останутся без изменений, а эта версия до обновления работает с настройками по умолчанию.",
+	["Lootoman could not upgrade your options to this version. They are kept as they were, and this session uses default options. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
 
 	-- Core/Slash.lua
 	["Commands:"] = "Команды:",
@@ -17,7 +17,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["/ltm help: list the commands"] = "/ltm help: список команд",
 
 	-- Core/Share.lua
-	["%s settings"] = "Настройки: %s",
+	["%s options"] = "Настройки: %s",
 
 	-- Modules/Shared/EditMode.lua
 	["Position"] = "Положение",
@@ -36,9 +36,9 @@ ns.Locales.AddTranslation("ruRU", {
 	["Confirm Bind-on-Pickup Items when Alone"] = "Не спрашивать о персональных предметах вне группы",
 	["Auto Loot is off in the game. Fast Autoloot works only together with Auto Loot."] = "Автоматический сбор добычи в игре выключен. Быстрый автолут работает только вместе с автоматическим сбором добычи.",
 	["All set. Next time this box will be hidden."] = "Всё настроено. В следующий раз эта рамка будет скрыта.",
-	["These are standard game settings. You can find them in %s."] = "Это стандартные настройки игры. Их можно найти здесь: %s.",
-	["Open the Game's Setting"] = "Открыть настройку игры",
-	["The game's Auto Loot settings can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
+	["These are the game's own options. You can find them in %s."] = "Это стандартные настройки игры. Их можно найти здесь: %s.",
+	["Open in the Game's Options"] = "Открыть настройку игры",
+	["The game's Auto Loot options can be changed out of combat."] = "Настройки автоматического сбора добычи можно менять только вне боя.",
 	["Picks up items that bind when picked up without asking, unless you are in a group."] = "Подбирает предметы, которые становятся персональными при получении, без вопроса, если вы не в группе.",
 
 	-- Modules/LootFeed/Frames.lua
@@ -103,7 +103,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Apply"] = "Применить",
 	["This profile uses this look from now on."] = "Этот профиль теперь использует этот вид.",
 	["Reset Position"] = "Сбросить позицию",
-	["Opens the window of the look this profile uses: its settings, its row design and the feed's position."] = "Открывает окно вида, который использует этот профиль: его настройки, оформление строк и положение ленты.",
+	["Opens the window of the look this profile uses: its options, its row design and the feed's position."] = "Открывает окно вида, который использует этот профиль: его настройки, оформление строк и положение ленты.",
 	["Puts the loot feed back at its default place in the current Edit Mode layout."] = "Возвращает ленту добычи на место по умолчанию в текущей раскладке режима редактирования.",
 	["Size"] = "Размер",
 	["Background"] = "Фон",
@@ -118,7 +118,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Rare and better items glow in their quality colour."] = "Редкие и более ценные предметы светятся цветом своего качества.",
 
 	["Feed Look"] = "Вид ленты",
-	["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
+	["The feed look this profile uses: every option of the feed and its row design. Its menu opens it to edit."] = "Вид ленты, который использует этот профиль: все настройки ленты и вид её строк. Из его меню он открывается для изменения.",
 	["Use look “%s”"] = "Использовать вид «%s»",
 	["Loot feed looks"] = "Виды ленты лута",
 
@@ -139,14 +139,14 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete look “%s”? Profiles that use it switch to the Default look."] = "Удалить вид «%s»? Профили, которые его используют, переключатся на вид «По умолчанию».",
 	["Creates a copy of this look, and this profile uses it."] = "Создаёт копию этого вида, и этот профиль начинает его использовать.",
 	["Renames this look in every profile that uses it."] = "Переименовывает этот вид во всех профилях, которые его используют.",
-	["Returns every setting of this look to its default and starts its row design afresh."] = "Возвращает все настройки этого вида к значениям по умолчанию и начинает вид строк заново.",
+	["Returns every option of this look to its default and starts its row design afresh."] = "Возвращает все настройки этого вида к значениям по умолчанию и начинает вид строк заново.",
 	["Delete look"] = "Удалить вид",
 	["Edit"] = "Изменить",
-	["Opens the window of this look, to change its settings and its row design."] = "Открывает окно этого вида, чтобы изменить его настройки и вид строк.",
+	["Opens the window of this look, to change its options and its row design."] = "Открывает окно этого вида, чтобы изменить его настройки и вид строк.",
 	["Edit, copy or reset"] = "Изменить, копировать или сбросить",
 	["Edit, copy, rename or reset"] = "Изменить, копировать, переименовать или сбросить",
 	["New look"] = "Новый вид",
-	["Starts a look with every setting at its default, and this profile uses it."] = "Создаёт вид со всеми настройками по умолчанию, и этот профиль начинает его использовать.",
+	["Starts a look with every option at its default, and this profile uses it."] = "Создаёт вид со всеми настройками по умолчанию, и этот профиль начинает его использовать.",
 	["Makes a text of your looks to copy and give to another character or player."] = "Создаёт текст с вашими видами, чтобы скопировать его и передать другому персонажу или игроку.",
 	["With Background"] = "С фоном",
 	["With Border"] = "С рамкой",
@@ -221,8 +221,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Renames this profile for every character that uses it."] = "Переименовывает этот профиль для всех персонажей, которые его используют.",
 	["New name of “%s”:"] = "Новое название «%s»:",
 	["Reset"] = "Сбросить",
-	["Returns every setting of this profile to its default."] = "Возвращает все настройки этого профиля к значениям по умолчанию.",
-	["Reset profile “%s” to the default settings?"] = "Сбросить профиль «%s» к настройкам по умолчанию?",
+	["Returns every option of this profile to its default."] = "Возвращает все настройки этого профиля к значениям по умолчанию.",
+	["Reset profile “%s” to the default options?"] = "Сбросить профиль «%s» к настройкам по умолчанию?",
 	["Copy or reset"] = "Копировать или сбросить",
 	["Copy, rename or reset"] = "Копировать, переименовать или сбросить",
 	["Delete profile"] = "Удалить профиль",

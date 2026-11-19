@@ -124,7 +124,7 @@ describe("share and import dialogs", function()
 
 		it("lists each module's settings with its parts under them, then the looks, with only the profile's own ticked", function()
 			assert.same({
-				"Fast autoloot settings [x]", "Junk settings [x]", "  Junk List [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” [x]",
+				"Fast autoloot options [x]", "Junk options [x]", "  Junk List [x]", "Loot feed options [x]", "  Position [x]", "  Use look “Default” [x]",
 				"# Loot feed looks", "  Default [x]", "  Raid [ ]",
 			}, shown(frame))
 		end)
@@ -139,14 +139,14 @@ describe("share and import dialogs", function()
 
 		it("leaves the parts under the loot feed's settings out without them, and Use look without its look", function()
 			tick(frame, "Default", false)
-			assert.same({ "Fast autoloot settings [x]", "Junk settings [x]", "  Junk List [x]", "Loot feed settings [x]", "  Position [x]", "  Use look “Default” (off)",
+			assert.same({ "Fast autoloot options [x]", "Junk options [x]", "  Junk List [x]", "Loot feed options [x]", "  Position [x]", "  Use look “Default” (off)",
 				"# Loot feed looks", "  Default [ ]", "  Raid [ ]" }, shown(frame))
 			assert.same({ "module:AutoLoot", "module:Junk", "marks", "module:LootFeed", "positions:LootFeed" }, read().names)
 			tick(frame, "Default", true)
-			tick(frame, "Loot feed settings", false)
-			assert.same({ "Loot feed settings [ ]", "  Position (off)", "  Use look “Default” (off)" }, { unpack(shown(frame), 4, 6) })
+			tick(frame, "Loot feed options", false)
+			assert.same({ "Loot feed options [ ]", "  Position (off)", "  Use look “Default” (off)" }, { unpack(shown(frame), 4, 6) })
 			assert.same({ "module:AutoLoot", "module:Junk", "marks" }, read().names)
-			tick(frame, "Loot feed settings", true)
+			tick(frame, "Loot feed options", true)
 			assert.same({ "  Position [x]", "  Use look “Default” [x]" }, { unpack(shown(frame), 5, 6) })
 		end)
 
@@ -200,7 +200,7 @@ describe("share and import dialogs", function()
 		it("says what a pasted text holds, everything ticked, and a choice for a taken name", function()
 			typeInto(frame.box.EditBox, exported)
 			assert.same({ "It holds the parts ticked below.", true }, { frame.status.text, frame.importButton.enabled })
-			assert.same({ "Loot feed settings [x]", "  Use look “Raid” [x]", "# Loot feed looks", "  Raid [x] both", "  Solo [x]" },
+			assert.same({ "Loot feed options [x]", "  Use look “Raid” [x]", "# Loot feed looks", "  Raid [x] both", "  Solo [x]" },
 				shown(frame))
 			typeInto(frame.box.EditBox, "nonsense")
 			assert.same({ "This is not a Lootoman profile text.", false, {} }, { frame.status.text, frame.importButton.enabled, shown(frame) })
@@ -211,7 +211,7 @@ describe("share and import dialogs", function()
 			tick(frame, "Raid", false)
 			assert.equals("  Use look “Raid” (off)", shown(frame)[2])
 			tick(frame, "Raid", true)
-			tick(frame, "Loot feed settings", false)
+			tick(frame, "Loot feed options", false)
 			assert.equals("  Use look “Raid” (off)", shown(frame)[2])
 			-- Looks alone need no name for a profile.
 			assert.same({ false, true }, { frame.name.enabled, frame.importButton.enabled })
