@@ -43,6 +43,10 @@ LookWindow.PREVIEW_WIDTH = 440
 -- The tabs' panel on the left, and where the panels start under the top row.
 LookWindow.PANEL_WIDTH = LookWindow.WIDTH - LookWindow.PREVIEW_WIDTH - 48
 LookWindow.PANEL_TOP = -100
+LookWindow.PREVIEW_HEIGHT = LookWindow.HEIGHT + LookWindow.PANEL_TOP - 36
+-- The samples' zoom, and the wide samples over the tabs: the window's own
+-- state, for the session.
+LookWindow.ZOOMS = { 1, 1.5, 2 }
 -- The window's global name, for UISpecialFrames.
 LookWindow.NAME = "LootomanLookWindow"
 -- The tabs: three of the look's settings (their tab in Looks.Settings), then
@@ -167,6 +171,7 @@ end
 local window
 local selected = "row"
 local drag
+local zoom, wide = 1, false
 -- The look the window edits.
 local edited = Looks.DEFAULT
 
@@ -268,9 +273,13 @@ function LookWindow.Refresh()
 	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = Looks.Value(edited, "glow") }
 	-- The warning's sample in the look's own text.
 	window.samples[#window.samples].row = Frames.SampleWarning(Looks.Value(edited, "slotsText"))
-	-- Rows one under another; icons side by side, wrapping at the preview's edge.
+	-- Rows one under another; icons side by side, wrapping at the preview's
+	-- edge; all at the zoom.
+	local previewWidth = wide and LookWindow.WIDTH - 32 or LookWindow.PREVIEW_WIDTH
+	window.stage:SetScale(zoom)
+	window.stage:SetSize(previewWidth / zoom, LookWindow.PREVIEW_HEIGHT / zoom)
 	local left, top = 0, 0
-	local room = LookWindow.PREVIEW_WIDTH - 24
+	local room = previewWidth / zoom - 24
 	for index, rowFrame in ipairs(window.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 		local sample = window.samples[index]
@@ -279,7 +288,7 @@ function LookWindow.Refresh()
 			left, top = 0, top + layout.height + layout.gap
 		end
 		rowFrame:ClearAllPoints()
-		rowFrame:SetPoint("TOPLEFT", window.preview, "TOPLEFT", 12 + left, -12 - top)
+		rowFrame:SetPoint("TOPLEFT", window.stage, "TOPLEFT", 12 + left, -12 - top)
 		rowFrame:Show()
 		if isIcons(design) then
 			left = left + layout.width + layout.gap
@@ -341,6 +350,33 @@ function LookWindow.ShowTab(id)
 		panel:SetShown(id == index)
 	end
 	window.designTab:SetShown(id == LookWindow.DESIGN)
+end
+
+-- The samples drawn larger (LookWindow.ZOOMS).
+function LookWindow.SetZoom(value)
+	zoom = value
+	LookWindow.Refresh()
+end
+
+function LookWindow.Zoom()
+	return zoom
+end
+
+-- The samples over the whole width of the window, the tabs hidden; and back.
+function LookWindow.SetWide(on)
+	wide = on == true
+	if not window then
+		return
+	end
+	local preview = window.preview
+	preview:ClearAllPoints()
+	preview:SetPoint("TOPRIGHT", -16, LookWindow.PANEL_TOP)
+	preview:SetSize(wide and LookWindow.WIDTH - 32 or LookWindow.PREVIEW_WIDTH, LookWindow.PREVIEW_HEIGHT)
+	window.panel:SetShown(not wide)
+	for id = 1, 4 do
+		window["tab" .. id]:SetShown(not wide)
+	end
+	LookWindow.Refresh()
 end
 
 -- Switches the window to another look, which the profile may not use: Apply
@@ -492,7 +528,7 @@ end
 local function startDrag(part)
 	LookWindow.Select(part)
 	local x, y = GetCursorPosition()
-	drag = { x = x, y = y, move = Looks.Drag(edited, part, scale() * UIParent:GetEffectiveScale()) }
+	drag = { x = x, y = y, move = Looks.Drag(edited, part, scale() * zoom * UIParent:GetEffectiveScale()) }
 end
 
 local function stopDrag()
@@ -897,7 +933,32 @@ local function build()
 	-- The samples on the right, the tabs' panel on the left.
 	frame.preview = CreateFrame("Frame", nil, frame)
 	frame.preview:SetPoint("TOPRIGHT", -16, LookWindow.PANEL_TOP)
-	frame.preview:SetSize(LookWindow.PREVIEW_WIDTH, LookWindow.HEIGHT + LookWindow.PANEL_TOP - 36)
+	frame.preview:SetSize(LookWindow.PREVIEW_WIDTH, LookWindow.PREVIEW_HEIGHT)
+	-- The samples stand on a stage that takes the zoom.
+	frame.stage = CreateFrame("Frame", nil, frame.preview)
+	frame.stage:SetPoint("TOPLEFT")
+	-- Over the samples: the zoom, and the button that widens them over the tabs.
+	frame.wideButton = CreateFrame("Frame", nil, frame, "MaximizeMinimizeButtonFrameTemplate")
+	frame.wideButton:SetPoint("BOTTOMRIGHT", frame.preview, "TOPRIGHT", 0, 2)
+	frame.wideButton:SetOnMaximizedCallback(function()
+		LookWindow.SetWide(true)
+	end)
+	frame.wideButton:SetOnMinimizedCallback(function()
+		LookWindow.SetWide(false)
+	end)
+	if frame.wideButton.SetMaximizedLook then
+		frame.wideButton:SetMaximizedLook()
+	end
+	frame.zoom = CreateFrame("DropdownButton", nil, frame, "WowStyle1DropdownTemplate")
+	frame.zoom:SetPoint("RIGHT", frame.wideButton, "LEFT", -4, 0)
+	frame.zoom:SetWidth(90)
+	frame.zoom:SetupMenu(function(_, root)
+		for _, value in ipairs(LookWindow.ZOOMS) do
+			root:CreateRadio(L["%d %%"]:format(value * 100), function()
+				return zoom == value
+			end, LookWindow.SetZoom, value)
+		end
+	end)
 
 	local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	hint:SetPoint("TOPLEFT", frame.preview, "BOTTOMLEFT", 4, -8)
@@ -921,7 +982,7 @@ local function build()
 	frame.samples[#frame.samples + 1] = { row = Frames.SampleWarning(), alpha = 1 }
 	frame.rows = {}
 	for index = 1, #frame.samples do
-		local rowFrame = Frames.CreateRow(frame.preview)
+		local rowFrame = Frames.CreateRow(frame.stage)
 		-- The row's box: the space its parts are placed in.
 		rowFrame.Box = rowFrame:CreateTexture(nil, "BACKGROUND")
 		rowFrame.Box:SetAllPoints()

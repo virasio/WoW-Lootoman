@@ -261,6 +261,32 @@ describe("loot feed look window", function()
 			assert.same({ 21, -6 }, { design().parts.name.x, design().parts.name.y })
 		end)
 
+		it("zooms the samples, and a drag moves a part as far on screen at any zoom", function()
+			assert.same({ 1, 1 }, { LookWindow.Zoom(), window.stage.scale })
+			local choices = {}
+			for _, entry in ipairs(Loader.ui.OpenMenu(window.zoom).entries) do
+				choices[#choices + 1] = entry.text
+			end
+			assert.same({ "100 %", "150 %", "200 %" }, choices)
+			Loader.ui.OpenMenu(window.zoom).entries[3].setSelected(2)
+			assert.same({ 2, 2, LookWindow.PREVIEW_WIDTH / 2 }, { LookWindow.Zoom(), window.stage.scale, window.stage.width })
+			-- Twice the pointer's way for the same design pixels.
+			local hit = window.rows[1].hits.name
+			ui.cursor = { 100, 100 }
+			hit.scripts.OnDragStart(hit)
+			ui.cursor = { 120, 90 }
+			LookWindow.OnUpdate()
+			assert.same({ 21, -6 }, { design().parts.name.x, design().parts.name.y })
+			hit.scripts.OnDragStop(hit)
+		end)
+
+		it("widens the samples over the tabs, and back", function()
+			LookWindow.SetWide(true)
+			assert.same({ false, false, LookWindow.WIDTH - 32 }, { window.panel.shown, window.tab1.shown, window.preview.width })
+			LookWindow.SetWide(false)
+			assert.same({ true, true, LookWindow.PREVIEW_WIDTH }, { window.panel.shown, window.tab1.shown, window.preview.width })
+		end)
+
 		it("chooses a part by clicking it, and the row by clicking its free space or between rows", function()
 			local hit = window.rows[1].hits.amount
 			hit.scripts.OnClick(hit)
@@ -297,7 +323,7 @@ describe("loot feed look window", function()
 				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "With background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 			-- Icons 36 wide and 4 apart, side by side.
-			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
 			-- The icon stands for the row; the name cannot be chosen.
 			local rowFrame = window.rows[1]
 			-- A hidden owned count has no hit area either.
