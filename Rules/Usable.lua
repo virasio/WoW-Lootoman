@@ -61,11 +61,13 @@ function Usable.Find(itemID)
 	return nil, false
 end
 
--- The kinds this client has: a collection it lacks is no kind here.
+-- The kinds this client has: a collection it lacks, or one its game has no
+-- items for (the client's data says so), is no kind here.
 function Usable.Kinds()
 	local collections, list = Compat.GetCollectionKinds(), {}
+	local none = ns.Data and ns.Data.noCollections or {}
 	for _, kind in ipairs(Usable.KINDS) do
-		if not COLLECTIONS[kind] or collections[kind] then
+		if not COLLECTIONS[kind] or (collections[kind] and not none[kind]) then
 			list[#list + 1] = kind
 		end
 	end
