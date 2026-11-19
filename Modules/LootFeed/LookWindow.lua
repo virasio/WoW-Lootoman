@@ -104,6 +104,7 @@ local CONTROLS = {
 		{ key = "size", label = L["Size, Percent of the Row Height"] },
 		{ key = "x", label = L["Horizontal Offset"] },
 		{ key = "y", label = L["Vertical Offset"] },
+		{ key = "qualityBorder", label = L["Quality Border"] },
 	},
 	name = TEXT_CONTROLS,
 	amount = {},
@@ -140,7 +141,9 @@ for _, control in ipairs(BORDER) do
 end
 table.insert(CONTROLS.owned, 1, COUNTS)
 -- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
--- The amount and the owned count sit on the icon, each set alike.
+-- The amount and the owned count sit on the icon, each set alike. The row is
+-- the icon, so it also offers the icon's border (a control may name the part
+-- whose value it sets).
 local ICON_PARTS = { "row", "amount", "owned" }
 local ON_THE_ICON = {
 	{ key = "point", label = L["Anchor Point"] },
@@ -155,6 +158,7 @@ local ON_THE_ICON = {
 local ICON_CONTROLS = {
 	row = {
 		{ key = "height", label = L["Icon Size"] },
+		{ key = "qualityBorder", label = L["Quality Border"], part = "icon" },
 	},
 	amount = ON_THE_ICON,
 	owned = { COUNTS },
@@ -164,8 +168,8 @@ for _, control in ipairs(ON_THE_ICON) do
 end
 -- A checkbox for a switch (with a color swatch for a background), a dropdown
 -- for a choice, else a slider with a field.
-local KINDS = { shown = "check", background = "background", border = "background", anchor = "choice", point = "choice", align = "choice",
-	count = "choice", style = "choice" }
+local KINDS = { shown = "check", qualityBorder = "check", background = "background", border = "background", anchor = "choice",
+	point = "choice", align = "choice", count = "choice", style = "choice" }
 local CONTROL_COUNT = 0
 for _, list in pairs(CONTROLS) do
 	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
@@ -546,10 +550,12 @@ function LookWindow.UpdateInspector()
 	for index, control in ipairs(window.controls) do
 		local spec = specs[index]
 		local kind = spec and (KINDS[spec.key] or "number")
-		control.spec, control.part, control.kind = spec, selected, kind
-		control.value = spec and values[spec.key]
+		local part = spec and spec.part or selected
+		local partValues = part == selected and values or valuesOf(design, part)
+		control.spec, control.part, control.kind = spec, part, kind
+		control.value = spec and partValues[spec.key]
 		-- Before the dropdown is shown: showing it builds its menu from them.
-		control.choices = kind == "choice" and choices(spec.key, design, selected) or nil
+		control.choices = kind == "choice" and choices(spec.key, design, part) or nil
 		control.label:SetShown(spec ~= nil)
 		control.check:SetShown(kind == "check" or kind == "background")
 		control.swatch:SetShown(kind == "background")
@@ -557,7 +563,7 @@ function LookWindow.UpdateInspector()
 		control.input:SetShown(kind == "number")
 		control.choice:SetShown(kind == "choice")
 		-- Under another control: only while that one is on.
-		local enabled = not (spec and spec.parent) or values[spec.parent] == true
+		local enabled = not (spec and spec.parent) or partValues[spec.parent] == true
 		if spec then
 			control.label:SetText(spec.label)
 			control.label:SetFontObject(enabled and "GameFontHighlight" or "GameFontDisable")
@@ -570,11 +576,11 @@ function LookWindow.UpdateInspector()
 		if kind == "background" then
 			-- The color can be picked only while the background is on.
 			local on = control.value == true and ColorPickerFrame ~= nil
-			control.swatch:SetColorRGB(Design.RGB(values[spec.colorKey or "color"]))
+			control.swatch:SetColorRGB(Design.RGB(partValues[spec.colorKey or "color"]))
 			control.swatch:SetEnabled(on)
 			control.swatch:SetAlpha(on and 1 or 0.4)
 		elseif kind == "number" then
-			control.low, control.high = Design.Range(design, selected, spec.key)
+			control.low, control.high = Design.Range(design, part, spec.key)
 			control.slider:Init(control.value, control.low, control.high, math.max(1, control.high - control.low))
 			control.slider:SetEnabled(enabled)
 			control.input:SetText(tostring(control.value))

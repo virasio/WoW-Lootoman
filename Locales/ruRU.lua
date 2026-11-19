@@ -155,6 +155,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Makes a text of your looks to copy and give to another character or player."] = "Создаёт текст с вашими видами, чтобы скопировать его и передать другому персонажу или игроку.",
 	["With Background"] = "С фоном",
 	["With Border"] = "С рамкой",
+	["Quality Border"] = "Рамка качества",
 	["Border Width"] = "Толщина рамки",
 	["Opacity"] = "Непрозрачность",
 	["Icon Size"] = "Размер иконки",

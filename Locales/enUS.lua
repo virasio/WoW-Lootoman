@@ -160,6 +160,7 @@ ns.Locales.AddEnglish({
 	"With Background",
 	"With Border",
 	"Border Width",
+	"Quality Border",
 	"Opacity",
 	"Icon Size",
 	"Gap Between Icons",

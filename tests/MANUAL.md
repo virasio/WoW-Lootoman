@@ -186,6 +186,8 @@ The Default look and default options unless a check says otherwise.
   - *Expected:* the swatch, *Border Width* and *Opacity* are greyed out until *With Border* is ticked; the default is a white 1-pixel border at half opacity.
   - Four thin edges along the row's box, inside it, over its own background and under its icon and texts; the feed and the samples follow each change at once, and after `/reload`.
   - A look of icons has no border controls.
+- [ ] **Quality border (0.5.9).** With a rare item, a junk row and the low-space warning in the feed, untick *Quality Border* on the *Icon* part (a look of rows), then on the *Icon* of a look of icons, and tick it again.
+  - *Expected:* ticked by default, in every look made before; unticked, the icons lose their borders, the item's quality colour, the junk row's gray and the warning's red one alike, and keep their glow; the warning's name stays red. The feed and the samples follow at once, and after `/reload`.
 - [ ] **Owned count per look.** Tick the owned count's *Shown* in one look, and set *Counts* to *Bags only* with some of an item in the bank and some in the bags; loot that item. *Expected:* with *Bags only* the bank's are not counted; the other looks keep their own.
 - [ ] **Top row (0.5.9).** *Expected:* the looks' dropdown at the top left with the look menu, the edited look chosen; no *Reset* or *Share* buttons (both are in the menu). Choose another look in it: the window edits it, the feed keeps the profile's look, and *Apply* appears beside the dropdown; *Apply* makes the profile use it and goes away. *Reset Position*, at the far right of the row, puts the feed back at its default place in the current Edit Mode layout.
 

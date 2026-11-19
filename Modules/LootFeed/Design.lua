@@ -1,9 +1,9 @@
 local _, ns = ...
 
 -- How a loot feed row looks. A design is data: the
--- row's box and the parts inside it, in pixels at the base size 13. The size
--- setting (10–16) scales a design, so one design fits every size. Frames draws
--- any design; the row designer edits the player's one.
+-- row's box and the parts inside it, in pixels at the base size 13; every look
+-- is drawn at Design.SIZE. Frames draws any design; the look window's designer
+-- edits the player's one.
 --
 -- The row: height, width and gap (between rows), its view: "rows" (the
 -- default), or "icons" for the compact view of icons only, a background of
@@ -11,7 +11,9 @@ local _, ns = ...
 -- in percent), and a border around it (border, borderColor, borderWidth in
 -- pixels, which the size does not scale, and borderOpacity). Parts, each with
 -- shown:
---   icon                  size, in percent of the row's height
+--   icon                  size, in percent of the row's height; qualityBorder,
+--                         whether it wears the border of the item's quality
+--                         (and the junk row's gray one, the warning's red one)
 --   glow                  over the icon of rare and better items
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
 --                         align, LEFT or RIGHT; the amount and the owned count
@@ -78,7 +80,7 @@ Design.LARGE = {
 	borderWidth = 1,
 	borderOpacity = 50,
 	parts = {
-		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
+		icon = { shown = true, size = 100, qualityBorder = true, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = true, fontSize = 13, style = "none", width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
 		amount = { shown = true, fontSize = 13, style = "none", width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
@@ -101,7 +103,7 @@ Design.COMPACT = {
 	borderWidth = 1,
 	borderOpacity = 50,
 	parts = {
-		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
+		icon = { shown = true, size = 100, qualityBorder = true, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = true, fontSize = 12, style = "none", width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
 		amount = { shown = true, fontSize = 12, style = "none", width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
@@ -124,7 +126,7 @@ Design.MINIMAL = {
 	borderWidth = 1,
 	borderOpacity = 50,
 	parts = {
-		icon = { shown = false, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
+		icon = { shown = false, size = 100, qualityBorder = true, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = false },
 		name = { shown = true, fontSize = 13, style = "none", width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, style = "none", width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
@@ -149,7 +151,7 @@ Design.ICONS = {
 	borderWidth = 1,
 	borderOpacity = 50,
 	parts = {
-		icon = { shown = true, size = 100, anchor = "row", point = "CENTER", x = 0, y = 0 },
+		icon = { shown = true, size = 100, qualityBorder = true, anchor = "row", point = "CENTER", x = 0, y = 0 },
 		glow = { shown = true },
 		name = { shown = false, fontSize = 13, style = "none", width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
 		amount = { shown = true, fontSize = 13, style = "none", width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,

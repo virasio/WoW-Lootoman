@@ -555,6 +555,28 @@ describe("loot feed frames", function()
 			assert.same({ true, "42" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
+		it("draws the icon's quality border, the junk row's and the warning's too, unless the design turns it off", function()
+			local Design = ns.Feed.Design
+			local rowFrame = Frames.CreateRow(nil)
+			local plain = { layout = Design.Layout(Design.LARGE) }
+			local bare = { layout = Design.Layout(Design.Current({ schema = Design.SCHEMA, base = "large",
+				changes = { icon = { qualityBorder = false } } })) }
+			local rows = {
+				{ kind = "item", name = "Cloth", icon = 1, quality = 4, amount = 1 },
+				{ kind = "warning", amount = "2" },
+				{ kind = "item", parts = { { name = "Tooth" } }, amount = 2 },
+			}
+			for _, row in ipairs(rows) do
+				Frames.ApplyLayout(rowFrame, plain.layout)
+				Frames.Fill(rowFrame, row, plain)
+				assert.is_true(rowFrame.IconBorder.shown, row.kind)
+				Frames.ApplyLayout(rowFrame, bare.layout)
+				Frames.Fill(rowFrame, row, bare)
+				-- The icon stays; only its border goes.
+				assert.same({ false, true }, { rowFrame.IconBorder.shown, rowFrame.Icon.shown }, row.kind)
+			end
+		end)
+
 		it("draws the amount's own background when the design asks, with its opacity", function()
 			local Design = ns.Feed.Design
 			local design = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { amount = { background = true, opacity = 30 } } })

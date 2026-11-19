@@ -12,7 +12,8 @@ describe("loot feed designs", function()
 	it("scale every length of a design with the size, and size the icon by the row's height", function()
 		local layout = Design.Layout(Design.LARGE, 16)
 		assert.same({ 43, 9, 369 }, { layout.height, layout.gap, layout.width })
-		assert.same({ shown = true, size = 100, pixels = 43, anchor = "row", point = "LEFT", x = 0, y = 0 }, layout.parts.icon)
+		assert.same({ shown = true, size = 100, qualityBorder = true, pixels = 43, anchor = "row", point = "LEFT", x = 0, y = 0 },
+			layout.parts.icon)
 		assert.same({ shown = true, fontSize = 16, style = "none", width = 246, align = "LEFT", anchor = "icon", point = "RIGHT", x = 14, y = 0 },
 			layout.parts.name)
 		assert.same({ shown = true }, layout.parts.glow)

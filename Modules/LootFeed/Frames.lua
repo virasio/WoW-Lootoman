@@ -448,7 +448,7 @@ function Frames.Fill(rowFrame, row, options, stuck)
 		-- A frame that showed an atlas keeps its coordinates otherwise.
 		rowFrame.Icon:SetTexCoord(0, 1, 0, 1)
 	end
-	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil)
+	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil and parts.icon.qualityBorder)
 	if look.border then
 		rowFrame.IconBorder:SetAtlas(look.border)
 		local tint = look.borderColor or WHITE

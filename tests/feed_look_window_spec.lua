@@ -112,7 +112,15 @@ describe("loot feed look window", function()
 			LookWindow.Select("icon")
 			assert.equals("icon", LookWindow.Selected())
 			assert.same({ "Shown: true", "Anchor To: row", "Anchor Point: LEFT", "Size, Percent of the Row Height: 100 in 20..100",
-				"Horizontal Offset: 0 in 0..265", "Vertical Offset: 0 in 0..0" }, inspector())
+				"Horizontal Offset: 0 in 0..265", "Vertical Offset: 0 in 0..0", "Quality Border: true" }, inspector())
+			-- The quality border turned off: the samples and the feed lose it.
+			local border = window.controls[6]
+			assert.equals("Quality Border", border.label.text)
+			border.check.checked = false
+			border.check.scripts.OnClick(border.check)
+			assert.same({ false, false, false }, { design().parts.icon.qualityBorder, window.rows[2].IconBorder.shown,
+				module.feed.options.layout.parts.icon.qualityBorder })
+			LookWindow.Change("icon", "qualityBorder", true)
 			LookWindow.Select("owned")
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
@@ -422,7 +430,13 @@ describe("loot feed look window", function()
 			ns.Feed.Looks.SetView("Strip", "icons")
 			LookWindow.Open("Strip")
 			assert.equals("row", LookWindow.Selected())
-			assert.same({ "Icon Size: 36 in 12..80" }, inspector())
+			assert.same({ "Icon Size: 36 in 12..80", "Quality Border: true" }, inspector())
+			-- The row is the icon, so its border is set here, on the icon's values.
+			local border = window.controls[2]
+			border.check.checked = false
+			border.check.scripts.OnClick(border.check)
+			assert.same({ false, false, "Quality Border: false" }, { ns.Feed.Design.Current(ns.Feed.Looks.Get("Strip")).parts.icon.qualityBorder,
+				window.rows[2].IconBorder.shown, inspector()[2] })
 			assert.same({ "Icon*", "Amount", "Owned Count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
 			LookWindow.Select("owned")
