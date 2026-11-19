@@ -91,13 +91,13 @@ Looks.SIDEWAYS = { left = true, right = true }
 -- The setting of each kind of usable item the feed keeps (Rules/Usable.lua),
 -- and its label.
 Looks.KEEP = {
-	quest = { "keepQuest", L["Items that start a quest"] },
+	quest = { "keepQuest", L["Items That Start a Quest"] },
 	recipe = { "keepRecipes", L["Recipes"] },
 	container = { "keepContainers", L["Containers"] },
 	pet = { "keepPets", L["Pets"] },
 	mount = { "keepMounts", L["Mounts"] },
 	toy = { "keepToys", L["Toys"] },
-	set = { "keepSets", L["Appearance sets"] },
+	set = { "keepSets", L["Appearance Sets"] },
 	heirloom = { "keepHeirlooms", L["Heirlooms"] },
 }
 
@@ -141,62 +141,62 @@ end
 -- before the fill direction.
 function Looks.Settings(view)
 	local content = {
-		{ kind = "header", key = "shows", label = L["What the feed shows"] },
+		{ kind = "header", key = "shows", label = L["What the Feed Shows"] },
 		{ kind = "checkbox", key = "items", label = L["Items"] },
 		{ kind = "checkbox", key = "currencies", label = L["Currencies"] },
 		{ kind = "checkbox", key = "money", label = L["Money"] },
 		{ kind = "checkbox", key = "reputation", label = L["Reputation"] },
 		{ kind = "checkbox", key = "xp", label = L["Experience"] },
-		{ kind = "dropdown", key = "minQuality", label = L["Minimum quality"],
+		{ kind = "dropdown", key = "minQuality", label = L["Minimum Quality"],
 			tooltip = L["Items of a lower quality are not shown."], choices = qualityChoices() },
-		{ kind = "checkbox", key = "junkRow", label = L["Junk in one row"],
+		{ kind = "checkbox", key = "junkRow", label = L["Junk in One Row"],
 			tooltip = L["Gray items and items you marked as junk merge into one row, “Junk”, which lists them in its tooltip."] },
-		{ kind = "header", key = "kept", label = L["Kept usable items"] },
-		{ kind = "checkbox", key = "keepUsable", label = L["Keep usable items"],
+		{ kind = "header", key = "kept", label = L["Kept Usable Items"] },
+		{ kind = "checkbox", key = "keepUsable", label = L["Keep Usable Items"],
 			tooltip = L["Items this character can use right now stay at the start of the feed, after any warnings, also below the minimum quality, until you click them: left to dismiss, right to use."] },
 	}
 	for _, kind in ipairs(ns.Rules.Usable.Kinds()) do
 		content[#content + 1] = { kind = "checkbox", key = Looks.KEEP[kind][1], label = Looks.KEEP[kind][2], parent = "keepUsable" }
 	end
 	local warnings = {
-		{ kind = "header", key = "warnings", label = L["Low-space warning"] },
-		{ kind = "checkbox", key = "warnTotal", label = L["Warn when few slots are free in all bags"],
+		{ kind = "header", key = "warnings", label = L["Low-Space Warning"] },
+		{ kind = "checkbox", key = "warnTotal", label = L["Warn when Few Slots Are Free in All Bags"],
 			tooltip = L["Shows the warning while no more slots are free in all your bags together, the reagent and profession bags too, than the number below."] },
-		{ kind = "slider", key = "warnTotalAt", label = L["All slots"], min = 0, max = 40, step = 1, format = "%d", parent = "warnTotal" },
-		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when few general slots are free"],
+		{ kind = "slider", key = "warnTotalAt", label = L["All Slots"], min = 0, max = 40, step = 1, format = "%d", parent = "warnTotal" },
+		{ kind = "checkbox", key = "warnGeneral", label = L["Warn when Few General Slots Are Free"],
 			tooltip = L["Shows the warning while no more general bag slots are free than the number below: only they take gear and junk."] },
-		{ kind = "slider", key = "warnGeneralAt", label = L["General slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnGeneral" },
-		{ kind = "checkbox", key = "warnReagent", label = L["Warn when few reagent slots are free"],
+		{ kind = "slider", key = "warnGeneralAt", label = L["General Slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnGeneral" },
+		{ kind = "checkbox", key = "warnReagent", label = L["Warn when Few Reagent Slots Are Free"],
 			tooltip = L["Shows the warning while no more reagent bag slots are free than the number below. Reagents go into the general bags when their bag is full."] },
-		{ kind = "slider", key = "warnReagentAt", label = L["Reagent slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnReagent" },
-		{ kind = "text", key = "slotsText", label = L["Warning text"], maxLetters = 80,
+		{ kind = "slider", key = "warnReagentAt", label = L["Reagent Slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnReagent" },
+		{ kind = "text", key = "slotsText", label = L["Warning Text"], maxLetters = 80,
 			tooltip = L["The warning's number, from tokens in braces: %s. A colour after a bar: {reagent|33ff33}."]:format(ns.Feed.SlotsText.TokenList()) },
 	}
 	for _, setting in ipairs(warnings) do
 		content[#content + 1] = setting
 	end
 	local appearance = {
-		{ kind = "dropdown", key = "direction", label = L["Fill direction"],
+		{ kind = "dropdown", key = "direction", label = L["Fill Direction"],
 			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
 			choices = directionsOf(view) },
-		{ kind = "slider", key = "maxRows", label = L["Number of rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
+		{ kind = "slider", key = "maxRows", label = L["Number of Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
 			min = 3, max = 20, step = 1, format = "%d" },
 		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
 			min = 10, max = 16, step = 1, format = "%d" },
-		{ kind = "dropdown", key = "textStyle", label = L["Text style"], tooltip = L["How the rows' texts stand out: plain, with a shadow, or outlined."],
+		{ kind = "dropdown", key = "textStyle", label = L["Text Style"], tooltip = L["How the rows' texts stand out: plain, with a shadow, or outlined."],
 			choices = { { "none", L["None"] }, { "shadow", L["Shadow"] }, { "outline", L["Outline"] }, { "thick", L["Thick outline"] } } },
-		{ kind = "checkbox", key = "glow", label = L["Glow for rare items"], tooltip = L["Rare and better items glow in their quality colour."] },
+		{ kind = "checkbox", key = "glow", label = L["Glow for Rare Items"], tooltip = L["Rare and better items glow in their quality colour."] },
 		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
 		{ kind = "color", key = "backgroundColor", label = L["Background color"],
 			tooltip = L["The background reaches a little past the rows on every side and fades out there."] },
 	}
 	local timings = {
-		{ kind = "slider", key = "stagger", label = L["Delay between rows"],
+		{ kind = "slider", key = "stagger", label = L["Delay Between Rows"],
 			tooltip = L["When much is looted at once, each row comes in this long after the one before it, and leaves as long after it."],
 			min = 0, max = 0.5, step = 0.05, format = L["%.2f s"] },
-		{ kind = "slider", key = "duration", label = L["Time on screen"], tooltip = L["Seconds before a row starts to fade out."],
+		{ kind = "slider", key = "duration", label = L["Time on Screen"], tooltip = L["Seconds before a row starts to fade out."],
 			min = 2, max = 30, step = 1, format = L["%d s"] },
-		{ kind = "slider", key = "fade", label = L["Fade-out time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
+		{ kind = "slider", key = "fade", label = L["Fade-Out Time"], min = 0.2, max = 3, step = 0.1, format = L["%.1f s"] },
 	}
 	local list = {}
 	for tab, settings in pairs({ content = content, appearance = appearance, timings = timings }) do

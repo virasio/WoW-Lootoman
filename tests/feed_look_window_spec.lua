@@ -76,8 +76,8 @@ describe("loot feed look window", function()
 			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
-			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30", "With background: false",
-				"Opacity: 60 in 0..100", "With border: false", "Border width: 1 in 1..4", "Opacity: 50 in 0..100" }, inspector())
+			assert.same({ "Row Height: 35 in 12..80", "Width: 300 in 120..600", "Gap Between Rows: 7 in 0..30", "With Background: false",
+				"Opacity: 60 in 0..100", "With Border: false", "Border Width: 1 in 1..4", "Opacity: 50 in 0..100" }, inspector())
 		end)
 
 		it("gives the row a border of its own, its colour picked, its width and opacity under it", function()
@@ -110,13 +110,13 @@ describe("loot feed look window", function()
 		it("shows the chosen part's values, within the row's box, and nothing more of a hidden part", function()
 			LookWindow.Select("icon")
 			assert.equals("icon", LookWindow.Selected())
-			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
-				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
+			assert.same({ "Shown: true", "Anchor To: row", "Anchor Point: LEFT", "Size, Percent of the Row Height: 100 in 20..100",
+				"Horizontal Offset: 0 in 0..265", "Vertical Offset: 0 in 0..0" }, inspector())
 			LookWindow.Select("owned")
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
-			assert.same({ "Shown: true", "Counts: bags", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
-				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "With background: false",
+			assert.same({ "Shown: true", "Counts: bags", "Anchor To: icon", "Anchor Point: BOTTOMRIGHT", "Text Alignment: RIGHT", "Text Size: 12 in 6..20",
+				"Maximum Width: 40 in 20..300", "Horizontal Offset: -4 in -23..265", "Vertical Offset: 3 in 0..23", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 		end)
 
@@ -156,7 +156,7 @@ describe("loot feed look window", function()
 		it("sets the amount's own background and its opacity", function()
 			LookWindow.Select("amount")
 			local list = inspector()
-			assert.same({ "With background: false", "Opacity: 60 in 0..100" }, { list[9], list[10] })
+			assert.same({ "With Background: false", "Opacity: 60 in 0..100" }, { list[9], list[10] })
 			window.controls[8].check.checked = true
 			window.controls[8].check.scripts.OnClick(window.controls[8].check)
 			assert.is_true(design().parts.amount.background)
@@ -256,13 +256,13 @@ describe("loot feed look window", function()
 
 		it("anchors a part to the element and point chosen in its dropdowns, and aligns a text", function()
 			LookWindow.Select("name")
-			assert.same({ "Row", "Icon*", "Owned count" }, menu(window.controls[1].choice, "row"))
+			assert.same({ "Row", "Icon*", "Owned Count" }, menu(window.controls[1].choice, "row"))
 			assert.equals("row", design().parts.name.anchor)
 			assert.equals(9, #menu(window.controls[2].choice, "TOPRIGHT"))
 			assert.equals("TOPRIGHT", design().parts.name.point)
 			assert.same({ "Left*", "Right" }, menu(window.controls[3].choice, "RIGHT"))
 			assert.equals("RIGHT", design().parts.name.align)
-			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: TOPRIGHT", "Text alignment: RIGHT" },
+			assert.same({ "Shown: true", "Anchor To: row", "Anchor Point: TOPRIGHT", "Text Alignment: RIGHT" },
 				{ unpack(inspector(), 1, 4) })
 		end)
 
@@ -307,6 +307,19 @@ describe("loot feed look window", function()
 			hit.scripts.OnDragStop(hit)
 		end)
 
+		it("sizes every tab to its text, stands them on a frame around their area, and names the look in its title", function()
+			local sized = {}
+			for id = 1, 4 do
+				sized[id] = window["tab" .. id].resizedWith
+			end
+			assert.same({ 8, 8, 8, 8 }, sized)
+			assert.same({ "Feed Look: Default", true }, { window.title, window.inset:IsShown() })
+			LookWindow.SetWide(true)
+			assert.is_false(window.inset:IsShown())
+			LookWindow.SetWide(false)
+			assert.is_true(window.inset:IsShown())
+		end)
+
 		it("widens the samples over the tabs, and back", function()
 			LookWindow.SetWide(true)
 			assert.same({ false, false, LookWindow.WIDTH - 32 }, { window.panel.shown, window.tab1.shown, window.preview.width })
@@ -326,7 +339,7 @@ describe("loot feed look window", function()
 		end)
 
 		it("offers every part, also a hidden one, in its part list", function()
-			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts, "owned"))
+			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned Count" }, menu(window.parts, "owned"))
 			assert.equals("owned", LookWindow.Selected())
 		end)
 
@@ -336,18 +349,18 @@ describe("loot feed look window", function()
 			ns.Feed.Looks.Set("Strip", "size", 13)
 			LookWindow.Open("Strip")
 			assert.equals("row", LookWindow.Selected())
-			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
-			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
+			assert.same({ "Icon Size: 36 in 12..80", "Gap Between Icons: 4 in 0..30" }, inspector())
+			assert.same({ "Icon*", "Amount", "Owned Count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
 			LookWindow.Select("owned")
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
-			assert.same({ "Shown: true", "Counts: bags", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
-				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "With background: false",
+			assert.same({ "Shown: true", "Counts: bags", "Anchor Point: TOPRIGHT", "Text Alignment: RIGHT", "Text Size: 10 in 6..20",
+				"Horizontal Offset: -2 in -60..36", "Vertical Offset: -2 in -62..36", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 			LookWindow.Select("amount")
-			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
-				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "With background: false",
+			assert.same({ "Shown: true", "Anchor Point: BOTTOMRIGHT", "Text Alignment: RIGHT", "Text Size: 13 in 8..24",
+				"Horizontal Offset: -2 in -60..36", "Vertical Offset: 2 in -36..59", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 			-- Icons 36 wide and 4 apart, side by side.
 			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
@@ -361,7 +374,7 @@ describe("loot feed look window", function()
 			assert.equals("row", LookWindow.Selected())
 			-- Back on rows, every part again.
 			LookWindow.Open("Default")
-			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts))
+			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned Count" }, menu(window.parts))
 		end)
 
 		it("hides on Escape and with its close button, and the command toggles it", function()
@@ -404,7 +417,7 @@ describe("loot feed look window", function()
 					tabs[control.setting.key] = control.setting.tab
 				end
 			end
-			assert.same({ "What the feed shows", "Kept usable items", "Low-space warning" }, headers)
+			assert.same({ "What the Feed Shows", "Kept Usable Items", "Low-Space Warning" }, headers)
 			assert.same({ "content", "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings", "timings" },
 				{ tabs.items, tabs.warnGeneral, tabs.junkRow, tabs.direction, tabs.maxRows, tabs.size, tabs.backgroundOpacity, tabs.stagger,
 					tabs.duration, tabs.fade })
@@ -435,7 +448,7 @@ describe("loot feed look window", function()
 
 		it("offers the text style on Appearance, and the samples follow it", function()
 			local style = settingOf("textStyle")
-			assert.same({ "appearance", "Text style" }, { style.setting.tab, style.label.text })
+			assert.same({ "appearance", "Text Style" }, { style.setting.tab, style.label.text })
 			ns.Feed.Looks.Set("Default", "textStyle", "thick")
 			LookWindow.Refresh()
 			assert.equals("THICKOUTLINE", window.rows[1].Label.font[3])
@@ -443,7 +456,7 @@ describe("loot feed look window", function()
 
 		it("takes the warning's text in a field, a typed | kept single, and shows it in the sample", function()
 			local field = settingOf("slotsText")
-			assert.same({ "Warning text", "{general}+{reagent||1eff00}" }, { field.label.text, field.input:GetText() })
+			assert.same({ "Warning Text", "{general}+{reagent||1eff00}" }, { field.label.text, field.input:GetText() })
 			field.input:SetText("{free} || {general}")
 			field.input.scripts.OnEditFocusLost(field.input)
 			assert.equals("{free} | {general}", ns.Feed.Looks.Value("Default", "slotsText"))
@@ -511,7 +524,7 @@ describe("loot feed look window", function()
 		end)
 
 		it("names it in its title and changes it, leaving the feed alone", function()
-			assert.same({ "Feed look: Raid", "Raid" }, { window.title, LookWindow.Edited() })
+			assert.same({ "Feed Look: Raid", "Raid" }, { window.title, LookWindow.Edited() })
 			LookWindow.Change("row", "height", 40)
 			LookWindow.Set("maxRows", 9)
 			assert.same({ { row = { height = 40 } }, 9 }, { ns.Feed.Looks.Get("Raid").changes, ns.Feed.Looks.Value("Raid", "maxRows") })
@@ -520,7 +533,7 @@ describe("loot feed look window", function()
 
 		it("follows it when it is renamed, and closes when it is deleted", function()
 			ns.Feed.Looks.Rename("Raid", "Party")
-			assert.same({ "Feed look: Party", "Party" }, { window.title, LookWindow.Edited() })
+			assert.same({ "Feed Look: Party", "Party" }, { window.title, LookWindow.Edited() })
 			ns.Feed.Looks.Delete("Party")
 			assert.is_false(window.shown)
 		end)
@@ -628,7 +641,7 @@ describe("loot feed look window's buttons and view", function()
 		Looks.Create("Raid")
 		assert.same({ true, false }, { lookEntry("Default").isSelected(), window.apply:IsShown() })
 		lookEntry("Raid").setSelected()
-		assert.same({ "Raid", "Default", "Feed look: Raid", true }, { LookWindow.Edited(), Looks.Current(), window.title, window.apply:IsShown() })
+		assert.same({ "Raid", "Default", "Feed Look: Raid", true }, { LookWindow.Edited(), Looks.Current(), window.title, window.apply:IsShown() })
 		assert.is_true(lookEntry("Raid").isSelected())
 		window.apply.scripts.OnClick(window.apply)
 		assert.same({ "Raid", false }, { Looks.Current(), window.apply:IsShown() })

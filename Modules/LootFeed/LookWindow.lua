@@ -47,6 +47,8 @@ LookWindow.PREVIEW_HEIGHT = LookWindow.HEIGHT + LookWindow.PANEL_TOP - 36
 -- The samples' zoom, and the wide samples over the tabs: the window's own
 -- state, for the session.
 LookWindow.ZOOMS = { 1, 1.5, 2 }
+-- Room beside a tab's text, past the game's own.
+LookWindow.TAB_PADDING = 8
 -- The window's global name, for UISpecialFrames.
 LookWindow.NAME = "LootomanLookWindow"
 -- The tabs: three of the look's settings (their tab in Looks.Settings), then
@@ -54,7 +56,7 @@ LookWindow.NAME = "LootomanLookWindow"
 LookWindow.CONTENT, LookWindow.APPEARANCE, LookWindow.TIMINGS, LookWindow.DESIGN = 1, 2, 3, 4
 local SETTING_TABS = { "content", "appearance", "timings" }
 
-local TITLES = { row = L["Row"], icon = L["Icon"], name = L["Name"], amount = L["Amount"], owned = L["Owned count"] }
+local TITLES = { row = L["Row"], icon = L["Icon"], name = L["Name"], amount = L["Amount"], owned = L["Owned Count"] }
 local PART_ORDER = { "row", "icon", "name", "amount", "owned" }
 local POINT_NAMES = {
 	TOPLEFT = L["Top left"],
@@ -72,28 +74,28 @@ local COUNT_NAMES = { all = L["Bags and bank"], bags = L["Bags only"] }
 
 -- Whether a part is shown is the checkbox beside the part's name, above these.
 local TEXT_CONTROLS = {
-	{ key = "anchor", label = L["Anchor to"] },
-	{ key = "point", label = L["Anchor point"] },
-	{ key = "align", label = L["Text alignment"] },
-	{ key = "fontSize", label = L["Text size"] },
-	{ key = "width", label = L["Maximum width"] },
-	{ key = "x", label = L["Horizontal offset"] },
-	{ key = "y", label = L["Vertical offset"] },
+	{ key = "anchor", label = L["Anchor To"] },
+	{ key = "point", label = L["Anchor Point"] },
+	{ key = "align", label = L["Text Alignment"] },
+	{ key = "fontSize", label = L["Text Size"] },
+	{ key = "width", label = L["Maximum Width"] },
+	{ key = "x", label = L["Horizontal Offset"] },
+	{ key = "y", label = L["Vertical Offset"] },
 }
 
 -- What the inspector shows for each part, in order.
 local CONTROLS = {
 	row = {
-		{ key = "height", label = L["Row height"] },
+		{ key = "height", label = L["Row Height"] },
 		{ key = "width", label = L["Width"] },
-		{ key = "gap", label = L["Gap between rows"] },
+		{ key = "gap", label = L["Gap Between Rows"] },
 	},
 	icon = {
-		{ key = "anchor", label = L["Anchor to"] },
-		{ key = "point", label = L["Anchor point"] },
-		{ key = "size", label = L["Size, percent of the row height"] },
-		{ key = "x", label = L["Horizontal offset"] },
-		{ key = "y", label = L["Vertical offset"] },
+		{ key = "anchor", label = L["Anchor To"] },
+		{ key = "point", label = L["Anchor Point"] },
+		{ key = "size", label = L["Size, Percent of the Row Height"] },
+		{ key = "x", label = L["Horizontal Offset"] },
+		{ key = "y", label = L["Vertical Offset"] },
 	},
 	name = TEXT_CONTROLS,
 	amount = {},
@@ -104,14 +106,14 @@ local CONTROLS = {
 -- opacity, which can be changed only while the background is on. The owned
 -- count also says what it counts.
 local BACKGROUND = {
-	{ key = "background", label = L["With background"] },
+	{ key = "background", label = L["With Background"] },
 	{ key = "opacity", label = L["Opacity"], parent = "background" },
 }
 -- The row's border, under its background: a checkbox with its colour's
 -- swatch, and under it the width and the opacity.
 local BORDER = {
-	{ key = "border", label = L["With border"], colorKey = "borderColor" },
-	{ key = "borderWidth", label = L["Border width"], parent = "border" },
+	{ key = "border", label = L["With Border"], colorKey = "borderColor" },
+	{ key = "borderWidth", label = L["Border Width"], parent = "border" },
 	{ key = "borderOpacity", label = L["Opacity"], parent = "border" },
 }
 local COUNTS = { key = "count", label = L["Counts"] }
@@ -133,18 +135,18 @@ table.insert(CONTROLS.owned, 1, COUNTS)
 -- The amount and the owned count sit on the icon, each set alike.
 local ICON_PARTS = { "row", "amount", "owned" }
 local ON_THE_ICON = {
-	{ key = "point", label = L["Anchor point"] },
-	{ key = "align", label = L["Text alignment"] },
-	{ key = "fontSize", label = L["Text size"] },
-	{ key = "x", label = L["Horizontal offset"] },
-	{ key = "y", label = L["Vertical offset"] },
+	{ key = "point", label = L["Anchor Point"] },
+	{ key = "align", label = L["Text Alignment"] },
+	{ key = "fontSize", label = L["Text Size"] },
+	{ key = "x", label = L["Horizontal Offset"] },
+	{ key = "y", label = L["Vertical Offset"] },
 	BACKGROUND[1],
 	BACKGROUND[2],
 }
 local ICON_CONTROLS = {
 	row = {
-		{ key = "height", label = L["Icon size"] },
-		{ key = "gap", label = L["Gap between icons"] },
+		{ key = "height", label = L["Icon Size"] },
+		{ key = "gap", label = L["Gap Between Icons"] },
 	},
 	amount = ON_THE_ICON,
 	owned = { COUNTS },
@@ -268,14 +270,18 @@ function LookWindow.Refresh()
 		window:Hide()
 		return
 	end
-	window:SetTitle(L["Feed look: %s"]:format(Looks.DisplayName(edited)))
+	window:SetTitle(L["Feed Look: %s"]:format(Looks.DisplayName(edited)))
 	window.looks:GenerateMenu()
 	window.apply:SetShown(edited ~= Looks.Current())
 	window.resetPosition:SetEnabled(LootFeed.feed ~= nil and LootFeed:IsActive() and ns.EditMode.LayoutName() ~= nil)
 	local design = Design.Current(section())
 	window.tab4:SetText(isIcons(design) and L["Icon"] or L["Row"])
+	-- Each tab as wide as its text, in every language: the game sizes a tab
+	-- as it shows, which may come before its text is measured.
 	if PanelTemplates_TabResize then
-		PanelTemplates_TabResize(window.tab4, 0)
+		for id = 1, 4 do
+			PanelTemplates_TabResize(window["tab" .. id], LookWindow.TAB_PADDING)
+		end
 	end
 	if not controlsOf(design)[selected] then
 		selected = "row"
@@ -385,6 +391,7 @@ function LookWindow.SetWide(on)
 	preview:SetPoint("TOPRIGHT", -16, LookWindow.PANEL_TOP)
 	preview:SetSize(wide and LookWindow.WIDTH - 32 or LookWindow.PREVIEW_WIDTH, LookWindow.PREVIEW_HEIGHT)
 	window.panel:SetShown(not wide)
+	window.inset:SetShown(not wide)
 	for id = 1, 4 do
 		window["tab" .. id]:SetShown(not wide)
 	end
@@ -982,6 +989,12 @@ local function build()
 	frame.panel:SetPoint("TOPLEFT", 16, LookWindow.PANEL_TOP)
 	frame.panel:SetPoint("BOTTOMLEFT", 16, 36)
 	frame.panel:SetWidth(LookWindow.PANEL_WIDTH)
+	-- A frame around the tabs' area, which the tabs stand on.
+	frame.inset = CreateFrame("Frame", nil, frame, "InsetFrameTemplate")
+	frame.inset:SetPoint("TOPLEFT", frame.panel, "TOPLEFT", -4, 4)
+	frame.inset:SetPoint("BOTTOMRIGHT", frame.panel, "BOTTOMRIGHT", 4, -4)
+	frame.inset:SetFrameLevel(frame:GetFrameLevel() + 1)
+	frame.panel:SetFrameLevel(frame.inset:GetFrameLevel() + 1)
 	-- A wide row is cut off at the preview's edge.
 	frame.preview:SetClipsChildren(true)
 	local previewBackground = frame.preview:CreateTexture(nil, "BACKGROUND")
@@ -1024,7 +1037,7 @@ local function build()
 		if previous then
 			tab:SetPoint("LEFT", previous, "RIGHT", 2, 0)
 		else
-			tab:SetPoint("BOTTOMLEFT", frame.panel, "TOPLEFT", 4, 2)
+			tab:SetPoint("BOTTOMLEFT", frame.inset, "TOPLEFT", 6, -1)
 		end
 		tab:SetScript("OnClick", function()
 			LookWindow.ShowTab(id)

@@ -430,6 +430,8 @@ function UI.Install()
 	-- The tabs of a frame (SharedUIPanelTemplates.lua): the chosen one.
 	rawset(_G, "PanelTemplates_SetNumTabs", function(frame, count) frame.numTabs = count end)
 	rawset(_G, "PanelTemplates_SetTab", function(frame, id) frame.selectedTab = id end)
+	-- A tab as wide as its text and the padding (here: the padding it was given).
+	rawset(_G, "PanelTemplates_TabResize", function(tab, padding) tab.resizedWith = padding end)
 	-- The game's color picker (Blizzard_ColorPickerFrame): what it was opened
 	-- with, and Pick(r, g, b) or Cancel() as the player does.
 	local picker = { shown = false }
