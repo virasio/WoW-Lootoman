@@ -51,6 +51,11 @@ LookWindow.PREVIEW_HEIGHT = LookWindow.HEIGHT + LookWindow.PANEL_TOP - 36
 LookWindow.ZOOMS = { 1, 1.5, 2 }
 -- Room beside a tab's text, past the game's own.
 LookWindow.TAB_PADDING = 8
+-- The parts' hit areas over their row, in the order they are drawn (the
+-- texts over the icon), and the gold frame over them all, a pixel wide.
+LookWindow.HIT_LEVELS = { icon = 5, name = 6, amount = 7, owned = 8 }
+LookWindow.MARK_LEVEL = 10
+LookWindow.MARK_WIDTH = 1
 -- The window's global name, for UISpecialFrames.
 LookWindow.NAME = "LootomanLookWindow"
 -- The tabs: three of the look's settings (their tab in Looks.Settings), then
@@ -232,18 +237,20 @@ end
 
 -- The gold frame in a row: around the row or the chosen icon, and around the
 -- most a chosen text may take, from the side it grows from: its maximum width,
--- as far as the row allows. Hidden where the chosen part is not shown.
+-- as far as the row allows. Shown only on the designer's tab, and hidden
+-- where the chosen part is not shown.
 local function mark(rowFrame, layout)
 	local frame = rowFrame.Selected
 	frame:ClearAllPoints()
+	local designing = window.tab == LookWindow.DESIGN
 	if selected == "row" then
 		frame:SetPoint("TOPLEFT", rowFrame, "TOPLEFT", -2, 2)
 		frame:SetPoint("BOTTOMRIGHT", rowFrame, "BOTTOMRIGHT", 2, -2)
-		frame:Show()
+		frame:SetShown(designing)
 		return
 	end
 	local region = rowFrame[Frames.REGIONS[selected]]
-	frame:SetShown(region:IsShown())
+	frame:SetShown(designing and region:IsShown())
 	if Design.TEXTS[selected] then
 		local side = layout.parts[selected].align
 		local outward = side == "LEFT" and -2 or 2
@@ -338,6 +345,7 @@ function LookWindow.Refresh()
 		end
 		rowFrame.Box:SetAlpha(selected == "row" and 1 or 0.5)
 		mark(rowFrame, layout)
+		window.layout = layout
 		for part, hit in pairs(rowFrame.hits) do
 			hit:SetShown(rowFrame[Frames.REGIONS[part]]:IsShown() and hittable(design, part))
 		end
@@ -391,6 +399,12 @@ function LookWindow.ShowTab(id)
 		panel:SetShown(id == index)
 	end
 	window.designTab:SetShown(id == LookWindow.DESIGN)
+	-- The gold frame shows only on the designer's tab.
+	if window.layout then
+		for _, rowFrame in ipairs(window.rows) do
+			mark(rowFrame, window.layout)
+		end
+	end
 end
 
 -- The samples drawn larger (LookWindow.ZOOMS).
@@ -616,17 +630,19 @@ end
 -- A gold frame, the mark of the chosen part; mark() places it.
 local function createBorder(parent)
 	local border = CreateFrame("Frame", nil, parent)
-	border:SetFrameLevel(parent:GetFrameLevel() + 6)
+	border:SetFrameLevel(parent:GetFrameLevel() + LookWindow.MARK_LEVEL)
 	local edges = { { "TOPLEFT", "TOPRIGHT" }, { "BOTTOMLEFT", "BOTTOMRIGHT" }, { "TOPLEFT", "BOTTOMLEFT" }, { "TOPRIGHT", "BOTTOMRIGHT" } }
+	border.edges = {}
 	for index, ends in ipairs(edges) do
 		local edge = border:CreateTexture(nil, "OVERLAY")
+		border.edges[index] = edge
 		edge:SetColorTexture(1, 0.82, 0, 1)
 		edge:SetPoint(ends[1])
 		edge:SetPoint(ends[2])
 		if index <= 2 then
-			edge:SetHeight(2)
+			edge:SetHeight(LookWindow.MARK_WIDTH)
 		else
-			edge:SetWidth(2)
+			edge:SetWidth(LookWindow.MARK_WIDTH)
 		end
 	end
 	border:Hide()
@@ -636,7 +652,8 @@ end
 local function createHit(rowFrame, part)
 	local hit = CreateFrame("Button", nil, rowFrame)
 	hit:SetAllPoints(rowFrame[Frames.REGIONS[part]])
-	hit:SetFrameLevel(rowFrame:GetFrameLevel() + 5)
+	-- In the order they are drawn, so a text over the icon is picked, not the icon.
+	hit:SetFrameLevel(rowFrame:GetFrameLevel() + LookWindow.HIT_LEVELS[part])
 	hit:RegisterForDrag("LeftButton")
 	hit.Highlight = hit:CreateTexture(nil, "HIGHLIGHT")
 	hit.Highlight:SetAllPoints()

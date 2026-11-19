@@ -202,9 +202,15 @@ describe("loot feed look window", function()
 			assert.same({ true, { 0.2, 0.4, 0.6, 0.4 } }, { module.feed.rows[1].RowBackground.shown, module.feed.rows[1].RowBackground.colorTexture })
 		end)
 
-		it("marks the row, the chosen icon, or the most room the chosen text may take, with a frame", function()
+		it("marks the row, the chosen icon, or the most room the chosen text may take, with a thin frame on the designer's tab", function()
 			local row = window.rows[1]
+			-- Not on the settings' tabs.
+			LookWindow.ShowTab(LookWindow.CONTENT)
+			assert.is_false(row.Selected.shown)
+			LookWindow.ShowTab(LookWindow.DESIGN)
 			assert.same({ true, { "TOPLEFT", row, "TOPLEFT", -2, 2 } }, { row.Selected.shown, row.Selected.points[1] })
+			local edges = { row.Selected.edges[1].height, row.Selected.edges[3].width }
+			assert.same({ 1, 1 }, edges)
 			LookWindow.Select("icon")
 			assert.same({ "TOPLEFT", row.Icon, "TOPLEFT", -2, 2 }, row.Selected.points[1])
 			assert.equals(0.5, row.Box.alpha)
@@ -375,6 +381,19 @@ describe("loot feed look window", function()
 			assert.same({ false, false, LookWindow.WIDTH - 32 }, { window.panel.shown, window.tab1.shown, window.preview.width })
 			LookWindow.SetWide(false)
 			assert.same({ true, true, LookWindow.PREVIEW_WIDTH }, { window.panel.shown, window.tab1.shown, window.preview.width })
+		end)
+
+		it("picks a text over the icon before the icon, as they are drawn, and brings up the designer", function()
+			local row = window.rows[1]
+			local levels = {}
+			for part, hit in pairs(row.hits) do
+				levels[part] = hit.level - row:GetFrameLevel()
+			end
+			assert.is_true(levels.name > levels.icon and levels.amount > levels.icon and levels.owned > levels.icon)
+			assert.is_true(row.Selected.level > levels.owned + row:GetFrameLevel())
+			LookWindow.ShowTab(LookWindow.CONTENT)
+			row.hits.owned.scripts.OnClick(row.hits.owned)
+			assert.same({ "owned", LookWindow.DESIGN }, { LookWindow.Selected(), window.selectedTab })
 		end)
 
 		it("chooses a part by clicking it, and the row by clicking its free space or between rows", function()
