@@ -17,6 +17,8 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ![The loot feed: two cloths, reputation, money and the junk in one row](screenshots/loot-feed.png)
 
+![The same loot as icons: the junk, money, reputation and the cloths, each amount on its icon](screenshots/loot-feed-icons.png)
+
 - What you pick up appears next to the centre of the screen and fades out: items, currencies, money, reputation and, if you want, experience. Repeated items merge into one row with a count, and all junk (gray items and items you marked as junk) gathers in one row, "Junk", which lists them in its tooltip. When much is looted at once, the rows come in one after another and leave the same way. Money from merchants, mail, trade, the auction house and banks is not loot and is not shown.
 - Quest items carry the bags' gold quest border on their icon. Point at a row to see the item's or currency's tooltip, or money, experience and reputation in full; the feed waits while you do. Shift-click an item row to put its link into the chat; right-click a piece of gear you just looted to equip it. Other clicks go through to the game world, but for a kept item.
 - **Feed looks** hold every setting of the feed and the design of its rows. Looks have names and are shared by every profile; each profile uses one, chosen on the options page from a menu like Edit Mode's layout menu: edit, copy, rename, reset to the defaults and delete a look, start a new one, and share or import looks as text. The look Default always exists.
@@ -55,6 +57,8 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ### Gathering highlights (WoW Forever)
 
+![A herb sparkling, its icon and its name over it](screenshots/highlights.png)
+
 - The object you are about to loot sparkles with a few small gold stars: the one your Interact key would use, within about 15 yards. Herbs, ore veins, chests and quest objects all sparkle alike, each kind with its own switch under *Highlight Lootable Objects*. The sparkles are bright in reach, quieter further away, and faint on what you can't use yet (a locked chest, too little skill).
 - *Only What You Can Gather* (on by default) lights herbs only with Herbalism, ore only with Mining and corpses only with Skinning; turn it off to see them anyway, say to help a friend who gathers.
 - *Intensity* and *Sparkle Color*, right under the switch, set how bright the stars are and their colour (gold by default); the kinds are under *What to Highlight*.
@@ -91,6 +95,8 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 - `/ltm debug help` lists the commands for testing and bug reports: `debug log` (the journal: errors and the extended log), `debug selftest`, `debug loot` (made-up loot in the feed), `debug junk` (why an item is junk or not), `debug bags` and, on WoW Forever, `debug target`.
 
 ### Bug reports
+
+![The bug report window](screenshots/bug-report.png)
 
 *Bug Report* in the minimap icon's menu (or `/ltm report`) opens a window with the whole report, ready to copy: the versions, a self-test, this session's errors, the extended log and the options that differ from their defaults; it names neither your character nor your realm. Turn on *Extended Log* there, do what goes wrong, and come back. Lootoman keeps its own errors always, and never fills the chat with debug lines.
 
