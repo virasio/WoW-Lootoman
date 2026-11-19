@@ -41,8 +41,9 @@ local Compat, L = ns.Compat, ns.L
 -- frame is hidden, and costs nothing, while there are no rows and no warnings.
 --
 -- It draws on every frame only while something moves: a row fading in or
--- out, a row sliding to its place, the preview in Edit Mode. At rest (a
--- warning, a stuck row, rows waiting for their time) it draws every IDLE
+-- out, a row sliding to its place. At rest (a warning, a stuck row, rows
+-- waiting for their time, the sample rows of Edit Mode and the look window)
+-- it draws every IDLE
 -- seconds, and at once when a row's fade is due or a call below wakes it; the
 -- hover pause may follow the pointer one rest step late.
 --
@@ -955,7 +956,7 @@ function FeedMixin:Draw(now, elapsed)
 	local model = self.model
 	elapsed = elapsed or (self.drawnAt and math.max(0, now - self.drawnAt) or 0)
 	self.drawnAt = now
-	local moving = self.preview ~= nil
+	local moving = false
 	local hovered = self.frame:IsMouseOver()
 	model:SetHover(hovered, now)
 	model:Update(now)

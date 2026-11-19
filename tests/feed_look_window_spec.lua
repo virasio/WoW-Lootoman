@@ -752,9 +752,14 @@ describe("loot feed look window, opened from", function()
 		local look, profile = ns.SettingsPanel.main.look, ns.SettingsPanel.main.profile
 		assert.same({ "WowStyle1DropdownTemplate", 260, 30 }, { look.template, look.width, look.height })
 		assert.equals("WowStyle2DropdownTemplate", profile.template)
+		-- While the window is open, the feed shows its sample rows where it stands, as in Edit
+		-- Mode, also with no loot.
+		local feed = ns.Modules:Get("LootFeed").feed
+		assert.same({ false, nil }, { feed.frame.shown, feed.preview })
 		api.OpenMenu(ns.SettingsPanel.main.look).entries[1].entries[1].callback()
-		assert.is_true(LookWindow.window.shown)
+		assert.same({ true, true, true }, { LookWindow.window.shown, feed.frame.shown, feed.preview ~= nil })
 		LookWindow.window:Hide()
+		assert.same({ false, nil }, { feed.frame.shown, feed.preview })
 		-- Edit beside the dropdown: the profile's look, also when another one was edited.
 		ns.Feed.Looks.Create("Raid")
 		LookWindow.Open("Raid")
@@ -791,12 +796,19 @@ describe("loot feed look window, opened from", function()
 		-- Another addon's frame keeps the dialog.
 		lib.internal.dialog:Update({ parent = {} })
 		assert.is_true(lib.internal.dialog.shown)
-		-- Opened from Edit Mode, it closes with it; opened otherwise, it stays.
+		-- In Edit Mode the samples stay when the window closes.
+		lib.callbacks.enter()
+		LookWindow.window:Hide()
+		assert.same({ true, true }, { feed.frame.shown, feed.preview ~= nil })
+		selection.scripts.OnMouseDown(selection)
+		-- Opened from Edit Mode, it closes with it; opened otherwise, it stays, and so do the
+		-- samples.
+		lib.editing = false
 		lib.callbacks.exit()
-		assert.is_false(LookWindow.window.shown)
+		assert.same({ false, false, nil }, { LookWindow.window.shown, feed.frame.shown, feed.preview })
 		edit.scripts.OnClick(edit)
 		lib.callbacks.exit()
-		assert.is_true(LookWindow.window.shown)
+		assert.same({ true, true }, { LookWindow.window.shown, feed.preview ~= nil })
 	end)
 end)
 

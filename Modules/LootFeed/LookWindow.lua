@@ -8,19 +8,19 @@ local Feed = ns.Feed
 -- looks showing the look the window edits, with the look menu; choosing a
 -- look there edits it, and Apply beside it, shown while the profile uses
 -- another look, makes the profile use it. On the right, sample rows of every
--- kind, drawn by the feed's own code in the look's design and size, each in
--- its box. On the left, four tabs:
+-- kind, drawn by the feed's own code in the look's design. On the left, four
+-- tabs:
 -- - Content, Appearance and Timings: the look's settings (Looks.Settings,
 --   each with its tab), scrolled; the look's view, rows or icons, before the
 --   fill direction on Appearance.
--- - Row (Icon for a look of icons): the chosen part, in the spirit of Platynator's nameplate
+-- - Layout: the chosen part, in the spirit of Platynator's nameplate
 --   designer: whether it is shown, what it is anchored to and where, its size,
 --   alignment and offsets. Numbers have a slider and a field to type them in;
 --   both only go as far as the row's box allows (Design.Range). An Icons look
 --   lists only what it lets the player change: the icon's size and the gap
 --   between icons (as the row), the amount and the owned count; its samples
 --   stand side by side.
--- Click a part in the samples to choose it, which brings up the Design tab; drag it to move it on the grid. A gold frame marks the chosen part (for
+-- Click a part in the samples to choose it, which brings up the Layout tab; drag it to move it on the grid. A gold frame marks the chosen part (for
 -- a text, the most room it may take), or the row when no part is chosen.
 -- Every change is saved in the look, and the feed follows at once when the
 -- profile uses it.
@@ -29,7 +29,8 @@ local Feed = ns.Feed
 -- uses. Resetting and sharing a look are in its menu.
 --
 -- The window is the player's own frame, built the first time it opens, never
--- in combat; Escape and its close button hide it.
+-- in combat; Escape and its close button hide it. While it is open, the feed
+-- itself shows its sample rows where it stands, as in Edit Mode.
 local LootFeed = ns.Modules:Get("LootFeed")
 local Design, Frames, Looks, LookMenu = Feed.Design, Feed.Frames, Feed.Looks, Feed.LookMenu
 
@@ -1022,7 +1023,10 @@ local function build()
 	frame:SetScript("OnDragStart", frame.StartMoving)
 	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 	frame:SetScript("OnUpdate", LookWindow.OnUpdate)
-	frame:SetScript("OnHide", stopDrag)
+	frame:SetScript("OnHide", function()
+		stopDrag()
+		LootFeed:UpdatePreview()
+	end)
 	-- Resized from its bottom right corner, within the screen.
 	frame:SetResizable(true)
 	fitScreen(frame)
@@ -1306,6 +1310,7 @@ function LookWindow.Open(name)
 		fitScreen(window)
 	end
 	window:Show()
+	LootFeed:UpdatePreview()
 	LookWindow.ShowTab(window.tab)
 	LookWindow.Refresh()
 	return true
@@ -1317,6 +1322,10 @@ function LookWindow.OpenFromEditMode()
 	if LookWindow.Open(wasShown and edited or nil) and not wasShown then
 		fromEditMode = true
 	end
+end
+
+function LookWindow.IsShown()
+	return window ~= nil and window:IsShown() == true
 end
 
 function LookWindow.CloseFromEditMode()

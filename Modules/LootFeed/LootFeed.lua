@@ -171,6 +171,17 @@ function LootFeed:Layout()
 	return Feed.Design.Layout(Feed.Design.Current(self:DesignSection()))
 end
 
+-- The feed shows its sample rows while Edit Mode is on or the look window is
+-- open, so the look is seen where the feed stands while it is edited.
+function LootFeed:UpdatePreview()
+	if self.feed and self:IsActive() then
+		local active = ns.EditMode.IsActive() or self.LookWindow.IsShown()
+		if active ~= (self.feed.preview ~= nil) then
+			self.feed:SetPreview(active)
+		end
+	end
+end
+
 -- The design of the rows: the look's (Looks.lua).
 function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
@@ -372,10 +383,10 @@ function LootFeed:OnEnable()
 				self.LookWindow.CloseFromEditMode()
 			end,
 			onEditMode = function(active)
-				self.feed:SetPreview(active)
 				if not active then
 					self.LookWindow.CloseFromEditMode()
 				end
+				self:UpdatePreview()
 			end,
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
@@ -386,6 +397,7 @@ function LootFeed:OnEnable()
 	self.feed.disabled = false
 	self.lowQuality = {}
 	self:Apply()
+	self:UpdatePreview()
 	Feed.Sources.Start(self, function(entry)
 		local now = Compat.GetTime()
 		entry = self:AsJunk(entry)

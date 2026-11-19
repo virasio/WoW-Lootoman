@@ -680,8 +680,11 @@ describe("loot feed frames", function()
 			feed:SetPreview(true)
 			assert.is_true(feed.frame.shown)
 			feed:Draw(0)
-			-- The stuck sample in the first place, and the rows that fit after it.
+			-- The stuck sample in the first place, and the rows that fit after it;
+			-- in place, they rest as rows at rest do, not drawn on every frame.
 			assert.same({ "Sample quest item@0", "Sample rare item@42", "Sample item@84" }, layout())
+			feed:Draw(5)
+			assert.same({ false, 5 + Frames.IDLE }, { feed.moving, feed.nextDraw })
 			feed:SetOptions(options({ maxRows = 8 }))
 			feed:Draw(0)
 			assert.equals(7, #layout())
