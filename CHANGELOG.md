@@ -11,6 +11,7 @@ Lootoman is easier to find, to reach and to report about.
 - **No debug lines in the chat** any more: Lootoman keeps them, and its own errors always, for the report. The self-test in the chat says only what failed.
 - **"Options"** in every English text, as the game says.
 - The list of what was sold in a session is gone; the chat line after each sale stays.
+- **Icons:** an amount or owned count wider than its icon, such as "1.23K" gold with its coin, gets smaller to fit instead of running into the next icon's number.
 
 ## 0.5.9
 

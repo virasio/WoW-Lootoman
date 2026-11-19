@@ -135,8 +135,11 @@ function methods:SetShadowOffset(x, y) self.shadowOffset = { x, y } end
 function methods:SetShadowColor(r, g, b, a) self.shadowColor = { r, g, b, a } end
 -- A texture shows a file or a colour: each replaces the other.
 function methods:SetColorTexture(r, g, b, a) self.colorTexture, self.texture = { r, g, b, a }, nil end
--- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
-function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
+-- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8); an atlas
+-- in the text (a coin) is one letter.
+function methods:GetUnboundedStringWidth()
+	return select(2, (self.text or ""):gsub("|A[^|]*|a", "M"):gsub("[^\128-\191]", "")) * 7
+end
 -- A text wraps every 520 pixels, 14 pixels a line.
 function methods:GetStringHeight() return 14 * math.max(1, math.ceil(self:GetUnboundedStringWidth() / 520)) end
 function methods:SetGradient(orientation, from, to) self.gradient = { orientation, from, to } end
@@ -353,7 +356,10 @@ function UI.Install()
 		SetUtilityButtonAnchor = function(button, anchor, relativeTo) button.anchor = { anchor, relativeTo } end,
 		SetUtilityButtonClickHandler = function(button, handler) button.click = handler end,
 	})
-	rawset(_G, "CreateAtlasMarkup", function(atlas) return "|A:" .. atlas .. "|a" end)
+	-- With a size, the atlas markup says it, height first, as the real one does.
+	rawset(_G, "CreateAtlasMarkup", function(atlas, width, height)
+		return "|A:" .. atlas .. (width and (":" .. (height or 0) .. ":" .. width) or "") .. "|a"
+	end)
 	-- Secure handlers (SecureHandlers.lua): the snippet runs before the script.
 	rawset(_G, "SecureHandlerWrapScript", function(frame, script, _, preBody)
 		frame.wrapped = frame.wrapped or {}

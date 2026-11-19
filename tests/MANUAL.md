@@ -209,6 +209,8 @@ The Default look and default options unless a check says otherwise.
   - Experience as "1.23K" or "12.34K", cut, not rounded, without a "+".
   - An item's count without "×".
   - A look of rows keeps "×3" and "+123".
+- [ ] **Texts that fit.** A look of icons as it comes (icons of 36). Loot over a thousand gold and an item next to it with a count, and let the low-space warning show a long text (*Warning Text* `{general}+{reagent}+{profession}`); show the owned count of an item you hold thousands of.
+  - *Expected:* each text stays on its own icon, smaller where it has to be, money's coin as small as its number; nothing runs over the next icon. Text that fits keeps its size.
 - [ ] **Background.** With a look of icons and *Background* on. *Expected:* one background behind all the icons, fading out past them on every side by a third of an icon.
 
 ### Usable items
