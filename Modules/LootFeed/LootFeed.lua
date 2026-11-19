@@ -166,6 +166,13 @@ function LootFeed:ModelOptions()
 	}
 end
 
+-- The rows' layout at the look's size, with its text style.
+function LootFeed:Layout()
+	local layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size"))
+	layout.textStyle = self:Get("textStyle")
+	return layout
+end
+
 -- The design of the rows: the look's (Looks.lua).
 function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
@@ -338,7 +345,7 @@ function LootFeed:Apply()
 	self.feed:SetOptions({
 		direction = self:Get("direction"),
 		maxRows = self:Get("maxRows"),
-		layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size")),
+		layout = self:Layout(),
 		opacity = self:Get("backgroundOpacity") / 100,
 		color = { ns.Text.RGB(self:Get("backgroundColor")) },
 		-- Whether the owned count shows is the design's (its part's Shown).

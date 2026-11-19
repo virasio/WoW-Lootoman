@@ -114,6 +114,8 @@ ns.Locales.AddEnglish({
 	"Puts the loot feed back at its default place in the current Edit Mode layout.",
 	"Size",
 	"The size of the text; the icons and rows follow it.",
+	"Text style",
+	"How the rows' texts stand out: plain, with a shadow, or outlined.",
 	"Background opacity",
 	"Background color",
 	"The background reaches a little past the rows on every side and fades out there.",

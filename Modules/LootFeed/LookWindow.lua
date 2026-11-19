@@ -270,6 +270,7 @@ function LookWindow.Refresh()
 		selected = "row"
 	end
 	local layout = Design.Layout(design, Looks.Value(edited, "size"))
+	layout.textStyle = Looks.Value(edited, "textStyle")
 	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = Looks.Value(edited, "glow") }
 	-- The warning's sample in the look's own text.
 	window.samples[#window.samples].row = Frames.SampleWarning(Looks.Value(edited, "slotsText"))

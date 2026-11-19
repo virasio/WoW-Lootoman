@@ -269,6 +269,20 @@ local function getFonts()
 	return fonts
 end
 
+-- The look's text style (layout.textStyle): "none" (plain), "shadow", or an
+-- outline, "outline" or "thick"; an outline goes without the shadow.
+local OUTLINES = { outline = "OUTLINE", thick = "THICKOUTLINE" }
+
+local function styleText(region, face, size, style)
+	region:SetFont(face[1], size, OUTLINES[style] or face[3])
+	if style == "shadow" then
+		region:SetShadowOffset(1, -1)
+		region:SetShadowColor(0, 0, 0, 1)
+	else
+		region:SetShadowOffset(0, 0)
+	end
+end
+
 -- A row frame with all its parts; ApplyLayout sizes it, Fill shows a row.
 function Frames.CreateRow(parent)
 	local rowFrame = CreateFrame("Frame", nil, parent)
@@ -367,7 +381,7 @@ function Frames.ApplyLayout(rowFrame, layout)
 		region:SetPoint(Design.OwnPoint(layout, name), regionOf(rowFrame, part.anchor), part.point, part.x, part.y)
 		if Design.TEXTS[name] then
 			local face = name == "owned" and font.number or font.text
-			region:SetFont(face[1], part.fontSize, face[3])
+			styleText(region, face, part.fontSize, layout.textStyle)
 			region:SetJustifyH(part.align)
 		end
 	end
@@ -459,7 +473,7 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	rowFrame.Pin:SetSize(size, size)
 	local waiting = stuck and stuck.waiting or 0
 	local font = getFonts().number
-	rowFrame.Waiting:SetFont(font[1], parts.owned.fontSize, font[3])
+	styleText(rowFrame.Waiting, font, parts.owned.fontSize, options.layout.textStyle)
 	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
 	rowFrame.Waiting:SetShown(waiting > 0)
 	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting
