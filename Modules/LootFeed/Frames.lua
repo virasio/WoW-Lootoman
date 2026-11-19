@@ -819,10 +819,6 @@ function Frames.Create(model)
 	frame:SetClampedToScreen(true)
 	frame:SetMouseClickEnabled(false)
 	frame:SetMouseMotionEnabled(false)
-	frame.PreviewBackground = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
-	frame.PreviewBackground:SetAllPoints()
-	frame.PreviewBackground:SetColorTexture(0, 0, 0, 0.2)
-	frame.PreviewBackground:Hide()
 	frame.Back = Frames.CreateBackground(frame)
 	local feed = setmetatable({
 		frame = frame,
@@ -958,7 +954,6 @@ end
 
 function FeedMixin:SetPreview(active)
 	self.preview = active and Frames.PreviewRows() or nil
-	self.frame.PreviewBackground:SetShown(active)
 	self.nextDraw = 0
 	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or self.warning ~= nil)
 end

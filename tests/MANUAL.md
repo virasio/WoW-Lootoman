@@ -145,7 +145,7 @@ The Default look and default options unless a check says otherwise.
   - "Money" with the sum in coins; "Experience" with "+12,345"; "Reputation with …" with its signed amount.
   - The rows wait while the pointer is over them; clicks and the mouse wheel reach the game world, but on a row of gear in the bags and, while Shift is held, on any item row.
 - [ ] **Edit Mode.** Open Edit Mode.
-  - *Expected:* the loot feed is listed as *Loot Feed* with sample rows. The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
+  - *Expected:* the loot feed is listed as *Loot Feed* with sample rows, drawn as the feed draws them: only the look's own background behind them, no dark box of Lootoman's (Edit Mode's own highlight marks the feed). The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
   - It can be moved, and keeps its position per Edit Mode layout and across `/reload`.
   - Clicking it opens the look's window, not a small dialog (0.5.9); it stays picked and can still be dragged. Other frames, Blizzard's and other addons', keep their dialogs. Leaving Edit Mode closes the window it opened; a window opened with *Edit* stays.
 - [ ] **Looks from 0.5.8 (0.5.9).** Before updating, a look with *Size* 14 and one with a background (opacity 60 %). *Expected:* after the update both look as before: the first as big (its row height and texts larger in the *Layout* tab), the second with *Background* ticked at 60 %.
