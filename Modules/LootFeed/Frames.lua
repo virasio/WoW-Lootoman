@@ -269,7 +269,7 @@ local function getFonts()
 	return fonts
 end
 
--- The look's text style (layout.textStyle): "none" (plain), "shadow", or an
+-- A text's style (its part's style in the design): "none" (plain), "shadow", or an
 -- outline, "outline" or "thick"; an outline goes without the shadow.
 local OUTLINES = { outline = "OUTLINE", thick = "THICKOUTLINE" }
 
@@ -409,7 +409,7 @@ function Frames.ApplyLayout(rowFrame, layout)
 		region:SetPoint(Design.OwnPoint(layout, name), regionOf(rowFrame, part.anchor), part.point, part.x, part.y)
 		if Design.TEXTS[name] then
 			local face = name == "owned" and font.number or font.text
-			styleText(region, face, part.fontSize, layout.textStyle)
+			styleText(region, face, part.fontSize, part.style)
 			region:SetJustifyH(part.align)
 		end
 	end
@@ -501,7 +501,7 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	rowFrame.Pin:SetSize(size, size)
 	local waiting = stuck and stuck.waiting or 0
 	local font = getFonts().number
-	styleText(rowFrame.Waiting, font, parts.owned.fontSize, options.layout.textStyle)
+	styleText(rowFrame.Waiting, font, parts.owned.fontSize, parts.owned.style)
 	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
 	rowFrame.Waiting:SetShown(waiting > 0)
 	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting

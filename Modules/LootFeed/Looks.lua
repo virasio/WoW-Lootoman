@@ -60,7 +60,6 @@ Looks.DEFAULTS = {
 	stagger = 0.15,
 	size = 12,
 	-- The rows' texts: "none" (plain), "shadow", "outline" or "thick".
-	textStyle = "none",
 	backgroundOpacity = 0,
 	backgroundColor = "000000",
 	glow = true,
@@ -183,8 +182,6 @@ function Looks.Settings(view)
 			min = 3, max = 20, step = 1, format = "%d" },
 		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
 			min = 10, max = 16, step = 1, format = "%d" },
-		{ kind = "dropdown", key = "textStyle", label = L["Text Style"], tooltip = L["How the rows' texts stand out: plain, with a shadow, or outlined."],
-			choices = { { "none", L["None"] }, { "shadow", L["Shadow"] }, { "outline", L["Outline"] }, { "thick", L["Thick outline"] } } },
 		{ kind = "checkbox", key = "glow", label = L["Glow for Rare Items"], tooltip = L["Rare and better items glow in their quality colour."] },
 		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
 		{ kind = "color", key = "backgroundColor", label = L["Background color"],

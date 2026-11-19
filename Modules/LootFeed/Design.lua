@@ -53,6 +53,8 @@ Design.POINTS = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTT
 Design.ELEMENTS = { "row", "icon", "name", "amount", "owned" }
 Design.ALIGNS = { "LEFT", "RIGHT" }
 Design.TEXTS = { name = true, amount = true, owned = true }
+-- How a text stands out: plain, with a shadow, or outlined.
+Design.STYLES = { "none", "shadow", "outline", "thick" }
 -- What the owned count counts: bags and bank, or the bags only.
 Design.COUNTS = { "all", "bags" }
 -- The parts that are anchored, in the order they are listed.
@@ -74,10 +76,10 @@ Design.LARGE = {
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
-		name = { shown = true, fontSize = 13, width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
+		name = { shown = true, fontSize = 13, style = "none", width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
+		amount = { shown = true, fontSize = 13, style = "none", width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
+		owned = { shown = false, fontSize = 12, style = "none", width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -97,10 +99,10 @@ Design.COMPACT = {
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
-		name = { shown = true, fontSize = 12, width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
-		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
+		name = { shown = true, fontSize = 12, style = "none", width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
+		amount = { shown = true, fontSize = 12, style = "none", width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+		owned = { shown = false, fontSize = 10, style = "none", width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -120,10 +122,10 @@ Design.MINIMAL = {
 	parts = {
 		icon = { shown = false, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = false },
-		name = { shown = true, fontSize = 13, width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
+		name = { shown = true, fontSize = 13, style = "none", width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
+		amount = { shown = true, fontSize = 13, style = "none", width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+		owned = { shown = false, fontSize = 10, style = "none", width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -145,10 +147,10 @@ Design.ICONS = {
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "CENTER", x = 0, y = 0 },
 		glow = { shown = true },
-		name = { shown = false, fontSize = 13, width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+		name = { shown = false, fontSize = 13, style = "none", width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
+		amount = { shown = true, fontSize = 13, style = "none", width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
+		owned = { shown = false, fontSize = 10, style = "none", width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -431,6 +433,8 @@ local function valid(design, part, key, value)
 		return contains(Design.ALIGNS, value)
 	elseif key == "count" then
 		return contains(Design.COUNTS, value)
+	elseif key == "style" then
+		return contains(Design.STYLES, value)
 	elseif key == "color" or key == "borderColor" then
 		return value:match("^%x%x%x%x%x%x$") ~= nil
 	end

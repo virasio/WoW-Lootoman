@@ -116,6 +116,7 @@ describe("loot feed look window", function()
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
 			assert.same({ "Shown: true", "Counts: bags", "Anchor To: icon", "Anchor Point: BOTTOMRIGHT", "Text Alignment: RIGHT", "Text Size: 12 in 6..20",
+				"Text Style: none",
 				"Maximum Width: 40 in 20..300", "Horizontal Offset: -4 in -23..265", "Vertical Offset: 3 in 0..23", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 		end)
@@ -129,10 +130,10 @@ describe("loot feed look window", function()
 			LookWindow.Select("amount")
 			-- A dropdown takes more room than a slider; the checkbox's label sits after it.
 			assert.same({ -60, -110 }, { top(window.controls[1]), top(window.controls[2]) })
-			local background = window.controls[8]
+			local background = window.controls[9]
 			assert.same({ "LEFT", background.check, "RIGHT", 4, 0 }, background.label.points[1])
-			assert.equals(top(window.controls[7]) - 46, top(background))
-			assert.equals(top(background) - 30, top(window.controls[9]))
+			assert.equals(top(window.controls[8]) - 46, top(background))
+			assert.equals(top(background) - 30, top(window.controls[10]))
 		end)
 
 		it("counts the bags only, or bags and bank, as the look's owned count says", function()
@@ -156,15 +157,15 @@ describe("loot feed look window", function()
 		it("sets the amount's own background and its opacity", function()
 			LookWindow.Select("amount")
 			local list = inspector()
-			assert.same({ "With Background: false", "Opacity: 60 in 0..100" }, { list[9], list[10] })
-			window.controls[8].check.checked = true
-			window.controls[8].check.scripts.OnClick(window.controls[8].check)
+			assert.same({ "With Background: false", "Opacity: 60 in 0..100" }, { list[10], list[11] })
+			window.controls[9].check.checked = true
+			window.controls[9].check.scripts.OnClick(window.controls[9].check)
 			assert.is_true(design().parts.amount.background)
 		end)
 
 		it("lets the color and the opacity of a background change only while it is on, the opacity under it", function()
 			LookWindow.Select("amount")
-			local background, opacity = window.controls[8], window.controls[9]
+			local background, opacity = window.controls[9], window.controls[10]
 			assert.same({ true, false, false, false, "GameFontDisable" }, { background.swatch.shown, background.swatch.enabled,
 				opacity.slider.enabled, opacity.input.enabled, opacity.label.fontObject })
 			assert.equals(32, opacity.label.points[1][2])
@@ -177,7 +178,7 @@ describe("loot feed look window", function()
 		it("picks a background's color in the game's color picker, and puts the old one back on Cancel", function()
 			LookWindow.Select("amount")
 			LookWindow.Change("amount", "background", true)
-			local swatch, picker = window.controls[8].swatch, ui.colorPicker
+			local swatch, picker = window.controls[9].swatch, ui.colorPicker
 			swatch.scripts.OnClick(swatch)
 			assert.same({ true, 0, 0, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
 			picker:Pick(1, 0.5, 0)
@@ -242,13 +243,13 @@ describe("loot feed look window", function()
 			width.scripts.OnEscapePressed(width)
 			assert.same({ 600, "600" }, { design().width, width.text })
 			LookWindow.Select("name")
-			local x = window.controls[6].input
+			local x = window.controls[7].input
 			x.text = "-12.6"
 			x.scripts.OnEnterPressed(x)
 			assert.equals(-13, design().parts.name.x)
 			-- Only as wide as the row.
 			LookWindow.Change("row", "width", 320)
-			local nameWidth = window.controls[5].input
+			local nameWidth = window.controls[6].input
 			nameWidth.text = "9999"
 			nameWidth.scripts.OnEnterPressed(nameWidth)
 			assert.equals(320, module:DesignSection().changes.name.width)
@@ -356,10 +357,12 @@ describe("loot feed look window", function()
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
 			assert.same({ "Shown: true", "Counts: bags", "Anchor Point: TOPRIGHT", "Text Alignment: RIGHT", "Text Size: 10 in 6..20",
+				"Text Style: none",
 				"Horizontal Offset: -2 in -60..36", "Vertical Offset: -2 in -62..36", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 			LookWindow.Select("amount")
 			assert.same({ "Shown: true", "Anchor Point: BOTTOMRIGHT", "Text Alignment: RIGHT", "Text Size: 13 in 8..24",
+				"Text Style: none",
 				"Horizontal Offset: -2 in -60..36", "Vertical Offset: 2 in -36..59", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 			-- Icons 36 wide and 4 apart, side by side.
@@ -446,12 +449,24 @@ describe("loot feed look window", function()
 			assert.equals("000000", ns.Feed.Looks.Value("Default", "backgroundColor"))
 		end)
 
-		it("offers the text style on Appearance, and the samples follow it", function()
-			local style = settingOf("textStyle")
-			assert.same({ "appearance", "Text Style" }, { style.setting.tab, style.label.text })
-			ns.Feed.Looks.Set("Default", "textStyle", "thick")
-			LookWindow.Refresh()
-			assert.equals("THICKOUTLINE", window.rows[1].Label.font[3])
+		it("offers each text's style in the designer, after its size, and the samples follow it alone", function()
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+				assert.is_not.equal("textStyle", setting.key)
+			end
+			LookWindow.Select("name")
+			local choices
+			for _, control in ipairs(window.controls) do
+				if control.label.shown and control.label.text == "Text Style" then
+					choices = control.choice.menu
+				end
+			end
+			assert.is_not_nil(choices)
+			LookWindow.Change("name", "style", "thick")
+			assert.same({ "THICKOUTLINE", "thick" }, { window.rows[1].Label.font[3], design().parts.name.style })
+			assert.is_falsy(window.rows[1].Amount.font[3] == "THICKOUTLINE")
+			-- Not a style it does not know.
+			assert.is_false(pcall(LookWindow.Change, "name", "style", "glitter"))
+			assert.equals("thick", design().parts.name.style)
 		end)
 
 		it("takes the warning's text in a field, a typed | kept single, and shows it in the sample", function()

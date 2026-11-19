@@ -110,7 +110,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Puts the loot feed back at its default place in the current Edit Mode layout."] = "Возвращает ленту добычи на место по умолчанию в текущей раскладке режима редактирования.",
 	["Size"] = "Размер",
 	["The size of the text; the icons and rows follow it."] = "Размер текста; значки и строки меняются вместе с ним.",
-	["How the rows' texts stand out: plain, with a shadow, or outlined."] = "Как выделяются тексты строк: без оформления, с тенью или с обводкой.",
 	["Background opacity"] = "Непрозрачность фона",
 	["Background color"] = "Цвет фона",
 	["The background reaches a little past the rows on every side and fades out there."] = "Фон немного выходит за строки со всех сторон и там затухает.",

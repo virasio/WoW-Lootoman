@@ -71,6 +71,7 @@ local POINT_NAMES = {
 }
 local ALIGN_NAMES = { LEFT = L["Left"], RIGHT = L["Right"] }
 local COUNT_NAMES = { all = L["Bags and bank"], bags = L["Bags only"] }
+local STYLE_NAMES = { none = L["None"], shadow = L["Shadow"], outline = L["Outline"], thick = L["Thick outline"] }
 
 -- Whether a part is shown is the checkbox beside the part's name, above these.
 local TEXT_CONTROLS = {
@@ -78,6 +79,7 @@ local TEXT_CONTROLS = {
 	{ key = "point", label = L["Anchor Point"] },
 	{ key = "align", label = L["Text Alignment"] },
 	{ key = "fontSize", label = L["Text Size"] },
+	{ key = "style", label = L["Text Style"] },
 	{ key = "width", label = L["Maximum Width"] },
 	{ key = "x", label = L["Horizontal Offset"] },
 	{ key = "y", label = L["Vertical Offset"] },
@@ -138,6 +140,7 @@ local ON_THE_ICON = {
 	{ key = "point", label = L["Anchor Point"] },
 	{ key = "align", label = L["Text Alignment"] },
 	{ key = "fontSize", label = L["Text Size"] },
+	{ key = "style", label = L["Text Style"] },
 	{ key = "x", label = L["Horizontal Offset"] },
 	{ key = "y", label = L["Vertical Offset"] },
 	BACKGROUND[1],
@@ -157,7 +160,7 @@ end
 -- A checkbox for a switch (with a color swatch for a background), a dropdown
 -- for a choice, else a slider with a field.
 local KINDS = { shown = "check", background = "background", border = "background", anchor = "choice", point = "choice", align = "choice",
-	count = "choice" }
+	count = "choice", style = "choice" }
 local CONTROL_COUNT = 0
 for _, list in pairs(CONTROLS) do
 	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
@@ -210,6 +213,10 @@ local function choices(key, design, part)
 	elseif key == "count" then
 		for _, count in ipairs(Design.COUNTS) do
 			list[#list + 1] = { count, COUNT_NAMES[count] }
+		end
+	elseif key == "style" then
+		for _, style in ipairs(Design.STYLES) do
+			list[#list + 1] = { style, STYLE_NAMES[style] }
 		end
 	else
 		for _, align in ipairs(Design.ALIGNS) do
@@ -287,7 +294,6 @@ function LookWindow.Refresh()
 		selected = "row"
 	end
 	local layout = Design.Layout(design, Looks.Value(edited, "size"))
-	layout.textStyle = Looks.Value(edited, "textStyle")
 	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = Looks.Value(edited, "glow") }
 	-- The warning's sample in the look's own text.
 	window.samples[#window.samples].row = Frames.SampleWarning(Looks.Value(edited, "slotsText"))

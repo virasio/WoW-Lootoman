@@ -455,17 +455,20 @@ describe("loot feed module", function()
 		assert.equals("xp", module.model:Visible(Test.state.time)[1].row.kind)
 	end)
 
-	it("styles every text of a row as the look says: plain, shadowed or outlined", function()
+	it("styles each text of a row as its part in the design says: plain, shadowed or outlined", function()
 		local warning = module.feed.warningRow
 		assert.same({ 0, 0 }, warning.Label.shadowOffset)
-		module:Set("textStyle", "outline")
-		assert.same({ "OUTLINE", "OUTLINE", "OUTLINE", { 0, 0 } }, { warning.Label.font[3], warning.Amount.font[3], warning.Owned.font[3],
-			warning.Label.shadowOffset })
-		module:Set("textStyle", "thick")
+		local Looks = ns.Feed.Looks
+		Looks.SetDesign("Default", "name", "style", "outline")
+		assert.same({ "OUTLINE", { 0, 0 } }, { warning.Label.font[3], warning.Label.shadowOffset })
+		assert.is_falsy(warning.Amount.font[3] == "OUTLINE")
+		Looks.SetDesign("Default", "amount", "style", "thick")
 		assert.equals("THICKOUTLINE", warning.Amount.font[3])
-		module:Set("textStyle", "shadow")
+		Looks.SetDesign("Default", "name", "style", "shadow")
 		assert.same({ { 1, -1 }, { 0, 0, 0, 1 } }, { warning.Label.shadowOffset, warning.Label.shadowColor })
 		assert.is_falsy(warning.Label.font[3] == "OUTLINE")
+		Looks.SetDesign("Default", "owned", "style", "outline")
+		assert.equals("OUTLINE", warning.Owned.font[3])
 	end)
 
 	it("applies changed settings at once", function()
