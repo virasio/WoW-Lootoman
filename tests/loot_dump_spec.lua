@@ -4,8 +4,9 @@ local Loader = require("tests.helpers.loader")
 describe("loot dump (debug builds)", function()
 	local ns, Test
 
+	-- The extended log.
 	local function output()
-		return table.concat(Test.state.printed, "\n")
+		return table.concat(ns.Diagnostics.Section().log, "\n")
 	end
 
 	before_each(function()

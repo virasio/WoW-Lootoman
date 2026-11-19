@@ -90,54 +90,118 @@ describe("slash commands", function()
 		end)
 	end)
 
-	describe("debug", function()
+	describe("debug log", function()
 		local function debugOn()
 			return ns.Storage:GetGlobal("debug")
 		end
 
-		it("shows the switch without changing it", function()
-			run("debug log")
-			assert.is_false(debugOn())
-			assert.matches("off for all characters%.", printed[1])
-			ns.Storage:SetGlobal("debug", true)
-			run("DEBUG LOG")
-			assert.is_true(debugOn())
-			assert.matches("on for all characters%.", printed[2])
-		end)
-
-		for _, value in ipairs({ "on", "On", "ON", "1" }) do
-			it("turns debug messages on with “" .. value .. "”", function()
+		for _, value in ipairs({ "on", "On", "ON" }) do
+			it("turns the extended log on with “" .. value .. "”", function()
 				run("debug log " .. value)
 				assert.is_true(debugOn())
-				assert.matches("on for all characters%.", printed[1])
+				assert.same({ "The extended log is on for all characters." }, lines())
 			end)
 		end
 
-		for _, value in ipairs({ "off", "Off", "OFF", "0" }) do
-			it("turns debug messages off with “" .. value .. "”", function()
+		for _, value in ipairs({ "off", "Off", "OFF" }) do
+			it("turns the extended log off with “" .. value .. "”", function()
 				ns.Storage:SetGlobal("debug", true)
 				run("debug log " .. value)
 				assert.is_false(debugOn())
-				assert.matches("off for all characters%.", printed[1])
+				assert.same({ "The extended log is off for all characters; errors are still kept." }, lines())
 			end)
 		end
 
-		it("explains an unknown value and changes nothing", function()
+		it("explains an unknown value or count and changes nothing", function()
 			ns.Storage:SetGlobal("debug", true)
-			run("debug log  maybe ")
-			assert.is_true(debugOn())
-			assert.equals(1, #printed)
-			assert.matches("Unknown value “maybe”", printed[1])
+			for _, value in ipairs({ " maybe ", "0", "301", "2.5" }) do
+				Test.state.printed = {}
+				printed = Test.state.printed
+				run("debug log " .. value)
+				assert.is_true(debugOn())
+				assert.matches("^Unknown value “" .. value:gsub("^%s*(.-)%s*$", "%1"):gsub("%p", "%%%0") .. "”", lines()[1])
+			end
 		end)
 
-		it("prints debug messages only while it is on", function()
+		it("never prints a debug line, and keeps it only while the log is on", function()
 			ns.Debug("hidden")
 			run("debug log on")
-			ns.Debug("shown")
+			ns.Debug("kept")
 			run("debug log off")
 			ns.Debug("hidden again")
-			assert.equals(3, #printed)
-			assert.matches("shown", printed[2])
+			assert.equals(2, #printed)
+			local log = ns.Diagnostics.Section().log
+			assert.same({ 1, true }, { #log, log[1]:find("kept", 1, true) ~= nil })
+		end)
+
+		it("while the log is off, prints the errors kept and how to turn it on", function()
+			run("debug log")
+			assert.same({ "The extended log is off: /ltm debug log on" }, lines())
+			Test.state.time = 7
+			ns.Compat.ReportError("something broke")
+			Test.state.printed = {}
+			printed = Test.state.printed
+			run("debug log 50")
+			assert.same({ "7.00 Error: something broke", "The extended log is off: /ltm debug log on" }, lines())
+		end)
+
+		it("prints the last 20 entries, or as many as asked, errors and lines in time order", function()
+			run("debug log on")
+			for index = 1, 30 do
+				Test.state.time = index
+				ns.Debug("line " .. index)
+				if index == 25 then
+					ns.Compat.ReportError("broken at 25")
+				end
+			end
+			Test.state.printed = {}
+			printed = Test.state.printed
+			run("debug log")
+			local shown = lines()
+			assert.same({ 20, "12.00 line 12", "25.00 line 25", "25.00 Error: broken at 25", "30.00 line 30" },
+				{ #shown, shown[1], shown[14], shown[15], shown[20] })
+			Test.state.printed = {}
+			printed = Test.state.printed
+			run("debug log 300")
+			assert.same({ 31, "1.00 line 1" }, { #lines(), lines()[1] })
+		end)
+
+		it("clears the journal: the log, the errors and the saved self-test", function()
+			run("debug log on")
+			ns.Debug("something")
+			ns.Compat.ReportError("broken")
+			run("debug selftest")
+			run("debug log clear")
+			local section = ns.Diagnostics.Section()
+			assert.same({ {}, {}, nil, {} }, { section.log, section.errors, section.selfTest, ns.Diagnostics.SessionErrors() })
+			assert.equals("The journal is cleared: the extended log, the errors and the saved self-test.", lines()[#lines()])
+			Test.state.printed = {}
+			printed = Test.state.printed
+			run("debug log")
+			assert.same({ "The journal is empty." }, lines())
+		end)
+	end)
+
+	describe("errors", function()
+		it("are kept with the start of their stack, and still reach the game's error handler", function()
+			Test.state.time = 3
+			Test.state.stack = "one\ntwo\nthree\nfour\nfive\nsix\nseven"
+			ns.Bus:On("ProfileChanged", "test", function() error("listener broke") end)
+			ns.Bus:Send("ProfileChanged", "Raid", "Default")
+			local kept = ns.Diagnostics.Section().errors
+			assert.same({ 1, 3, "one\ntwo\nthree\nfour\nfive\nsix" }, { #kept, kept[1].at, kept[1].stack })
+			assert.matches("listener broke", kept[1].message)
+			assert.matches("listener broke", Test.state.errors[#Test.state.errors])
+			assert.equals(kept[1], ns.Diagnostics.SessionErrors()[1])
+		end)
+
+		it("are kept, the last 20, whether or not the extended log is on", function()
+			for index = 1, 25 do
+				ns.Compat.ReportError("error " .. index)
+			end
+			local kept = ns.Diagnostics.Section().errors
+			assert.same({ 20, "error 6", "error 25", 20 }, { #kept, kept[1].message, kept[20].message, #ns.Diagnostics.SessionErrors() })
+			assert.is_false(ns.Storage:GetGlobal("debug"))
 		end)
 	end)
 

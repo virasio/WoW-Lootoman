@@ -945,7 +945,25 @@ function Compat.Print(text)
 	DEFAULT_CHAT_FRAME:AddMessage(text)
 end
 
--- Reports an error to the game's error handler (BugSack) without stopping the caller.
+-- The stack where an error was raised, as Blizzard's script errors show it:
+-- called from ReportError, which an xpcall calls as its handler, it starts at
+-- the function that raised the error.
+function Compat.GetStack()
+	return debugstack(3)
+end
+
+-- fn(err, stack) hears every error ReportError reports, before the game does.
+local errorListener
+
+function Compat.SetErrorListener(fn)
+	errorListener = fn
+end
+
+-- Reports an error to the game's error handler (BugSack) without stopping the
+-- caller; the listener keeps it first, and an error of its own stops nothing.
 function Compat.ReportError(err)
+	if errorListener then
+		pcall(errorListener, err, Compat.GetStack())
+	end
 	geterrorhandler()(err)
 end

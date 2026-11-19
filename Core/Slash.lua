@@ -7,11 +7,10 @@ local Bus, Compat, L, Storage, Text = ns.Bus, ns.Compat, ns.L, ns.Storage, ns.Te
 
 Storage:RegisterGlobalDefaults({ debug = false })
 
--- Debug output for development and bug reports, kept in the saved
--- diagnostics while the extended log is on. It is not translated.
+-- A line of the extended log, for development and bug reports: kept in the
+-- journal while the log is on, never printed. It is not translated.
 function ns.Debug(text)
 	if Storage.db and Storage:GetGlobal("debug") then
-		ns.Print("|cff999999" .. text .. "|r")
 		ns.Diagnostics.Log(text)
 	end
 end
@@ -91,33 +90,50 @@ end
 
 ns.Slash.RegisterDebug("help", debugHelp, "/ltm debug help: list the debug commands")
 
--- Values accepted by on/off commands, compared in lower case.
-local SWITCH = {
-	on = true,
-	["1"] = true,
-	off = false,
-	["0"] = false,
-}
+-- Values accepted by on/off commands, compared in lower case (a number is a
+-- count of entries).
+local SWITCH = { on = true, off = false }
 
--- The extended log: one switch for the whole account, not part of a profile.
--- "clear" empties the saved diagnostics (the log and the last self-test).
+-- The journal in the chat: the last LOG_LINES entries, or as many as asked
+-- (up to the log's size); while the extended log is off, only the errors kept
+-- and how to turn it on.
+local LOG_LINES = 20
+
+local function printJournal(count)
+	local on = Storage.db and Storage:GetGlobal("debug")
+	local lines = ns.Diagnostics.Entries(count, not on)
+	for _, line in ipairs(lines) do
+		ns.Print(line)
+	end
+	if not on then
+		ns.Print("The extended log is off: /ltm debug log on")
+	elseif #lines == 0 then
+		ns.Print("The journal is empty.")
+	end
+end
+
+-- The extended log: one switch for the whole account, not part of a profile
+-- (the errors are kept whether it is on or off). "clear" empties the journal:
+-- the log, the errors and the last self-test.
 ns.Slash.RegisterDebug("log", function(argument)
-	if Text.FoldCase(argument) == "clear" then
+	local word = Text.FoldCase(argument)
+	local count = tonumber(word)
+	if word == "" then
+		printJournal(LOG_LINES)
+	elseif count and count == math.floor(count) and count >= 1 and count <= ns.Diagnostics.LOG_SIZE then
+		printJournal(count)
+	elseif word == "clear" then
 		ns.Diagnostics.Clear()
-		ns.Print("The extended log and the saved self-test are cleared.")
-		return
+		ns.Print("The journal is cleared: the extended log, the errors and the saved self-test.")
+	elseif SWITCH[word] ~= nil then
+		Storage:SetGlobal("debug", SWITCH[word])
+		ns.Print(SWITCH[word] and "The extended log is on for all characters."
+			or "The extended log is off for all characters; errors are still kept.")
+	else
+		ns.Print(("Unknown value “%s”. Use /ltm debug log, a number from 1 to %d, on, off or clear.")
+			:format(argument, ns.Diagnostics.LOG_SIZE))
 	end
-	if argument ~= "" then
-		local enabled = SWITCH[Text.FoldCase(argument)]
-		if enabled == nil then
-			ns.Print(("Unknown value “%s”. Use /ltm debug log on, off or clear."):format(argument))
-			return
-		end
-		Storage:SetGlobal("debug", enabled)
-	end
-	ns.Print(Storage:GetGlobal("debug") and "The extended log is on for all characters."
-		or "The extended log is off for all characters.")
-end, "/ltm debug log [on | off | clear]: turn the extended log on or off, or clear it")
+end, "/ltm debug log [N | on | off | clear]: the journal's last 20 or N entries; turn the extended log on or off; clear the journal")
 
 ns.Slash.RegisterDebug("selftest", function()
 	ns.SelfTest.Run()

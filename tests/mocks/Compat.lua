@@ -76,6 +76,7 @@ local state = {
 	-- Item class names by class ID; the character's level; the item on the cursor.
 	itemClasses = {},
 	equipped = {},
+	stack = "Interface/AddOns/Lootoman/Here.lua:1: in function <here>\n[C]: in function 'xpcall'",
 	linked = {},
 	playerLevel = 60,
 	cursorItem = nil,
@@ -681,7 +682,21 @@ function Compat.Print(text)
 	state.printed[#state.printed + 1] = text
 end
 
+-- state.stack: what GetStack answers, the lines of a stack.
+function Compat.GetStack()
+	return state.stack
+end
+
+local errorListener
+
+function Compat.SetErrorListener(fn)
+	errorListener = fn
+end
+
 function Compat.ReportError(err)
+	if errorListener then
+		pcall(errorListener, err, Compat.GetStack())
+	end
 	state.errors[#state.errors + 1] = err
 end
 

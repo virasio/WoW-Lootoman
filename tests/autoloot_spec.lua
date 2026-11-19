@@ -43,10 +43,10 @@ describe("fast autoloot", function()
 		Test.FireEvent("BAG_UPDATE_DELAYED")
 	end
 
-	-- Why the loot window was shown, from the debug output.
+	-- Why the loot window was shown, from the extended log.
 	local function shown()
 		local reasons = {}
-		for _, line in ipairs(Test.state.printed) do
+		for _, line in ipairs(ns.Diagnostics.Section().log) do
 			reasons[#reasons + 1] = line:match("loot window shown %((.-)%)")
 		end
 		return reasons

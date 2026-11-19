@@ -94,6 +94,7 @@ files["Compat/"] = {
 		"UnitXPMax",
 		"WOW_PROJECT_ID",
 		"geterrorhandler",
+		"debugstack",
 		"issecretvalue",
 	},
 }
