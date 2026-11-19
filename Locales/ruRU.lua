@@ -152,6 +152,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Starts a look with every setting at its default, and this profile uses it."] = "Создаёт вид со всеми настройками по умолчанию, и этот профиль начинает его использовать.",
 	["Makes a text of your looks to copy and give to another character or player."] = "Создаёт текст с вашими видами, чтобы скопировать его и передать другому персонажу или игроку.",
 	["With background"] = "С фоном",
+	["With border"] = "С рамкой",
+	["Border width"] = "Толщина рамки",
 	["Opacity"] = "Непрозрачность",
 	["Icon size"] = "Размер иконки",
 	["Gap between icons"] = "Промежуток между иконками",

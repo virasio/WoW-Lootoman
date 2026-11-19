@@ -6,9 +6,11 @@ local _, ns = ...
 -- any design; the row designer edits the player's one.
 --
 -- The row: height, width and gap (between rows), its view: "rows" (the
--- default), or "icons" for the compact view of icons only, and a background
--- of its own behind each row (background, its color as "rrggbb" and its
--- opacity in percent). Parts, each with shown:
+-- default), or "icons" for the compact view of icons only, a background of
+-- its own behind each row (background, its color as "rrggbb" and its opacity
+-- in percent), and a border around it (border, borderColor, borderWidth in
+-- pixels, which the size does not scale, and borderOpacity). Parts, each with
+-- shown:
 --   icon                  size, in percent of the row's height
 --   glow                  over the icon of rare and better items
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
@@ -65,6 +67,10 @@ Design.LARGE = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
@@ -84,6 +90,10 @@ Design.COMPACT = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
@@ -103,6 +113,10 @@ Design.MINIMAL = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
 		icon = { shown = false, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = false },
@@ -124,6 +138,10 @@ Design.ICONS = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
 		icon = { shown = true, size = 100, anchor = "row", point = "CENTER", x = 0, y = 0 },
 		glow = { shown = true },
@@ -144,7 +162,8 @@ local TEXT_LIMITS = { fontSize = { 8, 24 }, width = { 20, 600 } }
 -- The range of every number that is not a place; places keep a part inside
 -- the row (Range, Fit).
 Design.LIMITS = {
-	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 }, opacity = { 0, 100 } },
+	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 }, opacity = { 0, 100 }, borderWidth = { 1, 4 },
+		borderOpacity = { 0, 100 } },
 	icon = { size = { 20, 100 } },
 	name = TEXT_LIMITS,
 	amount = { fontSize = TEXT_LIMITS.fontSize, width = TEXT_LIMITS.width, opacity = { 0, 100 } },
@@ -412,7 +431,7 @@ local function valid(design, part, key, value)
 		return contains(Design.ALIGNS, value)
 	elseif key == "count" then
 		return contains(Design.COUNTS, value)
-	elseif key == "color" then
+	elseif key == "color" or key == "borderColor" then
 		return value:match("^%x%x%x%x%x%x$") ~= nil
 	end
 	return true

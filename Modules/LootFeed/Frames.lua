@@ -292,6 +292,23 @@ function Frames.CreateRow(parent)
 	rowFrame.RowBackground = rowFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
 	rowFrame.RowBackground:SetAllPoints()
 	rowFrame.RowBackground:Hide()
+	-- Its border, four thin edges inside its box, over the background and under
+	-- the parts.
+	rowFrame.RowBorder = {}
+	for _, side in ipairs({ "top", "bottom", "left", "right" }) do
+		local edge = rowFrame:CreateTexture(nil, "BACKGROUND", nil, 0)
+		edge:Hide()
+		rowFrame.RowBorder[side] = edge
+	end
+	local border = rowFrame.RowBorder
+	border.top:SetPoint("TOPLEFT")
+	border.top:SetPoint("TOPRIGHT")
+	border.bottom:SetPoint("BOTTOMLEFT")
+	border.bottom:SetPoint("BOTTOMRIGHT")
+	border.left:SetPoint("TOPLEFT")
+	border.left:SetPoint("BOTTOMLEFT")
+	border.right:SetPoint("TOPRIGHT")
+	border.right:SetPoint("BOTTOMRIGHT")
 	rowFrame.Icon = rowFrame:CreateTexture(nil, "ARTWORK")
 	rowFrame.Glow = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
 	rowFrame.Glow:SetBlendMode("ADD")
@@ -367,6 +384,17 @@ function Frames.ApplyLayout(rowFrame, layout)
 	local r, g, b = Design.RGB(layout.color)
 	rowFrame.RowBackground:SetColorTexture(r, g, b, layout.opacity / 100)
 	rowFrame.RowBackground:SetShown(layout.background)
+	local br, bg, bb = Design.RGB(layout.borderColor or "ffffff")
+	local width = layout.borderWidth or 1
+	for side, edge in pairs(rowFrame.RowBorder) do
+		edge:SetColorTexture(br, bg, bb, (layout.borderOpacity or 50) / 100)
+		if side == "top" or side == "bottom" then
+			edge:SetHeight(width)
+		else
+			edge:SetWidth(width)
+		end
+		edge:SetShown(layout.border == true)
+	end
 	local size = parts.icon.pixels
 	rowFrame.Icon:SetSize(size, size)
 	local border = math.floor(size * Frames.BORDER_SCALE + 0.5)

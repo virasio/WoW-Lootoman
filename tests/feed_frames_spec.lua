@@ -578,6 +578,26 @@ describe("loot feed frames", function()
 			assert.is_false(rowFrame.AmountBackground.shown)
 		end)
 
+		it("draws a border on the row's edges when the design asks, in its colour, width and opacity, not scaled", function()
+			local Design = ns.Feed.Design
+			local rowFrame = Frames.CreateRow(nil)
+			Frames.ApplyLayout(rowFrame, Design.Layout(Design.LARGE, 13))
+			for _, edge in pairs(rowFrame.RowBorder) do
+				assert.is_false(edge.shown)
+			end
+			local design = Design.Current({ schema = Design.SCHEMA, base = "large",
+				changes = { row = { border = true, borderColor = "ff8000", borderWidth = 2, borderOpacity = 40 } } })
+			Frames.ApplyLayout(rowFrame, Design.Layout(design, 26))
+			local edges = rowFrame.RowBorder
+			assert.same({ true, true, true, true }, { edges.top.shown, edges.bottom.shown, edges.left.shown, edges.right.shown })
+			assert.same({ 2, 2, 2, 2 }, { edges.top.height, edges.bottom.height, edges.left.width, edges.right.width })
+			assert.same({ 1, 128 / 255, 0, 0.4 }, edges.left.colorTexture)
+			-- Each edge along its side of the row.
+			local function along(edge) return { edge.points[1][1], edge.points[2][1] } end
+			assert.same({ { "TOPLEFT", "TOPRIGHT" }, { "BOTTOMLEFT", "BOTTOMRIGHT" }, { "TOPLEFT", "BOTTOMLEFT" }, { "TOPRIGHT", "BOTTOMRIGHT" } },
+				{ along(edges.top), along(edges.bottom), along(edges.left), along(edges.right) })
+		end)
+
 		it("shows the owned count and the glow, and hides them when turned off", function()
 			ns.Compat.Test.SetItems({ [2589] = { name = "Linen Cloth", owned = 42 } })
 			model:Add({ kind = "item", id = 2589, link = LINK, name = "Linen Cloth", icon = 1, amount = 1, quality = 4 }, 0)

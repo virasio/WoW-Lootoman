@@ -77,7 +77,34 @@ describe("loot feed look window", function()
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
 			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30", "With background: false",
-				"Opacity: 60 in 0..100" }, inspector())
+				"Opacity: 60 in 0..100", "With border: false", "Border width: 1 in 1..4", "Opacity: 50 in 0..100" }, inspector())
+		end)
+
+		it("gives the row a border of its own, its colour picked, its width and opacity under it", function()
+			local edges = window.rows[1].RowBorder
+			assert.is_false(edges.top.shown)
+			LookWindow.Change("row", "border", true)
+			LookWindow.Change("row", "borderWidth", 3)
+			LookWindow.Change("row", "borderOpacity", 80)
+			assert.same({ true, 3, 3, { 1, 1, 1, 0.8 } }, { edges.top.shown, edges.top.height, edges.left.width, edges.right.colorTexture })
+			-- The swatch beside the checkbox picks the border's colour.
+			local swatch
+			for _, control in ipairs(window.controls) do
+				if control.spec and control.spec.key == "border" then
+					swatch = control.swatch
+				end
+			end
+			swatch.scripts.OnClick(swatch)
+			ui.colorPicker:Pick(1, 0, 0)
+			assert.same({ "ff0000", { 1, 0, 0, 0.8 } }, { design().borderColor, edges.bottom.colorTexture })
+			-- The feed follows; a size does not scale the width.
+			local feedEdges = module.feed.warningRow.RowBorder
+			assert.same({ true, 3 }, { feedEdges.top.shown, feedEdges.top.height })
+			ns.Feed.Looks.Set("Default", "size", 16)
+			assert.equals(3, module.feed.warningRow.RowBorder.top.height)
+			-- Out of range: held at the limit, as every value of the design.
+			LookWindow.Change("row", "borderWidth", 9)
+			assert.equals(4, design().borderWidth)
 		end)
 
 		it("shows the chosen part's values, within the row's box, and nothing more of a hidden part", function()

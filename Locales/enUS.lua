@@ -156,6 +156,8 @@ ns.Locales.AddEnglish({
 	"Starts a look with every setting at its default, and this profile uses it.",
 	"Makes a text of your looks to copy and give to another character or player.",
 	"With background",
+	"With border",
+	"Border width",
 	"Opacity",
 	"Icon size",
 	"Gap between icons",

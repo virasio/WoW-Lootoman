@@ -107,6 +107,13 @@ local BACKGROUND = {
 	{ key = "background", label = L["With background"] },
 	{ key = "opacity", label = L["Opacity"], parent = "background" },
 }
+-- The row's border, under its background: a checkbox with its colour's
+-- swatch, and under it the width and the opacity.
+local BORDER = {
+	{ key = "border", label = L["With border"], colorKey = "borderColor" },
+	{ key = "borderWidth", label = L["Border width"], parent = "border" },
+	{ key = "borderOpacity", label = L["Opacity"], parent = "border" },
+}
 local COUNTS = { key = "count", label = L["Counts"] }
 for _, part in ipairs({ "amount", "owned" }) do
 	for index, control in ipairs(TEXT_CONTROLS) do
@@ -117,6 +124,9 @@ for _, part in ipairs({ "row", "amount", "owned" }) do
 	for _, control in ipairs(BACKGROUND) do
 		table.insert(CONTROLS[part], control)
 	end
+end
+for _, control in ipairs(BORDER) do
+	table.insert(CONTROLS.row, control)
 end
 table.insert(CONTROLS.owned, 1, COUNTS)
 -- An Icons layout's parts and controls: the rest of it is fixed (Design.lua).
@@ -144,7 +154,8 @@ for _, control in ipairs(ON_THE_ICON) do
 end
 -- A checkbox for a switch (with a color swatch for a background), a dropdown
 -- for a choice, else a slider with a field.
-local KINDS = { shown = "check", background = "background", anchor = "choice", point = "choice", align = "choice", count = "choice" }
+local KINDS = { shown = "check", background = "background", border = "background", anchor = "choice", point = "choice", align = "choice",
+	count = "choice" }
 local CONTROL_COUNT = 0
 for _, list in pairs(CONTROLS) do
 	CONTROL_COUNT = math.max(CONTROL_COUNT, #list)
@@ -425,15 +436,17 @@ local function valuesOf(design, part)
 	return part == "row" and design or design.parts[part]
 end
 
--- The game's color picker for the background of a part: each color picked
--- is saved at once, and Cancel puts the one before back.
-function LookWindow.PickColor(part)
+-- The game's color picker for the background of a part, or for another of
+-- its colours (key: "borderColor"): each color picked is saved at once, and
+-- Cancel puts the one before back.
+function LookWindow.PickColor(part, key)
 	if not ColorPickerFrame then
 		return
 	end
-	local r, g, b = Design.RGB(valuesOf(Design.Current(section()), part).color)
+	key = key or "color"
+	local r, g, b = Design.RGB(valuesOf(Design.Current(section()), part)[key])
 	local function save(red, green, blue)
-		LookWindow.Change(part, "color", Design.Hex(red, green, blue))
+		LookWindow.Change(part, key, Design.Hex(red, green, blue))
 	end
 	ColorPickerFrame:SetupColorPickerAndShow({
 		r = r,
@@ -487,7 +500,7 @@ function LookWindow.UpdateInspector()
 		if kind == "background" then
 			-- The color can be picked only while the background is on.
 			local on = control.value == true and ColorPickerFrame ~= nil
-			control.swatch:SetColorRGB(Design.RGB(values.color))
+			control.swatch:SetColorRGB(Design.RGB(values[spec.colorKey or "color"]))
 			control.swatch:SetEnabled(on)
 			control.swatch:SetAlpha(on and 1 or 0.4)
 		elseif kind == "number" then
@@ -603,7 +616,7 @@ local function createControl(parent)
 	-- the color picker.
 	control.swatch = CreateFrame("Button", nil, parent, "ColorSwatchTemplate")
 	control.swatch:SetScript("OnClick", function()
-		LookWindow.PickColor(control.part)
+		LookWindow.PickColor(control.part, control.spec and control.spec.colorKey)
 	end)
 
 	control.slider = CreateFrame("Frame", nil, parent, "MinimalSliderWithSteppersTemplate")
