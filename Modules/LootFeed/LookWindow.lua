@@ -999,6 +999,16 @@ function LookWindow.UpdateFeed()
 	window.updating = false
 end
 
+-- Never smaller than it starts, never beyond the screen as it is when the
+-- window shows: the UI scale or the resolution may have changed since, so a
+-- window too big for it shrinks to fit.
+local function fitScreen(frame)
+	local width = math.max(LookWindow.WIDTH, UIParent:GetWidth() or 0)
+	local height = math.max(LookWindow.HEIGHT, UIParent:GetHeight() or 0)
+	frame:SetResizeBounds(LookWindow.WIDTH, LookWindow.HEIGHT, width, height)
+	frame:SetSize(math.min(frame:GetWidth(), width), math.min(frame:GetHeight(), height))
+end
+
 local function build()
 	local frame = CreateFrame("Frame", LookWindow.NAME, UIParent, "DefaultPanelFlatTemplate")
 	frame:SetSize(LookWindow.WIDTH, LookWindow.HEIGHT)
@@ -1013,11 +1023,9 @@ local function build()
 	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 	frame:SetScript("OnUpdate", LookWindow.OnUpdate)
 	frame:SetScript("OnHide", stopDrag)
-	-- Resized from its bottom right corner, never smaller than it starts.
+	-- Resized from its bottom right corner, within the screen.
 	frame:SetResizable(true)
-	local screenWidth, screenHeight = UIParent:GetWidth(), UIParent:GetHeight()
-	frame:SetResizeBounds(LookWindow.WIDTH, LookWindow.HEIGHT, math.max(LookWindow.WIDTH, screenWidth or 0),
-		math.max(LookWindow.HEIGHT, screenHeight or 0))
+	fitScreen(frame)
 	frame.grip = CreateFrame("Button", nil, frame)
 	frame.grip:SetSize(16, 16)
 	frame.grip:SetPoint("BOTTOMRIGHT", -4, 4)
@@ -1295,6 +1303,7 @@ function LookWindow.Open(name)
 	edited = Looks.Get(name) and name or Looks.Current()
 	if not window:IsShown() then
 		fromEditMode = false
+		fitScreen(window)
 	end
 	window:Show()
 	LookWindow.ShowTab(window.tab)

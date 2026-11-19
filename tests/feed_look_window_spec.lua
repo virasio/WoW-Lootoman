@@ -387,6 +387,13 @@ describe("loot feed look window", function()
 			LookWindow.SetWide(false)
 			LookWindow.Resize(500, 300)
 			assert.same({ 900, 640, 440, 504 }, { window.width, window.height, window.preview.width, window.preview.height })
+			-- Never beyond the screen as it is when the window opens again: a
+			-- higher UI scale leaves less room, and a bigger window shrinks to it.
+			LookWindow.Resize(1200, 800)
+			window:Hide()
+			Loader.ui.UIParent:SetSize(1000, 700)
+			LookWindow.Open()
+			assert.same({ 1000, 700, 1000, 700 }, { window.resizeBounds[3], window.resizeBounds[4], window.width, window.height })
 		end)
 
 		it("widens the samples over the tabs, and back", function()
