@@ -64,7 +64,8 @@ local function newLibEditMode()
 		addFrame(self, frame, ...)
 		local selection = { parent = frame, scripts = {} }
 		function selection:HookScript(name, fn) self.scripts[name] = fn end
-		function selection:ShowSelected(selected) self.selected = selected end
+		function selection:ShowSelected(selected) self.selected, self.isSelected = selected, true end
+		function selection:ShowHighlighted() self.isSelected = false end
 		self.frameSelections[frame] = selection
 	end
 	return lib
@@ -260,27 +261,33 @@ describe("Edit Mode", function()
 	end)
 
 	it("opens a frame's own window instead of the dialog, the frame picked and movable still", function()
-		local opened = 0
+		local opened, closed = 0, 0
 		local own = newFrame()
-		ns.EditMode.Register(module, own, { default = { point = "CENTER", x = 0, y = 0 }, window = function() opened = opened + 1 end })
+		ns.EditMode.Register(module, own, { default = { point = "CENTER", x = 0, y = 0 }, window = function() opened = opened + 1 end,
+			closeWindow = function() closed = closed + 1 end })
 		local dialog, selection = lib.internal.dialog, lib.frameSelections[own]
-		local function click(drag)
-			selection.scripts.OnMouseDown(selection)
-			if drag then
-				selection.scripts.OnDragStart(selection)
-			end
-			selection.scripts.OnMouseUp(selection)
-		end
 		-- The library shows the dialog as the frame is clicked; the click opens the window.
 		dialog:Update(selection)
-		click()
+		selection.scripts.OnMouseDown(selection)
 		assert.same({ false, true, true, 1 }, { dialog.shown, selection.selected, own.movable, opened })
-		-- A click on the picked frame opens it again; not a drag, not in a fight.
-		click()
-		click(true)
+		-- A click on the picked frame opens it again; not in a fight.
+		selection.scripts.OnMouseDown(selection)
 		ns.Compat.Test.SetCombat(true)
-		click()
+		selection.scripts.OnMouseDown(selection)
 		assert.equals(2, opened)
+		ns.Compat.Test.SetCombat(false)
+		-- The library highlights the frame on the way to picking it, more than once: the
+		-- window stays. Another frame or system picked leaves it highlighted: the window
+		-- closes, once.
+		lib.editing = true
+		selection:ShowHighlighted()
+		selection:ShowSelected(true)
+		ns.Compat.Test.Advance(0)
+		assert.equals(0, closed)
+		selection:ShowHighlighted()
+		selection:ShowHighlighted()
+		ns.Compat.Test.Advance(0)
+		assert.equals(1, closed)
 		-- Other frames keep the dialog.
 		dialog:Update({ parent = newFrame() })
 		assert.is_true(dialog.shown)

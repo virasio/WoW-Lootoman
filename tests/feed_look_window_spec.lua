@@ -730,14 +730,15 @@ describe("loot feed look window, opened from", function()
 		function lib:AddFrame(frame)
 			local selection = { parent = frame, scripts = {} }
 			function selection:HookScript(name, fn) self.scripts[name] = fn end
-			function selection:ShowSelected(selected) self.selected = selected end
+			function selection:ShowSelected(selected) self.selected, self.isSelected = selected, true end
+			function selection:ShowHighlighted() self.isSelected = false end
 			self.frameSelections[frame] = selection
 		end
 		function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 		function lib:AddFrameSettingsButtons() end
 		lib.callbacks = {}
 		function lib:RegisterCallback(event, fn) self.callbacks[event] = fn end
-		function lib:IsInEditMode() return false end
+		function lib:IsInEditMode() return self.editing == true end
 		lib.internal = { dialog = { shown = false } }
 		function lib.internal.dialog:Update(selection) self.selection, self.shown = selection, true end
 		function lib.internal.dialog:Hide() self.shown = false end
@@ -763,28 +764,29 @@ describe("loot feed look window, opened from", function()
 		edit.scripts.OnClick(edit)
 		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
 		LookWindow.window:Hide()
-		-- In Edit Mode the library's dialog does not show for the feed: its window opens on a
-		-- click, and the feed stays picked and movable, to be dragged; a press that drags the
-		-- feed opens nothing.
+		-- In Edit Mode the library's dialog does not show for the feed: its window opens, and the
+		-- feed stays picked and movable, to be dragged.
 		local frame = ns.Modules:Get("LootFeed").feed.frame
 		local selection = lib.frameSelections[frame]
+		lib.editing = true
 		lib.internal.dialog:Update(selection)
 		selection.scripts.OnMouseDown(selection)
-		selection.scripts.OnDragStart(selection)
-		selection.scripts.OnMouseUp(selection)
-		assert.is_false(LookWindow.window.shown)
-		selection.scripts.OnMouseDown(selection)
-		selection.scripts.OnMouseUp(selection)
 		assert.same({ false, true, true, true }, { lib.internal.dialog.shown, selection.selected, frame.movable == true, LookWindow.window.shown })
+		-- Another frame or system picked: the window it opened closes; one opened otherwise stays.
+		selection:ShowHighlighted()
+		ns.Compat.Test.Advance(0)
+		assert.is_false(LookWindow.window.shown)
+		edit.scripts.OnClick(edit)
+		selection:ShowHighlighted()
+		ns.Compat.Test.Advance(0)
+		assert.is_true(LookWindow.window.shown)
 		-- A click on the feed keeps the look the window shows; opened by it, the window shows
 		-- the profile's look.
 		LookWindow.Open("Raid")
 		selection.scripts.OnMouseDown(selection)
-		selection.scripts.OnMouseUp(selection)
 		assert.equals("Raid", LookWindow.Edited())
 		LookWindow.window:Hide()
 		selection.scripts.OnMouseDown(selection)
-		selection.scripts.OnMouseUp(selection)
 		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
 		-- Another addon's frame keeps the dialog.
 		lib.internal.dialog:Update({ parent = {} })

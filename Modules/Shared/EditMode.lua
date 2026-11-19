@@ -24,11 +24,13 @@ local Bus, Compat, L, Storage = ns.Bus, ns.Compat, ns.L, ns.Storage
 --       buttons = { { text = …, click = function() end } },   -- in the Edit Mode dialog
 --       noReset = true,                      -- no Reset To Default button in the dialog
 --       window = function() end,             -- the owner's window instead of the dialog
+--       closeWindow = function() end,        -- when the frame is no longer picked
 --   })
 --
 -- A frame with a window of its own is still moved in Edit Mode, but picking it
 -- opens that window rather than the library's dialog (EditMode.ResetPosition
--- puts it back where it starts).
+-- puts it back where it starts); picking another frame or system calls
+-- closeWindow.
 --
 -- LibEditMode draws the selection on the frame itself, so a hidden frame
 -- cannot be picked: an active module shows a preview in onEditMode(true). An
@@ -278,7 +280,8 @@ end
 -- the library shows it. Hiding it deselects the library's frames (its OnHide),
 -- so the frame is selected again and stays movable, to be dragged as usual;
 -- the library deselects it when another frame or system is picked, or Edit
--- Mode closes. Its window opens from the frame's own click (see Register).
+-- Mode closes. Its window opens from the frame's own click, and closes as
+-- another frame or system is picked (see Register).
 local function onDialogUpdate(dialog, selection)
 	if selection and windows[selection.parent] then
 		dialog:Hide()
@@ -348,21 +351,33 @@ function EditMode.Register(module, frame, options)
 	if options.window then
 		windows[frame] = options.window
 		watchDialog()
-		-- The frame's selection, as the library keeps it: a click opens the window,
-		-- also on a frame picked already, but not a press that drags the frame.
+		-- The frame's selection, as the library keeps it: a press opens the window,
+		-- also on a frame picked already.
 		local selection = type(lib.frameSelections) == "table" and lib.frameSelections[frame]
 		if selection and selection.HookScript then
-			local dragged = false
 			selection:HookScript("OnMouseDown", function()
-				dragged = false
-			end)
-			selection:HookScript("OnDragStart", function()
-				dragged = true
-			end)
-			selection:HookScript("OnMouseUp", function()
-				if not dragged and not Compat.InCombat() then
+				if not Compat.InCombat() then
 					options.window()
 				end
+			end)
+		end
+		-- Unpicked, the selection is only highlighted: the library does so when
+		-- another frame or a system of the game is picked, and also while it
+		-- picks this one (more than once), so whether it is picked is read once
+		-- that is over, on the next frame.
+		if selection and options.closeWindow and type(selection.ShowHighlighted) == "function" then
+			local pending = false
+			hooksecurefunc(selection, "ShowHighlighted", function()
+				if pending then
+					return
+				end
+				pending = true
+				Compat.After(0, function()
+					pending = false
+					if lib:IsInEditMode() and not selection.isSelected then
+						options.closeWindow()
+					end
+				end)
 			end)
 		end
 	end
