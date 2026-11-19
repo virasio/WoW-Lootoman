@@ -20,7 +20,7 @@ local Compat, L = ns.Compat, ns.L
 -- edge, drawn by the design as any row: a bag icon with a red border, the
 -- warning as its name, and as its amount the free slots as the look's
 -- template writes them (SlotsText.lua: "3+2" by default). Its tooltip lists
--- every kind of bag; when it can be clicked (the toss window, while junk
+-- every kind of bag; when it can be clicked (the junk window, while junk
 -- management is on) it says so, and a left click calls feed.onWarningClick.
 -- While it shows the feed stays shown.
 --
@@ -108,11 +108,16 @@ local function short(amount)
 	return ns.Text.ShortNumber(amount, decimalPoint()), GREEN
 end
 
--- Money on an icon: the short number and its coin, as big as the text.
+-- A coin as big as a text of this size.
+local function coinMarkup(coin, size)
+	return CreateAtlasMarkup("coin-" .. coin, size, size)
+end
+
+-- Money on an icon: the short number and its coin, as big as the text; also
+-- the number and the coin apart, for a smaller text that has to fit.
 local function shortMoney(copper, layout)
 	local text, coin = ns.Text.ShortMoney(copper, decimalPoint())
-	local size = layout.parts.amount.fontSize
-	return text .. CreateAtlasMarkup("coin-" .. coin, size, size)
+	return text .. coinMarkup(coin, layout.parts.amount.fontSize), text, coin
 end
 
 -- What a row shows: { icon, label, labelColor, amount, amountColor, border,
@@ -169,7 +174,8 @@ function Frames.Describe(row, options)
 	elseif kind == "money" then
 		local look = { icon = ICONS.money, label = GetMoneyString(row.amount, true), labelColor = WHITE }
 		if icons then
-			look.amount, look.amountColor = shortMoney(row.amount, options.layout), WHITE
+			look.amount, look.amountNumber, look.coin = shortMoney(row.amount, options.layout)
+			look.amountColor = WHITE
 		end
 		return look
 	elseif kind == "xp" then
@@ -287,6 +293,33 @@ local function styleText(region, face, size, style)
 	else
 		region:SetShadowOffset(0, 0)
 	end
+end
+
+-- The smallest size a text on an icon is drawn at to fit.
+Frames.MIN_FONT_SIZE = 6
+
+-- On an icon a text is never wider than the icon: a longer one (money with
+-- its coin, a warning's text, a big owned count) is drawn smaller until it
+-- fits, so it never runs over the next icon. textAt(size) is the text at a
+-- size (money's coin goes with the size). Starts at the part's size, as a row
+-- before may have left it smaller; the size is guessed from the width, then
+-- lowered while the text is still too wide, as long as it narrows.
+local function fitText(region, face, part, available, textAt)
+	local size = part.fontSize
+	styleText(region, face, size, part.style)
+	region:SetText(textAt(size))
+	local width = region:GetUnboundedStringWidth()
+	while width > available and size > Frames.MIN_FONT_SIZE do
+		size = math.max(Frames.MIN_FONT_SIZE, math.min(size - 1, math.floor(size * available / width)))
+		styleText(region, face, size, part.style)
+		region:SetText(textAt(size))
+		local narrower = region:GetUnboundedStringWidth()
+		if narrower >= width then
+			break
+		end
+		width = narrower
+	end
+	return size
 end
 
 -- A row frame with all its parts; ApplyLayout sizes it, Fill shows a row.
@@ -471,6 +504,15 @@ function Frames.Fill(rowFrame, row, options, stuck)
 	rowFrame.Amount:SetText(look.amount or "")
 	if look.amountColor then
 		rowFrame.Amount:SetTextColor(look.amountColor[1], look.amountColor[2], look.amountColor[3])
+	end
+	if Design.View(options.layout) == "icons" then
+		local font, available = getFonts(), parts.icon.pixels
+		fitText(rowFrame.Amount, font.text, parts.amount, available, function(size)
+			return look.coin and look.amountNumber .. coinMarkup(look.coin, size) or look.amount or ""
+		end)
+		fitText(rowFrame.Owned, font.number, parts.owned, available, function()
+			return look.ownedText or ""
+		end)
 	end
 	rowFrame.Label:SetShown(parts.name.shown)
 	rowFrame.Label:SetText(look.label)

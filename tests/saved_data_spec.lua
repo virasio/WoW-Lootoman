@@ -51,6 +51,7 @@ describe("saved data of version 0.1", function()
 	it("is saved again with nothing lost or changed, at the current schema", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
+		expected.LootomanCharDB.schema = #ns.Migrations.character
 		-- The loot feed's settings moved into looks.
 		expected.LootomanDB.profiles.Default.modules.LootFeed = nil
 		expected.LootomanDB.profiles.Raid.modules.LootFeed = { look = "Raid rows" }
@@ -76,6 +77,7 @@ describe("saved data of version 0.3", function()
 	it("is saved again with nothing lost or changed, the bars' data too", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
+		expected.LootomanCharDB.schema = #ns.Migrations.character
 		expected.LootomanDB.profiles.Default.modules.LootFeed = nil
 		holds(ns.Compat.Test.state.saved, expected, "saved")
 	end)
@@ -111,6 +113,7 @@ describe("saved data of version 0.3.5", function()
 	it("is saved again with nothing lost or changed, the bars' data too", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
+		expected.LootomanCharDB.schema = #ns.Migrations.character
 		-- The loot feed's settings moved into looks: at least 3 rows, the owned
 		-- count hidden in the look, as its layout hid it already.
 		expected.LootomanDB.profiles.Default.modules.LootFeed = nil
@@ -177,6 +180,7 @@ describe("saved data of version 0.4", function()
 	it("is saved again with nothing else lost or changed, the bars' data too", function()
 		local expected = fixture()
 		expected.LootomanDB.schema = #ns.Migrations.account
+		expected.LootomanCharDB.schema = #ns.Migrations.character
 		expected.LootomanDB.profiles.Default.modules.LootFeed = { look = "Strip" }
 		expected.LootomanDB.profiles.Raid.modules.LootFeed = { look = "Quiet" }
 		expected.LootomanDB.profiles.Alt.modules.LootFeed = { look = "Quiet" }

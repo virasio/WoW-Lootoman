@@ -91,7 +91,7 @@ end
 local function addLook(root, name, how)
 	local isDefault = name == Looks.DEFAULT
 	local actions = {
-		{ text = L["Edit"], tooltip = L["Opens the window of this look, to change its settings and its row design."], run = function()
+		{ text = L["Edit"], tooltip = L["Opens the window of this look, to change its options and its row design."], run = function()
 			LookMenu.Edit(name)
 		end },
 		{ text = L["Copy"], tooltip = L["Creates a copy of this look, and this profile uses it."], run = function()
@@ -103,7 +103,7 @@ local function addLook(root, name, how)
 			LookMenu.Rename(name)
 		end }
 	end
-	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Returns every setting of this look to its default and starts its row design afresh."], run = function()
+	actions[#actions + 1] = { text = L["Reset"], tooltip = L["Returns every option of this look to its default and starts its row design afresh."], run = function()
 		LookMenu.Reset(name)
 	end }
 	NameMenu.AddName(root, {
@@ -134,7 +134,7 @@ function LookMenu.Generator(how)
 			addLook(root, name, how)
 		end
 		root:CreateDivider()
-		NameMenu.AddNew(root, L["New look"], L["Starts a look with every setting at its default, and this profile uses it."], function()
+		NameMenu.AddNew(root, L["New look"], L["Starts a look with every option at its default, and this profile uses it."], function()
 			LookMenu.New(how.created)
 		end)
 	NameMenu.AddShareEntries(root, function()

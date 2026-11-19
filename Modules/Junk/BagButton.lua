@@ -1,8 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
--- The bag button: it opens the toss window from the bags, in the middle of the
--- screen. By the setting (bagButton): small, in the bag window's title left
+-- The bag button: it opens the junk window from the bags (Window.lua: to
+-- sell at a merchant, else to throw away in the middle of the screen). By the setting (bagButton): small, in the bag window's title left
 -- of its close button; large, above the bag window over its close button;
 -- large, on its own, placed in Edit Mode and sized in its dialog; or never.
 --
@@ -10,7 +10,7 @@ local L = ns.L
 -- the backpack (when the bags are separate), so it shows and hides with them;
 -- nothing of Blizzard's is changed or hooked. A bag addon that replaces the
 -- game's bags leaves those windows closed: there, the button on its own and
--- /lootoman toss open the window.
+-- /ltm junk open the window.
 local Junk = ns.Modules:Get("Junk")
 local BagButton = {}
 Junk.BagButton = BagButton

@@ -19,18 +19,9 @@ Bus:OnEvent("PLAYER_LOGIN", "Startup", function()
 	Bus:OffEvent("PLAYER_LOGIN", "Startup")
 	Storage:SetCharacter(Compat.GetCharacterKey())
 	if Storage.readOnlyReason == "failed" then
-		ns.Print(L["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."])
+		ns.Print(L["Lootoman could not upgrade your options to this version. They are kept as they were, and this session uses default options. Please report it on the addon's page."])
 	elseif Storage:IsReadOnly() then
-		ns.Print(L["Your settings were saved by a newer version of Lootoman. They are kept as they are, and this version uses default settings until you update."])
+		ns.Print(L["Your options were saved by a newer version of Lootoman. They are kept as they are, and this version uses default options until you update."])
 	end
 	Bus:Send("Ready")
-end)
-
--- The first PLAYER_ENTERING_WORLD tells a login from a /reload. At a login the
--- session's data starts anew, whether or not the module that keeps it is on.
-Bus:OnEvent("PLAYER_ENTERING_WORLD", "Startup", function(_, isInitialLogin)
-	Bus:OffEvent("PLAYER_ENTERING_WORLD", "Startup")
-	if isInitialLogin then
-		Storage:NewSession()
-	end
 end)

@@ -307,17 +307,17 @@ describe("Edit Mode", function()
 	it("tells the self-test the library's version and whether the dialog's reset button is there", function()
 		local function line()
 			local found
-			for _, text in ipairs(ns.Compat.Test.state.printed) do
+			for _, text in ipairs(ns.Diagnostics.Section().selfTest.lines) do
 				found = text:match("Edit Mode: .*") or found
 			end
 			return found
 		end
-		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
+		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 		-- The fake LibStub gives no version.
 		assert.equals("Edit Mode: LibEditMode nil; dialog found, reset button found, hooked yes", line())
 		-- An update of the library that moved its dialog.
 		lib.internal = nil
-		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
+		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 		assert.equals("Edit Mode: LibEditMode nil; dialog NOT found, reset button NOT found, hooked yes", line())
 	end)
 end)
@@ -338,7 +338,7 @@ describe("Edit Mode without LibEditMode", function()
 		rawset(_G, "LibStub", nil)
 		local ns = Loader.LoadAddon()
 		Loader.Start(ns)
-		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
-		assert.matches("Edit Mode: LibEditMode not found", table.concat(ns.Compat.Test.state.printed, "\n"))
+		ns.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
+		assert.matches("Edit Mode: LibEditMode not found", table.concat(ns.Diagnostics.Section().selfTest.lines, "\n"))
 	end)
 end)

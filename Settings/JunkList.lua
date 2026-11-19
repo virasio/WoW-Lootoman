@@ -1,12 +1,11 @@
 local _, ns = ...
-local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
+local Compat, L, Marks, Text = ns.Compat, ns.L, ns.Marks, ns.Text
 
--- The junk list window: the profile's marks, in three tabs.
---   Bags      the bags as the junk windows' item grid (ItemGrid.lua), where
---             every move marks the item for good;
+-- The junk list, the junk window's third mode (Modules/Junk/Window.lua): the
+-- profile's marks, in two tabs under the window.
 --   Junk      every item marked junk, in the bags or not;
 --   Not junk  every item marked not junk.
--- In the two lists each item has its icon, its name and Remove, and its
+-- In the lists each item has its icon, its name and Remove, and its
 -- tooltip on hover. An item joins the tab's list when it is dropped on the
 -- list from the bags, or through the field over the list: Shift-click an
 -- item anywhere while the field is active (the game puts the link there, as
@@ -17,22 +16,16 @@ local Bus, Compat, L, Marks, Text = ns.Bus, ns.Compat, ns.L, ns.Marks, ns.Text
 -- item marked otherwise here than in the text keeps its mark, and a window
 -- shows these one by one, with the item's tooltip: Keep mine or Take theirs.
 --
--- It opens from the main page (Edit the Junk List) and from the toss and
--- sell windows, only while junk management is on. The first time, right of
--- the game's options window and level with its top (over the options' right
--- edge when the screen has no room for it there), or in the middle of the
--- screen while the options are closed; after that it stays where it is (or
--- where the player moved it); it is built the first time, out
--- of combat. While shown it follows the bags, the marks and the profile; it
--- closes when junk management is turned off. Escape and its close button
--- hide it.
+-- It opens from the main page (Edit the Junk List), right of the game's
+-- options window and level with its top (over the options' right edge when
+-- the screen has no room for it there), or in the middle of the screen while
+-- the options are closed; and from the window's gear, where it is. Only while
+-- junk management is on. While shown it follows the marks and the profile.
 local JunkList = {}
 ns.JunkList = JunkList
 
--- The window's global name, for UISpecialFrames.
-JunkList.NAME = "LootomanJunkList"
 JunkList.CONFLICTS_NAME = "LootomanJunkConflicts"
-JunkList.BAGS, JunkList.JUNK, JunkList.NOT_JUNK = 1, 2, 3
+JunkList.JUNK, JunkList.NOT_JUNK = 1, 2
 JunkList.ROW_HEIGHT = 26
 -- Over the list: the field and its hint.
 JunkList.LIST_TOP = 64
@@ -44,7 +37,7 @@ local TAB_MARKS = { [JunkList.JUNK] = "junk", [JunkList.NOT_JUNK] = "notJunk" }
 
 local Junk = ns.Modules:Get("Junk")
 local window, conflicts
-local active, hooked = false, false
+local hooked = false
 
 -- The items with a mark, sorted by name: { itemID, mark, name, text, icon }.
 -- An item the client has not loaded yet shows its ID.
@@ -182,25 +175,15 @@ function JunkList.Refresh()
 	window.lines = lines
 end
 
--- Shows a tab: the item grid, or a list.
+-- Shows a list tab.
 function JunkList.ShowTab(id)
 	if not window then
 		return
 	end
 	window.tab = id
 	PanelTemplates_SetTab(window.frame, id)
-	local bags = id == JunkList.BAGS
-	for _, section in pairs(window.grid.sections) do
-		section.frame:SetShown(bags)
-	end
-	window.list:SetShown(not bags)
-	window.clear:SetShown(not bags)
-	if bags then
-		window.grid:Refresh()
-	else
-		window.field:SetText("")
-		JunkList.Refresh()
-	end
+	window.field:SetText("")
+	JunkList.Refresh()
 end
 
 -- Shift-click on an item while the field is active: the game hands its link
@@ -221,7 +204,7 @@ end
 local function buildList(frame)
 	local ItemGrid = Junk.ItemGrid
 	local list = CreateFrame("Frame", nil, frame)
-	list:SetPoint("TOPLEFT", ItemGrid.SIDE, -ItemGrid.TOP)
+	list:SetPoint("TOPLEFT", ItemGrid.SIDE, -ItemGrid.TOP - Junk.Window.TOP)
 	list:SetPoint("BOTTOMRIGHT", -ItemGrid.SIDE, ItemGrid.FOOTER)
 	list:EnableMouse(true)
 	list:SetScript("OnReceiveDrag", dropped)
@@ -257,13 +240,10 @@ local function buildList(frame)
 	window.empty:SetText(L["None"])
 end
 
--- Its first place, as it is built: right of the game's options window, level
--- with its top, moved left over it as far as the screen needs; or in the
--- middle of the screen while the options are closed. (The grid leaves its
--- place to its owner; a frame with none is not drawn.)
-local function place()
-	local frame = window.frame
-	frame:ClearAllPoints()
+-- Its place opened from the options: right of the game's options window,
+-- level with its top, moved left over it as far as the screen needs; or in
+-- the middle of the screen while the options are closed.
+local function place(frame)
 	local panel = SettingsPanel
 	local right, top = panel and panel:IsVisible() and panel:GetRight(), panel and panel:GetTop()
 	local screen = UIParent:GetRight()
@@ -277,18 +257,9 @@ local function place()
 	frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, top * scale)
 end
 
-local function build()
-	local grid = Junk.ItemGrid.Create({
-		name = JunkList.NAME,
-		title = L["Junk List"],
-		kind = "toss",
-		mode = "keep",
-		noListButton = true,
-		-- Over the game's options window (HIGH), where its button is.
-		strata = "DIALOG",
-	})
+local function build(grid)
 	local frame = grid.frame
-	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.BAGS }
+	window = { grid = grid, frame = frame, rows = {}, tab = JunkList.JUNK }
 	buildList(frame)
 
 	-- Clear List, under the lists.
@@ -316,6 +287,7 @@ local function build()
 	window.import:SetScript("OnClick", function()
 		ns.SettingsPanel.Share.OpenImport("part:marks")
 	end)
+	window.import:Hide()
 	window.share = CreateFrame("Button", nil, grid.footer, "UIPanelButtonTemplate")
 	window.share:SetSize(90, 22)
 	window.share:SetPoint("RIGHT", window.import, "LEFT", -4, 0)
@@ -323,49 +295,45 @@ local function build()
 	window.share:SetScript("OnClick", function()
 		ns.SettingsPanel.Share.OpenShare("part:marks")
 	end)
+	window.share:Hide()
 
 	-- The tabs, under the window as on the game's own.
 	local tabs = {}
-	for id, text in ipairs({ L["Bags"], L["Junk"], L["Not Junk"] }) do
+	for id, text in ipairs({ L["Junk"], L["Not Junk"] }) do
 		local tab = CreateFrame("Button", nil, frame, "PanelTabButtonTemplate")
 		tab:SetID(id)
 		tab:SetText(text)
 		tab:SetScript("OnClick", function()
 			JunkList.ShowTab(id)
 		end)
+		tab:Hide()
 		tabs[id] = tab
 	end
 	frame.Tabs = tabs
 	tabs[1]:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 12, 2)
 	PanelTemplates_SetNumTabs(frame, #tabs)
-	place()
-	JunkList.ShowTab(JunkList.BAGS)
 	hookLinks()
-	if active then
-		grid:Attach()
+end
+
+-- What the lists show and hide as they come and go.
+local function showLists(shown)
+	for _, part in ipairs({ window.list, window.clear, window.share, window.import, window.frame.Tabs[1], window.frame.Tabs[2] }) do
+		part:SetShown(shown)
 	end
 end
 
--- Opens the window, on a tab (Bags by default); it is built the first time,
--- which waits for the end of combat.
+-- Opens the junk window on the lists, on a tab (the last one shown), beside
+-- the options.
 function JunkList.Open(tab)
-	if not active then
+	if not (Junk and Junk.Window.Open("options")) then
 		ns.Print(L["Junk management is off. Turn it on in the options."])
 		return false
 	end
-	if not window then
-		if Compat.InCombat() then
-			ns.Print(L["The junk list opens out of combat."])
-			return false
-		end
-		build()
-	end
-	window.grid:Open()
 	JunkList.ShowTab(tab or window.tab)
 	return true
 end
 
--- The window, for tests: { grid, frame, list, field, add, rows, lines, tab,
+-- The lists, for tests: { grid, frame, list, field, add, rows, lines, tab,
 -- clear, share, import }.
 function JunkList.Window()
 	return window
@@ -489,28 +457,23 @@ function JunkList.Conflicts()
 	return conflicts
 end
 
--- Without the junk module (a build that leaves it out) the window never opens.
+-- Without the junk module (a build that leaves it out) there are no lists.
 if Junk then
-	Junk.AddPart({
-		Enable = function()
-			active = true
-			if window then
-				window.grid:Attach()
-			end
+	Junk.Window.Register("lists", {
+		title = L["Junk List"],
+		kind = "toss",
+		hidesSections = true,
+		build = build,
+		place = place,
+		onRefresh = function()
+			JunkList.Refresh()
 		end,
-		Disable = function()
-			active = false
-			if window then
-				window.grid:Close()
-			end
+		enter = function()
+			showLists(true)
+			JunkList.ShowTab(window.tab)
+		end,
+		leave = function()
+			showLists(false)
 		end,
 	})
 end
-
-local function refreshShown()
-	if window and window.list:IsVisible() then
-		JunkList.Refresh()
-	end
-end
-Bus:On("MarksChanged", JunkList, refreshShown)
-Bus:On("ProfileChanged", JunkList, refreshShown)

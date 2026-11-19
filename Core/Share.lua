@@ -148,7 +148,7 @@ end
 function Share.Label(name, data)
 	local module = moduleOf(name)
 	if module then
-		return L["%s settings"]:format(module.title)
+		return L["%s options"]:format(module.title)
 	end
 	local part = partsByName[name]
 	if not part then

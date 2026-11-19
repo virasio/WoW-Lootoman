@@ -14,26 +14,10 @@ describe("startup", function()
 		assert.is_true(Test.IsRegistered("ADDON_LOADED"))
 	end)
 
-	it("starts the character's session data anew at a login, and keeps it over a reload", function()
-		local charDB = { schema = 1, session = { sales = { sales = { { count = 1 } } } } }
-		Loader.Start(ns, { LootomanCharDB = charDB })
-		Test.FireEvent("PLAYER_ENTERING_WORLD", false, true)
-		assert.same({ { count = 1 } }, ns.Storage:GetSessionSection("sales").sales)
-		-- Only the first PLAYER_ENTERING_WORLD counts; later ones come with zoning.
-		Test.FireEvent("PLAYER_ENTERING_WORLD", true, false)
-		assert.same({ { count = 1 } }, ns.Storage:GetSessionSection("sales").sales)
-
-		ns = Loader.LoadAddon()
-		Loader.Start(ns, { LootomanCharDB = charDB })
-		ns.Compat.Test.FireEvent("PLAYER_ENTERING_WORLD", true, false)
-		assert.same({}, ns.Storage:GetSessionSection("sales"))
-		assert.is_nil(ns.Compat.Test.state.saved.LootomanCharDB.session.sales.sales)
-	end)
-
 	it("creates and keeps the saved variables of a fresh install", function()
 		Loader.Start(ns)
 		assert.equals(4, Test.state.saved.LootomanDB.schema)
-		assert.equals(1, Test.state.saved.LootomanCharDB.schema)
+		assert.equals(2, Test.state.saved.LootomanCharDB.schema)
 		assert.equals(ns.Storage.db, Test.state.saved.LootomanDB)
 	end)
 
@@ -63,7 +47,7 @@ describe("startup", function()
 		first.Profiles.Create("Main")
 		first.Profiles.Switch("Main")
 		first.Modules:SetEnabled("Feed", true)
-		first.Compat.Test.RunSlashCommand("LOOTOMAN", "debug on")
+		first.Compat.Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		local saved = first.Compat.Test.state.saved.LootomanDB
 
 		-- Session 2, Bo: switches to Main and deletes it.
@@ -106,10 +90,9 @@ describe("startup", function()
 		assert.equals(1, #Test.state.errors)
 		assert.equals(1, #Test.state.printed)
 		assert.matches("could not upgrade", Test.state.printed[1])
-		Test.RunSlashCommand("LOOTOMAN", "selftest")
 		local line
-		for _, printed in ipairs(Test.state.printed) do
-			line = line or printed:match("Saved data: .*")
+		for _, text in ipairs((ns.SelfTest.Run())) do
+			line = line or text:match("Saved data: .*")
 		end
 		assert.matches("read%-only %(the upgrade failed%)", line)
 	end)

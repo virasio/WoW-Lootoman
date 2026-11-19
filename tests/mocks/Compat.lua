@@ -76,7 +76,11 @@ local state = {
 	-- Item class names by class ID; the character's level; the item on the cursor.
 	itemClasses = {},
 	equipped = {},
+	stack = "Interface/AddOns/Lootoman/Here.lua:1: in function <here>\n[C]: in function 'xpcall'",
 	linked = {},
+	requested = {},
+	missingAtlases = {},
+	date = "2026-11-19 14:05",
 	playerLevel = 60,
 	cursorItem = nil,
 	cursorFiles = {},
@@ -594,6 +598,21 @@ function Compat.GetItemCount(item, bagsOnly)
 	return bagsOnly and (info.inBags or info.owned or 0) or (info.owned or 0)
 end
 
+-- state.date: the date and time now.
+function Compat.GetDate()
+	return state.date
+end
+
+-- state.missingAtlases: the atlases the fake client lacks ({ [name] = true }).
+function Compat.HasAtlas(name)
+	return not state.missingAtlases[name]
+end
+
+-- state.requested: the item IDs asked for, in order.
+function Compat.RequestItem(itemID)
+	state.requested[#state.requested + 1] = itemID
+end
+
 function Compat.GetItemLook(item)
 	local info = findItem(item)
 	if not info then
@@ -681,7 +700,21 @@ function Compat.Print(text)
 	state.printed[#state.printed + 1] = text
 end
 
+-- state.stack: what GetStack answers, the lines of a stack.
+function Compat.GetStack()
+	return state.stack
+end
+
+local errorListener
+
+function Compat.SetErrorListener(fn)
+	errorListener = fn
+end
+
 function Compat.ReportError(err)
+	if errorListener then
+		pcall(errorListener, err, Compat.GetStack())
+	end
 	state.errors[#state.errors + 1] = err
 end
 

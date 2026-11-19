@@ -40,6 +40,7 @@ files["Compat/"] = {
 		"C_MountJournal",
 		"C_PetJournal",
 		"C_PlayerInteractionManager",
+		"C_Texture",
 		"C_Timer",
 		"C_ToyBox",
 		"C_NamePlate",
@@ -94,6 +95,8 @@ files["Compat/"] = {
 		"UnitXPMax",
 		"WOW_PROJECT_ID",
 		"geterrorhandler",
+		"debugstack",
+		"date",
 		"issecretvalue",
 	},
 }
@@ -188,6 +191,12 @@ files["Settings/"] = {
 		"SettingsTooltip",
 		"StaticPopup_Show",
 		"UIParent",
+		-- The minimap icon (Minimap.lua); GetMinimapShape is a minimap addon's, when there is one.
+		"AddonCompartmentFrame",
+		"GetCursorPosition",
+		"GetMinimapShape",
+		"MenuUtil",
+		"Minimap",
 	},
 }
 

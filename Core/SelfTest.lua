@@ -1,9 +1,10 @@
 local addonName, ns = ...
 local Bus, Compat, Modules, Storage = ns.Bus, ns.Compat, ns.Modules, ns.Storage
 
--- /lootoman selftest: calls Compat against the real client and
--- prints what the addon knows about itself. The output is for bug reports, so
--- it is not translated.
+-- /ltm debug selftest: calls Compat against the real client and
+-- notes what the addon knows about itself, for bug reports, so it is not
+-- translated. Every line goes into the journal; the chat gets only what
+-- failed and the verdict.
 local SelfTest = {}
 ns.SelfTest = SelfTest
 
@@ -63,12 +64,19 @@ function SelfTest.AddReport(build)
 	reports[#reports + 1] = build
 end
 
--- The lines go to the chat and into the saved diagnostics.
-function SelfTest.Run()
+-- Runs every check; the lines go into the saved diagnostics, and are
+-- returned (a line from a timer may still come). With options.print the chat
+-- gets the failed checks, if any, and the verdict; a check not available on
+-- the client is no failure. With options.anonymous (the bug report) the
+-- character is not named, only whether its profile is the default one.
+function SelfTest.Run(options)
+	local toChat = options and options.print
 	local saved = ns.Diagnostics.StartSelfTest()
-	local function say(text)
+	local function say(text, failure)
 		saved[#saved + 1] = text
-		ns.Print(text)
+		if failure and toChat then
+			ns.Print(text)
+		end
 	end
 	say("Self-test")
 
@@ -82,7 +90,7 @@ function SelfTest.Run()
 			say("  " .. name .. ": not available, " .. tostring(problem))
 		else
 			failed = failed + 1
-			say("  " .. name .. ": FAILED, " .. tostring(ran and problem or ok))
+			say("  " .. name .. ": FAILED, " .. tostring(ran and problem or ok), true)
 		end
 	end
 	local scheduled, problem = pcall(Compat.After, 0, function()
@@ -90,14 +98,15 @@ function SelfTest.Run()
 	end)
 	if not scheduled then
 		failed = failed + 1
-		say("  After: FAILED, " .. tostring(problem))
+		say("  After: FAILED, " .. tostring(problem), true)
 	end
 
 	-- Each line is built under protection, so a broken call cannot stop the
 	-- report; the line then shows the error instead.
+	-- A builder may also say that its line belongs in the chat.
 	local function report(build)
-		local ok, text = pcall(build)
-		say(ok and text or ("(" .. tostring(text) .. ")"))
+		local ok, text, show = pcall(build)
+		say(ok and text or ("(" .. tostring(text) .. ")"), ok and show)
 	end
 
 	report(function()
@@ -108,6 +117,9 @@ function SelfTest.Run()
 		return "Addon " .. tostring(Compat.GetAddOnMetadata(addonName, "Version"))
 	end)
 	report(function()
+		if options and options.anonymous then
+			return "Profile " .. (Storage:GetProfileName() == Storage.DEFAULT_PROFILE and "Default" or "not Default")
+		end
 		return ("Character %s, profile %s"):format(tostring(Storage.character), Storage:GetProfileName())
 	end)
 	local READ_ONLY = { newer = ", read-only (saved by a newer version)", failed = ", read-only (the upgrade failed)" }
@@ -162,7 +174,8 @@ function SelfTest.Run()
 		if #absent > 0 then
 			line = line .. "; not on this client: " .. table.concat(absent, "; ")
 		end
-		return line
+		-- A function without what it needs is shown in the chat too.
+		return line, #missing > 0
 	end)
 	for _, build in ipairs(reports) do
 		report(build)
@@ -175,5 +188,9 @@ function SelfTest.Run()
 		end)
 	end
 
-	say(failed == 0 and "All checks passed." or (failed .. " check(s) failed."))
+	say(failed == 0 and "All checks passed." or (failed .. " check(s) failed."), true)
+	if toChat then
+		ns.Print("The full report is in the bug report window: /ltm report")
+	end
+	return saved, failed
 end
