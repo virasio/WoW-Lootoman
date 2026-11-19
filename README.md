@@ -15,6 +15,8 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ### Loot feed
 
+![The loot feed: two cloths, reputation, money and the junk in one row](screenshots/loot-feed.png)
+
 - What you pick up appears next to the centre of the screen and fades out: items, currencies, money, reputation and, if you want, experience. Repeated items merge into one row with a count, and all junk (gray items and items you marked as junk) gathers in one row, "Junk", which lists them in its tooltip. When much is looted at once, the rows come in one after another and leave the same way. Money from merchants, mail, trade, the auction house and banks is not loot and is not shown.
 - Quest items carry the bags' gold quest border on their icon. Point at a row to see the item's or currency's tooltip, or money, experience and reputation in full; the feed waits while you do. Shift-click an item row to put its link into the chat; right-click a piece of gear you just looted to equip it. Other clicks go through to the game world, but for a kept item.
 - **Feed looks** hold every setting of the feed and the design of its rows. Looks have names and are shared by every profile; each profile uses one, chosen on the options page from a menu like Edit Mode's layout menu: edit, copy, rename, reset to the defaults and delete a look, start a new one, and share or import looks as text. The look Default always exists.
@@ -30,7 +32,11 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - The feed is placed with the game's Edit Mode, with its own position in every Edit Mode layout.
 - **Low-space warning**: one warning row sits at the feed's edge where its oldest row is, then a kept item, and the rows stack after them. It shows while any of three thresholds you turn on is reached: free slots in all bags, in the general bags (on by default, at 3 or fewer: only they take gear and junk), or in the reagent bag. Its number is a text you write with tokens, such as `{general}+{reagent|1eff00}` (the default, "3+2") or `{free} / {total}`, each named with what it stands for under the field; its tooltip lists every kind of bag; a click opens the junk window while junk management is on. It follows the look's design like any row: a bag with a red border and "Few free bag slots" as its name.
 
+![The look window on its Content tab, the sample rows on the right](screenshots/look-window.png)
+
 ### Junk
+
+![The junk window, throwing away: the junk on top, the suggestions, then the rest by kind, with prices](screenshots/junk-window.png)
 
 - Junk is every gray item and every item you marked as junk, but not an item you marked "not junk". Lootoman also suggests what else could go; a suggestion becomes junk only when you send it there.
 - *Enable Junk Management* turns all of it on or off; turned off, the game's own sell-junk button is back.
@@ -61,11 +67,15 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ### Options and profiles
 
+![The options page](screenshots/options.png)
+
 - One options page in the game's AddOns options, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk, the loot feed and, on WoW Forever, gathering highlights, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window and the junk window. At the page's top right, *Show the Minimap Icon*, for this character.
 - **The minimap icon**, Lootoman's own picture (the game's AddOns list shows it too), opens the options on a click; a right click opens a menu: *Options*, *Loot Feed Look*, *Junk* and *Bug Report*. Drag it round the minimap's edge (a square minimap too, when a minimap addon makes it square); it stays where you put it. The game's addon compartment has the same entry, also with the icon hidden.
 - Every character can use its own profile; new characters use the Default profile.
 - **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's options, the loot feed's position and the look it uses, and any of your feed looks. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one; texts from earlier versions are read too. When an imported look's name is taken, choose for each one: keep both, replace yours, or keep yours. Feed looks can also be shared and imported on their own, from the look menu.
 - Changes apply at once, without `/reload`.
+
+![The minimap icon and its menu](screenshots/minimap.png)
 
 ### Languages and clients
 
@@ -83,16 +93,6 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 ### Bug reports
 
 *Bug Report* in the minimap icon's menu (or `/ltm report`) opens a window with the whole report, ready to copy: the versions, a self-test, this session's errors, the extended log and the options that differ from their defaults; it names neither your character nor your realm. Turn on *Extended Log* there, do what goes wrong, and come back. Lootoman keeps its own errors always, and never fills the chat with debug lines.
-
-## Screenshots
-
-The loot feed after picking up herbs, leather and experience:
-
-![The loot feed](screenshots/loot-feed.png)
-
-The loot feed in Edit Mode:
-
-![The loot feed in Edit Mode](screenshots/edit-mode.png)
 
 ## Status
 
