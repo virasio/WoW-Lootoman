@@ -345,8 +345,9 @@ function LootFeed:Apply()
 		direction = self:Get("direction"),
 		maxRows = self:Get("maxRows"),
 		layout = self:Layout(),
-		opacity = self:Get("backgroundOpacity") / 100,
+		opacity = self:Get("background") and self:Get("backgroundOpacity") / 100 or 0,
 		color = { ns.Text.RGB(self:Get("backgroundColor")) },
+		fade = self:Get("backgroundFade"),
 		-- Whether the owned count shows is the design's (its part's Shown).
 		showOwned = Feed.Design.Current(self:DesignSection()).parts.owned.shown,
 		showGlow = self:Get("glow"),

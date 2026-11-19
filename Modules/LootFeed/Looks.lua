@@ -60,8 +60,12 @@ Looks.DEFAULTS = {
 	stagger = 0.15,
 	size = 12,
 	-- The rows' texts: "none" (plain), "shadow", "outline" or "thick".
-	backgroundOpacity = 0,
+	-- The background behind the rows: off; its colour, opacity and whether it
+	-- fades out past the rows.
+	background = false,
 	backgroundColor = "000000",
+	backgroundOpacity = 50,
+	backgroundFade = true,
 	glow = true,
 	-- The low-space warning's thresholds: all bags, general bags, the reagent
 	-- bag (off: reagents go into the general bags when their bag is full), and
@@ -183,9 +187,13 @@ function Looks.Settings(view)
 		{ kind = "slider", key = "size", label = L["Size"], tooltip = L["The size of the text; the icons and rows follow it."],
 			min = 10, max = 16, step = 1, format = "%d" },
 		{ kind = "checkbox", key = "glow", label = L["Glow for Rare Items"], tooltip = L["Rare and better items glow in their quality colour."] },
-		{ kind = "slider", key = "backgroundOpacity", label = L["Background opacity"], min = 0, max = 100, step = 5, format = L["%d %%"] },
-		{ kind = "color", key = "backgroundColor", label = L["Background color"],
-			tooltip = L["The background reaches a little past the rows on every side and fades out there."] },
+		{ kind = "checkbox", key = "background", label = L["Background"],
+			tooltip = L["One background behind all the rows, in a colour of your choosing."] },
+		{ kind = "color", key = "backgroundColor", label = L["Color"], parent = "background" },
+		{ kind = "slider", key = "backgroundOpacity", label = L["Opacity"], min = 0, max = 100, step = 5, format = L["%d %%"],
+			parent = "background" },
+		{ kind = "checkbox", key = "backgroundFade", label = L["Fade at the Edges"], parent = "background",
+			tooltip = L["The background reaches a little past the rows on every side and fades out there; without this, it ends there sharply."] },
 	}
 	local timings = {
 		{ kind = "slider", key = "stagger", label = L["Delay Between Rows"],

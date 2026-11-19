@@ -77,6 +77,17 @@ Migrations.account = {
 			end
 		end
 	end,
+	-- 4 (0.5.9): the loot feed's background gets its own switch, off by
+	-- default; a look that showed one (an opacity above 0) keeps it on.
+	function(db)
+		local sections = type(db.sections) == "table" and db.sections or {}
+		for _, look in pairs(type(sections.feedLooks) == "table" and sections.feedLooks or {}) do
+			local values = type(look) == "table" and type(look.values) == "table" and look.values or nil
+			if values and type(values.backgroundOpacity) == "number" and values.backgroundOpacity > 0 then
+				values.background = true
+			end
+		end
+	end,
 }
 
 -- Junk's settings as 0.4 saved them in a profile or a text, as they are from

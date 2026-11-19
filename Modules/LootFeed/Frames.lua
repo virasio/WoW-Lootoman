@@ -715,6 +715,7 @@ local function createBackground(frame)
 		piece:SetTexture(Frames.FADE)
 		piece:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
 		back.pieces[name] = piece
+		back.fade = true
 	end
 	local pieces = back.pieces
 	pieces.center:SetAllPoints(back)
@@ -734,9 +735,22 @@ local function createBackground(frame)
 	return back
 end
 
--- The look's margin, colour ({ r, g, b }) and opacity (0 to 1).
-local function styleBackground(back, margin, color, opacity)
+-- The look's margin, colour ({ r, g, b }), opacity (0 to 1) and whether the
+-- margin fades out (else it is solid, as the middle is).
+local function styleBackground(back, margin, color, opacity, fade)
 	local pieces = back.pieces
+	if back.fade ~= fade then
+		back.fade = fade
+		for name, piece in pairs(pieces) do
+			if fade then
+				piece:SetTexture(Frames.FADE)
+				local coords = PIECES[name]
+				piece:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+			else
+				piece:SetColorTexture(1, 1, 1, 1)
+			end
+		end
+	end
 	pieces.top:SetHeight(margin)
 	pieces.bottom:SetHeight(margin)
 	pieces.left:SetWidth(margin)
@@ -877,7 +891,8 @@ function FeedMixin:SetOptions(options)
 	end
 	Frames.ApplyLayout(self.warningRow, layout)
 	placeWarnings(self)
-	styleBackground(self.frame.Back, Frames.BackgroundMargin(layout), options.color or { 0, 0, 0 }, options.opacity or 0)
+	styleBackground(self.frame.Back, Frames.BackgroundMargin(layout), options.color or { 0, 0, 0 }, options.opacity or 0,
+		options.fade ~= false)
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 	end

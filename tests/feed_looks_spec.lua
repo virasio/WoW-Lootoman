@@ -27,7 +27,9 @@ describe("loot feed looks", function()
 		assert.same({ "Default", "auction", "Raid" }, Looks.List())
 		assert.same({ schema = 1, base = "large" }, Looks.Get("Raid"))
 		-- The low-space warning: only the general bags' threshold, and today's "3+2".
-		assert.same({ 5, true, false, 12, 0, 3, false, false, 5, "{general}+{reagent|1eff00}" }, { Looks.Value("Raid", "maxRows"),
+		assert.same({ false, 50, true }, { Looks.Value("Raid", "background"), Looks.Value("Raid", "backgroundOpacity"),
+			Looks.Value("Raid", "backgroundFade") })
+		assert.same({ 5, true, false, 12, 50, 3, false, false, 5, "{general}+{reagent|1eff00}" }, { Looks.Value("Raid", "maxRows"),
 			Looks.Value("Raid", "xp"), Looks.Value("Raid", "keepPets"), Looks.Value("Raid", "size"), Looks.Value("Raid", "backgroundOpacity"),
 			Looks.Value("Raid", "warnGeneralAt"), Looks.Value("Raid", "warnReagent"), Looks.Value("Raid", "warnTotal"),
 			Looks.Value("Raid", "warnTotalAt"), Looks.Value("Raid", "slotsText") })

@@ -192,6 +192,14 @@ describe("migrations", function()
 		assert.same({ Default = {} }, fresh.profiles)
 	end)
 
+	it("switches the loot feed's background on in each 0.5.8 look that showed one", function()
+		local db = Migrations.Run(Migrations.account, dofile("tests/fixtures/saved_0_5_8.lua")().LootomanDB)
+		local looks = db.sections.feedLooks
+		assert.same({ true, 60, "336699" }, { looks.Glass.values.background, looks.Glass.values.backgroundOpacity,
+			looks.Glass.values.backgroundColor })
+		assert.same({ nil, nil }, { looks.Plain.values.background, looks.Default.values })
+	end)
+
 	it("runs every missing step in order", function()
 		local ran = {}
 		local steps = {

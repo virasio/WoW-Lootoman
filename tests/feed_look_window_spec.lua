@@ -440,6 +440,20 @@ describe("loot feed look window", function()
 		it("picks the background's color on Appearance in the game's color picker, the feed following", function()
 			local swatch, picker = settingOf("backgroundColor").swatch, Loader.ui.colorPicker
 			assert.equals("appearance", settingOf("backgroundColor").setting.tab)
+			-- Under the switch: the colour first, then the opacity and the fade, all
+			-- greyed until the switch is on.
+			local order = {}
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+				if setting.key:find("^background") then
+					order[#order + 1] = setting.key .. ":" .. tostring(setting.parent)
+				end
+			end
+			assert.same({ "background:nil", "backgroundColor:background", "backgroundOpacity:background", "backgroundFade:background" }, order)
+			assert.same({ false, false, false }, { swatch.enabled, settingOf("backgroundOpacity").slider.enabled,
+				settingOf("backgroundFade").check.enabled })
+			LookWindow.Set("background", true)
+			assert.same({ true, true, true }, { swatch.enabled, settingOf("backgroundOpacity").slider.enabled,
+				settingOf("backgroundFade").check.enabled })
 			swatch.scripts.OnClick(swatch)
 			assert.same({ true, 0, 0, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
 			picker:Pick(0, 0.5, 1)

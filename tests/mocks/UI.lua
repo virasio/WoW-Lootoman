@@ -123,7 +123,8 @@ function methods:GetFont()
 end
 function methods:SetShadowOffset(x, y) self.shadowOffset = { x, y } end
 function methods:SetShadowColor(r, g, b, a) self.shadowColor = { r, g, b, a } end
-function methods:SetColorTexture(r, g, b, a) self.colorTexture = { r, g, b, a } end
+-- A texture shows a file or a colour: each replaces the other.
+function methods:SetColorTexture(r, g, b, a) self.colorTexture, self.texture = { r, g, b, a }, nil end
 -- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
 function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
 -- A text wraps every 520 pixels, 14 pixels a line.
@@ -132,7 +133,7 @@ function methods:SetGradient(orientation, from, to) self.gradient = { orientatio
 function methods:GetText() return self.text end
 function methods:SetTextColor(r, g, b) self.color = { r, g, b } end
 function methods:SetJustifyH(justify) self.justify = justify end
-function methods:SetTexture(texture) self.texture = texture end
+function methods:SetTexture(texture) self.texture, self.colorTexture = texture, nil end
 function methods:SetAtlas(atlas) self.atlas = atlas end
 function methods:SetVertexColor(r, g, b) self.vertex = { r, g, b } end
 function methods:SetTexCoord(...) self.texCoord = { ... } end

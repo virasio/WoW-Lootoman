@@ -479,7 +479,17 @@ describe("loot feed module", function()
 		assert.equals(369, module.feed.frame.width)
 		module:Set("backgroundOpacity", 80)
 		module:Set("backgroundColor", "ff8000")
+		-- No background until it is switched on.
+		assert.equals(0, module.feed.frame.Back.alpha)
+		module:Set("background", true)
 		assert.same({ 0.8, { 1, 128 / 255, 0 } }, { module.feed.frame.Back.alpha, module.feed.frame.Back.pieces.center.vertex })
+		-- The margin fades out, or without the fade is as solid as the middle.
+		local corner = module.feed.frame.Back.pieces.topLeft
+		assert.same({ ns.Feed.Frames.FADE, { 0, 0.5, 0, 0.5 } }, { corner.texture, corner.texCoord })
+		module:Set("backgroundFade", false)
+		assert.same({ nil, { 1, 1, 1, 1 } }, { corner.texture, corner.colorTexture })
+		module:Set("backgroundFade", true)
+		assert.same({ ns.Feed.Frames.FADE, { 0, 0.5, 0, 0.5 } }, { corner.texture, corner.texCoord })
 		assert.equals(3, module.model.options.maxRows)
 		module:Set("direction", "down")
 		assert.equals("down", module.feed.options.direction)
