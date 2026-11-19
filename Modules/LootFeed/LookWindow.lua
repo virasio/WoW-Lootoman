@@ -417,14 +417,15 @@ function LookWindow.Zoom()
 	return zoom
 end
 
--- The samples' area by the window's size: right of the tabs' panel, or over
--- the whole width while wide.
-function LookWindow.Layout()
+-- The samples' area by the window's size (as the game reports it, else as it
+-- is now): all the room right of the tabs' panel, or over the whole width
+-- while wide.
+function LookWindow.Layout(width, height)
 	if not window then
 		return
 	end
-	local width = window.width or LookWindow.WIDTH
-	local height = window.height or LookWindow.HEIGHT
+	width = width or window:GetWidth() or LookWindow.WIDTH
+	height = height or window:GetHeight() or LookWindow.HEIGHT
 	window.previewWidth = wide and width - 32 or width - LookWindow.PANEL_WIDTH - 48
 	window.previewHeight = height + LookWindow.PANEL_TOP - 36
 	local preview = window.preview
@@ -1023,14 +1024,17 @@ local function build()
 	frame.grip:SetNormalTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up]])
 	frame.grip:SetHighlightTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight]])
 	frame.grip:SetPushedTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down]])
+	-- Sized from where the mouse is, as the game's own resize buttons do (the
+	-- second argument): without it, the corner could jump away as the sizing
+	-- began, after a drag elsewhere (a sample's part, the color picker).
 	frame.grip:SetScript("OnMouseDown", function()
-		frame:StartSizing("BOTTOMRIGHT")
+		frame:StartSizing("BOTTOMRIGHT", true)
 	end)
 	frame.grip:SetScript("OnMouseUp", function()
 		frame:StopMovingOrSizing()
 	end)
-	frame:SetScript("OnSizeChanged", function()
-		LookWindow.Layout()
+	frame:SetScript("OnSizeChanged", function(_, width, height)
+		LookWindow.Layout(width, height)
 	end)
 
 	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")

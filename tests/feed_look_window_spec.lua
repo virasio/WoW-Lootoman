@@ -364,9 +364,14 @@ describe("loot feed look window", function()
 
 		it("is resized from its corner, never below its first size, and its samples' area grows with it", function()
 			assert.same({ true, 900, 640 }, { window.resizable, window.resizeBounds[1], window.resizeBounds[2] })
+			-- Sized from where the mouse is, so the corner does not jump.
 			window.grip.scripts.OnMouseDown(window.grip)
-			assert.equals("BOTTOMRIGHT", window.sizing)
+			assert.same({ "BOTTOMRIGHT", true }, { window.sizing, window.sizingFromMouse })
 			window.grip.scripts.OnMouseUp(window.grip)
+			-- The size the game reports as the corner is dragged: the samples take
+			-- all the room right of the tabs.
+			window.scripts.OnSizeChanged(window, 1100, 700)
+			assert.same({ 640, 564 }, { window.preview.width, window.preview.height })
 			LookWindow.Resize(1200, 800)
 			assert.same({ 740, 664 }, { window.preview.width, window.preview.height })
 			LookWindow.SetWide(true)

@@ -90,7 +90,7 @@ end
 function methods:SetResizable(resizable) self.resizable = resizable end
 function methods:SetClipsChildren(clips) self.clipsChildren = clips end
 function methods:SetResizeBounds(...) self.resizeBounds = { ... } end
-function methods:StartSizing(point) self.sizing = point end
+function methods:StartSizing(point, fromMouse) self.sizing, self.sizingFromMouse = point, fromMouse end
 function methods:StopMovingOrSizing() self.sizing = nil end
 function methods:SetAttribute(name, value)
 	if not blocked(self, "SetAttribute") then
