@@ -33,9 +33,12 @@ describe("loot feed looks", function()
 			Looks.Value("Raid", "xp"), Looks.Value("Raid", "keepPets"), Looks.Value("Raid", "backgroundOpacity"),
 			Looks.Value("Raid", "warnGeneralAt"), Looks.Value("Raid", "warnReagent"), Looks.Value("Raid", "warnTotal"),
 			Looks.Value("Raid", "warnTotalAt"), Looks.Value("Raid", "slotsText") })
-		-- The template is any text up to 80 characters.
+		-- The template is any text up to 80 characters, not bytes: Cyrillic
+		-- letters take two each.
 		assert.is_truthy(Looks.Set("Raid", "slotsText", "{free}"))
 		assert.is_nil(Looks.Set("Raid", "slotsText", ("x"):rep(81)))
+		assert.is_truthy(Looks.Set("Raid", "slotsText", ("я"):rep(80)))
+		assert.is_nil(Looks.Set("Raid", "slotsText", ("я"):rep(81)))
 	end)
 
 	it("follow the rules of profile names", function()

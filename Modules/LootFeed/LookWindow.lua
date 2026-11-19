@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, Compat, L, NameMenu, Storage = ns.Bus, ns.Compat, ns.L, ns.NameMenu, ns.Storage
+local Bus, Compat, L, NameMenu, Storage, Text = ns.Bus, ns.Compat, ns.L, ns.NameMenu, ns.Storage, ns.Text
 local Feed = ns.Feed
 
 -- The feed look window: everything about one feed look (Looks.lua) in one
@@ -854,8 +854,9 @@ local function createSetting(parent, setting, y)
 		end)
 	elseif setting.kind == "text" then
 		-- An edit box shows a "|" only doubled and gives a typed one back
-		-- doubled; the look keeps it single. Saved on Enter and when the box
-		-- loses the focus.
+		-- doubled; the look keeps it single, so the box takes up to twice the
+		-- look's letters. Saved on Enter and when the box loses the focus, cut
+		-- to the look's length: the box then shows what was kept.
 		control.label:SetPoint("TOPLEFT", x + 4, y)
 		control.input = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
 		control.input:SetPoint("TOPLEFT", x + 10, y - 18)
@@ -864,7 +865,7 @@ local function createSetting(parent, setting, y)
 		control.input:SetMaxLetters(setting.maxLetters * 2)
 		local function save(input)
 			if not window.updating then
-				LookWindow.Set(setting.key, (input:GetText():gsub("||", "|")))
+				LookWindow.Set(setting.key, Text.Truncate((input:GetText():gsub("||", "|")), setting.maxLetters))
 			end
 		end
 		control.input:SetScript("OnEnterPressed", function(input)

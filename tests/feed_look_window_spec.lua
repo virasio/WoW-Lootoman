@@ -602,6 +602,12 @@ describe("loot feed look window", function()
 			assert.equals("{free} | {general}", ns.Feed.Looks.Value("Default", "slotsText"))
 			assert.equals("{free} || {general}", field.input:GetText())
 			assert.equals("|cffffffff3|r|cffffffff || |r|cffffffff2|r", window.rows[#window.rows].Amount.text)
+			-- A longer text is cut to 80 letters, Cyrillic ones too, and the field
+			-- shows what was kept.
+			field.input:SetText("{free} " .. ("я"):rep(90))
+			field.input.scripts.OnEditFocusLost(field.input)
+			assert.same({ "{free} " .. ("я"):rep(73), "{free} " .. ("я"):rep(73) },
+				{ ns.Feed.Looks.Value("Default", "slotsText"), field.input:GetText() })
 			-- Under the field, what each token stands for: the tokens in white, a bar
 			-- shown as typed; the field's room grows by the note's height.
 			local note = field.note.text

@@ -224,7 +224,8 @@ local function declared(view, key)
 end
 
 -- Whether a look of this view may hold the value: of its default's type, and
--- one its control can set (a slider's range and step, a dropdown's choices).
+-- one its control can set (a slider's range and step, a dropdown's choices, a
+-- text's length in characters).
 local function allows(view, key, value)
 	local default = Looks.DEFAULTS[key]
 	if default == nil or type(value) ~= type(default) then
@@ -245,7 +246,7 @@ local function allows(view, key, value)
 		end
 		return false
 	elseif setting.kind == "text" then
-		return #value <= setting.maxLetters
+		return Text.Length(value) <= setting.maxLetters
 	elseif setting.kind == "color" then
 		return value:match("^%x%x%x%x%x%x$") ~= nil
 	end
