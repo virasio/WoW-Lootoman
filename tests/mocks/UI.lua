@@ -156,6 +156,9 @@ function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
 -- A panel template's title (DefaultPanelFlatTemplate's SetTitle).
 function methods:SetTitle(text) self.title = text end
+-- A button's textures: an atlas or a file.
+function methods:SetNormalAtlas(atlas) self.normalAtlas = atlas end
+function methods:SetNormalTexture(texture) self.normalTexture = texture end
 function methods:IsEnabled() return self.enabled ~= false end
 function methods:SetFontObject(font) self.fontObject = font end
 function methods:HookScript(name, fn)

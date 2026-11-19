@@ -10,7 +10,7 @@ local L = ns.L
 -- button works again.
 --
 -- A click sells the junk (Sections.SaleList) at once; Shift-click opens the
--- sell window to pick what to sell, and sells nothing by itself; a setting
+-- junk window to pick what to sell, and sells nothing by itself; a setting
 -- swaps the two. The icon is grey
 -- when there is no junk to sell. With "Sell junk at merchants" on, the junk is
 -- sold as soon as a merchant's window opens.
@@ -45,13 +45,13 @@ local function sell()
 	return Junk.SellQueue.Start(Junk.Sections.SaleList())
 end
 
--- Whether a plain click opens the sort window, by the selling choice: it
+-- Whether a plain click opens the junk window, by the selling choice: it
 -- does unless the button sells ("button"); Shift-click does the other.
 local function clickOpens()
 	return Junk:Get("selling") ~= "button"
 end
 
--- What a click does: open the sort window and sell nothing, or sell the junk.
+-- What a click does: open the junk window to sell and sell nothing, or sell the junk.
 function SellButton.Click(shift)
 	if (not shift) == clickOpens() then
 		if Junk.SellWindow then

@@ -1,8 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
--- The bag button: it opens the toss window from the bags, in the middle of the
--- screen. By the setting (bagButton): small, in the bag window's title left
+-- The bag button: it opens the junk window from the bags (Window.lua: to
+-- sell at a merchant, else to throw away in the middle of the screen). By the setting (bagButton): small, in the bag window's title left
 -- of its close button; large, above the bag window over its close button;
 -- large, on its own, placed in Edit Mode and sized in its dialog; or never.
 --

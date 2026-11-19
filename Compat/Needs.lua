@@ -109,6 +109,7 @@ ns.Compat.NEEDS = {
 	GetTime = { "GetTime" },
 	GetXP = { "UnitXP", "UnitXPMax" },
 	Has = {},
+	HasAtlas = { "C_Texture.GetAtlasInfo" },
 	InCombat = { "InCombatLockdown" },
 	IsAddOnLoaded = { "C_AddOns.IsAddOnLoaded" },
 	IsAutoLootOn = { "C_CVar.GetCVarBool", "IsModifiedClick" },

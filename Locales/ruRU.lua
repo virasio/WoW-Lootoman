@@ -189,7 +189,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["/ltm feed: open the loot feed's look window"] = "/ltm feed: открыть окно вида ленты лута",
 
 	-- Settings/Panel.lua
-	["The junk list opens out of combat."] = "Список хлама открывается вне боя.",
 
 	-- Settings/Profiles.lua
 	["Profile"] = "Профиль",
@@ -261,7 +260,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["At Merchants"] = "У торговца",
 	["Sell automatically"] = "Продавать автоматически",
 	["Sell with the sell button"] = "Продавать кнопкой продажи",
-	["The sell button opens the sort window"] = "Кнопка продажи открывает окно сортировки",
+	["The sell button opens the junk window"] = "Кнопка продажи открывает окно хлама",
 
 	-- Modules/Junk/ItemGrid.lua
 	["Other"] = "Прочее",
@@ -301,7 +300,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["To Junk"] = "В хлам",
 	["A quest in your log still wants these"] = "Это ещё нужно заданиям в журнале",
 	["Junk List"] = "Список хлама",
-	["Bags"] = "Сумки",
 	["Add"] = "Добавить",
 	["Clear List"] = "Очистить список",
 	["Merge with my list"] = "Объединить с моим списком",
@@ -315,9 +313,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["That is neither an item link nor an item ID."] = "Это не ссылка на предмет и не его номер.",
 	["Drop an item here from your bags, Shift-click one while the field is active, or paste a link or an item ID."] = "Перетащите сюда предмет из сумок, щёлкните по предмету с Shift, пока поле активно, или вставьте ссылку либо номер предмета.",
 	["Throw Away Junk"] = "Выбросить хлам",
+	["Back to the bags"] = "Назад к сумкам",
+	["The junk list"] = "Список хлама",
 	["In the loot: %s, worth %s"] = "В добыче: %s, стоит %s",
 	["Worth less than what is left in the loot."] = "Стоит меньше, чем то, что осталось в добыче.",
-	["Sort Junk"] = "Разбор хлама",
 	["Sell Junk"] = "Продать хлам",
 	["This item is now in an equipment set; nothing was deleted."] = "Этот предмет теперь в комплекте экипировки, ничего не удалено.",
 	["Drag an item here to mark it as junk."] = "Перетащите сюда предмет, чтобы пометить его как хлам.",

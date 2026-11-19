@@ -1,10 +1,9 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local L = ns.L
 
--- The sell window (the sort window, as the player sees it): the bags as an
--- item grid (ItemGrid.lua), laid out like the toss window, with what a
--- merchant buys, by the merchant's price. It opens from the sell-junk button,
--- to the right of the merchant's window, and closes with it. A move in it is
+-- Selling, the junk window's second mode (Window.lua), only while a merchant
+-- is open: the bags as an item grid (ItemGrid.lua), laid out as for throwing
+-- away, with what a merchant buys, by the merchant's price. A move in it is
 -- for this sale only, and for good with Shift held (ItemGrid.lua).
 --
 -- Sell Junk, at the bottom, sells the junk group, less the junk in bags the
@@ -15,11 +14,7 @@ local Junk = ns.Modules:Get("Junk")
 local SellWindow = {}
 Junk.SellWindow = SellWindow
 
-SellWindow.NAME = "LootomanSellWindow"
-SellWindow.GAP = 4
-
 local grid
-local active = false
 
 -- The upper section's junk that Sell junk sells.
 local function saleOf(built)
@@ -33,7 +28,7 @@ local function saleOf(built)
 end
 
 local function updateFooter()
-	if not grid or not grid.built then
+	if not grid or not grid.built or Junk.Window.Mode() ~= "sell" then
 		return
 	end
 	local sale = saleOf(grid.built)
@@ -42,61 +37,47 @@ local function updateFooter()
 	grid.warning:SetShown(#sale > Junk.SellQueue.BUYBACK)
 end
 
-local function footer(owner, frame)
-	owner.sellButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	owner.sellButton:SetSize(120, 22)
-	owner.sellButton:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
-	owner.sellButton:SetText(L["Sell Junk"])
+local function build(window)
+	grid = window
+	local frame = grid.footer
+	grid.sellButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	grid.sellButton:SetSize(120, 22)
+	grid.sellButton:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
+	grid.sellButton:SetText(L["Sell Junk"])
 	-- The sale goes on without the window, which is done once the junk is picked.
-	owner.sellButton:SetScript("OnClick", function()
-		Junk.SellQueue.Start(saleOf(owner.built))
-		owner:Close()
+	grid.sellButton:SetScript("OnClick", function()
+		Junk.SellQueue.Start(saleOf(grid.built))
+		grid:Close()
 	end)
-	owner.warning = frame:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
-	owner.warning:SetPoint("LEFT", frame, "LEFT", 0, 0)
-	owner.warning:SetPoint("RIGHT", owner.sellButton, "LEFT", -8, 0)
-	owner.warning:SetJustifyH("LEFT")
-	owner.warning:SetText(L["Only the last 12 sold items can be bought back."])
+	grid.sellButton:Hide()
+	grid.warning = frame:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
+	grid.warning:SetPoint("LEFT", frame, "LEFT", 0, 0)
+	grid.warning:SetPoint("RIGHT", grid.sellButton, "LEFT", -8, 0)
+	grid.warning:SetJustifyH("LEFT")
+	grid.warning:SetText(L["Only the last 12 sold items can be bought back."])
+	grid.warning:Hide()
+	Junk.SellQueue.Watch(updateFooter)
 end
 
+-- The sell button: the window selling, beside the merchant.
 function SellWindow.Open()
-	if not active or not grid or not Compat.IsInteracting("Merchant") then
-		return
-	end
-	grid.frame:ClearAllPoints()
-	grid.frame:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT", SellWindow.GAP, 0)
-	grid:Open()
+	return Junk.Window.Open("merchant")
 end
 
 function SellWindow.Grid()
-	return grid
+	return Junk.Window.Grid()
 end
 
-Junk.AddPart({
-	Enable = function()
-		if not MerchantFrame then
-			return
-		end
-		if not grid then
-			grid = Junk.ItemGrid.Create({
-				name = SellWindow.NAME,
-				title = L["Sort Junk"],
-				kind = "sell",
-				onRefresh = updateFooter,
-				footer = footer,
-			})
-			Junk.SellQueue.Watch(updateFooter)
-		end
-		grid:Attach()
-		active = true
-		Junk.ListenEvent("MERCHANT_CLOSED", function()
-			grid:Close()
-		end)
+Junk.Window.Register("sell", {
+	title = L["Sell Junk"],
+	kind = "sell",
+	onRefresh = updateFooter,
+	build = build,
+	enter = function()
+		grid.sellButton:Show()
 	end,
-	Disable = function()
-		active = false
-		if grid then
-			grid:Close()
-		end
+	leave = function()
+		grid.sellButton:Hide()
+		grid.warning:Hide()
 	end,
 })

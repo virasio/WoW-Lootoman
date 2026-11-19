@@ -193,9 +193,6 @@ ns.Locales.AddEnglish({
 	"The look window opens out of combat.",
 	"/ltm feed: open the loot feed's look window",
 
-	-- Settings/Panel.lua
-	"The junk list opens out of combat.",
-
 	-- Settings/Profiles.lua
 	"Profile",
 	"Default",
@@ -266,7 +263,7 @@ ns.Locales.AddEnglish({
 	"At Merchants",
 	"Sell automatically",
 	"Sell with the sell button",
-	"The sell button opens the sort window",
+	"The sell button opens the junk window",
 
 	-- Modules/Junk/ItemGrid.lua
 	"Other",
@@ -306,7 +303,6 @@ ns.Locales.AddEnglish({
 	"To Junk",
 	"A quest in your log still wants these",
 	"Junk List",
-	"Bags",
 	"Add",
 	"Clear List",
 	"Merge with my list",
@@ -320,9 +316,10 @@ ns.Locales.AddEnglish({
 	"That is neither an item link nor an item ID.",
 	"Drop an item here from your bags, Shift-click one while the field is active, or paste a link or an item ID.",
 	"Throw Away Junk",
+	"Back to the bags",
+	"The junk list",
 	"In the loot: %s, worth %s",
 	"Worth less than what is left in the loot.",
-	"Sort Junk",
 	"Sell Junk",
 	"This item is now in an equipment set; nothing was deleted.",
 	"Drag an item here to mark it as junk.",

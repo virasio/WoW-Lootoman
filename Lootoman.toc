@@ -73,6 +73,7 @@ Modules\Junk\Junk.lua
 Modules\Junk\QuestMemory.lua
 Modules\Junk\Sections.lua
 Modules\Junk\ItemGrid.lua
+Modules\Junk\Window.lua
 Modules\Junk\TossButton.lua
 Modules\Junk\Toss.lua
 Modules\Junk\BagButton.lua

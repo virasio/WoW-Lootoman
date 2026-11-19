@@ -2,8 +2,8 @@ local _, ns = ...
 local Compat, Inventory, L, Marks, Prices, SelfTest, Text = ns.Compat, ns.Inventory, ns.L, ns.Marks, ns.Prices, ns.SelfTest, ns.Text
 local JunkRule, Suggest = ns.Rules.Junk, ns.Rules.Suggest
 
--- The sections of the junk windows, from the bags as they are:
---   junk       gray and marked items (and, in the sell window, what the player
+-- The sections of the junk window, from the bags as they are:
+--   junk       gray and marked items (and, selling, what the player
 --              sent there for this sale), the ones a quest in the log still
 --              wants last, as a hint (entry.hint);
 --   suggested  what the suggestion rules find (Rules.Suggest), by rule;
@@ -135,7 +135,7 @@ end
 -- { junk = { entries, hinted (how many of them, last), total },
 --   suggested = { groups = { { key (the rule), entries, total } }, entries, total },
 --   rest = { groups = { { key, name (the kind), entries, total } }, entries, total } }.
--- thisSale: the sell window's decisions for this sale (Rules.Junk.Decide).
+-- thisSale: the decisions for this sale while selling (Rules.Junk.Decide).
 function Sections.Build(kind, thisSale)
 	assert(kind == "toss" or kind == "sell", "the kind is toss or sell")
 	local result = {

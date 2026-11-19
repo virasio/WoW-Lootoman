@@ -2,7 +2,7 @@ local _, ns = ...
 local Compat, Inventory, L, SelfTest = ns.Compat, ns.Inventory, ns.L, ns.SelfTest
 
 -- Selling junk: a controller without frames, as fast autoloot is. The sell
--- button and the sell window only start it and show its state.
+-- button and the junk window only start it and show its state.
 --
 -- One stack every PACE seconds while a merchant is open (selling the next one
 -- waits until the server has taken the last: its slot no longer holds it).

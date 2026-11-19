@@ -40,6 +40,7 @@ files["Compat/"] = {
 		"C_MountJournal",
 		"C_PetJournal",
 		"C_PlayerInteractionManager",
+		"C_Texture",
 		"C_Timer",
 		"C_ToyBox",
 		"C_NamePlate",

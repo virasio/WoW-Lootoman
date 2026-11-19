@@ -2,7 +2,7 @@ local _, ns = ...
 local Compat, L, Prices = ns.Compat, ns.L, ns.Prices
 local JunkRule = ns.Rules.Junk
 
--- The bag-like window of the junk windows: three sections (Sections.lua), each
+-- The bag-like window of the junk window (Window.lua): three sections (Sections.lua), each
 -- scrolling on its own so all are in sight while an item is dragged between
 -- them, with item buttons in rows of eight like the game's bags:
 --   junk       the junk, the items a quest in the log still wants last, under
@@ -19,15 +19,16 @@ local JunkRule = ns.Rules.Junk
 -- dragging it onto the junk or the not-junk section. The drag is the window's
 -- own: the item stays in its bag slot and nothing goes onto the game's
 -- cursor; a copy of its icon follows the mouse. Dropping it outside the window
--- is the owner's: the toss window deletes it.
+-- is the owner's: throwing away, it deletes it.
 --
--- The window's mode says what a move means: "sell" (the sell window), for
--- this sale only, and for good (a mark) with Shift held; "keep" (the toss
--- window and the junk list), always for good. This sale's decisions are the
--- window's own and go when it closes.
+-- The window's mode says what a move means: "sell" (selling), for this sale
+-- only, and for good (a mark) with Shift held; "keep" (throwing away), always
+-- for good. This sale's decisions are the window's own and go when it closes
+-- or changes its kind. The owner may hide the sections to show something
+-- else in their place (the junk window's lists).
 --
 --   local grid = ItemGrid.Create({
---       name = "LootomanTossWindow",          -- global name, for UISpecialFrames
+--       name = "LootomanJunkWindow",          -- global name, for UISpecialFrames
 --       title = <text>, kind = "toss" | "sell", mode = "keep" | "sell",
 --       dropOutside = <tooltip line>, onDropOutside = function(entry) end,  -- optional
 --       footer = function(grid, footer) end,  -- adds the owner's buttons
@@ -36,6 +37,7 @@ local JunkRule = ns.Rules.Junk
 --   })
 --   grid:Attach()      -- in the part's Enable: refresh on changes while shown
 --   grid:Open() / grid:Close() / grid:Refresh()
+--   grid:SetKind("sell") / grid:ShowSections(false)
 local Junk = ns.Modules:Get("Junk")
 local ItemGrid = {}
 Junk.ItemGrid = ItemGrid
@@ -126,7 +128,7 @@ local GridMixin = {}
 GridMixin.__index = GridMixin
 
 -- Whether a move made now is for good: always in a "keep" window, with Shift
--- in the sell window.
+-- while selling.
 function GridMixin:ForGood()
 	return self.options.mode ~= "sell" or shiftDown()
 end
@@ -280,8 +282,8 @@ local function createButton(grid, parent)
 	button.kept = button:CreateTexture(nil, "OVERLAY")
 	button.kept:SetAllPoints()
 	button.kept:SetColorTexture(0, 0, 0, 0.5)
-	-- A mark for an owner's note on the item (the toss window's "cheaper than
-	-- the loot").
+	-- A mark for an owner's note on the item (throwing away: "cheaper than the
+	-- loot").
 	button.check = button:CreateTexture(nil, "OVERLAY", nil, 2)
 	button.check:SetSize(14, 14)
 	button.check:SetPoint("TOPRIGHT", 2, 2)
@@ -445,7 +447,30 @@ local function fill(grid, section, built)
 	section.shown = count
 end
 
+-- Switches what the grid lists and what a move means, on the same frame:
+-- kind "toss" or "sell", mode "keep" or "sell" (by default the kind's). This
+-- sale's decisions go with the old kind.
+function GridMixin:SetKind(kind, mode)
+	self.options.kind, self.options.mode = kind, mode or (kind == "sell" and "sell" or "keep")
+	self.sections.junk.showKept = kind == "sell"
+	self.thisSale = { junk = {}, keep = {} }
+end
+
+-- Shows or hides the sections; hidden, a refresh only tells the owner.
+function GridMixin:ShowSections(shown)
+	self.hidden = not shown
+	for _, section in pairs(self.sections) do
+		section.frame:SetShown(shown)
+	end
+end
+
 function GridMixin:Refresh()
+	if self.hidden then
+		if self.options.onRefresh then
+			self.options.onRefresh(self, nil)
+		end
+		return
+	end
 	local built = Junk.Sections.Build(self.options.kind, self.options.mode == "sell" and self.thisSale or nil)
 	self.built = built
 	for _, key in ipairs(ItemGrid.SECTIONS) do
@@ -526,18 +551,7 @@ function ItemGrid.Create(options)
 	if options.name then
 		table.insert(UISpecialFrames, options.name)
 	end
-	-- The junk list (Settings/JunkList.lua), to see every mark.
-	if not options.noListButton then
-		grid.listButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-		grid.listButton:SetSize(90, 20)
-		grid.listButton:SetPoint("TOPRIGHT", -24, -1)
-		grid.listButton:SetText(L["Junk List"])
-		grid.listButton:SetScript("OnClick", function()
-			if ns.JunkList then
-				ns.JunkList.Open()
-			end
-		end)
-	end
+	grid.close = close
 
 	local y = -top
 	for _, key in ipairs(ItemGrid.SECTIONS) do

@@ -458,7 +458,7 @@ function LootFeed:OnEnable()
 	self:OnEvent("MODIFIER_STATE_CHANGED", function()
 		self.feed:SetLinkModifier(Compat.IsChatLinkHeld())
 	end)
-	-- The warning's click opens the toss window only while junk management is on.
+	-- The warning's click opens the junk window only while junk management is on.
 	self:On("ModuleToggled", function(_, name)
 		if name == "Junk" then
 			self.feed:SetWarning(self:Warning())

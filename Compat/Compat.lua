@@ -448,6 +448,11 @@ end
 
 -- An item's icon and quality, also before its full data is loaded; either can
 -- be nil.
+-- Whether the client has a texture atlas of this name.
+function Compat.HasAtlas(name)
+	return C_Texture.GetAtlasInfo(name) ~= nil
+end
+
 -- Asks the server for an item's data; ITEM_DATA_LOAD_RESULT(itemID, success)
 -- tells when it came.
 function Compat.RequestItem(itemID)

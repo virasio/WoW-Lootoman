@@ -1,11 +1,10 @@
 local _, ns = ...
 local Compat, Inventory, L, Prices, Text = ns.Compat, ns.Inventory, ns.L, ns.Prices, ns.Text
 
--- The toss window: the bags as an item grid (ItemGrid.lua), junk on top, to
--- throw things away. It opens from the loot window's button, next to the loot
--- window (right of it, or left when there is no room) and closes with the
--- loot; or from the bag button and with /ltm junk, in the middle of the
--- screen. Every move in it marks the item for good.
+-- Throwing away, the junk window's first mode (Window.lua): the bags as an
+-- item grid (ItemGrid.lua), junk on top. Every move in it marks the item for
+-- good. Opened beside the loot window, it names the most valuable item left in
+-- the loot and checks the junk worth less.
 --
 -- Dragging an item out of the window deletes its stack: a gray one at once;
 -- any other after a confirmation in Lootoman's own dialog, which for rare and
@@ -25,15 +24,13 @@ local Junk = ns.Modules:Get("Junk")
 local Toss = {}
 Junk.Toss = Toss
 
-Toss.NAME = "LootomanTossWindow"
 Toss.CONFIRM_NAME = "LootomanDeleteConfirm"
 -- Enum.ItemQuality: from Rare on, the game asks for its confirmation word,
 -- except for heirlooms.
 Toss.RARE, Toss.HEIRLOOM = 3, 7
-Toss.GAP = 4
-
 local grid, confirm
-local active, fromLoot = false, false
+-- Whether the window is beside the loot window.
+local fromLoot = false
 -- The most valuable item left in the loot while the window is by it.
 ---@type { link: string, count: number, worth: number }?
 local lootBest
@@ -169,21 +166,6 @@ function Toss.Delete(entry)
 	end
 end
 
-local function place(nextToLoot)
-	local frame = grid.frame
-	frame:ClearAllPoints()
-	if not nextToLoot then
-		frame:SetPoint("CENTER")
-		return
-	end
-	local right, screen = LootFrame:GetRight(), UIParent:GetRight()
-	if right and screen and right + Junk.ItemGrid.WIDTH + Toss.GAP > screen then
-		frame:SetPoint("TOPRIGHT", LootFrame, "TOPLEFT", -Toss.GAP, 0)
-	else
-		frame:SetPoint("TOPLEFT", LootFrame, "TOPRIGHT", Toss.GAP, 0)
-	end
-end
-
 -- The most valuable item left in the open loot window, by what it is worth
 -- as the window weighs items (Prices.Worth): { link, count, worth }, or nil.
 -- Junk worth less is marked, so the player sees what to give up for it.
@@ -220,81 +202,60 @@ local function showBest()
 	end
 end
 
--- Opens the window: with nextToLoot, next to the loot window when it is
--- visible (and it then closes with the loot); else in the middle of the screen.
+-- The window throwing away: with nextToLoot, beside the loot window when it
+-- is visible (and then it closes with the loot); else as /ltm junk opens it.
 function Toss.Open(nextToLoot)
-	if not active or not grid then
-		return
-	end
-	-- Visible, not only shown: fast autoloot keeps a shown window in a hidden holder.
-	fromLoot = nextToLoot == true and LootFrame ~= nil and LootFrame:IsVisible()
-	place(fromLoot)
-	showBest()
-	grid:Open()
+	return Junk.Window.Open(nextToLoot and "loot" or "auto")
 end
 
--- The toss buttons: the window opens (next to the loot window with
--- nextToLoot, from the loot window's button; else in the middle of the
--- screen, from the bag button), or closes.
+-- The loot window's button (nextToLoot) and the bag button: the window opens
+-- or closes.
 function Toss.Toggle(nextToLoot)
-	if grid and grid:IsShown() then
-		grid:Close()
-	else
-		Toss.Open(nextToLoot)
-	end
+	Junk.Window.Toggle(nextToLoot and "loot" or "auto")
 end
 
 function Toss.Grid()
-	return grid
+	return Junk.Window.Grid()
 end
 
-ns.Slash.Register("junk", function()
-	if active then
-		Toss.Open(false)
-	else
-		ns.Print(L["Junk management is off. Turn it on in the options."])
+local function leave()
+	fromLoot, lootBest = false, nil
+	if grid and grid.lootLine then
+		grid.lootLine:Hide()
 	end
-end, L["/ltm junk: open the junk window"])
+	if confirm then
+		confirm:Hide()
+	end
+end
+
+Junk.Window.Register("toss", {
+	title = L["Throw Away Junk"],
+	kind = "toss",
+	dropOutside = L["Drag it out of the window to delete it."],
+	onDropOutside = function(entry)
+		Toss.Delete(entry)
+	end,
+	checked = function(entry)
+		return lootBest ~= nil and entry.decision.junk and entry.price < lootBest.worth
+	end,
+	checkedNote = L["Worth less than what is left in the loot."],
+	build = function(window)
+		grid = window
+		grid.lootLine = grid.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		grid.lootLine:SetPoint("TOPLEFT", Junk.ItemGrid.SIDE, -Junk.ItemGrid.TOP)
+		grid.lootLine:SetPoint("TOPRIGHT", -Junk.ItemGrid.SIDE, -Junk.ItemGrid.TOP)
+		grid.lootLine:SetJustifyH("LEFT")
+		grid.lootLine:Hide()
+	end,
+	enter = function(_, anchor)
+		fromLoot = anchor == "loot"
+		showBest()
+	end,
+	leave = leave,
+})
 
 Junk.AddPart({
 	Enable = function()
-		grid = grid or Junk.ItemGrid.Create({
-			name = Toss.NAME,
-			title = L["Throw Away Junk"],
-			kind = "toss",
-			dropOutside = L["Drag it out of the window to delete it."],
-			onDropOutside = Toss.Delete,
-			-- Room for the loot's best item over the sections.
-			top = 18,
-			checked = function(entry)
-				return lootBest ~= nil and entry.decision.junk and entry.price < lootBest.worth
-			end,
-			checkedNote = L["Worth less than what is left in the loot."],
-			onHide = function()
-				if confirm then
-					confirm:Hide()
-				end
-			end,
-		})
-		if not grid.lootLine then
-			grid.lootLine = grid.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			grid.lootLine:SetPoint("TOPLEFT", Junk.ItemGrid.SIDE, -Junk.ItemGrid.TOP)
-			grid.lootLine:SetPoint("TOPRIGHT", -Junk.ItemGrid.SIDE, -Junk.ItemGrid.TOP)
-			grid.lootLine:SetJustifyH("LEFT")
-			grid.lootLine:Hide()
-		end
-		grid:Attach()
-		active = true
-		Junk.ListenEvent("LOOT_CLOSED", function()
-			if fromLoot then
-				grid:Close()
-			end
-		end)
-		-- Another part of Lootoman asks for the window (the loot feed's low-space
-		-- warning): in the middle of the screen, as from the bags.
-		Junk.Listen("OpenJunkWindow", function()
-			Toss.Open(false)
-		end)
 		-- An item taken from the loot: the best of what is left.
 		Junk.ListenEvent("LOOT_SLOT_CLEARED", function()
 			if fromLoot and grid:IsShown() then
@@ -303,13 +264,5 @@ Junk.AddPart({
 			end
 		end)
 	end,
-	Disable = function()
-		active = false
-		if grid then
-			grid:Close()
-		end
-		if confirm then
-			confirm:Hide()
-		end
-	end,
+	Disable = leave,
 })

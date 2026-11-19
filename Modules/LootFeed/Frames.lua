@@ -20,7 +20,7 @@ local Compat, L = ns.Compat, ns.L
 -- edge, drawn by the design as any row: a bag icon with a red border, the
 -- warning as its name, and as its amount the free slots as the look's
 -- template writes them (SlotsText.lua: "3+2" by default). Its tooltip lists
--- every kind of bag; when it can be clicked (the toss window, while junk
+-- every kind of bag; when it can be clicked (the junk window, while junk
 -- management is on) it says so, and a left click calls feed.onWarningClick.
 -- While it shows the feed stays shown.
 --

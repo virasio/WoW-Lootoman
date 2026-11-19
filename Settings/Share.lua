@@ -6,7 +6,7 @@ local Panel = ns.SettingsPanel
 -- open from the profile menu for a whole profile ("profile"), from a
 -- menu of named items, such as the loot feed's looks, for the items only
 -- ("looks", the name of the collection), or from a window for one part only
--- ("part:marks", the junk list window), which goes into the current profile.
+-- ("part:marks", the junk window's lists), which goes into the current profile.
 --
 -- Both list what a text can hold, with a checkbox each: every module's
 -- settings, and indented under them the parts of the module, which can be
