@@ -348,10 +348,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Sold %d items for %s."] = "Продано предметов: %d, за %s.",
 	["Only the last 12 sold items can be bought back."] = "Выкупить обратно можно только 12 последних проданных предметов.",
 	["Selling stopped: %s."] = "Продажа остановлена: %s.",
-	["Nothing was sold this session."] = "За этот сеанс ничего не продано.",
-	["%s ×%d: %s"] = "%s ×%d: %s",
-	["This session: %d items for %s."] = "За этот сеанс: предметов — %d, на %s.",
-	["/lootoman sales: list what was sold this session"] = "/lootoman sales: список проданного за этот сеанс",
 
 	-- Modules/Junk/SellButton.lua
 	["Sell junk"] = "Продать хлам",

@@ -195,40 +195,16 @@ describe("sale queue", function()
 		assert.matches("Sold 1 items", printed())
 	end)
 
-	-- The addon loaded again with the saved variables so far, as after a
-	-- /reload or a new login, up to the first PLAYER_ENTERING_WORLD.
-	local function again(isInitialLogin)
-		local saved = Test.state.saved
-		ns = Loader.Start(Loader.LoadAddon(), { LootomanDB = saved.LootomanDB, LootomanCharDB = saved.LootomanCharDB })
-		Test = ns.Compat.Test
-		Test.FireEvent("PLAYER_ENTERING_WORLD", isInitialLogin, not isInitialLogin)
-		return ns.Modules:Get("Junk").SellQueue
-	end
-
-	it("keeps the session's log over a reload, empties it at login, and lists it", function()
+	it("says what was sold in the chat, and keeps nothing in the character's data", function()
 		start()
 		serve()
 		Test.Advance(SellQueue.PACE * 3)
 		SellQueue.Stop("closed")
-		SellQueue = again(false)
-		assert.equals(1, #SellQueue.Log())
+		assert.matches("Sold 1 items for 2 copper%.", table.concat(Test.state.printed, "\n"))
+		assert.is_nil(Test.state.saved.LootomanCharDB.session)
+		-- No command lists the sales any more: it shows the help.
 		Test.RunSlashCommand("LOOTOMAN", "sales")
-		assert.same({ "[Junk 1] ×2: 2 copper", "This session: 1 items for 2 copper." }, {
-			Test.state.printed[1]:match("%[.*"), Test.state.printed[2]:match("This.*") })
-		SellQueue = again(true)
-		assert.same({}, SellQueue.Log())
-		Test.RunSlashCommand("LOOTOMAN", "sales")
-		assert.matches("Nothing was sold", Test.state.printed[#Test.state.printed])
-	end)
-
-	it("empties the log at login also while the Junk module is off", function()
-		start()
-		serve()
-		Test.Advance(SellQueue.PACE * 3)
-		ns.Modules:SetEnabled("Junk", false)
-		SellQueue = again(true)
-		ns.Modules:SetEnabled("Junk", true)
-		assert.same({}, SellQueue.Log())
+		assert.matches("Commands:", Test.state.printed[#Test.state.printed - 4])
 	end)
 
 	it("reports the last sale in the self-test", function()

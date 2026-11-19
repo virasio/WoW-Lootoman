@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, Inventory, L, SelfTest, Storage = ns.Compat, ns.Inventory, ns.L, ns.SelfTest, ns.Storage
+local Compat, Inventory, L, SelfTest = ns.Compat, ns.Inventory, ns.L, ns.SelfTest
 
 -- Selling junk: a controller without frames, as fast autoloot is. The sell
 -- button and the sell window only start it and show its state.
@@ -19,11 +19,8 @@ local Compat, Inventory, L, SelfTest, Storage = ns.Compat, ns.Inventory, ns.L, n
 -- slot no longer holds its item), "refused" (the merchant did not take one),
 -- "noAnswer" (the server did not answer in time).
 --
--- Each sale goes into the session's log (the character's session data,
--- Storage:GetSessionSection: kept over /reload, emptied at login) and a chat
--- line. A merchant can buy
--- back only the last BUYBACK stacks sold to it, so past that in one visit the
--- chat line says so.
+-- Each sale ends with a chat line. A merchant can buy back only the last
+-- BUYBACK stacks sold to it, so past that in one visit the chat line says so.
 local Junk = ns.Modules:Get("Junk")
 local SellQueue = {}
 Junk.SellQueue = SellQueue
@@ -51,23 +48,11 @@ local visit, warned = 0, false
 -- Each run of timers belongs to one sale; a stopped sale's timers do nothing.
 local run = 0
 
-local function log()
-	return Storage:GetSessionSection("sales")
-end
-
-local function record()
-	local entry = { count = sale.count, money = sale.money, items = sale.items }
-	local list = log()
-	list.sales = type(list.sales) == "table" and list.sales or {}
-	list.sales[#list.sales + 1] = entry
-end
-
 local function finish(newState, why)
 	state, reason = newState, why
 	last = { count = sale.count, money = sale.money, items = sale.items, reason = why }
 	queue, current = nil, nil
 	if sale.count > 0 then
-		record()
 		ns.Print(L["Sold %d items for %s."]:format(sale.count, GetMoneyString(sale.money, true)))
 		visit = visit + sale.count
 		if visit > SellQueue.BUYBACK and not warned then
@@ -211,27 +196,6 @@ end
 function SellQueue.LastResult()
 	return last
 end
-
--- The session's sales: { { count, money, items } }.
-function SellQueue.Log()
-	return type(log().sales) == "table" and log().sales or {}
-end
-
-ns.Slash.Register("sales", function()
-	local sales = SellQueue.Log()
-	if #sales == 0 then
-		ns.Print(L["Nothing was sold this session."])
-		return
-	end
-	local count, money = 0, 0
-	for _, entry in ipairs(sales) do
-		for _, item in ipairs(entry.items or {}) do
-			ns.Print(L["%s ×%d: %s"]:format(tostring(item.link), item.count or 1, GetMoneyString(item.money or 0, true)))
-		end
-		count, money = count + (entry.count or 0), money + (entry.money or 0)
-	end
-	ns.Print(L["This session: %d items for %s."]:format(count, GetMoneyString(money, true)))
-end, L["/lootoman sales: list what was sold this session"])
 
 SelfTest.AddReport(function()
 	if not last then

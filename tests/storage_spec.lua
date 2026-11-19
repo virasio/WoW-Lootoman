@@ -122,7 +122,8 @@ describe("storage", function()
 
 	it("returns the saved tables to keep: the same ones when current, upgraded copies otherwise", function()
 		local current = #ns.Migrations.account
-		local account, character = { schema = current, profiles = { Default = {} }, profileKeys = {}, global = {} }, { schema = 1 }
+		local account, character = { schema = current, profiles = { Default = {} }, profileKeys = {}, global = {} },
+			{ schema = #ns.Migrations.character }
 		local db, charDB = load(account, character)
 		assert.equals(account, db)
 		assert.equals(character, charDB)

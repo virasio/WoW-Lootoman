@@ -353,10 +353,6 @@ ns.Locales.AddEnglish({
 	"Sold %d items for %s.",
 	"Only the last 12 sold items can be bought back.",
 	"Selling stopped: %s.",
-	"Nothing was sold this session.",
-	"%s ×%d: %s",
-	"This session: %d items for %s.",
-	"/lootoman sales: list what was sold this session",
 
 	-- Modules/Junk/SellButton.lua
 	"Sell junk",
