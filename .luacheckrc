@@ -191,6 +191,12 @@ files["Settings/"] = {
 		"SettingsTooltip",
 		"StaticPopup_Show",
 		"UIParent",
+		-- The minimap icon (Minimap.lua); GetMinimapShape is a minimap addon's, when there is one.
+		"AddonCompartmentFrame",
+		"GetCursorPosition",
+		"GetMinimapShape",
+		"MenuUtil",
+		"Minimap",
 	},
 }
 

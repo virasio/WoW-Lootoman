@@ -205,6 +205,15 @@ ns.Locales.AddEnglish({
 	"Errors from other addons, and some of Lootoman's, are in BugSack.",
 	"The bug report opens out of combat.",
 
+	-- Settings/Minimap.lua
+	"Options",
+	"Loot Feed Look",
+	"Click: options",
+	"Right-click: menu",
+	"Drag: move",
+	"Show the Minimap Icon",
+	"For this character.",
+
 	-- Settings/Profiles.lua
 	"Profile",
 	"Default",

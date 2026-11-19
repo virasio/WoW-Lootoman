@@ -389,7 +389,10 @@ function UI.Install()
 		local lines = owner.lines or owner
 		lines[#lines + 1] = text
 	end)
-	rawset(_G, "GameTooltip_AddNormalLine", function(lines, text) lines[#lines + 1] = text end)
+	rawset(_G, "GameTooltip_AddNormalLine", function(owner, text)
+		local lines = owner.lines or owner
+		lines[#lines + 1] = text
+	end)
 	api.OpenMenu = UI.OpenMenu
 	-- MenuUtil.CreateContextMenu: the last menu opened, as built.
 	rawset(_G, "MenuUtil", { CreateContextMenu = function(owner, generator)

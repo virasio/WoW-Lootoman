@@ -17,6 +17,8 @@
     "type-check": "Any"
   },
   "diagnostics.globals": [
+    "AddonCompartmentFrame",
+    "GetMinimapShape",
     "Auctionator",
     "LibQuestieDB",
     "CANCEL",

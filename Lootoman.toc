@@ -105,6 +105,7 @@ Settings\Share.lua
 Settings\CopyText.lua
 Settings\JunkList.lua
 Settings\BugReport.lua
+Settings\Minimap.lua
 Settings\AutoLootBox.lua
 
 #@debug@
