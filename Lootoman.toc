@@ -15,7 +15,7 @@
 ## Category-ruRU: Добыча
 ## Category-zhCN: 战利品
 ## Category-zhTW: 戰利品
-## IconTexture: Interface\Icons\INV_Misc_Bag_08
+## IconTexture: Interface\AddOns\Lootoman\Art\Icon
 ## SavedVariables: LootomanDB
 ## SavedVariablesPerCharacter: LootomanCharDB
 ## X-Curse-Project-ID: 1765586

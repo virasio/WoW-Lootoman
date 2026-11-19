@@ -4,7 +4,7 @@
 
 Lootoman is easier to find, to reach and to report about.
 
-- **A minimap icon:** a click opens the options, a right click a menu with the loot feed's look, the junk window and *Bug Report*. Drag it round the minimap's edge. A checkbox at the top right of the options page hides it, for each character. The game's addon compartment has the same entry.
+- **A minimap icon** with Lootoman's own picture, which the game's AddOns list now shows too: a click opens the options, a right click a menu with the loot feed's look, the junk window and *Bug Report*. Drag it round the minimap's edge. A checkbox at the top right of the options page hides it, for each character. The game's addon compartment has the same entry.
 - **One junk window** instead of three: *Throw Away Junk*, *Sell Junk* at a merchant, and *Junk List*, which a gear by the close button switches to and back. It opens to sell when you are at a merchant, and to throw away elsewhere.
 - **Fewer commands:** `/ltm` opens the options, `/ltm feed` the loot feed's look, `/ltm junk` the junk window, `/ltm report` the bug report, and `/ltm help` lists them. `/lootoman design`, `toss`, `sales` and `selftest` are gone; the commands for testing and bug reports are under `/ltm debug help`.
 - **Bug reports in a window:** the whole report, ready to copy, with the address to send it to, and an *Extended Log* switch. It names neither your character nor your realm.

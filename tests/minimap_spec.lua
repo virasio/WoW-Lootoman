@@ -41,7 +41,22 @@ describe("minimap icon", function()
 		assert.same({ "LootomanMinimapButton", minimap, 31, true }, { button.name, button.parent, button:GetWidth(), button:IsShown() })
 		-- 225°: half the minimap's 198 and 5 beyond, down and to the left.
 		assert.same({ "CENTER", minimap, -74, -74 }, point())
-		assert.same({ "Interface\\Icons\\INV_Misc_Bag_08", 136430 }, { button.icon.texture, button.border.texture })
+		assert.same({ "Interface\\AddOns\\Lootoman\\Art\\Icon", 136430 }, { button.icon.texture, button.border.texture })
+	end)
+
+	it("shows the picture the addon list shows, a texture in the addon's folder", function()
+		local toc = assert(io.open("Lootoman.toc", "rb"))
+		local icon = toc:read("*a"):match("\n## IconTexture: ([^\r\n]+)")
+		toc:close()
+		assert.equals(Icon.TEXTURE, icon)
+		local file = icon:match("^Interface\\AddOns\\Lootoman\\(.+)$"):gsub("\\", "/") .. ".tga"
+		assert.equals("Art/Icon.tga", file)
+		local texture = assert(io.open(file, "rb"))
+		-- An uncompressed 32-bit TGA of 64 by 64, as the game reads it.
+		local header = texture:read(18)
+		texture:close()
+		assert.same({ 2, 64, 64, 32 }, { header:byte(3), header:byte(13) + header:byte(14) * 256,
+			header:byte(15) + header:byte(16) * 256, header:byte(17) })
 	end)
 
 	it("goes round the edge as it is dragged, and keeps its angle for the character", function()
@@ -115,7 +130,7 @@ describe("minimap icon", function()
 		rawset(_G, "AddonCompartmentFrame", { RegisterAddon = function(_, data) compartment = data end })
 		start()
 		Icon.SetShown(false)
-		assert.same({ "Lootoman", "Interface\\Icons\\INV_Misc_Bag_08", true }, { compartment.text, compartment.icon, Icon.compartment })
+		assert.same({ "Lootoman", "Interface\\AddOns\\Lootoman\\Art\\Icon", true }, { compartment.text, compartment.icon, Icon.compartment })
 		compartment.func(nil, { buttonName = "LeftButton" })
 		assert.equals(1, opened)
 		compartment.func(nil, { buttonName = "RightButton" })

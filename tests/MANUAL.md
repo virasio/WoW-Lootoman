@@ -462,12 +462,13 @@ On WoW Forever, with the default settings unless the check says otherwise.
 
 ## Minimap icon
 
-- [ ] **The icon.** Log in. *Expected:* a round icon with the bag at the minimap's bottom left; its tooltip *Lootoman* and the version, *Click: options*, *Right-click: menu*, *Drag: move*. A click opens the options.
+- [ ] **The icon.** Log in. *Expected:* a round icon with Lootoman's picture (a bag of coins and a purple gem) at the minimap's bottom left, sharp, its corners hidden under the round border; its tooltip *Lootoman* and the version, *Click: options*, *Right-click: menu*, *Drag: move*. A click opens the options.
 - [ ] **The menu.** Right-click it. *Expected:* *Options*, *Loot Feed Look*, *Junk*, *Bug Report*, each opening its window; *Junk* is greyed while junk management is off.
 - [ ] **Dragging.** Drag it round the minimap, `/reload`. *Expected:* it follows the edge and stays where it was put; another character has it at the bottom left. In Edit Mode, make the minimap bigger and smaller: the icon stays on its edge.
 - [ ] **Square minimap.** With a minimap addon that makes the map square (if one is at hand). *Expected:* the icon goes along the square's edge.
 - [ ] **The checkbox.** At the top right of the options page, on the title's line: *Show the Minimap Icon* in small letters with its checkbox right of it; only the two light on hover. Untick it. *Expected:* the icon goes at once, also in a fight; another character still has it; its tooltip says *For this character.*
-- [ ] **The addon compartment.** On retail, the game's addon compartment by the minimap. *Expected:* *Lootoman* with the bag icon, also with the minimap icon hidden: a click opens the options, a right click the menu, its tooltip as the icon's. On WoW Forever, `/dump AddonCompartmentFrame ~= nil`: note the answer, and whether the entry is there.
+- [ ] **The addon compartment.** The game's addon compartment button by the minimap. *Expected:* *Lootoman* with its picture, also with the minimap icon hidden: a click opens the options, a right click the menu, its tooltip as the icon's. On WoW Forever, only if there is no compartment button: `/dump AddonCompartmentFrame ~= nil`; `false`, the client has no compartment and there is nothing to check; `true`, it has one that is hidden: note it.
+- [ ] **The addon list.** The game's AddOns list, at character selection and from the game menu. *Expected:* Lootoman with its picture beside its name, on retail and on WoW Forever.
 - [ ] **Buttons collectors.** With a minimap button collector (if one is at hand). *Expected:* it finds *LootomanMinimapButton*.
 
 ## Taint

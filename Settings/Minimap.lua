@@ -25,7 +25,9 @@ Icon.SIZE = 31
 Icon.ANGLE = 225
 -- How far past the minimap's edge the button's centre sits.
 Icon.RADIUS = 5
-Icon.TEXTURE = [[Interface\Icons\INV_Misc_Bag_08]]
+-- Lootoman's own picture, the one the TOC names for the addon list: a bag of
+-- coins with a purple gem, painted to the edges, with no frame to cut away.
+Icon.TEXTURE = [[Interface\AddOns\Lootoman\Art\Icon]]
 -- LibDBIcon's textures: the border, the background and the highlight.
 Icon.BORDER, Icon.BACKGROUND, Icon.HIGHLIGHT = 136430, 136467, 136477
 
@@ -138,7 +140,6 @@ local function create()
 	button.icon:SetTexture(Icon.TEXTURE)
 	button.icon:SetSize(18, 18)
 	button.icon:SetPoint("CENTER", 0, 0)
-	button.icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 	button:SetScript("OnClick", click)
 	button:SetScript("OnEnter", Icon.ShowTooltip)
 	button:SetScript("OnLeave", function()
