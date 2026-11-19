@@ -293,7 +293,6 @@ function LookWindow.Refresh()
 	window.apply:SetShown(edited ~= Looks.Current())
 	window.resetPosition:SetEnabled(LootFeed.feed ~= nil and LootFeed:IsActive() and ns.EditMode.LayoutName() ~= nil)
 	local design = Design.Current(section())
-	window.tab4:SetText(isIcons(design) and L["Icon"] or L["Row"])
 	-- Each tab as wide as its text, in every language: the game sizes a tab
 	-- as it shows, which may come before its text is measured.
 	if PanelTemplates_TabResize then
@@ -788,8 +787,14 @@ local GAP_SETTING = {
 	end,
 }
 
-local function labelOf(setting)
-	return type(setting.label) == "function" and setting.label() or setting.label
+-- A setting's label now: the window's own settings say it by a function; the
+-- look's are made once, so their label is the one the look's view gives
+-- (labels, by key: "Number of Icons" for a look of icons).
+local function labelOf(setting, labels)
+	if type(setting.label) == "function" then
+		return setting.label()
+	end
+	return labels and labels[setting.key] or setting.label
 end
 
 -- The room a note under a text setting may take, from the setting's left edge.
@@ -924,8 +929,8 @@ local function createSetting(parent, setting, y)
 		end)
 	end
 	control.label:SetText(labelOf(setting))
-	control.update = function()
-		control.label:SetText(labelOf(setting))
+	control.update = function(labels)
+		control.label:SetText(labelOf(setting, labels))
 		local value = setting.get and setting.get() or Looks.Value(edited, setting.key)
 		local enabled = not setting.parent or Looks.Value(edited, setting.parent) == true
 		control.label:SetFontObject(enabled and "GameFontHighlight" or "GameFontDisable")
@@ -983,8 +988,12 @@ end
 -- The settings' values, from the look.
 function LookWindow.UpdateFeed()
 	window.updating = true
+	local labels = {}
+	for _, setting in ipairs(Looks.Settings(Looks.View(edited))) do
+		labels[setting.key] = setting.label
+	end
 	for _, control in ipairs(window.settings) do
-		control.update()
+		control.update(labels)
 	end
 	window.updating = false
 end
@@ -1173,7 +1182,7 @@ local function build()
 
 	-- The tabs, over the panel; the designer's is titled by the look's view.
 	local previous
-	for id, text in ipairs({ L["Content"], L["Appearance"], L["Timings"], L["Row"] }) do
+	for id, text in ipairs({ L["Content"], L["Appearance"], L["Timings"], L["Layout"] }) do
 		local tab = CreateFrame("Button", nil, frame, "PanelTopTabButtonTemplate")
 		tab:SetID(id)
 		tab:SetText(text)

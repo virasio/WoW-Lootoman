@@ -148,7 +148,7 @@ The Default look and default options unless a check says otherwise.
   - *Expected:* the loot feed is listed as *Loot Feed* with sample rows. The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
   - It can be moved, and keeps its position per Edit Mode layout and across `/reload`.
   - Clicking it opens the look's window, not a small dialog (0.5.9); it stays picked and can still be dragged. Other frames, Blizzard's and other addons', keep their dialogs. Leaving Edit Mode closes the window it opened; a window opened with *Edit* stays.
-- [ ] **Looks from 0.5.8 (0.5.9).** Before updating, a look with *Size* 14 and one with a background (opacity 60 %). *Expected:* after the update both look as before: the first as big (its row height and texts larger in the *Row* tab), the second with *Background* ticked at 60 %.
+- [ ] **Looks from 0.5.8 (0.5.9).** Before updating, a look with *Size* 14 and one with a background (opacity 60 %). *Expected:* after the update both look as before: the first as big (its row height and texts larger in the *Layout* tab), the second with *Background* ticked at 60 %.
 - [ ] **Look.** The Default look. *Expected:* a big icon with its quality border, a glow on rare and better items, no owned count, no background (*Background* is off until ticked).
 
 ### Feed looks and their window (0.4.5)
@@ -161,17 +161,17 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Opening the window.** *Edit* in a look's menu, *Edit* beside the feed look on the options page, the feed clicked in Edit Mode, and `/lootoman design`.
   - *Expected:* titled "Feed Look: …"; opened for the first time in a fight, it refuses with a message.
   - *Edit* on a look the profile does not use edits that look and leaves the feed alone; renaming it renames the title, deleting it closes the window.
-- [ ] **Tabs (0.5.9).** *Expected:* on the left four tabs standing on a frame around their area, each as wide as its title, in English and in Russian; *Content* first: *What the Feed Shows*, *Kept Usable Items* (its kinds under the switch, greyed out while it is off; on WoW Forever without *Appearance Sets* and *Heirlooms*) and *Low-Space Warning*; *Appearance* (with *View* before *Fill direction*); *Timings*; and the designer's tab, named *Row*, or *Icon* for a look of icons. Every heading, switch, label and button of the window in title capitals, the choices and tooltips in sentences. The samples on the right. Choosing another *View* asks first, then starts the look's design afresh, and the designer's tab is renamed.
+- [ ] **Tabs (0.5.9).** *Expected:* on the left four tabs standing on a frame around their area, each as wide as its title, in English and in Russian; *Content* first: *What the Feed Shows*, *Kept Usable Items* (its kinds under the switch, greyed out while it is off; on WoW Forever without *Appearance Sets* and *Heirlooms*) and *Low-Space Warning*; *Appearance* (with *View* before *Fill direction*); *Timings*; and the designer's tab, *Layout*. Every heading, switch, label and button of the window in title capitals, the choices and tooltips in sentences. The samples on the right. Choosing another *View* asks first, then starts the look's design afresh; with *Icons*, *Number of Rows* and *Gap Between Rows* become *Number of Icons* and *Gap Between Icons*, and back with *Rows*.
 - [ ] **Samples.** *Expected:* sample rows of every kind, the experience row with a thousands amount, and the stuck quest item with the quest mark and "+1", centred in their area. With *Background* on, the feed's background behind them as in the feed (its colour, opacity and fade). *Light Backdrop* over them turns their backdrop light and back.
 - [ ] **Resizing (0.5.9).** Drag the window's bottom right corner larger, then try to make it smaller than it started. *Expected:* the samples' area grows with it, the tabs' area grows taller; it never gets smaller than its first size. At 200 % with a taller window, all the samples fit.
 - [ ] **Zoom (0.5.9).** Over the samples, choose 150 % and 200 % in the dropdown, then click the maximize button beside it, and click it again.
   - *Expected:* the samples are drawn larger, centred while they fit and from the top left corner when they do not, cut at the area's edge (icons never wrap to a second line); parts are chosen and dragged as before, and a drag moves a part as far on screen as the pointer goes.
   - The maximize button widens the samples over the whole window, the tabs and their panel hidden; clicking again brings them back.
   - Close and reopen the window: the zoom, the width, the window's size and the backdrop are as you left them; after `/reload`, back to 100 %, narrow and dark.
-- [ ] **Text style (0.5.9).** On the *Row* (or *Icon*) tab, for the name, the amount and the owned count, each *Text Style* after *Text Size*: *None*, *Shadow*, *Outline*, *Thick outline*.
+- [ ] **Text style (0.5.9).** On the *Layout* tab, for the name, the amount and the owned count, each *Text Style* after *Text Size*: *None*, *Shadow*, *Outline*, *Thick outline*.
   - *Expected:* only that text follows, in the feed and in the samples, at once and after `/reload` (the stuck row's waiting count follows the owned count's); *None* (the default) looks as before 0.5.9. *Appearance* has no *Text Style* and no *Size*.
-- [ ] **Row tab.** Choose each part (Row, Icon, Name, Amount, Owned count) by clicking it and from the *Part* list, and click a row's free space and the space between rows.
-  - *Expected:* the *Row* tab comes up; the clicked part, or the row, is chosen; a thin gold frame marks it (a text shows the most room it may take), and shows on this tab only. With a look of icons, click the amount on the icon: the amount is chosen, not the icon.
+- [ ] **Layout tab.** Choose each part (Row, Icon, Name, Amount, Owned count) by clicking it and from the *Part* list, and click a row's free space and the space between rows.
+  - *Expected:* the *Layout* tab comes up; the clicked part, or the row, is chosen; a thin gold frame marks it (a text shows the most room it may take), and shows on this tab only. With a look of icons, click the amount on the icon: the amount is chosen, not the icon.
   - The first line sits clear of the tab's top edge: *Part* and, for a part but the row, *Shown* to its right with its checkbox first; a divider under it.
   - With *Shown* unticked, no other control shows.
 - [ ] **Editing.** Drag parts; change every control by slider and by typing a number (also out of range); tick and untick *Shown*.
@@ -427,7 +427,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
 - [ ] **In a fight.** *Expected:* the icon and the name keep showing (the name may be one the game hides from addons: it still shows); no errors.
 - [ ] **A nameplate addon.** With Platynator. *Expected:* our icon and name over the stars; the addon's own plate stays its own; no second icon from the game.
 - [ ] **Kept.** `/reload`, and a profile text shared and imported. *Expected:* the four settings kept; a new character gets *Icon and name*.
-- [ ] **Russian client.** *Expected:* «Яркость искр», «Цвет искр», «Что подсвечивать» with «Трупы для свежевания» and «Только то, что можно собрать», «Над объектом», «Непрозрачность», «Ничего», «Значок», «Значок и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
+- [ ] **Russian client.** *Expected:* «Яркость искр», «Цвет искр», «Что подсвечивать» with «Трупы для свежевания» and «Только то, что можно собрать», «Над объектом», «Непрозрачность», «Ничего», «Иконка», «Иконка и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
 
 ## Saved diagnostics (0.5.5)
 

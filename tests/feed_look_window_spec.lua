@@ -484,7 +484,7 @@ describe("loot feed look window", function()
 					window.designTab.shown }
 			end
 			assert.same({ 1, true, false, false, false }, shown())
-			assert.same({ "Content", "Appearance", "Timings", "Row" }, { window.tab1.text, window.tab2.text, window.tab3.text, window.tab4.text })
+			assert.same({ "Content", "Appearance", "Timings", "Layout" }, { window.tab1.text, window.tab2.text, window.tab3.text, window.tab4.text })
 			local headers, tabs = {}, {}
 			for _, control in ipairs(window.settings) do
 				if control.setting.kind == "header" then
@@ -536,9 +536,10 @@ describe("loot feed look window", function()
 			assert.equals("000000", ns.Feed.Looks.Value("Default", "backgroundColor"))
 		end)
 
-		it("sets the gap between rows on Appearance, after the number of rows, named after the view", function()
+		it("sets the gap between rows on Appearance, after the number of rows, both named after the view", function()
 			local gap = settingOf("gap")
 			assert.same({ "appearance", "Gap Between Rows", 7 }, { gap.setting.tab, gap.label.text, gap.slider.value })
+			assert.equals("Number of Rows", settingOf("maxRows").label.text)
 			for index, control in ipairs(window.settings) do
 				if control.setting.key == "gap" then
 					assert.equals("maxRows", window.settings[index - 1].setting.key)
@@ -551,7 +552,7 @@ describe("loot feed look window", function()
 			end
 			ns.Feed.Looks.SetView("Default", "icons")
 			LookWindow.Refresh()
-			assert.same({ "Gap Between Icons", 4 }, { gap.label.text, gap.slider.value })
+			assert.same({ "Gap Between Icons", 4, "Number of Icons" }, { gap.label.text, gap.slider.value, settingOf("maxRows").label.text })
 		end)
 
 		it("offers each text's style in the designer, after its size, and the samples follow it alone", function()
@@ -814,8 +815,8 @@ describe("loot feed look window's buttons and view", function()
 		api.AcceptPopup()
 		assert.same({ "icons", { schema = 1, base = "icons" } }, { Looks.View("Default"), Looks.Get("Default") })
 		assert.equals("row", LookWindow.Selected())
-		-- The designer's tab is named after the view.
-		assert.equals("Icon", window.tab4.text)
+		-- The designer's tab keeps its name, and the number of rows is one of icons.
+		assert.equals("Layout", window.tab4.text)
 		-- The same view again asks nothing.
 		local asked = #api.popups
 		LookWindow.SetView("icons")

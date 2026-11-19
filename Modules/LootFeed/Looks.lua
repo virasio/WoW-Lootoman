@@ -136,10 +136,11 @@ local function directionsOf(view)
 end
 
 -- A look's settings, as the look window draws them on its tabs (tab =
--- "content", "appearance" or "timings"): header, checkbox, slider and
--- dropdown. A setting with a parent (the key of a checkbox before it) sits
--- under it; a kind of usable item the client has no collection for is not
--- offered. view picks the directions offered. The window puts the look's view
+-- "content", "appearance" or "timings"): header, checkbox, slider, dropdown,
+-- colour and text (with a note under it). A setting with a parent (the key of
+-- a checkbox before it) sits under it; a kind of usable item the client has no
+-- collection for is not offered. view picks the directions offered and whether
+-- the feed's entries are called rows or icons. The window puts the look's view
 -- before the fill direction.
 function Looks.Settings(view)
 	local content = {
@@ -180,7 +181,9 @@ function Looks.Settings(view)
 		{ kind = "dropdown", key = "direction", label = L["Fill Direction"],
 			tooltip = L["Where new entries go. Bottom to top: the oldest one stays at the bottom edge and new ones stack above it; the other directions likewise. Left to right and right to left are for the Icons layouts."],
 			choices = directionsOf(view) },
-		{ kind = "slider", key = "maxRows", label = L["Number of Rows"], tooltip = L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
+		{ kind = "slider", key = "maxRows", label = view == "icons" and L["Number of Icons"] or L["Number of Rows"],
+			tooltip = view == "icons" and L["How many icons are shown at once. When there are more, the oldest ones fade out at once."]
+				or L["How many rows are shown at once. When there are more, the oldest ones fade out at once."],
 			min = 3, max = 20, step = 1, format = "%d" },
 		{ kind = "checkbox", key = "glow", label = L["Glow for Rare Items"], tooltip = L["Rare and better items glow in their quality colour."] },
 		{ kind = "checkbox", key = "background", label = L["Background"],
