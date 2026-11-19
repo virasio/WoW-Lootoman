@@ -166,10 +166,9 @@ function LootFeed:ModelOptions()
 	}
 end
 
--- The rows' layout at the look's size, with its text style.
+-- The rows' layout, from the look's design.
 function LootFeed:Layout()
-	local layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()))
-	return layout
+	return Feed.Design.Layout(Feed.Design.Current(self:DesignSection()))
 end
 
 -- The design of the rows: the look's (Looks.lua).

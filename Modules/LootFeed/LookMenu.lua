@@ -6,7 +6,9 @@ local Bus, L, NameMenu = ns.Bus, ns.L, ns.NameMenu
 -- LookWindow.lua), Copy, Rename and Reset under its gear and a delete button;
 -- + New look; Import and Share, which open the dialogs of profile texts for
 -- looks. Names are typed in the game's input dialog, and what cannot be
--- undone is confirmed. The options page and Edit Mode show it alike.
+-- undone is confirmed. The options page shows it; the look window's
+-- dropdown is the same menu (Generator), its radios choosing the look the
+-- window edits.
 --
 --   dropdown:SetupMenu(LookMenu.Build)
 ns.Feed = ns.Feed or {}
@@ -143,8 +145,7 @@ function LookMenu.Generator(how)
 	end
 end
 
--- The options page's and Edit Mode's menu: the radios choose the look the
--- profile uses.
+-- The options page's menu: the radios choose the look the profile uses.
 LookMenu.Build = LookMenu.Generator({
 	isSelected = function(name)
 		return Looks.Current() == name
