@@ -219,8 +219,9 @@ describe("profile texts", function()
 			assert.same({ { enabled = false }, { look = "Strip" } }, { read.sections["module:LootFeed"], read.sections["look:LootFeed"] })
 			assert.same({ "Spare", "Strip" }, read.collections.looks.names)
 			local strip, spare = read.collections.looks.items.Strip, read.collections.looks.items.Spare
-			assert.same({ "icons", 12, "left", false, 13, true, "all" }, { strip.base, strip.values.maxRows, strip.values.direction,
-				strip.values.xp, strip.values.size, strip.changes.owned.shown, strip.changes.owned.count })
+			-- 0.4's size of 13 folded into the design: the icons' 36 is 39 drawn at 12.
+			assert.same({ "icons", 12, "left", false, nil, 39, true, "all" }, { strip.base, strip.values.maxRows, strip.values.direction,
+				strip.values.xp, strip.values.size, strip.changes.row.height, strip.changes.owned.shown, strip.changes.owned.count })
 			-- Every other layout becomes a look with 0.4's defaults.
 			assert.same({ "compact", 8 }, { spare.base, spare.values.maxRows })
 			assert.equals(0, read.skipped)

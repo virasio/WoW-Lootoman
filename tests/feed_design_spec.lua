@@ -12,8 +12,9 @@ describe("loot feed designs", function()
 	it("scale every length of a design with the size, and size the icon by the row's height", function()
 		local layout = Design.Layout(Design.LARGE, 16)
 		assert.same({ 43, 9, 369 }, { layout.height, layout.gap, layout.width })
-		assert.same({ shown = true, size = 100, pixels = 43, anchor = "row", point = "LEFT", x = 0, y = 0 }, layout.parts.icon)
-		assert.same({ shown = true, fontSize = 16, width = 246, align = "LEFT", anchor = "icon", point = "RIGHT", x = 14, y = 0 },
+		assert.same({ shown = true, size = 100, qualityBorder = true, pixels = 43, anchor = "row", point = "LEFT", x = 0, y = 0 },
+			layout.parts.icon)
+		assert.same({ shown = true, fontSize = 16, style = "none", width = 246, align = "LEFT", anchor = "icon", point = "RIGHT", x = 14, y = 0 },
 			layout.parts.name)
 		assert.same({ shown = true }, layout.parts.glow)
 		Design.Set(section, "row", "height", 20)
@@ -287,9 +288,9 @@ describe("loot feed designs", function()
 		end)
 
 		it("draws the design of the look the profile uses, saved for the whole account", function()
-			ns.Feed.Looks.Set("Default", "size", 13)
 			ns.Feed.Looks.SetDesign("Default", "row", "height", 40)
-			assert.equals(40, module.feed.options.layout.height)
+			-- Drawn at the feed's size, 12 of the design's 13.
+			assert.equals(37, module.feed.options.layout.height)
 			assert.same({ row = { height = 40 } }, ns.Storage:GetGlobalSection("feedLooks").Default.changes)
 		end)
 

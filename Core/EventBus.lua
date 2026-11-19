@@ -24,7 +24,7 @@ Bus.MESSAGES = {
 		unheard = "account-wide settings are read where they are used" },
 	ModuleToggled = { payload = "module, active", from = "Modules" },
 	OpenSettings = { payload = "", from = "Slash: /lootoman" },
-	OpenShareDialog = { payload = "mode: \"profile\", or a collection's name to share only its items; item: the one ticked, else the profile's", from = "the look menu, the look window" },
+	OpenShareDialog = { payload = "mode: \"profile\", or a collection's name to share only its items; item: the one ticked, else the profile's", from = "the look menu" },
 	OpenImportDialog = { payload = "mode: \"profile\", or a collection's name to import only its items", from = "the look menu" },
 	FeedLookChanged = { payload = "name, key: the feed look and the setting that changed; key nil for its design, view, a reset or an import", from = "Looks" },
 	FeedLookRenamed = { payload = "old, new: a feed look's names", from = "Looks" },
@@ -33,6 +33,7 @@ Bus.MESSAGES = {
 	PricesChanged = { payload = "", from = "Prices, after the auction house closed" },
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot" },
+	OpenTossWindow = { payload = "", from = "the loot feed, a click on its low-space warning; the junk module opens the toss window" },
 }
 
 local messageListeners = {}

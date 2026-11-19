@@ -77,6 +77,26 @@ Migrations.account = {
 			end
 		end
 	end,
+	-- 4 (0.5.9): the loot feed's background gets its own switch, off by
+	-- default; a look that showed one (an opacity above 0) keeps it on. And a
+	-- look's size goes: a look with another size than 12 has its design's
+	-- lengths scaled by it (Migrations.FoldSize), so it looks as it did.
+	function(db)
+		local sections = type(db.sections) == "table" and db.sections or {}
+		for _, look in pairs(type(sections.feedLooks) == "table" and sections.feedLooks or {}) do
+			local values = type(look) == "table" and type(look.values) == "table" and look.values or nil
+			if values and type(values.backgroundOpacity) == "number" and values.backgroundOpacity > 0 then
+				values.background = true
+			end
+			if values and values.size ~= nil then
+				Migrations.FoldSize(look, values.size)
+				values.size = nil
+				if next(values) == nil then
+					look.values = nil
+				end
+			end
+		end
+	end,
 }
 
 -- Junk's settings as 0.4 saved them in a profile or a text, as they are from
@@ -366,6 +386,49 @@ function Migrations.FeedLooks(db)
 		looks.Default.values = next(values) and values or nil
 	end
 	return true
+end
+
+-- The lengths of the loot feed's built-in designs as 0.5.8 drew them
+-- (Modules/LootFeed/Design.lua then), the parts the row's own: what a look's
+-- size scaled. Kept here as they were, so the step never changes.
+local BASE_LENGTHS = {
+	large = { row = { height = 35, gap = 7, width = 300 }, icon = { x = 0, y = 0 },
+		name = { fontSize = 13, width = 200, x = 11, y = 0 }, amount = { fontSize = 13, width = 80, x = 6, y = 0 },
+		owned = { fontSize = 12, width = 40, x = -4, y = 3 } },
+	compact = { row = { height = 24, gap = 3, width = 260 }, icon = { x = 0, y = 0 },
+		name = { fontSize = 12, width = 180, x = 6, y = 0 }, amount = { fontSize = 12, width = 60, x = 5, y = 0 },
+		owned = { fontSize = 10, width = 30, x = -2, y = 2 } },
+	minimal = { row = { height = 16, gap = 2, width = 220 }, icon = { x = 0, y = 0 },
+		name = { fontSize = 13, width = 180, x = 0, y = 0 }, amount = { fontSize = 13, width = 60, x = 5, y = 0 },
+		owned = { fontSize = 10, width = 30, x = -2, y = 2 } },
+	icons = { row = { height = 36, gap = 4, width = 36 }, icon = { x = 0, y = 0 },
+		name = { fontSize = 13, width = 20, x = 0, y = 0 }, amount = { fontSize = 13, width = 60, x = -2, y = 2 },
+		owned = { fontSize = 10, width = 40, x = -2, y = -2 } },
+}
+-- The size every look had by default, at which the feed is drawn from 0.5.9 on.
+local OLD_SIZE = 12
+
+-- A look's design ({ schema, base, changes }) with every length scaled by
+-- size / 12, rounded: drawn at 12, it is as big as it was at that size. The
+-- changes keep only what differs from the base.
+function Migrations.FoldSize(look, size)
+	local base = BASE_LENGTHS[look.base] or BASE_LENGTHS.large
+	if type(size) ~= "number" or size <= 0 or size == OLD_SIZE then
+		return
+	end
+	local factor = size / OLD_SIZE
+	local changes = type(look.changes) == "table" and look.changes or {}
+	for part, lengths in pairs(base) do
+		local own = type(changes[part]) == "table" and changes[part] or {}
+		for key, default in pairs(lengths) do
+			local value = type(own[key]) == "number" and own[key] or default
+			local scaled = math.floor(value * factor + 0.5)
+			own[key] = scaled ~= default and scaled or nil
+		end
+		changes[part] = next(own) and own or nil
+	end
+	look.changes = next(changes) and changes or nil
+	look.schema = look.schema or 1
 end
 
 -- LootomanCharDB

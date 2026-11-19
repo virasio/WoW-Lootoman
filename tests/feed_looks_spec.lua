@@ -26,9 +26,19 @@ describe("loot feed looks", function()
 		Looks.Create("auction")
 		assert.same({ "Default", "auction", "Raid" }, Looks.List())
 		assert.same({ schema = 1, base = "large" }, Looks.Get("Raid"))
-		assert.same({ 5, true, false, 12, 0, 3, true }, { Looks.Value("Raid", "maxRows"), Looks.Value("Raid", "xp"),
-			Looks.Value("Raid", "keepPets"), Looks.Value("Raid", "size"), Looks.Value("Raid", "backgroundOpacity"),
-			Looks.Value("Raid", "warnGeneralAt"), Looks.Value("Raid", "warnReagent") })
+		-- The low-space warning: only the general bags' threshold, and today's "3+2".
+		assert.same({ false, 50, true }, { Looks.Value("Raid", "background"), Looks.Value("Raid", "backgroundOpacity"),
+			Looks.Value("Raid", "backgroundFade") })
+		assert.same({ 5, true, false, 50, 3, false, false, 5, "{general}+{reagent|1eff00}" }, { Looks.Value("Raid", "maxRows"),
+			Looks.Value("Raid", "xp"), Looks.Value("Raid", "keepPets"), Looks.Value("Raid", "backgroundOpacity"),
+			Looks.Value("Raid", "warnGeneralAt"), Looks.Value("Raid", "warnReagent"), Looks.Value("Raid", "warnTotal"),
+			Looks.Value("Raid", "warnTotalAt"), Looks.Value("Raid", "slotsText") })
+		-- The template is any text up to 80 characters, not bytes: Cyrillic
+		-- letters take two each.
+		assert.is_truthy(Looks.Set("Raid", "slotsText", "{free}"))
+		assert.is_nil(Looks.Set("Raid", "slotsText", ("x"):rep(81)))
+		assert.is_truthy(Looks.Set("Raid", "slotsText", ("я"):rep(80)))
+		assert.is_nil(Looks.Set("Raid", "slotsText", ("я"):rep(81)))
 	end)
 
 	it("follow the rules of profile names", function()
@@ -57,8 +67,8 @@ describe("loot feed looks", function()
 		Looks.Set("Default", "xp", false)
 		assert.same({ "Default:maxRows", "Default:maxRows", "Default:xp" }, sent)
 		-- A stored value it cannot hold counts as the default.
-		Looks.Get("Default").values = { size = 99, glow = "yes" }
-		assert.same({ 12, true }, { Looks.Value("Default", "size"), Looks.Value("Default", "glow") })
+		Looks.Get("Default").values = { maxRows = 99, glow = "yes" }
+		assert.same({ 5, true }, { Looks.Value("Default", "maxRows"), Looks.Value("Default", "glow") })
 	end)
 
 	it("fill up or down with rows, in any direction with icons, each view from its own default", function()

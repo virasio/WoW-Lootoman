@@ -10,6 +10,11 @@ local _, ns = ...
 --
 -- Items below the minimum quality and turned-off kinds are dropped.
 --
+-- Rows come in one after another: a new row shows `stagger` seconds after the
+-- one before it at the earliest, and its time starts when it shows, so rows
+-- looted at once also leave that far apart, each on its own timer. A merge
+-- shows at once.
+--
 -- When there are more than maxRows rows, the oldest ones fade out at once,
 -- over at most PUSH_FADE seconds. While the pointer is over the feed
 -- (SetHover), every timer stops.
@@ -22,7 +27,7 @@ local _, ns = ...
 -- takes the slot; Unstick lets it fade out instead, and it may stick again
 -- before it is gone. Looting a stuck item again adds to its row in place.
 --
---   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, minQuality = 0,
+--   local model = Model.New({ maxRows = 8, duration = 6, fade = 1, stagger = 0.15, minQuality = 0,
 --       kinds = { item = true, currency = true, money = true, reputation = true, xp = false } }, now)
 --   model:Add(entry, now); model:Update(now)
 --   for _, view in ipairs(model:Visible(now)) do -- view.row, view.alpha
@@ -42,11 +47,13 @@ function Model.New(options, now)
 	return model
 end
 
--- What makes two entries one row.
+-- What makes two entries one row: all junk is one row (entry.parts).
 local function keyOf(entry)
 	local kind = entry.kind
 	if kind == "money" or kind == "xp" then
 		return kind
+	elseif entry.parts then
+		return "junk"
 	elseif kind == "reputation" then
 		return "reputation:" .. tostring(entry.name)
 	end
@@ -67,8 +74,16 @@ local function clock(model, now)
 	return model.pausedAt or now
 end
 
-local function restart(model, row, now)
-	row.fadeStart = now + model.options.duration
+-- A row's time from when it shows: now, or for a new row, a stagger after the
+-- row before it.
+local function restart(model, row, now, new)
+	local showAt = now
+	if new then
+		showAt = math.max(now, (model.lastShowAt or -math.huge) + (model.options.stagger or 0))
+		model.lastShowAt = showAt
+	end
+	row.showAt = showAt
+	row.fadeStart = showAt + model.options.duration
 	row.fadeEnd = row.fadeStart + model.options.fade
 end
 
@@ -174,6 +189,8 @@ function ModelMixin:Add(entry, now, force)
 		if row.amount or entry.amount then
 			row.amount = (row.amount or 0) + (entry.amount or 0)
 		end
+		-- The junk row's items, each with its count, in the order they came.
+		local parts = row.parts
 		-- Everything else as the client knows it now: an item looted before its
 		-- data was loaded came without an icon or a quality.
 		for field, value in pairs(entry) do
@@ -181,13 +198,32 @@ function ModelMixin:Add(entry, now, force)
 				row[field] = value
 			end
 		end
+		if parts and entry.parts then
+			row.parts = parts
+			for _, part in ipairs(entry.parts) do
+				local found
+				for _, known in ipairs(parts) do
+					if known.key == part.key then
+						found = known
+					end
+				end
+				if found then
+					found.amount = found.amount + part.amount
+				else
+					parts[#parts + 1] = { key = part.key, link = part.link, amount = part.amount, entry = part.entry }
+				end
+			end
+		end
 	else
 		row = { key = key }
 		for field, value in pairs(entry) do
 			row[field] = value
 		end
+		restart(self, row, now, true)
 	end
-	restart(self, row, now)
+	if not row.showAt or row.showAt <= now then
+		restart(self, row, now)
+	end
 	table.insert(self.rows, 1, row)
 	pushOut(self, now)
 	return row
@@ -269,7 +305,7 @@ function ModelMixin:Visible(now)
 				top = row
 			end
 			waiting = waiting + 1
-		elseif row.fadeEnd > now then
+		elseif row.fadeEnd > now and (row.showAt or now) <= now then
 			list[#list + 1] = { row = row, alpha = alpha(row, now) }
 		end
 	end
@@ -288,8 +324,12 @@ function ModelMixin:NextChange(now)
 	end
 	local soonest
 	for _, row in ipairs(self.rows) do
-		if not row.stuck and row.fadeStart > now and (not soonest or row.fadeStart < soonest) then
-			soonest = row.fadeStart
+		if not row.stuck then
+			-- A row waiting to come in, or one to start fading.
+			local next = (row.showAt and row.showAt > now) and row.showAt or (row.fadeStart > now and row.fadeStart or nil)
+			if next and (not soonest or next < soonest) then
+				soonest = next
+			end
 		end
 	end
 	return soonest
@@ -318,6 +358,12 @@ function ModelMixin:SetHover(hovered, now)
 		for _, row in ipairs(self.rows) do
 			row.fadeStart = row.fadeStart + paused
 			row.fadeEnd = row.fadeEnd + paused
+			if row.showAt then
+				row.showAt = row.showAt + paused
+			end
+		end
+		if self.lastShowAt then
+			self.lastShowAt = self.lastShowAt + paused
 		end
 	end
 end

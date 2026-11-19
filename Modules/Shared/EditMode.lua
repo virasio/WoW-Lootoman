@@ -1,5 +1,5 @@
 local _, ns = ...
-local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
+local Bus, Compat, L, Storage = ns.Bus, ns.Compat, ns.L, ns.Storage
 
 -- Places module frames with Blizzard's Edit Mode through LibEditMode.
 -- Positions are kept per Edit Mode layout in the profile
@@ -23,7 +23,14 @@ local Bus, L, Storage = ns.Bus, ns.L, ns.Storage
 --       onEditMode = function(active) end,   -- show a preview while Edit Mode is on
 --       buttons = { { text = …, click = function() end } },   -- in the Edit Mode dialog
 --       noReset = true,                      -- no Reset To Default button in the dialog
+--       window = function() end,             -- the owner's window instead of the dialog
+--       closeWindow = function() end,        -- when the frame is no longer picked
 --   })
+--
+-- A frame with a window of its own is still moved in Edit Mode, but picking it
+-- opens that window rather than the library's dialog (EditMode.ResetPosition
+-- puts it back where it starts); picking another frame or system calls
+-- closeWindow.
 --
 -- LibEditMode draws the selection on the frame itself, so a hidden frame
 -- cannot be picked: an active module shows a preview in onEditMode(true). An
@@ -33,9 +40,10 @@ ns.EditMode = EditMode
 
 local entries = {}
 local lib
--- Frames whose dialog has no Reset To Default button (options.noReset), and the
--- dialog that hides it for them (see hideReset).
-local noReset = {}
+-- Frames whose dialog has no Reset To Default button (options.noReset), frames
+-- with a window of their own instead of the dialog (options.window), and the
+-- dialog that is watched for them (see onDialogUpdate).
+local noReset, windows = {}, {}
 local hookedDialog
 local layoutName
 -- True while a value set in the Edit Mode dialog is being stored.
@@ -264,10 +272,23 @@ end
 
 -- LibEditMode's dialog always has a Reset To Default button, which sets every
 -- setting to the default it was given, and offers no option to leave it out.
--- For a frame whose settings reset otherwise (the loot feed's look, reset in
--- the look's menu) it is hidden while the dialog shows that frame, and shown
--- again for the frames of other addons, which share the dialog.
-local function hideReset(dialog, selection)
+-- For a frame whose settings reset otherwise it is hidden while the dialog
+-- shows that frame, and shown again for the frames of other addons, which
+-- share the dialog.
+--
+-- A frame with a window of its own never shows the dialog: it is hidden as
+-- the library shows it. Hiding it deselects the library's frames (its OnHide),
+-- so the frame is selected again and stays movable, to be dragged as usual;
+-- the library deselects it when another frame or system is picked, or Edit
+-- Mode closes. Its window opens from the frame's own click, and closes as
+-- another frame or system is picked (see Register).
+local function onDialogUpdate(dialog, selection)
+	if selection and windows[selection.parent] then
+		dialog:Hide()
+		selection:ShowSelected(true)
+		selection.parent:SetMovable(true)
+		return
+	end
 	local reset = resetButtonOf(dialog)
 	if reset and selection then
 		local hide = noReset[selection.parent] == true
@@ -282,7 +303,7 @@ local function watchDialog()
 	local dialog = dialogOf(lib)
 	if dialog and type(dialog.Update) == "function" and hookedDialog ~= dialog then
 		hookedDialog = dialog
-		hooksecurefunc(dialog, "Update", hideReset)
+		hooksecurefunc(dialog, "Update", onDialogUpdate)
 	end
 end
 
@@ -327,6 +348,39 @@ function EditMode.Register(module, frame, options)
 		noReset[frame] = true
 		watchDialog()
 	end
+	if options.window then
+		windows[frame] = options.window
+		watchDialog()
+		-- The frame's selection, as the library keeps it: a press opens the window,
+		-- also on a frame picked already.
+		local selection = type(lib.frameSelections) == "table" and lib.frameSelections[frame]
+		if selection and selection.HookScript then
+			selection:HookScript("OnMouseDown", function()
+				if not Compat.InCombat() then
+					options.window()
+				end
+			end)
+		end
+		-- Unpicked, the selection is only highlighted: the library does so when
+		-- another frame or a system of the game is picked, and also while it
+		-- picks this one (more than once), so whether it is picked is read once
+		-- that is over, on the next frame.
+		if selection and options.closeWindow and type(selection.ShowHighlighted) == "function" then
+			local pending = false
+			hooksecurefunc(selection, "ShowHighlighted", function()
+				if pending then
+					return
+				end
+				pending = true
+				Compat.After(0, function()
+					pending = false
+					if lib:IsInEditMode() and not selection.isSelected then
+						options.closeWindow()
+					end
+				end)
+			end)
+		end
+	end
 	apply(entry)
 	if lib:IsInEditMode() then
 		preview(entry, true)
@@ -347,6 +401,26 @@ function EditMode.Refresh(frame)
 			end
 		end
 	end
+end
+
+-- Puts a registered frame back at its default place in the Edit Mode layout in
+-- use, forgetting the place saved for that layout; false while no layout is
+-- known.
+function EditMode.ResetPosition(frame)
+	if not layoutName then
+		return false
+	end
+	for _, entry in ipairs(entries) do
+		if entry.frame == frame then
+			local layouts = positions()[entry.key]
+			if layouts then
+				layouts[layoutName] = nil
+			end
+			apply(entry)
+			return true
+		end
+	end
+	return false
 end
 
 -- The Edit Mode layout in use, or nil before LibEditMode has said.

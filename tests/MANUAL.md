@@ -47,7 +47,7 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
   - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
     - *Enable Fast Autoloot*, a small white hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
     - *Enable Junk Management*, with *Edit the Junk List* right under it (and the QuestieDB note and button without QuestieDB), then *Loot Window Button*, *Style* under it (greyed out while the button is *Never*), *Bag Window Button*, *At Merchants* and the *Suggestions*, all greyed out while junk is off;
-    - *Show the Loot Feed*, with *Feed Look* under it (greyed out while the feed is off);
+    - *Show the Loot Feed*, with *Feed Look* under it and *Edit* beside it (both greyed out while the feed is off);
     - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only What You Can Gather*.
   - Every title on the page is capitalized as the game's own are (short words such as *when*, *at*, *the* lowercase); the dropdowns' choices, the tooltips and the Russian texts stay as they were.
   - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
@@ -134,53 +134,71 @@ The Default look and default options unless a check says otherwise.
 - [ ] **Feed turned on at a merchant.** Turn the loot feed off, talk to a merchant, turn the feed on in the options and sell an item.
   - *Expected:* no money row; after the merchant closes, looted money shows again.
   - The same at a mailbox, at a bank and in a trade with another player.
-- [ ] **Settings.** On the look window's *Feed* tab, change each:
-  - what the feed shows, minimum quality, number of rows (3 to 20), fill direction;
-  - time on screen, fade-out time, size, background opacity, glow for rare items.
+- [ ] **Settings.** On the look window's tabs, change each:
+  - *Content*: what the feed shows, minimum quality, junk in one row;
+  - *Appearance*: fill direction, number of rows (3 to 20), gap between rows (or icons), glow for rare items, the background with its colour, opacity and fade;
+  - *Timings*: delay between rows, time on screen, fade-out time.
 
   *Expected:* the feed changes at once, also after `/reload`. A full feed fades its oldest rows out. With a look of rows, *Fill direction* offers only *Bottom to top* and *Top to bottom*.
 - [ ] **Tooltips.** Point at an item row, a currency row, money, experience and reputation.
   - *Expected:* the game's tooltip for an item or a currency.
   - "Money" with the sum in coins; "Experience" with "+12,345"; "Reputation with …" with its signed amount.
-  - The rows wait while the pointer is over them; clicks and the mouse wheel reach the game world.
+  - The rows wait while the pointer is over them; clicks and the mouse wheel reach the game world, but on a row of gear in the bags and, while Shift is held, on any item row.
 - [ ] **Edit Mode.** Open Edit Mode.
-  - *Expected:* the loot feed is listed as *Loot Feed* with sample rows. The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
+  - *Expected:* the loot feed is listed as *Loot Feed* with sample rows, drawn as the feed draws them: only the look's own background behind them, no dark box of Lootoman's (Edit Mode's own highlight marks the feed). The first place is a stuck quest item with the quest mark and "+1", and after it come an item, a rare item, money, a currency, reputation and experience, as many as the rows allow.
   - It can be moved, and keeps its position per Edit Mode layout and across `/reload`.
-  - Its dialog is titled *Loot Feed* and holds only the *Feed Look* dropdown, with the look menu; there is no *Reset To Default* button (other frames' dialogs still have theirs).
-- [ ] **Look.** The Default look. *Expected:* a big icon with its quality border, a glow on rare and better items, no owned count, one shared background fading to the right.
+  - Clicking it opens the look's window, not a small dialog (0.5.9); it stays picked and can still be dragged. Then pick or drag another frame, Blizzard's and another addon's: the window closes and that frame's own dialog shows. With the window opened with *Edit* on another look than the profile's, a click on the feed keeps the window and that look. Other frames, Blizzard's and other addons', keep their dialogs. Leaving Edit Mode closes the window it opened; a window opened with *Edit* stays.
+- [ ] **Looks from 0.5.8 (0.5.9).** Before updating, a look with *Size* 14 and one with a background (opacity 60 %). *Expected:* after the update both look as before: the first as big (its row height and texts larger in the *Layout* tab), the second with *Background* ticked at 60 %.
+- [ ] **Look.** The Default look. *Expected:* a big icon with its quality border, a glow on rare and better items, no owned count, no background (*Background* is off until ticked).
 
 ### Feed looks and their window (0.4.5)
 
-- [ ] **Look menu.** On the options page and in the Edit Mode dialog.
+- [ ] **Look menu.** On the options page and in the look window's dropdown.
   - *+ New look*: type a name and press *Done*; the profile uses it. Then copy, rename, reset and delete (the delete button appears on hover).
   - *Expected:* each dialog closes after *Done*, *Reset* or *Delete*, with no BugSack error.
   - Default cannot be renamed or deleted; a deleted look's profiles switch to Default.
 - [ ] **Shared by profiles.** Two profiles use the same look; change it in one. *Expected:* the other shows the change.
-- [ ] **Opening the window.** *Edit* in a look's menu, on the options page and in the Edit Mode dialog, and `/lootoman design`.
-  - *Expected:* titled "Feed look: …"; opened for the first time in a fight, it refuses with a message.
+- [ ] **Opening the window.** *Edit* in a look's menu, *Edit* beside the feed look on the options page, the feed clicked in Edit Mode, and `/lootoman design`.
+  - *Expected:* titled "Feed Look: …"; opened for the first time in a fight, it refuses with a message.
+  - While the window is open, the feed shows its sample rows where it stands, as in Edit Mode, also with no loot, and follows each change of the profile's look at once; closing the window (Escape, the close button) puts the feed back as it was, but in Edit Mode, where the samples stay.
   - *Edit* on a look the profile does not use edits that look and leaves the feed alone; renaming it renames the title, deleting it closes the window.
-- [ ] **Feed tab.** *Expected:* the groups *What the feed shows*, *Kept usable items* (its kinds under the switch, greyed out while it is off), *Rows and timing* (with *View* before *Fill direction*), *Appearance* and *Low-space warnings*. Choosing another *View* asks first, then starts the look's design afresh.
-- [ ] **Samples.** *Expected:* sample rows of every kind, the experience row with a thousands amount, and the stuck quest item with the quest mark and "+1".
-- [ ] **Design tab.** Choose each part (Row, Icon, Name, Amount, Owned count) by clicking it and from the *Part* list, and click a row's free space and the space between rows.
-  - *Expected:* the *Design* tab comes up; the clicked part, or the row, is chosen; the gold frame marks it (a text shows the most room it may take).
+- [ ] **Tabs (0.5.9).** *Expected:* on the left four tabs standing on a frame around their area, each as wide as its title, in English and in Russian; *Content* first: *What the Feed Shows*, *Kept Usable Items* (its kinds under the switch, greyed out while it is off; on WoW Forever without *Appearance Sets* and *Heirlooms*) and *Low-Space Warning*; *Appearance* (with *View* before *Fill direction*); *Timings*; and the designer's tab, *Layout*. Every heading, switch, label and button of the window in title capitals, the choices and tooltips in sentences. The samples on the right. Choosing another *View* asks first, then starts the look's design afresh; with *Icons*, *Number of Rows* and *Gap Between Rows* become *Number of Icons* and *Gap Between Icons*, and back with *Rows*.
+- [ ] **Samples.** *Expected:* sample rows of every kind, the experience row with a thousands amount, and the stuck quest item with the quest mark and "+1", centred in their area, drawn exactly as in the feed, with no lighter box behind each row (the gold frame on *Layout* shows the chosen row's edges). With *Background* on, the feed's background behind them as in the feed (its colour, opacity and fade). *Light Backdrop* over them turns their backdrop light and back.
+- [ ] **Resizing (0.5.9).** Drag the window's bottom right corner larger, then try to make it smaller than it started. Do it right after opening the window, after dragging a part of a sample, and after picking the background's colour.
+  - *Expected:* the corner follows the pointer from where it was grabbed and never jumps; the samples' area fills all the room right of the tabs (the whole width when widened), with the same margins as before, and the samples stay centred in it; the tabs' area grows taller; the window never gets smaller than its first size. At 200 % with a taller window, all the samples fit.
+  - Make the window as big as the screen, close it, raise the game's UI scale, and open it again. *Expected:* the window fits the screen, its corner on it, and cannot be dragged past the screen's edge.
+- [ ] **Zoom (0.5.9).** Over the samples, choose 150 % and 200 % in the dropdown, then click the maximize button beside it, and click it again.
+  - *Expected:* the samples are drawn larger, centred while they fit and from the top left corner when they do not, cut at the area's edge (icons never wrap to a second line); parts are chosen and dragged as before, and a drag moves a part as far on screen as the pointer goes.
+  - The maximize button widens the samples over the whole window, the tabs and their panel hidden; clicking again brings them back.
+  - Close and reopen the window: the zoom, the width, the window's size and the backdrop are as you left them; after `/reload`, back to 100 %, narrow and dark.
+- [ ] **Text style (0.5.9).** On the *Layout* tab, for the name, the amount and the owned count, each *Text Style* after *Text Size*: *None*, *Shadow*, *Outline*, *Thick outline*.
+  - *Expected:* only that text follows, in the feed and in the samples, at once and after `/reload` (the stuck row's waiting count follows the owned count's); *None* (the default) looks as before 0.5.9. *Appearance* has no *Text Style* and no *Size*.
+- [ ] **Layout tab.** Choose each part (Row, Icon, Name, Amount, Owned count) by clicking it and from the *Part* list, and click a row's free space and the space between rows.
+  - *Expected:* the *Layout* tab comes up; the clicked part, or the row, is chosen; a thin gold frame marks it (a text shows the most room it may take), and shows on this tab only. With a look of icons, click the amount on the icon: the amount is chosen, not the icon.
   - The first line sits clear of the tab's top edge: *Part* and, for a part but the row, *Shown* to its right with its checkbox first; a divider under it.
   - With *Shown* unticked, no other control shows.
 - [ ] **Editing.** Drag parts; change every control by slider and by typing a number (also out of range); tick and untick *Shown*.
   - *Expected:* parts stay inside the row; the feed follows at once and after `/reload`.
   - The owned count also has *Counts*: *Bags and bank* or *Bags only*.
-- [ ] **Backgrounds.** For the row, the amount and the owned count: tick *With background*, click the colour swatch beside it, pick a colour, then *Cancel*; pick again and *OK*; change *Opacity* under it.
-  - *Expected:* the swatch and *Opacity* are greyed out and do nothing until *With background* is ticked; the default colour is black.
+- [ ] **Backgrounds.** For the row, the amount and the owned count: tick *With Background*, click the colour swatch beside it, pick a colour, then *Cancel*; pick again and *OK*; change *Opacity* under it.
+  - *Expected:* the swatch and *Opacity* are greyed out and do nothing until *With Background* is ticked; the default colour is black.
   - The feed follows each colour as it is picked; *Cancel* puts the old one back.
   - The row's background lies behind the whole row, under its icon and texts.
+- [ ] **Row border (0.5.9).** A look of rows, the *Row* part: tick *With Border*, pick a colour with the swatch beside it, then move *Border Width* (1 to 4) and *Opacity* under it; also with *With Background* ticked.
+  - *Expected:* the swatch, *Border Width* and *Opacity* are greyed out until *With Border* is ticked; the default is a white 1-pixel border at half opacity.
+  - Four thin edges along the row's box, inside it, over its own background and under its icon and texts; the feed and the samples follow each change at once, and after `/reload`.
+  - A look of icons has no border controls.
+- [ ] **Quality border (0.5.9).** With a rare item, a junk row and the low-space warning in the feed, untick *Quality Border* on the *Icon* part (a look of rows), then on the *Icon* of a look of icons, and tick it again.
+  - *Expected:* ticked by default, in every look made before; unticked, the icons lose their borders, the item's quality colour, the junk row's gray and the warning's red one alike, and keep their glow; the warning's name stays red. The feed and the samples follow at once, and after `/reload`.
 - [ ] **Owned count per look.** Tick the owned count's *Shown* in one look, and set *Counts* to *Bags only* with some of an item in the bank and some in the bags; loot that item. *Expected:* with *Bags only* the bank's are not counted; the other looks keep their own.
-- [ ] **Reset and Share.** In the window, *Reset* (after a question) returns the look to its defaults; *Share* opens the share window with this look ticked.
+- [ ] **Top row (0.5.9).** *Expected:* the looks' dropdown at the top left with the look menu, the edited look chosen; no *Reset* or *Share* buttons (both are in the menu). Choose another look in it: the window edits it, the feed keeps the profile's look, and *Apply* appears beside the dropdown; *Apply* makes the profile use it and goes away. *Reset Position*, at the far right of the row, puts the feed back at its default place in the current Edit Mode layout.
 
 ### Compact view
 
-- [ ] **Icons.** A new look, with *View: Icons* on its *Feed* tab.
+- [ ] **Icons.** A new look, with *View: Icons* on its *Appearance* tab.
   - *Expected:* square icons, the amount at the bottom right, the owned count hidden (when shown, small at the top right).
-  - The part list has *Icon* (its size and the gap), *Amount* and *Owned count*.
-  - The samples stand side by side, wrapping at the preview's edge.
+  - The part list has *Icon* (its size), *Amount* and *Owned Count*; the gap is *Gap Between Icons* on *Appearance*.
+  - The samples stand side by side in one line, centred, cut at the area's edge.
 - [ ] **Four directions.** With a look of icons, each *Fill direction*.
   - *Expected:* the oldest icon stays at the edge it fills from, new ones line up away from it.
   - Switching the profile between a look of icons and a look of rows brings back each look's own direction.
@@ -191,11 +209,11 @@ The Default look and default options unless a check says otherwise.
   - Experience as "1.23K" or "12.34K", cut, not rounded, without a "+".
   - An item's count without "×".
   - A look of rows keeps "×3" and "+123".
-- [ ] **Background.** With a look of icons and some background opacity. *Expected:* one even background behind all the icons, not fading.
+- [ ] **Background.** With a look of icons and *Background* on. *Expected:* one background behind all the icons, fading out past them on every side by a third of an icon.
 
 ### Usable items
 
-*Keep usable items* and all its kinds on (the default).
+*Keep Usable Items* and all its kinds on (the default).
 
 - [ ] **Quest starter on WoW Forever.** With fast autoloot, loot an item that starts a quest.
   - *Expected:* it stays at the start of the feed with the bags' quest mark; others fade in the places after it.
@@ -220,27 +238,38 @@ The Default look and default options unless a check says otherwise.
   - *Expected:* no Lua errors and no blocked action.
   - The left click lets the row go.
   - A right click does nothing for the next row until the fight ends, then works; meanwhile its tooltip ends with "Left-click: dismiss. Right-click: use, after the fight.".
-- [ ] **Placing.** With a kept item showing, move the feed in Edit Mode, change its size and its fill direction. *Expected:* right clicks still hit the item where it is, after each change (out of combat).
-- [ ] **Switches.** Turn off each kind, then *Keep usable items*, then *Items* with a kept item showing. *Expected:* those items fade as usual, and with *Items* off a kept item goes; the kinds sit under the switch on the look window's *Feed* tab, greyed out while it is off.
+- [ ] **Placing.** With a kept item showing, move the feed in Edit Mode, change its row height and its fill direction. *Expected:* right clicks still hit the item where it is, after each change (out of combat).
+- [ ] **Switches.** Turn off each kind, then *Keep Usable Items*, then *Items* with a kept item showing. *Expected:* those items fade as usual, and with *Items* off a kept item goes; the kinds sit under the switch on the look window's *Content* tab, greyed out while it is off.
 - [ ] **Below the minimum quality.** Set the minimum quality to Uncommon and loot a common usable item. *Expected:* it shows and stays.
-- [ ] **WoW Forever's collections.** On WoW Forever, the kinds on the look window's *Feed* tab. *Expected:* only the kinds whose collections the client has (note which).
+- [ ] **WoW Forever's collections.** On WoW Forever, the kinds on the look window's *Content* tab. *Expected:* only the kinds whose collections the client has (note which).
 
-### Low-space warnings
+### Low-space warning (0.5.9)
 
-- [ ] **General slots.** Default options.
-  - Fill the general bags down to 4 free slots: no warning.
-  - Down to 3: a warning row at the feed's bottom edge, the rows above it: the bag icon as big as the rows' icons, with a red border, "Few free bag slots" in red as its name, and a white "3" as its amount.
-  - Down to 0: "0"; its tooltip says "No free bag slots".
+- [ ] **Defaults.** Default options, with a reagent bag.
+  - Fill the reagent bag; keep 20 general slots free: no warning.
+  - Fill the general bags down to 4 free slots: no warning. Down to 3: a warning row at the feed's bottom edge, the rows above it: the bag icon as big as the rows' icons, with a red border, "Few free bag slots" in red as its name, and "3+0" as its amount (the general slots white, the reagent ones green).
+  - Its tooltip lists every kind of bag the character has, free of how many ("General bags: 3 of 16 free", "Reagent bag: 0 of 36 free", and the profession bags on WoW Forever).
 
   *Expected:* the warning stays while it holds, also with no rows, and goes when slots are freed. With *Fill direction: Top to bottom* it sits at the top edge.
+- [ ] **Thresholds.** On the look window's *Content* tab, *Low-space warning*: turn on *Warn when few slots are free in all bags* and *Warn when few reagent slots are free*, turn off the general one, and set each number to 0 and to 5. *Expected:* the warning shows while any threshold that is on is reached, and follows at once; without a reagent bag the reagent threshold never warns.
+- [ ] **Text.** Change *Warning text*: `{free} / {total}`, `{general|ff0000}`, and a typo such as `{genral}`. *Expected:* the warning's amount and its sample in the window follow when the field loses the focus or Enter is pressed; the typo shows as typed; a typed `|` shows as itself. Under the field, a grey note names every token in white and what it stands for, and how to add a colour; nothing is cut, in Russian too, and the settings under it are not covered.
+- [ ] **Click.** With junk management on, point at the warning and click it. *Expected:* its tooltip ends with "Click: throw away junk."; a left click opens the toss window in the middle of the screen. With junk management off: no such line, and clicks reach the world.
 - [ ] **Before a kept item.** A kept item while a warning holds, with rows and with icons filling up or down. *Expected:*
   - the warning at the edge, the kept item after it, then the fading rows;
   - when the warning goes, the kept item moves to the edge, and right clicks still hit it;
   - when a warning comes in a fight, the kept item stays where it is and the warning comes after it until the fight ends; then they swap.
-- [ ] **Reagent bag.** Fill the reagent bag down to 2 free slots. *Expected:* a green "2" as the amount; with few general slots too, one row with both: "3+2", white and green, and a tooltip with a line for each. Without a reagent bag, no reagent part.
-- [ ] **Thresholds.** Set each to 0 and to 5. *Expected:* the warnings follow at once.
 - [ ] **Following the design.** Change the look's design (icon size and place, the name's and the amount's place and size, their backgrounds, the row's background), and check the warning sample in the look window. *Expected:* the warning row follows like any row.
-- [ ] **With icons.** With a look of icons, filling up, down and sideways. *Expected:* the warning is a bag icon in the first place, like the other icons, with a red border and the free slots as its amount; no name; the tooltip names each kind.
+- [ ] **With icons.** With a look of icons, filling up, down and sideways. *Expected:* the warning is a bag icon in the first place, like the other icons, with a red border and its text as its amount; no name.
+
+### Junk, quest items, clicks, timing and the background (0.5.9)
+
+- [ ] **Junk in one row.** Loot several gray items and an item you marked as junk. *Expected:* one row, "Junk" in gray with the sell-junk icon and the items' count ("×5"); its tooltip lists each item with its count. A gray item marked not junk, and an item the client has not loaded yet, get rows of their own. Untick *Junk in one row* on *Content*: each item has its own row again.
+- [ ] **Usable junk.** Pick a lockbox (a junkbox, gray) and loot it if you can. *Expected:* it leaves the junk row and stays in the feed as a kept item.
+- [ ] **Quest items.** On WoW Forever, loot a quest item (one a quest asks you to collect). *Expected:* the gold quest border on its icon, as in the bags; an item that starts a quest keeps its "!"; with the icon hidden in the design, no mark.
+- [ ] **Shift-click.** Hold Shift and click an item row, with the chat's input box open and closed. *Expected:* the link goes into the chat, as from the bags. Ctrl-click opens the dressing room. Without Shift, clicks on rows that are not gear reach the world.
+- [ ] **Right-click to equip.** Loot a piece of gear you can wear. *Expected:* its tooltip ends with "Right-click: equip."; a right click equips it, or swaps it with what you wear; a bind-on-equip piece asks first. In a fight, armour is refused by the game and a weapon swaps. Gear that has left the bags takes no clicks.
+- [ ] **One after another.** Loot a corpse or a container with several items at once. *Expected:* the rows come in one after another, a short moment apart, and later leave one after another the same way. *Delay between rows* on *Timings* at 0: all at once; at 0.5: clearly apart. The pointer over the feed holds the rows still waiting.
+- [ ] **Background.** On *Appearance*, tick *Background* (its *Color*, *Opacity* and *Fade at the Edges* greyed until then), pick a *Color* (and *Cancel* once), keep *Opacity* at 50 %. *Expected:* the background in that colour covers the rows and reaches past them on every side by half a row (or half an icon), fading out there over the whole margin, round at the corners; with *Fade at the Edges* off, a plain box with sharp edges only 4 pixels past the rows; no seams where its pieces meet, at a few UI scales; as rows come and go it grows and shrinks smoothly. The same with a look of icons.
 
 ### At rest (0.5.5)
 
@@ -248,7 +277,7 @@ The feed draws on every frame only while something moves, and a few times a seco
 
 - [ ] **Looks as before.** Loot several things in a row, with rows and with icons. *Expected:* rows fade in, slide to their places and fade out as smoothly as before; a full feed pushes the oldest out; the pointer over the feed holds the rows, and they go on when it leaves (they may wait a moment longer to notice).
 - [ ] **Kept item and warning.** With only a kept item, then only a low-space warning on screen for a minute. *Expected:* they stay put; a right click on the kept item uses it, out of combat and, where allowed, in a fight; a new loot row appears at once.
-- [ ] **After a client or library update.** Open Edit Mode and select the loot feed. *Expected:* its dialog still has no *Reset To Default* (other frames' dialogs keep theirs), and the self-test's `Edit Mode:` line says the dialog and its reset button were found and hooked.
+- [ ] **After a client or library update.** Open Edit Mode and select the loot feed. *Expected:* no small dialog shows, the look's window opens, and the feed can still be dragged; the self-test's `Edit Mode:` line says the dialog was found and hooked.
 
 ## Junk
 
@@ -403,7 +432,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
 - [ ] **In a fight.** *Expected:* the icon and the name keep showing (the name may be one the game hides from addons: it still shows); no errors.
 - [ ] **A nameplate addon.** With Platynator. *Expected:* our icon and name over the stars; the addon's own plate stays its own; no second icon from the game.
 - [ ] **Kept.** `/reload`, and a profile text shared and imported. *Expected:* the four settings kept; a new character gets *Icon and name*.
-- [ ] **Russian client.** *Expected:* «Яркость искр», «Цвет искр», «Что подсвечивать» with «Трупы для свежевания» and «Только то, что можно собрать», «Над объектом», «Непрозрачность», «Ничего», «Значок», «Значок и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
+- [ ] **Russian client.** *Expected:* «Яркость искр», «Цвет искр», «Что подсвечивать» with «Трупы для свежевания» and «Только то, что можно собрать», «Над объектом», «Непрозрачность», «Ничего», «Иконка», «Иконка и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
 
 ## Saved diagnostics (0.5.5)
 

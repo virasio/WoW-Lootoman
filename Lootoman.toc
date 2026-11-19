@@ -82,6 +82,7 @@ Modules\Junk\SellWindow.lua
 
 Modules\LootFeed\Sources.lua
 Modules\LootFeed\Model.lua
+Modules\LootFeed\SlotsText.lua
 Modules\LootFeed\Design.lua
 Modules\LootFeed\Looks.lua
 Modules\LootFeed\LookMenu.lua

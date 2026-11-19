@@ -46,6 +46,15 @@ describe("loot feed frames", function()
 			assert.equals("loottoast-itemborder-white", Frames.Describe({ kind = "item", name = "Rag", quality = 0 }).border)
 		end)
 
+		it("shows all junk as one row: the sell-junk icon, its name gray, the items' count, a line for each in its tooltip", function()
+			local row = { kind = "item", name = "Junk", quality = 0, amount = 4,
+				parts = { { key = 700, link = "[Rag]", amount = 3 }, { key = 701, link = "[Bone]", amount = 1 } } }
+			local look = Frames.Describe(row)
+			assert.same({ "SpellIcon-256x256-SellJunk", nil, "Junk", "×4", "loottoast-itemborder-white" },
+				{ look.iconAtlas, look.icon, look.label, look.amount, look.border })
+			assert.same(Frames.Describe({ kind = "item", name = "Rag", quality = 0 }).labelColor, look.labelColor)
+		end)
+
 		it("gives rare and better items a glow in their quality colour, when asked", function()
 			assert.equals("bags-glow-3", Frames.Describe({ kind = "item", name = "Ring", quality = 3 }, { showGlow = true }).glow)
 			assert.is_nil(Frames.Describe({ kind = "item", name = "Cloth", quality = 2 }, { showGlow = true }).glow)
@@ -184,24 +193,95 @@ describe("loot feed frames", function()
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, frameWith("100 copper").points[1])
 		end)
 
-		local GENERAL = { kind = "general", count = 3, text = "Free bag slots: 3" }
-		local REAGENT = { kind = "reagent", count = 2, text = "Free reagent bag slots: 2" }
+		it("draws the junk row with the sell-junk icon and lists its items in the tooltip; the next item gets its own icon back", function()
+			model:Add({ kind = "item", name = "Junk", quality = 0, amount = 4,
+				parts = { { key = 700, link = "[Rag]", amount = 3 }, { key = 701, link = "[Bone]", amount = 1 } } }, 0)
+			feed:Draw(1)
+			local junk = frameWith("Junk")
+			assert.equals("SpellIcon-256x256-SellJunk", junk.Icon.atlas)
+			junk.scripts.OnEnter(junk)
+			assert.same({ "Junk", "[Rag] ×3", "[Bone]" }, tooltip.lines)
+		end)
 
-		it("draws the warning as a row of the design: a bag with a red border, the warning as its name, each bag kind's free slots as its amount", function()
-			feed:SetWarnings({ GENERAL, REAGENT })
+		it("marks a quest item with the bags' gold quest border on its icon; a kept starter keeps its \"!\"; no mark without the icon", function()
+			ns.Compat.Test.SetItems({ [800] = { name = "Wolf Meat", icon = 5, quality = 1, classID = 12 },
+				[2589] = { name = "Linen Cloth", icon = 1, quality = 1, classID = 7 } })
+			model:Add({ kind = "item", id = 800, link = "|Hitem:800::|h[Wolf Meat]|h", name = "Wolf Meat", icon = 5, quality = 1, amount = 1 }, 0)
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
+			feed:Draw(1)
+			local meat, cloth = frameWith("Wolf Meat"), frameWith("Linen Cloth")
+			assert.same({ true, "Interface\\ContainerFrame\\UI-Icon-QuestBorder", false }, { meat.QuestMark.shown, meat.QuestMark.texture,
+				cloth.QuestMark.shown })
+			local starter = { kind = "item", id = 800, link = "|Hitem:800::|h[Wolf Meat]|h", name = "Wolf Meat", icon = 5, quality = 1,
+				sticky = "quest" }
+			Frames.Fill(meat, starter, feed.options)
+			assert.same({ true, "Interface\\ContainerFrame\\UI-Icon-QuestBang" }, { meat.QuestMark.shown, meat.QuestMark.texture })
+			local noIcon = ns.Feed.Design.Layout(ns.Feed.Design.LARGE, 12)
+			noIcon.parts.icon.shown = false
+			Frames.Fill(meat, { kind = "item", id = 800, link = "|Hitem:800::|h[Wolf Meat]|h", name = "Wolf Meat", quality = 1 },
+				{ layout = noIcon })
+			assert.is_false(meat.QuestMark.shown)
+		end)
+
+		it("lets a row of gear in the bags take clicks, a right click equipping it; others only while Shift is held, to link", function()
+			local SWORD = "|cff1eff00|Hitem:900::|h[Sword]|h|r"
+			ns.Compat.Test.SetItems({ [900] = { name = "Sword", icon = 6, quality = 2, equippable = true, owned = 1 },
+				[2589] = { name = "Linen Cloth", icon = 1, quality = 1 } })
+			ns.Compat.Test.SetBags({ [0] = { size = 4, items = { { itemID = 900, count = 1 } } } })
+			model:Add({ kind = "item", id = 900, link = SWORD, name = "Sword", icon = 6, quality = 2, amount = 1 }, 0)
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
+			model:Add({ kind = "money", amount = 100 }, 0)
+			feed:Draw(1)
+			local sword, cloth, money = frameWith("Sword"), frameWith("Linen Cloth"), frameWith("100 copper")
+			assert.same({ true, false, false }, { sword.mouseClicks, cloth.mouseClicks, money.mouseClicks })
+			sword.scripts.OnEnter(sword)
+			assert.equals("Right-click: equip.", tooltip.lines[#tooltip.lines])
+			sword.scripts.OnMouseUp(sword, "RightButton")
+			cloth.scripts.OnMouseUp(cloth, "RightButton")
+			assert.same({ SWORD }, ns.Compat.Test.state.equipped)
+			-- Shift held: every item row takes clicks, and a left click links it; money still lets them through.
+			feed:SetLinkModifier(true)
+			feed:Draw(2)
+			assert.same({ true, true, false }, { sword.mouseClicks, cloth.mouseClicks, money.mouseClicks })
+			ns.Compat.Test.SetModifier("CHATLINK", true)
+			cloth.scripts.OnMouseUp(cloth, "LeftButton")
+			assert.same({ LINK }, ns.Compat.Test.state.linked)
+			-- Shift let go outside the game sends no event: pointing at a row reads it again.
+			ns.Compat.Test.SetModifier("CHATLINK", nil)
+			sword.scripts.OnEnter(sword)
+			feed:Draw(3)
+			assert.same({ false, true, false }, { feed.linkModifier, sword.mouseClicks, cloth.mouseClicks })
+		end)
+
+		local GENERAL = { amount = "|cffffffff3|r", lines = { "General bags: 3 of 16 free" } }
+		local REAGENT = { amount = "|cff1eff002|r", lines = { "Reagent bag: 2 of 36 free" } }
+		local BOTH = { amount = "|cffffffff3|r+|cff1eff002|r", lines = { "General bags: 3 of 16 free", "Reagent bag: 2 of 36 free" } }
+
+		it("draws the warning as a row of the design: a bag with a red border, the warning as its name, its text as its amount", function()
+			feed:SetWarning(BOTH)
 			local warning = feed.warningRow
 			-- At the Large design's size: the icon as big as any row's.
 			assert.same({ true, Frames.WARNING_ICON, 35, 35 }, { warning.shown, warning.Icon.texture, warning.Icon.width, warning.Icon.height })
 			assert.same({ true, "loottoast-itemborder-white", { 1, 0.25, 0.25 } }, { warning.IconBorder.shown, warning.IconBorder.atlas,
 				warning.IconBorder.vertex })
 			assert.same({ "Few free bag slots", { 1, 0.25, 0.25 } }, { warning.Label.text, warning.Label.color })
-			-- General slots white, reagent ones green, joined by "+".
 			assert.same({ true, "|cffffffff3|r+|cff1eff002|r" }, { warning.Amount.shown, warning.Amount.text })
-			-- The tooltip names each kind in its colour.
+			-- The tooltip lists each kind of bag; not clickable, it says nothing of a click and lets clicks through.
 			warning.scripts.OnEnter(warning)
-			assert.same({ "Few free bag slots", "Free bag slots: 3", "Free reagent bag slots: 2" }, tooltip.lines)
-			feed:SetWarnings({ REAGENT })
+			assert.same({ "Few free bag slots", "General bags: 3 of 16 free", "Reagent bag: 2 of 36 free" }, tooltip.lines)
+			assert.is_false(warning.mouseClicks == true)
+			feed:SetWarning(REAGENT)
 			assert.equals("|cff1eff002|r", warning.Amount.text)
+			-- Clickable (the toss window, while junk management is on): its tooltip says so, a left click calls back.
+			local clicked = 0
+			feed.onWarningClick = function() clicked = clicked + 1 end
+			feed:SetWarning({ amount = "1", lines = { "General bags: 1 of 16 free" }, clickable = true })
+			assert.is_true(warning.mouseClicks)
+			warning.scripts.OnEnter(warning)
+			assert.same({ "Few free bag slots", "General bags: 1 of 16 free", "Click: throw away junk." }, tooltip.lines)
+			warning.scripts.OnMouseUp(warning, "RightButton")
+			warning.scripts.OnMouseUp(warning, "LeftButton")
+			assert.equals(1, clicked)
 			-- An item's border keeps its own colour.
 			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 0)
 			feed:Draw(1)
@@ -212,7 +292,7 @@ describe("loot feed frames", function()
 			local Design = ns.Feed.Design
 			local icons = Design.Layout(Design.ICONS, 13)
 			feed:SetOptions(options({ direction = "right", layout = icons }))
-			feed:SetWarnings({ GENERAL, REAGENT })
+			feed:SetWarning(BOTH)
 			model:Add({ kind = "money", amount = 100 }, 0)
 			feed:Draw(1)
 			local warning = feed.warningRow
@@ -220,10 +300,9 @@ describe("loot feed frames", function()
 			assert.same({ "100 copper@40" }, layout())
 			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, warning.points[1])
 			assert.same({ false, true, 36 }, { warning.Label.shown, warning.Amount.shown, warning.Icon.width })
-			-- The background spans both, evenly behind icons.
-			local background = feed.frame.Background
-			assert.same({ 84, 44 }, { background.width, background.height })
-			assert.same({ 0.5, 0.5 }, { background.gradient[2].a, background.gradient[3].a })
+			-- The background spans both, and fades out past them by half an icon.
+			local back = feed.frame.Back
+			assert.same({ 76, 36, 18, 18 }, { back.width, back.height, back.pieces.left.width, back.pieces.top.height })
 			feed:SetOptions(options({ direction = "left", layout = icons }))
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, warning.points[1])
 			-- A stuck icon comes after the warning.
@@ -240,7 +319,7 @@ describe("loot feed frames", function()
 		end)
 
 		it("puts the stuck row after the warnings, before the other rows, with its marks and its clicks", function()
-			feed:SetWarnings({ GENERAL })
+			feed:SetWarning(GENERAL)
 			local quest = model:Add({ kind = "item", id = 1, name = "Letter", link = LINK, icon = 1, amount = 1 }, 0)
 			model:SetSticky(quest, "quest", 0)
 			local clam = model:Add({ kind = "item", id = 2, name = "Clam", link = LINK, icon = 2, amount = 1 }, 0)
@@ -275,7 +354,7 @@ describe("loot feed frames", function()
 			-- Without the warning, the stuck row takes the edge.
 			local letter2 = model:Add({ kind = "item", id = 3, name = "Note", link = LINK, icon = 3, amount = 1 }, 6.7)
 			model:SetSticky(letter2, "quest", 6.7)
-			feed:SetWarnings({})
+			feed:SetWarning(nil)
 			feed:Draw(13)
 			assert.same({ "Note@0", "100 copper@42" }, layout())
 		end)
@@ -312,7 +391,7 @@ describe("loot feed frames", function()
 			feed:Draw(6.5)
 			assert.same({ "Letter@0" }, layout())
 			ns.Compat.Test.SetCombat(true)
-			feed:SetWarnings({ GENERAL })
+			feed:SetWarning(GENERAL)
 			model:Add({ kind = "money", amount = 100 }, 6.6)
 			feed:Draw(6.7)
 			assert.same({ "Letter@0", "100 copper@84" }, layout())
@@ -324,7 +403,7 @@ describe("loot feed frames", function()
 			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, feed.warningRow.points[1])
 			-- A warning that goes in a fight leaves its place empty until it ends.
 			ns.Compat.Test.SetCombat(true)
-			feed:SetWarnings({})
+			feed:SetWarning(nil)
 			feed:Draw(7.5)
 			assert.same({ "Letter@42", "100 copper@84" }, layout())
 			ns.Compat.Test.SetCombat(false)
@@ -333,7 +412,7 @@ describe("loot feed frames", function()
 		end)
 
 		it("puts the warning at the anchor edge, the rows after it, and stays shown for it", function()
-			feed:SetWarnings({ GENERAL })
+			feed:SetWarning(GENERAL)
 			assert.is_true(feed.frame.shown)
 			local warning = feed.warningRow
 			assert.same({ "Few free bag slots", { "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 } }, { warning.Label.text, warning.points[1] })
@@ -345,7 +424,7 @@ describe("loot feed frames", function()
 			-- With the rows gone, the warning keeps the feed shown.
 			feed:Draw(100)
 			assert.same({ {}, true }, { layout(), feed.frame.shown })
-			feed:SetWarnings({})
+			feed:SetWarning(nil)
 			assert.is_false(warning.shown)
 			feed:Draw(101)
 			assert.is_false(feed.frame.shown)
@@ -477,6 +556,28 @@ describe("loot feed frames", function()
 			assert.same({ true, "42" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
+		it("draws the icon's quality border, the junk row's and the warning's too, unless the design turns it off", function()
+			local Design = ns.Feed.Design
+			local rowFrame = Frames.CreateRow(nil)
+			local plain = { layout = Design.Layout(Design.LARGE) }
+			local bare = { layout = Design.Layout(Design.Current({ schema = Design.SCHEMA, base = "large",
+				changes = { icon = { qualityBorder = false } } })) }
+			local rows = {
+				{ kind = "item", name = "Cloth", icon = 1, quality = 4, amount = 1 },
+				{ kind = "warning", amount = "2" },
+				{ kind = "item", parts = { { name = "Tooth" } }, amount = 2 },
+			}
+			for _, row in ipairs(rows) do
+				Frames.ApplyLayout(rowFrame, plain.layout)
+				Frames.Fill(rowFrame, row, plain)
+				assert.is_true(rowFrame.IconBorder.shown, row.kind)
+				Frames.ApplyLayout(rowFrame, bare.layout)
+				Frames.Fill(rowFrame, row, bare)
+				-- The icon stays; only its border goes.
+				assert.same({ false, true }, { rowFrame.IconBorder.shown, rowFrame.Icon.shown }, row.kind)
+			end
+		end)
+
 		it("draws the amount's own background when the design asks, with its opacity", function()
 			local Design = ns.Feed.Design
 			local design = Design.Current({ schema = Design.SCHEMA, base = "icons", changes = { amount = { background = true, opacity = 30 } } })
@@ -498,6 +599,26 @@ describe("loot feed frames", function()
 			assert.is_false(rowFrame.AmountBackground.shown)
 			Frames.Fill(rowFrame, { kind = "item", name = "Cloth", quality = 1, amount = 20 }, { layout = Design.Layout(Design.ICONS, 13) })
 			assert.is_false(rowFrame.AmountBackground.shown)
+		end)
+
+		it("draws a border on the row's edges when the design asks, in its colour, width and opacity, not scaled", function()
+			local Design = ns.Feed.Design
+			local rowFrame = Frames.CreateRow(nil)
+			Frames.ApplyLayout(rowFrame, Design.Layout(Design.LARGE, 13))
+			for _, edge in pairs(rowFrame.RowBorder) do
+				assert.is_false(edge.shown)
+			end
+			local design = Design.Current({ schema = Design.SCHEMA, base = "large",
+				changes = { row = { border = true, borderColor = "ff8000", borderWidth = 2, borderOpacity = 40 } } })
+			Frames.ApplyLayout(rowFrame, Design.Layout(design, 26))
+			local edges = rowFrame.RowBorder
+			assert.same({ true, true, true, true }, { edges.top.shown, edges.bottom.shown, edges.left.shown, edges.right.shown })
+			assert.same({ 2, 2, 2, 2 }, { edges.top.height, edges.bottom.height, edges.left.width, edges.right.width })
+			assert.same({ 1, 128 / 255, 0, 0.4 }, edges.left.colorTexture)
+			-- Each edge along its side of the row.
+			local function along(edge) return { edge.points[1][1], edge.points[2][1] } end
+			assert.same({ { "TOPLEFT", "TOPRIGHT" }, { "BOTTOMLEFT", "BOTTOMRIGHT" }, { "TOPLEFT", "BOTTOMLEFT" }, { "TOPRIGHT", "BOTTOMRIGHT" } },
+				{ along(edges.top), along(edges.bottom), along(edges.left), along(edges.right) })
 		end)
 
 		it("shows the owned count and the glow, and hides them when turned off", function()
@@ -525,29 +646,48 @@ describe("loot feed frames", function()
 			assert.same({ true, "5" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
-		it("spans one background over the rows on screen, fading to the right", function()
+		it("spans one background over the rows on screen, past them by half a row where it fades, easing to their size", function()
+			local rows = feed.options.layout
+			local two, three = 2 * rows.height + rows.gap, 3 * rows.height + 2 * rows.gap
+			local margin = math.floor(rows.height / 2 + 0.5)
 			model:Add({ kind = "money", amount = 100 }, 0)
 			model:Add({ kind = "xp", amount = 50 }, 0)
 			feed:Draw(1)
-			local background = feed.frame.Background
-			assert.is_true(background.shown)
-			assert.same({ 314, 91 }, { background.width, background.height })
-			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -7, -7 }, background.points[1])
-			assert.same({ "HORIZONTAL", 0.5, 0 }, { background.gradient[1], background.gradient[2].a, background.gradient[3].a })
-			feed:Draw(7)
-			assert.is_false(background.shown)
+			local back, pieces = feed.frame.Back, feed.frame.Back.pieces
+			assert.same({ true, rows.width, two }, { back.shown, back.width, back.height })
+			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, back.points[1])
+			-- Nine pieces of the fade texture: corners whole, edges stretched along their length, a solid centre.
+			assert.same({ margin, margin, margin, margin }, { pieces.top.height, pieces.left.width, pieces.topLeft.width, pieces.topLeft.height })
+			assert.same({ { 0, 0.5, 0, 0.5 }, { 0.49, 0.51, 0, 0.5 }, { 0.49, 0.51, 0.49, 0.51 } },
+				{ pieces.topLeft.texCoord, pieces.top.texCoord, pieces.center.texCoord })
+			assert.same({ "Interface\\AddOns\\Lootoman\\Art\\Fade", 0.5, { 0, 0, 0 } }, { pieces.center.texture, back.alpha, pieces.center.vertex })
+			-- In the look's colour.
+			feed:SetOptions(options({ color = { 1, 0, 0 }, opacity = 0.3 }))
+			assert.same({ 0.3, { 1, 0, 0 } }, { back.alpha, pieces.bottomRight.vertex })
+			-- A third row: the background eases to it.
+			model:Add({ kind = "item", id = 2589, name = "Linen Cloth", link = LINK, icon = 1, quality = 1, amount = 1 }, 1)
+			feed:Draw(1)
+			assert.equals(two, back.height)
+			feed:Draw(1 + Frames.EASE / 2)
+			assert.is_true(back.height > two and back.height < three, back.height)
+			feed:Draw(1.5)
+			assert.equals(three, back.height)
+			feed:Draw(9)
+			assert.is_false(back.shown)
 		end)
 
 		it("shows sample rows in Edit Mode, also with no loot", function()
 			feed:SetPreview(true)
 			assert.is_true(feed.frame.shown)
 			feed:Draw(0)
-			-- The stuck sample in the first place, and the rows that fit after it.
+			-- The stuck sample in the first place, and the rows that fit after it;
+			-- in place, they rest as rows at rest do, not drawn on every frame.
 			assert.same({ "Sample quest item@0", "Sample rare item@42", "Sample item@84" }, layout())
+			feed:Draw(5)
+			assert.same({ false, 5 + Frames.IDLE }, { feed.moving, feed.nextDraw })
 			feed:SetOptions(options({ maxRows = 8 }))
 			feed:Draw(0)
 			assert.equals(7, #layout())
-			assert.is_true(feed.frame.PreviewBackground.shown)
 			feed:SetPreview(false)
 			assert.is_false(feed.frame.shown)
 		end)
@@ -613,7 +753,7 @@ describe("loot feed frames", function()
 			end)
 
 			it("rests while it only shows a warning, and wakes for a new row at once", function()
-				feed:SetWarnings({ GENERAL })
+				feed:SetWarning(GENERAL)
 				run(1)
 				-- Nothing moves: a few draws a second.
 				local resting = #run(1)
@@ -640,7 +780,7 @@ describe("loot feed frames", function()
 				feed:Wake()
 				run(1)
 				-- A warning comes: the row slides after it over 0.15 seconds, nine frames.
-				feed:SetWarnings({ GENERAL })
+				feed:SetWarning(GENERAL)
 				assert.equals(9, #run(0.15))
 				assert.same({ "100 copper@42" }, layout())
 				local resting = #run(1)

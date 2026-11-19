@@ -651,6 +651,31 @@ function Compat.GetItemClassName(classID)
 	return try(C_Item.GetItemClassInfo, classID)
 end
 
+-- Equips an item from the bags (a link or an ID), or swaps it in; the game
+-- picks the slot, asks about binding, and refuses armour in a fight.
+function Compat.EquipItem(item)
+	try(C_Item.EquipItemByName, item)
+end
+
+-- Whether the chat-link modifier (Shift) is held now.
+function Compat.IsChatLinkHeld()
+	return IsModifiedClick("CHATLINK") == true
+end
+
+-- The game's modified click on an item, as its bags handle one (the chat link
+-- with Shift, the dressing room with Ctrl); true when one was made. A client
+-- without it still links with the chat-link modifier.
+function Compat.ModifiedItemClick(link)
+	if HandleModifiedItemClick then
+		return HandleModifiedItemClick(link) == true
+	end
+	if IsModifiedClick("CHATLINK") and ChatFrameUtil and ChatFrameUtil.InsertLink then
+		ChatFrameUtil.InsertLink(link)
+		return true
+	end
+	return false
+end
+
 -- Whether an item can be equipped at all (by anyone), and whether this
 -- character can use it now: nil where the client cannot say.
 function Compat.IsEquippableItem(item)

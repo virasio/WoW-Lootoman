@@ -1,5 +1,20 @@
 # Lootoman changelog
 
+## 0.5.9
+
+The loot feed reads better, does more with a click, and its settings are easier to reach.
+
+- **The low-space warning stops crying wolf:** by default it warns only when your general bags run low (3 slots or fewer), since reagents go into the general bags when their own bag is full. Turn on a threshold for all bags or for the reagent bag if you like. Its number is a text you can write (`{general}+{reagent}` by default, every token explained under the field), its tooltip lists every kind of bag, and a click opens the window to throw away junk.
+- **All junk in one row:** gray items and items you marked as junk gather in one "Junk" row that lists them in its tooltip. An item you can still use, such as a picked lockbox, stays on its own.
+- **Quest items** carry the bags' gold quest border.
+- **Clicks:** Shift-click an item row to link it in the chat; right-click a piece of gear you just looted to equip it.
+- **Rows come in one after another** when you loot a lot at once, and leave the same way; the delay is a setting.
+- **The background** has a switch of its own, takes the colour you pick, reaches half a row past the rows and fades out there (or ends sharply just past them, if you turn the fade off), and follows them smoothly. A look that showed a background keeps it.
+- **The look window, rebuilt:** an *Edit* button beside the look on the options page; in Edit Mode, clicking the feed opens the window directly, and picking another frame closes it. While the window is open, the feed shows its sample rows where it stands, as in Edit Mode. At its top the look you edit, with *Apply* to use another one and *Reset Position*; its settings on four tabs: *Content*, *Appearance*, *Timings* and *Layout*.
+- **More to set:** each text of a row can have a shadow or an outline, a row's background can have a border in a colour, width and opacity of your choice, the icons' quality border can be turned off, and the gap between rows is on *Appearance*. The look's *Size* is gone: the rows' and icons' own sizes do its job, and a look you made bigger or smaller stays as it was.
+- **The look window's samples** stand in front of the feed's background, centred, on a dark or light backdrop; they can be drawn at 150 or 200 percent or widened over the whole window, and the window can be resized from its corner. A text over the icon is easy to pick.
+- **WoW Forever:** the kept usable items no longer offer appearance sets and heirlooms, which it does not have.
+
 ## 0.5.8
 
 Junk management suggests what else can go, and the junk windows are easier to use.

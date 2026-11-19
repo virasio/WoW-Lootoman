@@ -41,10 +41,11 @@ describe("saved data of version 0.1", function()
 		assert.same({ "Default", "Raid rows" }, Looks.List())
 		assert.equals("Raid rows", Looks.Current())
 		local design = Design.Current(Looks.Get("Raid rows"))
-		assert.same({ 80, 14, true, "all" }, { design.parts.icon.size, design.parts.name.fontSize, design.parts.owned.shown, design.parts.owned.count })
+		-- Its size of 13 is folded into the design: the name's 14 is 15 drawn at 12.
+		assert.same({ 80, 15, true, "all" }, { design.parts.icon.size, design.parts.name.fontSize, design.parts.owned.shown, design.parts.owned.count })
 		-- The other profile's settings went into Default, as 0.4 showed them.
 		ns.Profiles.Switch("Default")
-		assert.same({ 5, true, 13 }, { ns.Modules:Get("LootFeed"):Get("maxRows"), ns.Modules:Get("LootFeed"):Get("xp"), ns.Modules:Get("LootFeed"):Get("size") })
+		assert.same({ 5, true }, { ns.Modules:Get("LootFeed"):Get("maxRows"), ns.Modules:Get("LootFeed"):Get("xp") })
 	end)
 
 	it("is saved again with nothing lost or changed, at the current schema", function()
@@ -166,8 +167,10 @@ describe("saved data of version 0.4", function()
 	it("loads without errors, the feed as 0.4 drew it from its look", function()
 		assert.same({}, ns.Compat.Test.state.errors)
 		local feed = ns.Modules:Get("LootFeed")
-		assert.same({ "Default", "Strip", "left", 6, 13, false, true }, { ns.Profiles.GetCurrent(), ns.Feed.Looks.Current(),
-			feed.feed.options.direction, feed.feed.options.maxRows, feed:Get("size"), feed:Get("xp"), feed.feed.options.showOwned })
+		-- Drawn as 0.4 drew it at size 13: its icons 36 pixels of the design at 13.
+		assert.same({ "Default", "Strip", "left", 6, 36, false, true }, { ns.Profiles.GetCurrent(), ns.Feed.Looks.Current(),
+			feed.feed.options.direction, feed.feed.options.maxRows, feed.feed.options.layout.height, feed:Get("xp"),
+			feed.feed.options.showOwned })
 		assert.same({ "Default", "Quiet", "Spare", "Strip" }, ns.Feed.Looks.List())
 	end)
 
