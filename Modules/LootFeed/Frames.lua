@@ -18,9 +18,11 @@ local Compat, L = ns.Compat, ns.L
 --
 -- Few free bag slots: one warning row takes the first place at the anchor
 -- edge, drawn by the design as any row: a bag icon with a red border, the
--- warning as its name, and as its amount the free slots of each kind of bag
--- that is low, each in its colour, joined by "+" (general white, reagent
--- green: "3+2"). Its tooltip names each. While it shows the feed stays shown.
+-- warning as its name, and as its amount the free slots as the look's
+-- template writes them (SlotsText.lua: "3+2" by default). Its tooltip lists
+-- every kind of bag; when it can be clicked (the toss window, while junk
+-- management is on) it says so, and a left click calls feed.onWarningClick.
+-- While it shows the feed stays shown.
 --
 -- A stuck row (Model.lua: an item the character can use) comes next, after the
 -- warning, and the fading rows stack after it. It shows a pin, or the bags'
@@ -31,22 +33,27 @@ local Compat, L = ns.Compat, ns.L
 -- fight is over.
 --
 -- Rows show tooltips but let clicks through to the game world, but for the
--- stuck one, and the mouse wheel keeps zooming the camera. Hovering pauses the model's timers. The
+-- stuck one, the warning (when it can be clicked), a row of gear in the bags
+-- (a right click equips it), and every item row while the chat-link modifier
+-- is held (SetLinkModifier: Shift-click puts its link into the chat, and the
+-- game's other modified clicks work as in the bags); the mouse wheel keeps
+-- zooming the camera. Hovering pauses the model's timers. The
 -- frame is hidden, and costs nothing, while there are no rows and no warnings.
 --
 -- It draws on every frame only while something moves: a row fading in or
--- out, a row sliding to its place, the preview in Edit Mode. At rest (a
--- warning, a stuck row, rows waiting for their time) it draws every IDLE
+-- out, a row sliding to its place. At rest (a warning, a stuck row, rows
+-- waiting for their time, the sample rows of Edit Mode and the look window)
+-- it draws every IDLE
 -- seconds, and at once when a row's fade is due or a call below wakes it; the
 -- hover pause may follow the pointer one rest step late.
 --
 --   local feed = Frames.Create(model)        -- out of combat, when the module starts
---   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design, size),
+--   feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(design),
 --       opacity = 0.5, showOwned = true, showGlow = true })
 --   feed:Wake()                              -- after model:Add
 --   feed:RefreshOwned()                      -- after the bags change
 --   feed:SetPreview(true)                    -- in Edit Mode
---   feed:SetWarnings({ { kind = "general", count = 2, text = "Free bag slots: 2" } }) -- or {} for none
+--   feed:SetWarning({ amount = "|cffffffff2|r", lines = { "General bags: 2 of 16 free" }, clickable = true }) -- or nil
 ns.Feed = ns.Feed or {}
 local Frames = {}
 ns.Feed.Frames = Frames
@@ -56,6 +63,9 @@ local Design = ns.Feed.Design
 Frames.POOL = 24
 -- A stuck row's pin: the game's own map pin.
 Frames.PIN = "Waypoint-MapPin-Tracked"
+-- Enum.ItemClass.Questitem: an item of this class carries the bags' gold quest
+-- border on its icon, as in the bags.
+Frames.QUEST_CLASS = 12
 Frames.FADE_IN = 0.2
 -- Seconds a row takes to slide one place.
 Frames.SLIDE_TIME = 0.15
@@ -114,6 +124,16 @@ function Frames.Describe(row, options)
 	options = options or {}
 	local kind = row.kind
 	local icons = options.layout ~= nil and Design.View(options.layout) == "icons"
+	if row.parts then
+		-- All junk in one row: one icon for junk, its name gray, the items' count.
+		local look = { iconAtlas = Frames.JUNK_ICON, label = L["Junk"], labelColor = qualityColor(0),
+			border = ColorManager.GetAtlasDataForLootBorderItemQuality(0) or "loottoast-itemborder-white" }
+		if (row.amount or 1) > 1 then
+			look.amount = icons and ns.Text.ShortNumber(row.amount, decimalPoint()) or ("×%d"):format(row.amount)
+			look.amountColor = WHITE
+		end
+		return look
+	end
 	if kind == "item" or kind == "currency" then
 		local look = { icon = row.icon, label = row.name, labelColor = qualityColor(row.quality) }
 		if (row.amount or 1) > 1 then
@@ -123,6 +143,9 @@ function Frames.Describe(row, options)
 		if kind == "currency" then
 			look.owned = options.showOwned and row.total or nil
 		else
+			-- Known once the client has the item's data.
+			local info = (row.link or row.id) and Compat.GetItemInfo(row.link or row.id)
+			look.questItem = info ~= nil and info.classID == Frames.QUEST_CLASS or nil
 			look.border = ColorManager.GetAtlasDataForLootBorderItemQuality(row.quality or 1) or "loottoast-itemborder-white"
 			if options.showGlow and (row.quality or 0) >= Frames.GLOW_QUALITY then
 				look.glow = ColorManager.GetAtlasDataForNewItemQuality(row.quality)
@@ -162,16 +185,8 @@ function Frames.Describe(row, options)
 		end
 		return { icon = ICONS.reputation, label = phrase:format(row.name), labelColor = WHITE, amount = amount, amountColor = color }
 	elseif kind == "warning" then
-		local counts = {}
-		for _, warning in ipairs(row.warnings) do
-			local color = Frames.WARNING_KINDS[warning.kind] or WHITE
-			local function byte(value)
-				return math.floor(value * 255 + 0.5)
-			end
-			counts[#counts + 1] = ("|cff%02x%02x%02x%d|r"):format(byte(color[1]), byte(color[2]), byte(color[3]), warning.count or 0)
-		end
 		return { icon = Frames.WARNING_ICON, label = L["Few free bag slots"], labelColor = Frames.WARNING_COLOR,
-			amount = table.concat(counts, "+"), amountColor = WHITE, border = Frames.WARNING_BORDER, borderColor = Frames.WARNING_COLOR }
+			amount = row.amount, amountColor = WHITE, border = Frames.WARNING_BORDER, borderColor = Frames.WARNING_COLOR }
 	end
 	return { label = tostring(row.name or kind), labelColor = WHITE }
 end
@@ -184,6 +199,11 @@ end
 -- Over an item or a currency the game's tooltip; over money, experience and
 -- reputation what their row says in full, as an icon cannot.
 local function showTooltip(rowFrame)
+	-- The chat-link modifier read again: a Shift let go outside the game
+	-- (after alt-tab) sends no event, and would leave the rows taking clicks.
+	if rowFrame.feed then
+		rowFrame.feed:SetLinkModifier(Compat.IsChatLinkHeld())
+	end
 	local row = rowFrame.data
 	if not row then
 		return
@@ -199,6 +219,15 @@ local function showTooltip(rowFrame)
 			else
 				GameTooltip:AddLine(L["Left-click: dismiss. Right-click: use."], 0.5, 1, 0.5)
 			end
+		elseif Frames.IsGear(row) then
+			GameTooltip:AddLine(L["Right-click: equip."], 0.5, 1, 0.5)
+		end
+		GameTooltip:Show()
+	elseif row.parts then
+		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
+		GameTooltip_SetTitle(GameTooltip, L["Junk"])
+		for _, part in ipairs(row.parts) do
+			GameTooltip:AddLine(part.amount > 1 and L["%s ×%d"]:format(part.link, part.amount) or part.link, 1, 1, 1)
 		end
 		GameTooltip:Show()
 	elseif row.kind == "currency" and row.id then
@@ -208,9 +237,11 @@ local function showTooltip(rowFrame)
 	elseif row.kind == "warning" then
 		GameTooltip:SetOwner(rowFrame, "ANCHOR_LEFT")
 		GameTooltip_SetTitle(GameTooltip, L["Few free bag slots"])
-		for _, warning in ipairs(row.warnings) do
-			local color = Frames.WARNING_KINDS[warning.kind] or WHITE
-			GameTooltip:AddLine(warning.text, color[1], color[2], color[3])
+		for _, line in ipairs(row.lines or {}) do
+			GameTooltip:AddLine(line, 1, 1, 1)
+		end
+		if row.clickable then
+			GameTooltip:AddLine(L["Click: throw away junk."], 0.5, 1, 0.5)
 		end
 		GameTooltip:Show()
 	elseif row.kind == "money" or row.kind == "xp" or row.kind == "reputation" then
@@ -244,6 +275,20 @@ local function getFonts()
 	return fonts
 end
 
+-- A text's style (its part's style in the design): "none" (plain), "shadow", or an
+-- outline, "outline" or "thick"; an outline goes without the shadow.
+local OUTLINES = { outline = "OUTLINE", thick = "THICKOUTLINE" }
+
+local function styleText(region, face, size, style)
+	region:SetFont(face[1], size, OUTLINES[style] or face[3])
+	if style == "shadow" then
+		region:SetShadowOffset(1, -1)
+		region:SetShadowColor(0, 0, 0, 1)
+	else
+		region:SetShadowOffset(0, 0)
+	end
+end
+
 -- A row frame with all its parts; ApplyLayout sizes it, Fill shows a row.
 function Frames.CreateRow(parent)
 	local rowFrame = CreateFrame("Frame", nil, parent)
@@ -253,6 +298,23 @@ function Frames.CreateRow(parent)
 	rowFrame.RowBackground = rowFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
 	rowFrame.RowBackground:SetAllPoints()
 	rowFrame.RowBackground:Hide()
+	-- Its border, four thin edges inside its box, over the background and under
+	-- the parts.
+	rowFrame.RowBorder = {}
+	for _, side in ipairs({ "top", "bottom", "left", "right" }) do
+		local edge = rowFrame:CreateTexture(nil, "BACKGROUND", nil, 0)
+		edge:Hide()
+		rowFrame.RowBorder[side] = edge
+	end
+	local border = rowFrame.RowBorder
+	border.top:SetPoint("TOPLEFT")
+	border.top:SetPoint("TOPRIGHT")
+	border.bottom:SetPoint("BOTTOMLEFT")
+	border.bottom:SetPoint("BOTTOMRIGHT")
+	border.left:SetPoint("TOPLEFT")
+	border.left:SetPoint("BOTTOMLEFT")
+	border.right:SetPoint("TOPRIGHT")
+	border.right:SetPoint("BOTTOMRIGHT")
 	rowFrame.Icon = rowFrame:CreateTexture(nil, "ARTWORK")
 	rowFrame.Glow = rowFrame:CreateTexture(nil, "OVERLAY", nil, 1)
 	rowFrame.Glow:SetBlendMode("ADD")
@@ -288,9 +350,22 @@ function Frames.CreateRow(parent)
 	rowFrame.Waiting:SetDrawLayer("OVERLAY", 5)
 	rowFrame.Waiting:Hide()
 	rowFrame:SetScript("OnMouseUp", function(self, button)
+		local row = self.data
+		-- The game's modified clicks on an item (its link into the chat with
+		-- Shift), as in the bags; a right click equips gear.
+		if self.feed and row and row.kind == "item" and row.link and self ~= self.feed.warningRow then
+			if button == "LeftButton" and Compat.ModifiedItemClick(row.link) then
+				return
+			elseif button == "RightButton" and not self.stuck and Frames.IsGear(row) then
+				Compat.EquipItem(row.link)
+				return
+			end
+		end
 		-- A left click lets the stuck item go (its right click is the use button's).
 		if self.stuck and button == "LeftButton" and self.feed then
 			self.feed:Dismiss(self.data)
+		elseif self.feed and self == self.feed.warningRow and button == "LeftButton" and self.feed.onWarningClick then
+			self.feed.onWarningClick()
 		end
 	end)
 	rowFrame:SetScript("OnEnter", showTooltip)
@@ -315,6 +390,17 @@ function Frames.ApplyLayout(rowFrame, layout)
 	local r, g, b = Design.RGB(layout.color)
 	rowFrame.RowBackground:SetColorTexture(r, g, b, layout.opacity / 100)
 	rowFrame.RowBackground:SetShown(layout.background)
+	local br, bg, bb = Design.RGB(layout.borderColor or "ffffff")
+	local width = layout.borderWidth or 1
+	for side, edge in pairs(rowFrame.RowBorder) do
+		edge:SetColorTexture(br, bg, bb, (layout.borderOpacity or 50) / 100)
+		if side == "top" or side == "bottom" then
+			edge:SetHeight(width)
+		else
+			edge:SetWidth(width)
+		end
+		edge:SetShown(layout.border == true)
+	end
 	local size = parts.icon.pixels
 	rowFrame.Icon:SetSize(size, size)
 	local border = math.floor(size * Frames.BORDER_SCALE + 0.5)
@@ -329,7 +415,7 @@ function Frames.ApplyLayout(rowFrame, layout)
 		region:SetPoint(Design.OwnPoint(layout, name), regionOf(rowFrame, part.anchor), part.point, part.x, part.y)
 		if Design.TEXTS[name] then
 			local face = name == "owned" and font.number or font.text
-			region:SetFont(face[1], part.fontSize, face[3])
+			styleText(region, face, part.fontSize, part.style)
 			region:SetJustifyH(part.align)
 		end
 	end
@@ -359,10 +445,16 @@ end
 function Frames.Fill(rowFrame, row, options, stuck)
 	local parts = options.layout.parts
 	local look = Frames.Describe(row, options)
-	local iconShown = parts.icon.shown and look.icon ~= nil
+	local iconShown = parts.icon.shown and (look.icon ~= nil or look.iconAtlas ~= nil)
 	rowFrame.Icon:SetShown(iconShown)
-	rowFrame.Icon:SetTexture(look.icon)
-	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil)
+	if look.iconAtlas then
+		rowFrame.Icon:SetAtlas(look.iconAtlas)
+	else
+		rowFrame.Icon:SetTexture(look.icon)
+		-- A frame that showed an atlas keeps its coordinates otherwise.
+		rowFrame.Icon:SetTexCoord(0, 1, 0, 1)
+	end
+	rowFrame.IconBorder:SetShown(iconShown and look.border ~= nil and parts.icon.qualityBorder)
 	if look.border then
 		rowFrame.IconBorder:SetAtlas(look.border)
 		local tint = look.borderColor or WHITE
@@ -403,23 +495,28 @@ function Frames.Fill(rowFrame, row, options, stuck)
 		texture:SetColorTexture(r, g, b, part.opacity / 100)
 		texture:SetShown(part.background and rowFrame[Frames.REGIONS[name]]:IsShown())
 	end
-	-- The quest mark as soon as the item is known to start a quest; the pin and
-	-- the clicks for the stuck row.
+	-- The quest mark as soon as the item is known to start a quest ("!"), or the
+	-- gold quest border on the icon of a quest item; the pin and the clicks for
+	-- the stuck row.
 	placeMarks(rowFrame, iconShown, options.layout.height)
-	rowFrame.QuestMark:SetShown(row.sticky == "quest")
+	local starter = row.sticky == "quest"
+	rowFrame.QuestMark:SetTexture(starter and TEXTURE_ITEM_QUEST_BANG or TEXTURE_ITEM_QUEST_BORDER)
+	rowFrame.QuestMark:SetShown(starter or (look.questItem == true and iconShown))
 	rowFrame.Pin:SetShown(stuck ~= nil and row.sticky ~= "quest")
 	local size = math.max(8, math.floor(parts.icon.pixels * 0.4 + 0.5))
 	rowFrame.Pin:SetSize(size, size)
 	local waiting = stuck and stuck.waiting or 0
 	local font = getFonts().number
-	rowFrame.Waiting:SetFont(font[1], parts.owned.fontSize, font[3])
+	styleText(rowFrame.Waiting, font, parts.owned.fontSize, parts.owned.style)
 	rowFrame.Waiting:SetText(waiting > 0 and ("+%d"):format(waiting) or "")
 	rowFrame.Waiting:SetShown(waiting > 0)
 	rowFrame.stuck, rowFrame.waiting = stuck ~= nil, waiting
-	-- In the feed only the stuck row takes clicks; the designer's rows take
+	-- In the feed the stuck row, gear in the bags and, while the chat-link
+	-- modifier is held, every item row take clicks; the designer's rows take
 	-- them all (they choose the row).
 	if rowFrame.feed then
-		rowFrame:SetMouseClickEnabled(stuck ~= nil)
+		local item = row.kind == "item" and row.link ~= nil
+		rowFrame:SetMouseClickEnabled(stuck ~= nil or (item and (rowFrame.feed.linkModifier or Frames.IsGear(row))))
 	end
 	rowFrame.data, rowFrame.amount, rowFrame.total = row, row.amount, row.total
 end
@@ -442,22 +539,42 @@ function Frames.PreviewRows()
 	}
 end
 
+-- Gear the bags hold: a right click on its row equips it.
+function Frames.IsGear(row)
+	return row.kind == "item" and row.link ~= nil and not row.parts and Compat.IsEquippableItem(row.link)
+		and Compat.GetItemCount(row.link, true) > 0
+end
+
+-- The junk row's icon: the sell-junk icon Lootoman's toss and sell buttons use.
+Frames.JUNK_ICON = "SpellIcon-256x256-SellJunk"
+
 -- The warning's text and border colour: the default UI's red for errors.
 Frames.WARNING_COLOR = { 1, 0.25, 0.25 }
 Frames.WARNING_ICON = [[Interface\Icons\INV_Misc_Bag_08]]
 -- The loot window's white quality border, tinted.
 Frames.WARNING_BORDER = "loottoast-itemborder-white"
--- Each kind of bag's colour in the warning's amount: general white, reagent
--- the green of uncommon items (#1eff00).
-Frames.WARNING_KINDS = { general = { 1, 1, 1 }, reagent = { 30 / 255, 1, 0 } }
+-- The look window's sample of the warning, in the look's template: two
+-- general slots and one reagent slot left.
+Frames.SAMPLE_SLOTS = { free = 3, total = 52, used = 49, general = 2, generalTotal = 16, reagent = 1, reagentTotal = 36,
+	profession = 0, professionTotal = 0 }
 
--- The look window's sample of the warning: two general slots and one reagent
--- slot left.
-function Frames.SampleWarning()
-	return { kind = "warning", warnings = {
-		{ kind = "general", count = 2, text = L["Free bag slots: %d"]:format(2) },
-		{ kind = "reagent", count = 1, text = L["Free reagent bag slots: %d"]:format(1) },
-	} }
+function Frames.SampleWarning(template)
+	return { kind = "warning", amount = ns.Feed.SlotsText.Render(template or ns.Feed.SlotsText.DEFAULT, Frames.SAMPLE_SLOTS, "ffffffff"),
+		lines = Frames.SlotLines(Frames.SAMPLE_SLOTS) }
+end
+
+-- The warning's tooltip: a line for each kind of bag the character has, free
+-- of how many.
+function Frames.SlotLines(slots)
+	local lines = {}
+	for _, kind in ipairs({ { "general", L["General bags: %d of %d free"] }, { "reagent", L["Reagent bag: %d of %d free"] },
+		{ "profession", L["Profession bags: %d of %d free"] } }) do
+		local total = slots[kind[1] .. "Total"] or 0
+		if total > 0 then
+			lines[#lines + 1] = kind[2]:format(slots[kind[1]] or 0, total)
+		end
+	end
+	return lines
 end
 
 local SIDEWAYS = { left = true, right = true }
@@ -552,34 +669,141 @@ local function release(feed, row, rowFrame)
 end
 
 -- The shared background spans the rows on screen and the warning, from the
--- anchor edge to the farthest one, with the gap as a margin; it fades out to
--- the right, but for icons.
-local function placeBackground(feed)
+-- anchor edge to the farthest one, in the look's colour and opacity, and
+-- reaches past them on every side by half a row's height (or of an icon's
+-- size), fading out there. It is nine pieces of one texture of Lootoman's
+-- own, made by a script in the project (Art/Fade.tga: white, its alpha
+-- falling off smoothly from its centre to its edges): each corner piece takes
+-- a quarter of it and each edge piece a strip of half of it, stretched to the
+-- margin, so the whole falloff spans the margin whatever its size and is
+-- round at the corners; a solid centre lies over the rows. Its size eases to the rows' in EASE seconds.
+Frames.FADE = [[Interface\AddOns\Lootoman\Art\Fade]]
+Frames.EASE = 0.15
+-- Each piece and its texture coordinates (left, right, top, bottom).
+local PIECES = {
+	center = { 0.49, 0.51, 0.49, 0.51 },
+	top = { 0.49, 0.51, 0, 0.5 },
+	bottom = { 0.49, 0.51, 0.5, 1 },
+	left = { 0, 0.5, 0.49, 0.51 },
+	right = { 0.5, 1, 0.49, 0.51 },
+	topLeft = { 0, 0.5, 0, 0.5 },
+	topRight = { 0.5, 1, 0, 0.5 },
+	bottomLeft = { 0, 0.5, 0.5, 1 },
+	bottomRight = { 0.5, 1, 0.5, 1 },
+}
+local CORNERS = { "topLeft", "topRight", "bottomLeft", "bottomRight" }
+
+-- How far the background reaches past the rows: with the fade, FADE_SHARE of
+-- a row's height (or of an icon's size), over which it fades out; without it,
+-- SOLID_MARGIN pixels.
+Frames.FADE_SHARE = 0.5
+Frames.SOLID_MARGIN = 4
+
+function Frames.BackgroundMargin(layout, fade)
+	if fade == false then
+		return Frames.SOLID_MARGIN
+	end
+	return math.max(1, math.floor(layout.height * Frames.FADE_SHARE + 0.5))
+end
+
+function Frames.CreateBackground(frame)
+	local back = CreateFrame("Frame", nil, frame)
+	-- Under the rows, which are the feed frame's children too.
+	back:SetFrameLevel(frame:GetFrameLevel())
+	back.pieces = {}
+	for name, coords in pairs(PIECES) do
+		local piece = back:CreateTexture(nil, "BACKGROUND")
+		piece:SetTexture(Frames.FADE)
+		piece:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+		back.pieces[name] = piece
+		back.fade = true
+	end
+	local pieces = back.pieces
+	pieces.center:SetAllPoints(back)
+	pieces.top:SetPoint("BOTTOMLEFT", back, "TOPLEFT")
+	pieces.top:SetPoint("BOTTOMRIGHT", back, "TOPRIGHT")
+	pieces.bottom:SetPoint("TOPLEFT", back, "BOTTOMLEFT")
+	pieces.bottom:SetPoint("TOPRIGHT", back, "BOTTOMRIGHT")
+	pieces.left:SetPoint("TOPRIGHT", back, "TOPLEFT")
+	pieces.left:SetPoint("BOTTOMRIGHT", back, "BOTTOMLEFT")
+	pieces.right:SetPoint("TOPLEFT", back, "TOPRIGHT")
+	pieces.right:SetPoint("BOTTOMLEFT", back, "BOTTOMRIGHT")
+	pieces.topLeft:SetPoint("BOTTOMRIGHT", back, "TOPLEFT")
+	pieces.topRight:SetPoint("BOTTOMLEFT", back, "TOPRIGHT")
+	pieces.bottomLeft:SetPoint("TOPRIGHT", back, "BOTTOMLEFT")
+	pieces.bottomRight:SetPoint("TOPLEFT", back, "BOTTOMRIGHT")
+	back:Hide()
+	return back
+end
+
+-- The look's margin, colour ({ r, g, b }), opacity (0 to 1) and whether the
+-- margin fades out (else it is solid, as the middle is).
+function Frames.StyleBackground(back, margin, color, opacity, fade)
+	local pieces = back.pieces
+	if back.fade ~= fade then
+		back.fade = fade
+		for name, piece in pairs(pieces) do
+			if fade then
+				piece:SetTexture(Frames.FADE)
+				local coords = PIECES[name]
+				piece:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+			else
+				piece:SetColorTexture(1, 1, 1, 1)
+			end
+		end
+	end
+	pieces.top:SetHeight(margin)
+	pieces.bottom:SetHeight(margin)
+	pieces.left:SetWidth(margin)
+	pieces.right:SetWidth(margin)
+	for _, name in ipairs(CORNERS) do
+		pieces[name]:SetSize(margin, margin)
+	end
+	for _, piece in pairs(pieces) do
+		piece:SetVertexColor(color[1], color[2], color[3])
+	end
+	back:SetAlpha(opacity)
+end
+
+-- Places the background over the rows on screen and the warning; returns true
+-- while its size is still easing to theirs.
+local function placeBackground(feed, now)
 	local layout = feed.options.layout
 	local length = sideways(feed) and layout.width or layout.height
 	local far = feed.warning and (warningOffset(feed) + length) or 0
 	for _, rowFrame in pairs(feed.frameOf) do
-		far = math.max(far, rowFrame.offset + length)
+		far = math.max(far, (rowFrame.target or rowFrame.offset) + length)
 	end
-	local background = feed.frame.Background
-	background:SetShown(far > 0)
-	if far > 0 then
-		local margin = layout.gap
-		local direction = feed.options.direction
-		background:ClearAllPoints()
-		if direction == "down" then
-			background:SetPoint("TOPLEFT", feed.frame, "TOPLEFT", -margin, margin)
-		elseif direction == "left" then
-			background:SetPoint("BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", margin, -margin)
-		else
-			background:SetPoint("BOTTOMLEFT", feed.frame, "BOTTOMLEFT", -margin, -margin)
-		end
-		if sideways(feed) then
-			background:SetSize(math.max(far, layout.width) + 2 * margin, layout.height + 2 * margin)
-		else
-			background:SetSize(layout.width + 2 * margin, far + 2 * margin)
-		end
+	local back = feed.frame.Back
+	if far <= 0 then
+		back:Hide()
+		feed.backSize = nil
+		return false
 	end
+	local width, height
+	if sideways(feed) then
+		width, height = math.max(far, layout.width), layout.height
+	else
+		width, height = layout.width, far
+	end
+	local direction = feed.options.direction
+	local point = direction == "down" and "TOPLEFT" or direction == "left" and "BOTTOMRIGHT" or "BOTTOMLEFT"
+	back:ClearAllPoints()
+	back:SetPoint(point, feed.frame, point, 0, 0)
+	local size = feed.backSize
+	if not size then
+		size = { width = width, height = height, fromWidth = width, fromHeight = height, toWidth = width, toHeight = height, at = now }
+	elseif size.toWidth ~= width or size.toHeight ~= height then
+		size.fromWidth, size.fromHeight = size.width, size.height
+		size.toWidth, size.toHeight, size.at = width, height, now
+	end
+	local done = math.min(1, math.max(0, (now - size.at) / Frames.EASE))
+	size.width = size.fromWidth + (size.toWidth - size.fromWidth) * done
+	size.height = size.fromHeight + (size.toHeight - size.fromHeight) * done
+	feed.backSize = size
+	back:SetSize(size.width, size.height)
+	back:Show()
+	return done < 1
 end
 
 function Frames.Create(model)
@@ -587,13 +811,7 @@ function Frames.Create(model)
 	frame:SetClampedToScreen(true)
 	frame:SetMouseClickEnabled(false)
 	frame:SetMouseMotionEnabled(false)
-	frame.PreviewBackground = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
-	frame.PreviewBackground:SetAllPoints()
-	frame.PreviewBackground:SetColorTexture(0, 0, 0, 0.2)
-	frame.PreviewBackground:Hide()
-	frame.Background = frame:CreateTexture(nil, "BACKGROUND")
-	frame.Background:SetColorTexture(1, 1, 1, 1)
-	frame.Background:Hide()
+	frame.Back = Frames.CreateBackground(frame)
 	local feed = setmetatable({
 		frame = frame,
 		model = model,
@@ -603,7 +821,7 @@ function Frames.Create(model)
 		frameOf = {},
 		seen = setmetatable({}, { __mode = "k" }),
 		version = 0,
-		warnings = {},
+		warning = nil,
 		-- Whether the last draw left something moving, and when to draw next at rest.
 		moving = false,
 		nextDraw = 0,
@@ -623,7 +841,7 @@ function Frames.Create(model)
 		end
 	end)
 	frame:Hide()
-	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE, Design.BASE_SIZE), opacity = 0.5 })
+	feed:SetOptions({ direction = "up", maxRows = 8, layout = Design.Layout(Design.LARGE), opacity = 0.5 })
 	return feed
 end
 
@@ -632,26 +850,28 @@ local function placeWarnings(feed)
 	local rowFrame = feed.warningRow
 	if not feed.warning then
 		hideTooltip(rowFrame)
+		rowFrame:SetMouseClickEnabled(false)
 		rowFrame:Hide()
 		return
 	end
 	Frames.Fill(rowFrame, feed.warning, feed.options)
+	rowFrame:SetMouseClickEnabled(feed.warning.clickable == true)
 	place(feed, rowFrame, warningOffset(feed))
 	rowFrame:SetAlpha(1)
 	rowFrame:Show()
 end
 
--- Shows these warnings in one row at the anchor edge, each { kind, count,
--- text }: kind "general" or "reagent", count the free slots, text for the
--- tooltip. The rows move past it.
-function FeedMixin:SetWarnings(warnings)
-	self.warnings = warnings
-	self.warning = #warnings > 0 and { kind = "warning", warnings = warnings } or nil
+-- Shows the warning in one row at the anchor edge, or none with nil:
+-- { amount = the text of its amount, lines = the tooltip's lines, clickable =
+-- whether a click does something (feed.onWarningClick) }. The rows move past
+-- it.
+function FeedMixin:SetWarning(warning)
+	self.warning = warning and { kind = "warning", amount = warning.amount, lines = warning.lines, clickable = warning.clickable } or nil
 	settle(self)
 	placeWarnings(self)
 	self.version = self.version + 1
 	self.nextDraw = 0
-	if #warnings > 0 then
+	if warning then
 		self.frame:Show()
 	end
 end
@@ -668,9 +888,8 @@ function FeedMixin:SetOptions(options)
 	end
 	Frames.ApplyLayout(self.warningRow, layout)
 	placeWarnings(self)
-	-- Behind icons the background is even; behind rows it fades out to the right.
-	local fadeTo = Design.View(layout) == "icons" and options.opacity or 0
-	self.frame.Background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, options.opacity), CreateColor(0, 0, 0, fadeTo))
+	Frames.StyleBackground(self.frame.Back, Frames.BackgroundMargin(layout, options.fade ~= false), options.color or { 0, 0, 0 },
+		options.opacity or 0, options.fade ~= false)
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 	end
@@ -715,11 +934,20 @@ function FeedMixin:RefreshOwned()
 	self.nextDraw = 0
 end
 
+-- Whether the chat-link modifier (Shift) is held: every item row then takes
+-- clicks, for its link.
+function FeedMixin:SetLinkModifier(held)
+	if self.linkModifier ~= held then
+		self.linkModifier = held
+		self.version = self.version + 1
+		self.nextDraw = 0
+	end
+end
+
 function FeedMixin:SetPreview(active)
 	self.preview = active and Frames.PreviewRows() or nil
-	self.frame.PreviewBackground:SetShown(active)
 	self.nextDraw = 0
-	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or #self.warnings > 0)
+	self.frame:SetShown(active or #self.model:Visible(Compat.GetTime()) > 0 or self.warning ~= nil)
 end
 
 -- elapsed: the game frame's own time, as OnUpdate gives it, so a slide that
@@ -728,7 +956,7 @@ function FeedMixin:Draw(now, elapsed)
 	local model = self.model
 	elapsed = elapsed or (self.drawnAt and math.max(0, now - self.drawnAt) or 0)
 	self.drawnAt = now
-	local moving = self.preview ~= nil
+	local moving = false
 	local hovered = self.frame:IsMouseOver()
 	model:SetHover(hovered, now)
 	model:Update(now)
@@ -781,6 +1009,8 @@ function FeedMixin:Draw(now, elapsed)
 			moving = moving or rowFrame.offset ~= target
 		end
 		if rowFrame then
+			-- Where it is going: the background eases to the rows' places once.
+			rowFrame.target = target
 			if rowFrame.data ~= row or rowFrame.amount ~= row.amount or rowFrame.total ~= row.total
 				or rowFrame.version ~= self.version or rowFrame.stuck ~= (view.stuck == true)
 				or rowFrame.waiting ~= (view.waiting or 0) or rowFrame.sticky ~= row.sticky then
@@ -796,14 +1026,15 @@ function FeedMixin:Draw(now, elapsed)
 			moving = moving or fadeIn < 1 or (view.alpha < 1 and not hovered)
 		end
 	end
-	placeBackground(self)
+	local easing = placeBackground(self, now)
+	moving = moving or easing
 	if self.useButton then
 		self.useButton:Sync(stuck and stuck.row or nil, stuck and stuckPlace(self) or nil)
 	end
 
 	self.moving = moving
 	self.nextDraw = math.min(now + Frames.IDLE, model:NextChange(now) or math.huge)
-	if #views == 0 and not hovered and #self.warnings == 0 then
+	if #views == 0 and not hovered and not self.warning then
 		self.frame:Hide()
 	end
 end

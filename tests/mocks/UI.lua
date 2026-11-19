@@ -62,6 +62,8 @@ function methods:IsShown() return self.shown end
 function methods:IsVisible() return self.shown and (self.parent == nil or self.parent:IsVisible()) end
 function methods:SetAlpha(alpha) self.alpha = alpha end
 function methods:GetAlpha() return self.alpha end
+function methods:SetMovable(movable) self.movable = movable end
+function methods:IsMovable() return self.movable == true end
 function methods:SetIgnoreParentAlpha(ignore) self.ignoresParentAlpha = ignore end
 function methods:SetScript(name, fn) self.scripts[name] = fn end
 function methods:GetScript(name) return self.scripts[name] end
@@ -77,9 +79,19 @@ function methods:SetPoint(...)
 end
 function methods:SetSize(width, height)
 	if not blocked(self, "SetSize") then
+		local changed = self.width ~= width or self.height ~= height
 		self.width, self.height = width, height
+		-- As the game does, a frame hears that its size changed.
+		if changed and self.scripts and self.scripts.OnSizeChanged then
+			self.scripts.OnSizeChanged(self, width, height)
+		end
 	end
 end
+function methods:SetResizable(resizable) self.resizable = resizable end
+function methods:SetClipsChildren(clips) self.clipsChildren = clips end
+function methods:SetResizeBounds(...) self.resizeBounds = { ... } end
+function methods:StartSizing(point, fromMouse) self.sizing, self.sizingFromMouse = point, fromMouse end
+function methods:StopMovingOrSizing() self.sizing = nil end
 function methods:SetAttribute(name, value)
 	if not blocked(self, "SetAttribute") then
 		self.attributes = self.attributes or {}
@@ -121,7 +133,8 @@ function methods:GetFont()
 end
 function methods:SetShadowOffset(x, y) self.shadowOffset = { x, y } end
 function methods:SetShadowColor(r, g, b, a) self.shadowColor = { r, g, b, a } end
-function methods:SetColorTexture(r, g, b, a) self.colorTexture = { r, g, b, a } end
+-- A texture shows a file or a colour: each replaces the other.
+function methods:SetColorTexture(r, g, b, a) self.colorTexture, self.texture = { r, g, b, a }, nil end
 -- About 7 pixels a letter (not a byte: "×" is two bytes in UTF-8).
 function methods:GetUnboundedStringWidth() return select(2, (self.text or ""):gsub("[^\128-\191]", "")) * 7 end
 -- A text wraps every 520 pixels, 14 pixels a line.
@@ -130,9 +143,12 @@ function methods:SetGradient(orientation, from, to) self.gradient = { orientatio
 function methods:GetText() return self.text end
 function methods:SetTextColor(r, g, b) self.color = { r, g, b } end
 function methods:SetJustifyH(justify) self.justify = justify end
-function methods:SetTexture(texture) self.texture = texture end
+function methods:SetTexture(texture) self.texture, self.colorTexture = texture, nil end
 function methods:SetAtlas(atlas) self.atlas = atlas end
 function methods:SetVertexColor(r, g, b) self.vertex = { r, g, b } end
+function methods:SetTexCoord(...) self.texCoord = { ... } end
+function methods:SetScale(scale) self.scale = scale end
+function methods:GetScale() return self.scale or 1 end
 function methods:GetEffectiveScale() return self.scale or 1 end
 function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
@@ -364,6 +380,7 @@ function UI.Install()
 		end
 	end
 	rawset(_G, "TEXTURE_ITEM_QUEST_BANG", "Interface\\ContainerFrame\\UI-Icon-QuestBang")
+	rawset(_G, "TEXTURE_ITEM_QUEST_BORDER", "Interface\\ContainerFrame\\UI-Icon-QuestBorder")
 	-- A tooltip's title goes first among its lines (a menu's tooltip gives a plain list).
 	rawset(_G, "GameTooltip_SetTitle", function(owner, text)
 		local lines = owner.lines or owner
@@ -412,6 +429,8 @@ function UI.Install()
 	-- The tabs of a frame (SharedUIPanelTemplates.lua): the chosen one.
 	rawset(_G, "PanelTemplates_SetNumTabs", function(frame, count) frame.numTabs = count end)
 	rawset(_G, "PanelTemplates_SetTab", function(frame, id) frame.selectedTab = id end)
+	-- A tab as wide as its text and the padding (here: the padding it was given).
+	rawset(_G, "PanelTemplates_TabResize", function(tab, padding) tab.resizedWith = padding end)
 	-- The game's color picker (Blizzard_ColorPickerFrame): what it was opened
 	-- with, and Pick(r, g, b) or Cancel() as the player does.
 	local picker = { shown = false }

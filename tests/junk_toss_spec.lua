@@ -110,6 +110,21 @@ describe("toss window", function()
 		assert.matches("is off", Test.state.printed[#Test.state.printed])
 	end)
 
+	it("opens in the middle of the screen when another part asks for it, and not while junk management is off", function()
+		ns.Bus:Send("OpenTossWindow")
+		local frame = Toss.Grid().frame
+		assert.same({ true, { "CENTER" } }, { frame:IsShown(), frame.points[1] })
+		frame:Hide()
+		ns.Modules:SetEnabled("Junk", false)
+		ns.Bus:Send("OpenTossWindow")
+		assert.is_false(frame:IsShown())
+	end)
+
+	it("is asked for by the loot feed", function()
+		ns.Modules:Get("LootFeed"):OpenTossWindow()
+		assert.is_true(Toss.Grid().frame:IsShown())
+	end)
+
 	describe("cheaper than the loot", function()
 		local function link(itemID, name)
 			return "|Hitem:" .. itemID .. "|h[" .. name .. "]|h"

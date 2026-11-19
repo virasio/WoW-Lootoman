@@ -111,65 +111,64 @@ describe("loot feed module", function()
 			Test.SetBags({ [0] = { size = 10, items = items }, [5] = reagent and { size = 5, items = reagentItems } or nil })
 		end
 
+		-- The warning's amount, or nil without one.
 		local function shown()
-			local texts = {}
-			for index, warning in ipairs(module.feed.warnings) do
-				texts[index] = warning.text
-			end
-			return texts
+			return module.feed.warning and module.feed.warning.amount or nil
 		end
 
-		it("warn when no more general slots are free than the threshold, 3 by default", function()
-			bags(4)
-			assert.same({}, shown())
-			bags(3)
-			assert.same({ "Free bag slots: 3" }, shown())
-			bags(0)
-			assert.same({ "No free bag slots" }, shown())
+		it("warn, by default, only when no more general slots are free than 3, with every bag's count", function()
+			bags(4, 0)
+			assert.is_nil(shown())
+			bags(3, 0)
+			-- General white, reagent green: today's "3+0".
+			assert.equals("|cffffffff3|r|cffffffff+|r|cff1eff000|r", shown())
+			assert.same({ "General bags: 3 of 10 free", "Reagent bag: 0 of 5 free" }, module.feed.warning.lines)
 			module:Set("warnGeneralAt", 0)
 			bags(1)
-			assert.same({}, shown())
+			assert.is_nil(shown())
 			module:Set("warnGeneral", false)
 			bags(0)
-			assert.same({}, shown())
+			assert.is_nil(shown())
 		end)
 
-		it("warn about the reagent bag when turned on and the player has one", function()
+		it("warn about all bags together, or the reagent bag, when those are turned on", function()
+			module:Set("warnGeneral", false)
+			module:Set("warnTotal", true)
+			bags(4, 2)
+			assert.is_nil(shown())
+			bags(3, 2)
+			assert.is_not_nil(shown())
+			module:Set("warnTotal", false)
 			module:Set("warnReagent", true)
-			bags(5, 1)
-			assert.same({ "Free reagent bag slots: 1" }, shown())
-			bags(1, 0)
-			assert.same({ "Free bag slots: 1", "No free reagent bag slots" }, shown())
-			-- Each with its bag kind and count, for the warning row's amount; one row for both.
-			assert.same({ "general", 1, "reagent", 0 }, { module.feed.warnings[1].kind, module.feed.warnings[1].count,
-				module.feed.warnings[2].kind, module.feed.warnings[2].count })
-			assert.equals("|cffffffff1|r+|cff1eff000|r", module.feed.warningRow.Amount.text)
-			bags(5)
-			assert.same({}, shown())
+			bags(8, 2)
+			assert.is_not_nil(shown())
+			-- Without a reagent bag, its threshold never warns.
+			bags(8)
+			assert.is_nil(shown())
 		end)
 
-		it("say nothing before the client has told the bags", function()
-			assert.same({}, shown())
+		it("write the amount from the look's template, a typo as typed", function()
+			module:Set("slotsText", "{general} / {general.total} {herb}")
+			bags(2)
+			assert.equals("|cffffffff2|r|cffffffff / |r|cffffffff10|r|cffffffff {herb}|r", shown())
+		end)
+
+		it("open the toss window with a click while junk management is on", function()
+			bags(2)
+			local opened = 0
+			ns.Bus:On("OpenTossWindow", "test", function() opened = opened + 1 end)
+			assert.is_true(module.feed.warning.clickable)
+			module.feed.onWarningClick()
+			assert.equals(1, opened)
+			ns.Modules:SetEnabled("Junk", false)
+			assert.is_false(module.feed.warning.clickable)
 		end)
 	end)
 
-	it("offers the client's item quality names", function()
-		local dropdown
-		for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
-			dropdown = setting.key == "minQuality" and setting or dropdown
-		end
-		local labels = {}
-		for _, choice in ipairs(dropdown.choices) do
-			labels[#labels + 1] = choice[1] .. "=" .. choice[2]
-		end
-		assert.same({ "0=Poor", "1=Common", "2=Uncommon", "3=Rare", "4=Epic", "5=Legendary" }, labels)
-	end)
-
-	it("puts the feed in Edit Mode right of the screen centre, with only its look's menu in its dialog", function()
+	it("puts the feed in Edit Mode right of the screen centre, with no settings in the library's dialog", function()
 		local frame = module.feed.frame
 		assert.same({ "Loot Feed", { point = "CENTER", x = 300, y = 0 } }, { lib.frames[frame].name, lib.frames[frame].default })
-		local settings = lib.settings[frame]
-		assert.same({ 1, 0, "Feed Look", ns.Feed.LookMenu.Build }, { #settings, settings[1].kind, settings[1].name, settings[1].generator })
+		assert.is_nil(lib.settings[frame])
 		assert.is_nil(lib.buttons and lib.buttons[frame])
 		lib.Fire("enter")
 		assert.is_true(frame.shown)
@@ -181,12 +180,94 @@ describe("loot feed module", function()
 		Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. LINK .. "x2", "Tester")
 		Test.SetMoney(150)
 		assert.is_true(module.feed.frame.shown)
-		module.feed:Draw(Test.state.time)
+		-- The second row comes in a moment after the first.
+		module.feed:Draw(Test.state.time + 0.2)
 		local shown = {}
 		for _, rowFrame in pairs(module.feed.frameOf) do
 			shown[rowFrame.Label.text] = rowFrame.Amount.text
 		end
 		assert.same({ ["150 copper"] = "", ["Linen Cloth"] = "×2" }, shown)
+	end)
+
+	it("lets item rows take clicks while the chat-link modifier is held", function()
+		Test.SetModifier("CHATLINK", true)
+		Test.FireEvent("MODIFIER_STATE_CHANGED", "LSHIFT", 1)
+		assert.is_true(module.feed.linkModifier)
+		Test.SetModifier("CHATLINK", nil)
+		Test.FireEvent("MODIFIER_STATE_CHANGED", "LSHIFT", 0)
+		assert.is_false(module.feed.linkModifier)
+	end)
+
+	describe("junk in one row", function()
+		local RAG = "|cff9d9d9d|Hitem:700::|h[Rag]|h|r"
+		local BONE = "|cff9d9d9d|Hitem:701::|h[Bone]|h|r"
+		local TOOTH = "|cff9d9d9d|Hitem:702::|h[Tooth]|h|r"
+		local BOX = "|cff9d9d9d|Hitem:703::|h[Box]|h|r"
+
+		before_each(function()
+			Test.SetItems({
+				[2589] = { name = "Linen Cloth", icon = 132889, quality = 1, stackSize = 200 },
+				[700] = { name = "Rag", icon = 1, quality = 0 }, [701] = { name = "Bone", icon = 2, quality = 0 },
+				[702] = { name = "Tooth", icon = 3, quality = 0 }, [703] = { name = "Box", icon = 4, quality = 0 },
+			})
+		end)
+
+		local function loot(link, count)
+			Test.FireEvent("CHAT_MSG_LOOT", "You receive loot: " .. link .. (count and ("x" .. count) or ""), "Tester")
+		end
+
+		local function junkRow()
+			for _, row in ipairs(module.model.rows) do
+				if row.parts then
+					return row
+				end
+			end
+		end
+
+		it("gathers gray items and items marked as junk into one row, each counted", function()
+			ns.Marks.Set(2589, "junk")
+			loot(RAG, 2)
+			loot(BONE)
+			loot(LINK, 3)
+			loot(RAG)
+			local row = junkRow()
+			assert.same({ "Junk", 7, 1 }, { row.name, row.amount, #module.model.rows })
+			assert.same({ { 700, 3 }, { 701, 1 }, { 2589, 3 } }, { { row.parts[1].key, row.parts[1].amount },
+				{ row.parts[2].key, row.parts[2].amount }, { row.parts[3].key, row.parts[3].amount } })
+		end)
+
+		it("leaves apart a gray item marked not junk, an item not loaded yet, and everything with the setting off", function()
+			ns.Marks.Set(701, "notJunk")
+			loot(BONE)
+			loot("|Hitem:799::|h[Unknown]|h")
+			assert.is_nil(junkRow())
+			assert.equals(2, #module.model.rows)
+			module:Set("junkRow", false)
+			loot(RAG)
+			assert.is_nil(junkRow())
+		end)
+
+		it("drops junk below the minimum quality as before", function()
+			module:Set("minQuality", 1)
+			loot(TOOTH)
+			assert.same({}, module.model.rows)
+		end)
+
+		it("takes out an item the character can use once the bags hold it, as a kept row", function()
+			loot(RAG)
+			loot(BOX)
+			assert.equals(2, #junkRow().parts)
+			Test.SetBags({ [0] = { size = 16, items = { { itemID = 703, count = 1, use = { openable = true } } } } })
+			local row = junkRow()
+			assert.same({ 1, 1, 700 }, { #row.parts, row.amount, row.parts[1].key })
+			local kept
+			for _, other in ipairs(module.model.rows) do
+				if other.id == 703 then
+					kept = other
+				end
+			end
+			assert.equals("container", kept.sticky)
+		end)
 	end)
 
 	describe("usable items", function()
@@ -374,14 +455,42 @@ describe("loot feed module", function()
 		assert.equals("xp", module.model:Visible(Test.state.time)[1].row.kind)
 	end)
 
+	it("styles each text of a row as its part in the design says: plain, shadowed or outlined", function()
+		local warning = module.feed.warningRow
+		assert.same({ 0, 0 }, warning.Label.shadowOffset)
+		local Looks = ns.Feed.Looks
+		Looks.SetDesign("Default", "name", "style", "outline")
+		assert.same({ "OUTLINE", { 0, 0 } }, { warning.Label.font[3], warning.Label.shadowOffset })
+		assert.is_falsy(warning.Amount.font[3] == "OUTLINE")
+		Looks.SetDesign("Default", "amount", "style", "thick")
+		assert.equals("THICKOUTLINE", warning.Amount.font[3])
+		Looks.SetDesign("Default", "name", "style", "shadow")
+		assert.same({ { 1, -1 }, { 0, 0, 0, 1 } }, { warning.Label.shadowOffset, warning.Label.shadowColor })
+		assert.is_falsy(warning.Label.font[3] == "OUTLINE")
+		Looks.SetDesign("Default", "owned", "style", "outline")
+		assert.equals("OUTLINE", warning.Owned.font[3])
+	end)
+
 	it("applies changed settings at once", function()
-		module:Set("size", 13)
 		module:Set("maxRows", 3)
-		assert.equals(119, module.feed.frame.height)
-		module:Set("size", 16)
-		assert.equals(369, module.feed.frame.width)
+		-- Three rows of 32 and two gaps of 6: the Large design drawn at 12 of 13.
+		assert.same({ 108, 277 }, { module.feed.frame.height, module.feed.frame.width })
 		module:Set("backgroundOpacity", 80)
-		assert.equals(0.8, module.feed.frame.Background.gradient[2].a)
+		module:Set("backgroundColor", "ff8000")
+		-- No background until it is switched on.
+		assert.equals(0, module.feed.frame.Back.alpha)
+		module:Set("background", true)
+		assert.same({ 0.8, { 1, 128 / 255, 0 } }, { module.feed.frame.Back.alpha, module.feed.frame.Back.pieces.center.vertex })
+		-- The margin fades out, or without the fade is as solid as the middle.
+		local corner = module.feed.frame.Back.pieces.topLeft
+		assert.same({ ns.Feed.Frames.FADE, { 0, 0.5, 0, 0.5 } }, { corner.texture, corner.texCoord })
+		local back = module.feed.frame.Back
+		assert.equals(16, back.pieces.top.height)
+		module:Set("backgroundFade", false)
+		-- Solid, and only 4 pixels past the rows.
+		assert.same({ nil, { 1, 1, 1, 1 }, 4, 4 }, { corner.texture, corner.colorTexture, back.pieces.top.height, corner.width })
+		module:Set("backgroundFade", true)
+		assert.same({ ns.Feed.Frames.FADE, { 0, 0.5, 0, 0.5 } }, { corner.texture, corner.texCoord })
 		assert.equals(3, module.model.options.maxRows)
 		module:Set("direction", "down")
 		assert.equals("down", module.feed.options.direction)
@@ -394,11 +503,10 @@ describe("loot feed module", function()
 		local Looks = ns.Feed.Looks
 		Looks.Create("Small")
 		Looks.Set("Small", "maxRows", 4)
-		Looks.Set("Small", "size", 13)
 		ns.Profiles.Create("Small")
 		ns.Storage.db.profiles.Small.modules = { LootFeed = { look = "Small" } }
 		ns.Profiles.Switch("Small")
-		assert.equals(161, module.feed.frame.height)
+		assert.equals(146, module.feed.frame.height)
 	end)
 
 	it("stops reading events and hides when turned off", function()

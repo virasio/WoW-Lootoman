@@ -290,6 +290,11 @@ Junk.AddPart({
 				grid:Close()
 			end
 		end)
+		-- Another part of Lootoman asks for the window (the loot feed's low-space
+		-- warning): in the middle of the screen, as from the bags.
+		Junk.Listen("OpenTossWindow", function()
+			Toss.Open(false)
+		end)
 		-- An item taken from the loot: the best of what is left.
 		Junk.ListenEvent("LOOT_SLOT_CLEARED", function()
 			if fromLoot and grid:IsShown() then

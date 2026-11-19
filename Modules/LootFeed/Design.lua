@@ -1,15 +1,19 @@
 local _, ns = ...
 
 -- How a loot feed row looks. A design is data: the
--- row's box and the parts inside it, in pixels at the base size 13. The size
--- setting (10–16) scales a design, so one design fits every size. Frames draws
--- any design; the row designer edits the player's one.
+-- row's box and the parts inside it, in pixels at the base size 13; every look
+-- is drawn at Design.SIZE. Frames draws any design; the look window's designer
+-- edits the player's one.
 --
 -- The row: height, width and gap (between rows), its view: "rows" (the
--- default), or "icons" for the compact view of icons only, and a background
--- of its own behind each row (background, its color as "rrggbb" and its
--- opacity in percent). Parts, each with shown:
---   icon                  size, in percent of the row's height
+-- default), or "icons" for the compact view of icons only, a background of
+-- its own behind each row (background, its color as "rrggbb" and its opacity
+-- in percent), and a border around it (border, borderColor, borderWidth in
+-- pixels, which the size does not scale, and borderOpacity). Parts, each with
+-- shown:
+--   icon                  size, in percent of the row's height; qualityBorder,
+--                         whether it wears the border of the item's quality
+--                         (and the junk row's gray one, the warning's red one)
 --   glow                  over the icon of rare and better items
 --   name, amount, owned   texts: fontSize; width, the most a text may take;
 --                         align, LEFT or RIGHT; the amount and the owned count
@@ -41,6 +45,10 @@ local Design = {}
 ns.Feed.Design = Design
 
 Design.BASE_SIZE = 13
+-- The size every look is drawn at: designs keep the pixels of size 13 and are
+-- drawn at 12, the default of the look's size that 0.5.9 folded into each
+-- design (saved data, schema 4).
+Design.SIZE = 12
 Design.SCHEMA = 1
 -- Parts move on a grid of this many design pixels.
 Design.GRID = 2
@@ -51,6 +59,8 @@ Design.POINTS = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTT
 Design.ELEMENTS = { "row", "icon", "name", "amount", "owned" }
 Design.ALIGNS = { "LEFT", "RIGHT" }
 Design.TEXTS = { name = true, amount = true, owned = true }
+-- How a text stands out: plain, with a shadow, or outlined.
+Design.STYLES = { "none", "shadow", "outline", "thick" }
 -- What the owned count counts: bags and bank, or the bags only.
 Design.COUNTS = { "all", "bags" }
 -- The parts that are anchored, in the order they are listed.
@@ -65,13 +75,17 @@ Design.LARGE = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
-		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
+		icon = { shown = true, size = 100, qualityBorder = true, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
-		name = { shown = true, fontSize = 13, width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
+		name = { shown = true, fontSize = 13, style = "none", width = 200, align = "LEFT", anchor = "icon", point = "RIGHT", x = 11, y = 0 },
+		amount = { shown = true, fontSize = 13, style = "none", width = 80, align = "LEFT", anchor = "name", point = "RIGHT", x = 6, y = 0,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 12, width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
+		owned = { shown = false, fontSize = 12, style = "none", width = 40, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -4, y = 3,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -84,13 +98,17 @@ Design.COMPACT = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
-		icon = { shown = true, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
+		icon = { shown = true, size = 100, qualityBorder = true, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = true },
-		name = { shown = true, fontSize = 12, width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
-		amount = { shown = true, fontSize = 12, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
+		name = { shown = true, fontSize = 12, style = "none", width = 180, align = "LEFT", anchor = "icon", point = "RIGHT", x = 6, y = 0 },
+		amount = { shown = true, fontSize = 12, style = "none", width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+		owned = { shown = false, fontSize = 10, style = "none", width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -103,13 +121,17 @@ Design.MINIMAL = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
-		icon = { shown = false, size = 100, anchor = "row", point = "LEFT", x = 0, y = 0 },
+		icon = { shown = false, size = 100, qualityBorder = true, anchor = "row", point = "LEFT", x = 0, y = 0 },
 		glow = { shown = false },
-		name = { shown = true, fontSize = 13, width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
+		name = { shown = true, fontSize = 13, style = "none", width = 180, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
+		amount = { shown = true, fontSize = 13, style = "none", width = 60, align = "LEFT", anchor = "name", point = "RIGHT", x = 5, y = 0,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+		owned = { shown = false, fontSize = 10, style = "none", width = 30, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -124,13 +146,17 @@ Design.ICONS = {
 	background = false,
 	color = "000000",
 	opacity = 60,
+	border = false,
+	borderColor = "ffffff",
+	borderWidth = 1,
+	borderOpacity = 50,
 	parts = {
-		icon = { shown = true, size = 100, anchor = "row", point = "CENTER", x = 0, y = 0 },
+		icon = { shown = true, size = 100, qualityBorder = true, anchor = "row", point = "CENTER", x = 0, y = 0 },
 		glow = { shown = true },
-		name = { shown = false, fontSize = 13, width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
-		amount = { shown = true, fontSize = 13, width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
+		name = { shown = false, fontSize = 13, style = "none", width = 20, align = "LEFT", anchor = "row", point = "LEFT", x = 0, y = 0 },
+		amount = { shown = true, fontSize = 13, style = "none", width = 60, align = "RIGHT", anchor = "icon", point = "BOTTOMRIGHT", x = -2, y = 2,
 			background = false, color = "000000", opacity = 60 },
-		owned = { shown = false, fontSize = 10, width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
+		owned = { shown = false, fontSize = 10, style = "none", width = 40, align = "RIGHT", anchor = "icon", point = "TOPRIGHT", x = -2, y = -2,
 			background = false, color = "000000", opacity = 60, count = "bags" },
 	},
 }
@@ -144,7 +170,8 @@ local TEXT_LIMITS = { fontSize = { 8, 24 }, width = { 20, 600 } }
 -- The range of every number that is not a place; places keep a part inside
 -- the row (Range, Fit).
 Design.LIMITS = {
-	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 }, opacity = { 0, 100 } },
+	row = { height = { 12, 80 }, width = { 120, 600 }, gap = { 0, 30 }, opacity = { 0, 100 }, borderWidth = { 1, 4 },
+		borderOpacity = { 0, 100 } },
 	icon = { size = { 20, 100 } },
 	name = TEXT_LIMITS,
 	amount = { fontSize = TEXT_LIMITS.fontSize, width = TEXT_LIMITS.width, opacity = { 0, 100 } },
@@ -412,7 +439,9 @@ local function valid(design, part, key, value)
 		return contains(Design.ALIGNS, value)
 	elseif key == "count" then
 		return contains(Design.COUNTS, value)
-	elseif key == "color" then
+	elseif key == "style" then
+		return contains(Design.STYLES, value)
+	elseif key == "color" or key == "borderColor" then
 		return value:match("^%x%x%x%x%x%x$") ~= nil
 	end
 	return true
@@ -564,7 +593,7 @@ end
 -- A design's values in pixels for a size: every length scaled and rounded, and
 -- the icon's size in pixels worked out from the row's height (icon.pixels).
 function Design.Layout(design, size)
-	local scale = size / Design.BASE_SIZE
+	local scale = (size or Design.SIZE) / Design.BASE_SIZE
 	local layout = { parts = {} }
 	for key, value in pairs(design) do
 		if key ~= "parts" then

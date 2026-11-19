@@ -20,6 +20,7 @@ ns.Compat.NEEDS = {
 		"C_EncodingUtil.SerializeCBOR",
 	} },
 	DeleteCursorItem = { "DeleteCursorItem" },
+	EquipItem = { "C_Item.EquipItemByName", optional = { "issecretvalue" } },
 	Encode = { "C_EncodingUtil.CompressString", "C_EncodingUtil.EncodeBase64", "Enum.CompressionMethod", optional = {
 		"C_EncodingUtil.SerializeCBOR",
 	} },
@@ -114,6 +115,7 @@ ns.Compat.NEEDS = {
 		"C_Container.GetBackpackSellJunkDisabled",
 		"C_Container.GetBagSlotFlag",
 	} },
+	IsChatLinkHeld = { "IsModifiedClick" },
 	IsCursorEmpty = { "GetCursorInfo" },
 	IsEquippableItem = { "C_Item.IsEquippableItem", optional = { "issecretvalue" } },
 	IsFishingLoot = { "IsFishingLoot" },
@@ -123,6 +125,7 @@ ns.Compat.NEEDS = {
 	IsQuestDone = { optional = { "C_QuestLog.IsQuestFlaggedCompleted", "issecretvalue" } },
 	IsSecret = { optional = { "issecretvalue" } },
 	LootSlot = { "LootSlot" },
+	ModifiedItemClick = { "IsModifiedClick", optional = { "ChatFrameUtil.InsertLink", "HandleModifiedItemClick" } },
 	PickupBagItem = { "C_Container.PickupContainerItem" },
 	Print = { "DEFAULT_CHAT_FRAME" },
 	RegisterEvent = { "CreateFrame" },

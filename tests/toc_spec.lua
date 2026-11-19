@@ -123,8 +123,9 @@ describe("the release package", function()
 	end)
 
 	it("holds only the addon, its README, its license and its changelog", function()
+		-- Art: the addon's own textures (the loot feed's background fade).
 		local allowed = { ["Lootoman.toc"] = true, ["README.md"] = true, LICENSE = true, ["CHANGELOG.md"] = true,
-			[".pkgmeta"] = true, [".gitignore"] = true }
+			[".pkgmeta"] = true, [".gitignore"] = true, Art = true }
 		for _, layer in ipairs(LAYERS) do
 			allowed[layer] = true
 		end

@@ -66,30 +66,67 @@ describe("loot feed look window", function()
 			window = LookWindow.window
 		end)
 
-		it("shows the sample rows, each in its box, and the row in the inspector", function()
+		it("shows the sample rows as the feed draws them, and the row in the inspector", function()
 			assert.is_true(window.shown)
 			assert.equals(8, #window.rows)
 			-- Each row takes clicks on its free space, the stuck sample too.
 			assert.same({ true, true }, { window.rows[1].mouseClicks, window.rows[7].mouseClicks })
 			-- Last, the low-space warning, drawn by the design too.
-			assert.same({ "Few free bag slots", "|cffffffff2|r+|cff1eff001|r" }, { window.rows[8].Label.text, window.rows[8].Amount.text })
-			assert.same({ true, 1 }, { window.rows[1].Box.shown, window.rows[1].Box.alpha })
+			assert.same({ "Few free bag slots", "|cffffffff2|r|cffffffff+|r|cff1eff001|r" }, { window.rows[8].Label.text, window.rows[8].Amount.text })
+			-- Drawn as the feed's rows: with the design's background off, nothing behind them.
+			assert.is_false(window.rows[1].RowBackground.shown)
 			-- The row is always shown: no checkbox beside it.
 			assert.same({ "row", false }, { LookWindow.Selected(), window.partShown.shown })
-			assert.same({ "Row height: 35 in 12..80", "Width: 300 in 120..600", "Gap between rows: 7 in 0..30", "With background: false",
-				"Opacity: 60 in 0..100" }, inspector())
+			assert.same({ "Row Height: 35 in 12..80", "Width: 300 in 120..600", "With Background: false",
+				"Opacity: 60 in 0..100", "With Border: false", "Border Width: 1 in 1..4", "Opacity: 50 in 0..100" }, inspector())
+		end)
+
+		it("gives the row a border of its own, its colour picked, its width and opacity under it", function()
+			local edges = window.rows[1].RowBorder
+			assert.is_false(edges.top.shown)
+			LookWindow.Change("row", "border", true)
+			LookWindow.Change("row", "borderWidth", 3)
+			LookWindow.Change("row", "borderOpacity", 80)
+			assert.same({ true, 3, 3, { 1, 1, 1, 0.8 } }, { edges.top.shown, edges.top.height, edges.left.width, edges.right.colorTexture })
+			-- The swatch beside the checkbox picks the border's colour.
+			local swatch
+			for _, control in ipairs(window.controls) do
+				if control.spec and control.spec.key == "border" then
+					swatch = control.swatch
+				end
+			end
+			swatch.scripts.OnClick(swatch)
+			ui.colorPicker:Pick(1, 0, 0)
+			assert.same({ "ff0000", { 1, 0, 0, 0.8 } }, { design().borderColor, edges.bottom.colorTexture })
+			-- The feed follows; a size does not scale the width.
+			local feedEdges = module.feed.warningRow.RowBorder
+			assert.same({ true, 3 }, { feedEdges.top.shown, feedEdges.top.height })
+			ns.Feed.Looks.Set("Default", "size", 16)
+			assert.equals(3, module.feed.warningRow.RowBorder.top.height)
+			-- Out of range: held at the limit, as every value of the design.
+			LookWindow.Change("row", "borderWidth", 9)
+			assert.equals(4, design().borderWidth)
 		end)
 
 		it("shows the chosen part's values, within the row's box, and nothing more of a hidden part", function()
 			LookWindow.Select("icon")
 			assert.equals("icon", LookWindow.Selected())
-			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: LEFT", "Size, percent of the row height: 100 in 20..100",
-				"Horizontal offset: 0 in 0..265", "Vertical offset: 0 in 0..0" }, inspector())
+			assert.same({ "Shown: true", "Anchor To: row", "Anchor Point: LEFT", "Size, Percent of the Row Height: 100 in 20..100",
+				"Horizontal Offset: 0 in 0..265", "Vertical Offset: 0 in 0..0", "Quality Border: true" }, inspector())
+			-- The quality border turned off: the samples and the feed lose it.
+			local border = window.controls[6]
+			assert.equals("Quality Border", border.label.text)
+			border.check.checked = false
+			border.check.scripts.OnClick(border.check)
+			assert.same({ false, false, false }, { design().parts.icon.qualityBorder, window.rows[2].IconBorder.shown,
+				module.feed.options.layout.parts.icon.qualityBorder })
+			LookWindow.Change("icon", "qualityBorder", true)
 			LookWindow.Select("owned")
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
-			assert.same({ "Shown: true", "Counts: bags", "Anchor to: icon", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 12 in 6..20",
-				"Maximum width: 40 in 20..300", "Horizontal offset: -4 in -23..265", "Vertical offset: 3 in 0..23", "With background: false",
+			assert.same({ "Shown: true", "Counts: bags", "Anchor To: icon", "Anchor Point: BOTTOMRIGHT", "Text Alignment: RIGHT", "Text Size: 12 in 6..20",
+				"Text Style: none",
+				"Maximum Width: 40 in 20..300", "Horizontal Offset: -4 in -23..265", "Vertical Offset: 3 in 0..23", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 		end)
 
@@ -102,10 +139,10 @@ describe("loot feed look window", function()
 			LookWindow.Select("amount")
 			-- A dropdown takes more room than a slider; the checkbox's label sits after it.
 			assert.same({ -60, -110 }, { top(window.controls[1]), top(window.controls[2]) })
-			local background = window.controls[8]
+			local background = window.controls[9]
 			assert.same({ "LEFT", background.check, "RIGHT", 4, 0 }, background.label.points[1])
-			assert.equals(top(window.controls[7]) - 46, top(background))
-			assert.equals(top(background) - 30, top(window.controls[9]))
+			assert.equals(top(window.controls[8]) - 46, top(background))
+			assert.equals(top(background) - 30, top(window.controls[10]))
 		end)
 
 		it("counts the bags only, or bags and bank, as the look's owned count says", function()
@@ -129,15 +166,15 @@ describe("loot feed look window", function()
 		it("sets the amount's own background and its opacity", function()
 			LookWindow.Select("amount")
 			local list = inspector()
-			assert.same({ "With background: false", "Opacity: 60 in 0..100" }, { list[9], list[10] })
-			window.controls[8].check.checked = true
-			window.controls[8].check.scripts.OnClick(window.controls[8].check)
+			assert.same({ "With Background: false", "Opacity: 60 in 0..100" }, { list[10], list[11] })
+			window.controls[9].check.checked = true
+			window.controls[9].check.scripts.OnClick(window.controls[9].check)
 			assert.is_true(design().parts.amount.background)
 		end)
 
 		it("lets the color and the opacity of a background change only while it is on, the opacity under it", function()
 			LookWindow.Select("amount")
-			local background, opacity = window.controls[8], window.controls[9]
+			local background, opacity = window.controls[9], window.controls[10]
 			assert.same({ true, false, false, false, "GameFontDisable" }, { background.swatch.shown, background.swatch.enabled,
 				opacity.slider.enabled, opacity.input.enabled, opacity.label.fontObject })
 			assert.equals(32, opacity.label.points[1][2])
@@ -150,7 +187,7 @@ describe("loot feed look window", function()
 		it("picks a background's color in the game's color picker, and puts the old one back on Cancel", function()
 			LookWindow.Select("amount")
 			LookWindow.Change("amount", "background", true)
-			local swatch, picker = window.controls[8].swatch, ui.colorPicker
+			local swatch, picker = window.controls[9].swatch, ui.colorPicker
 			swatch.scripts.OnClick(swatch)
 			assert.same({ true, 0, 0, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
 			picker:Pick(1, 0.5, 0)
@@ -174,15 +211,20 @@ describe("loot feed look window", function()
 			assert.same({ true, { 0.2, 0.4, 0.6, 0.4 } }, { module.feed.rows[1].RowBackground.shown, module.feed.rows[1].RowBackground.colorTexture })
 		end)
 
-		it("marks the row, the chosen icon, or the most room the chosen text may take, with a frame", function()
+		it("marks the row, the chosen icon, or the most room the chosen text may take, with a thin frame on the designer's tab", function()
 			local row = window.rows[1]
+			-- Not on the settings' tabs.
+			LookWindow.ShowTab(LookWindow.CONTENT)
+			assert.is_false(row.Selected.shown)
+			LookWindow.ShowTab(LookWindow.DESIGN)
 			assert.same({ true, { "TOPLEFT", row, "TOPLEFT", -2, 2 } }, { row.Selected.shown, row.Selected.points[1] })
+			local edges = { row.Selected.edges[1].height, row.Selected.edges[3].width }
+			assert.same({ 1, 1 }, edges)
 			LookWindow.Select("icon")
 			assert.same({ "TOPLEFT", row.Icon, "TOPLEFT", -2, 2 }, row.Selected.points[1])
-			assert.equals(0.5, row.Box.alpha)
-			-- The name's maximum width of 200, not the width of its text.
+			-- The name's maximum width of 200 (185 drawn at 12 of 13), not the width of its text.
 			LookWindow.Select("name")
-			assert.same({ { "TOPLEFT", row.Label, "TOPLEFT", -2, 2 }, 204 }, { row.Selected.points[1], row.Selected.width })
+			assert.same({ { "TOPLEFT", row.Label, "TOPLEFT", -2, 2 }, 189 }, { row.Selected.points[1], row.Selected.width })
 			LookWindow.Change("name", "align", "RIGHT")
 			assert.same({ "TOPRIGHT", row.Label, "TOPRIGHT", 2, 2 }, row.Selected.points[1])
 			-- Money has no amount to mark.
@@ -192,7 +234,8 @@ describe("loot feed look window", function()
 
 		it("changes the design from its sliders and checkboxes, and the feed follows at once", function()
 			window.controls[1].slider.callbacks.OnValueChanged[1](nil, 40.4)
-			assert.equals(40, module.feed.options.layout.height)
+			-- The design's 40 drawn at the feed's size, 12 of 13.
+			assert.equals(37, module.feed.options.layout.height)
 			assert.same({ row = { height = 40 } }, module:DesignSection().changes)
 			LookWindow.Select("icon")
 			window.partShown.checked = false
@@ -215,13 +258,13 @@ describe("loot feed look window", function()
 			width.scripts.OnEscapePressed(width)
 			assert.same({ 600, "600" }, { design().width, width.text })
 			LookWindow.Select("name")
-			local x = window.controls[6].input
+			local x = window.controls[7].input
 			x.text = "-12.6"
 			x.scripts.OnEnterPressed(x)
 			assert.equals(-13, design().parts.name.x)
 			-- Only as wide as the row.
 			LookWindow.Change("row", "width", 320)
-			local nameWidth = window.controls[5].input
+			local nameWidth = window.controls[6].input
 			nameWidth.text = "9999"
 			nameWidth.scripts.OnEnterPressed(nameWidth)
 			assert.equals(320, module:DesignSection().changes.name.width)
@@ -229,13 +272,13 @@ describe("loot feed look window", function()
 
 		it("anchors a part to the element and point chosen in its dropdowns, and aligns a text", function()
 			LookWindow.Select("name")
-			assert.same({ "Row", "Icon*", "Owned count" }, menu(window.controls[1].choice, "row"))
+			assert.same({ "Row", "Icon*", "Owned Count" }, menu(window.controls[1].choice, "row"))
 			assert.equals("row", design().parts.name.anchor)
 			assert.equals(9, #menu(window.controls[2].choice, "TOPRIGHT"))
 			assert.equals("TOPRIGHT", design().parts.name.point)
 			assert.same({ "Left*", "Right" }, menu(window.controls[3].choice, "RIGHT"))
 			assert.equals("RIGHT", design().parts.name.align)
-			assert.same({ "Shown: true", "Anchor to: row", "Anchor point: TOPRIGHT", "Text alignment: RIGHT" },
+			assert.same({ "Shown: true", "Anchor To: row", "Anchor Point: TOPRIGHT", "Text Alignment: RIGHT" },
 				{ unpack(inspector(), 1, 4) })
 		end)
 
@@ -261,6 +304,118 @@ describe("loot feed look window", function()
 			assert.same({ 21, -6 }, { design().parts.name.x, design().parts.name.y })
 		end)
 
+		it("zooms the samples, and a drag moves a part as far on screen at any zoom", function()
+			assert.same({ 1, 1 }, { LookWindow.Zoom(), window.stage.scale })
+			local choices = {}
+			for _, entry in ipairs(Loader.ui.OpenMenu(window.zoom).entries) do
+				choices[#choices + 1] = entry.text
+			end
+			assert.same({ "100 %", "150 %", "200 %" }, choices)
+			Loader.ui.OpenMenu(window.zoom).entries[3].setSelected(2)
+			assert.same({ 2, 2, LookWindow.PREVIEW_WIDTH / 2 }, { LookWindow.Zoom(), window.stage.scale, window.stage.width })
+			-- Twice the pointer's way for the same design pixels.
+			local hit = window.rows[1].hits.name
+			ui.cursor = { 100, 100 }
+			hit.scripts.OnDragStart(hit)
+			ui.cursor = { 120, 90 }
+			LookWindow.OnUpdate()
+			assert.same({ 21, -6 }, { design().parts.name.x, design().parts.name.y })
+			hit.scripts.OnDragStop(hit)
+		end)
+
+		it("sizes every tab to its text, stands them on a frame around their area, and names the look in its title", function()
+			local sized = {}
+			for id = 1, 4 do
+				sized[id] = window["tab" .. id].resizedWith
+			end
+			assert.same({ 8, 8, 8, 8 }, sized)
+			assert.same({ "Feed Look: Default", true }, { window.title, window.inset:IsShown() })
+			LookWindow.SetWide(true)
+			assert.is_false(window.inset:IsShown())
+			LookWindow.SetWide(false)
+			assert.is_true(window.inset:IsShown())
+		end)
+
+		it("centres the samples, or starts them at the corner and cuts them when they do not fit", function()
+			-- Rows of 277 in an area of 440: centred across; nine rows of 32 and gaps of 6, centred down.
+			local count = #window.rows
+			local height = count * 32 + (count - 1) * 6
+			local top = height + 24 <= 504 and math.floor((504 - height) / 2 + 0.5) or 12
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", math.floor((440 - 277) / 2 + 0.5), -top }, window.rows[1].points[1])
+			-- At 200 % they do not fit: from the corner, cut at the edge.
+			LookWindow.SetZoom(2)
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 12, -12 }, window.rows[1].points[1])
+			assert.is_true(window.preview.clipsChildren)
+			LookWindow.SetZoom(1)
+		end)
+
+		it("shows the feed's background behind the samples, as the feed draws it", function()
+			local back = window.stage.Back
+			assert.is_false(back.shown)
+			LookWindow.Set("background", true)
+			LookWindow.Set("backgroundColor", "336699")
+			assert.same({ true, 0.5, { 0.2, 0.4, 0.6 } }, { back.shown, back.alpha, back.pieces.center.vertex })
+			-- Around the samples, its margin half a row.
+			assert.same({ 277, 16 }, { back.width, back.pieces.top.height })
+			LookWindow.Set("backgroundFade", false)
+			assert.same({ { 1, 1, 1, 1 }, 4 }, { back.pieces.topLeft.colorTexture, back.pieces.top.height })
+		end)
+
+		it("switches the samples' backdrop between dark and light", function()
+			assert.same({ 0, 0, 0, 0.6 }, window.backdrop.colorTexture)
+			window.lightBackdrop.checked = true
+			window.lightBackdrop.scripts.OnClick(window.lightBackdrop)
+			assert.same({ 1, 1, 1, 0.5 }, window.backdrop.colorTexture)
+			LookWindow.SetLightBackdrop(false)
+			assert.same({ { 0, 0, 0, 0.6 }, false }, { window.backdrop.colorTexture, window.lightBackdrop.checked })
+		end)
+
+		it("is resized from its corner, never below its first size, and its samples' area grows with it", function()
+			assert.same({ true, 900, 640 }, { window.resizable, window.resizeBounds[1], window.resizeBounds[2] })
+			-- Sized from where the mouse is, so the corner does not jump.
+			window.grip.scripts.OnMouseDown(window.grip)
+			assert.same({ "BOTTOMRIGHT", true }, { window.sizing, window.sizingFromMouse })
+			window.grip.scripts.OnMouseUp(window.grip)
+			-- The size the game reports as the corner is dragged: the samples take
+			-- all the room right of the tabs.
+			window.scripts.OnSizeChanged(window, 1100, 700)
+			assert.same({ 640, 564 }, { window.preview.width, window.preview.height })
+			LookWindow.Resize(1200, 800)
+			assert.same({ 740, 664 }, { window.preview.width, window.preview.height })
+			LookWindow.SetWide(true)
+			assert.equals(1168, window.preview.width)
+			LookWindow.SetWide(false)
+			LookWindow.Resize(500, 300)
+			assert.same({ 900, 640, 440, 504 }, { window.width, window.height, window.preview.width, window.preview.height })
+			-- Never beyond the screen as it is when the window opens again: a
+			-- higher UI scale leaves less room, and a bigger window shrinks to it.
+			LookWindow.Resize(1200, 800)
+			window:Hide()
+			Loader.ui.UIParent:SetSize(1000, 700)
+			LookWindow.Open()
+			assert.same({ 1000, 700, 1000, 700 }, { window.resizeBounds[3], window.resizeBounds[4], window.width, window.height })
+		end)
+
+		it("widens the samples over the tabs, and back", function()
+			LookWindow.SetWide(true)
+			assert.same({ false, false, LookWindow.WIDTH - 32 }, { window.panel.shown, window.tab1.shown, window.preview.width })
+			LookWindow.SetWide(false)
+			assert.same({ true, true, LookWindow.PREVIEW_WIDTH }, { window.panel.shown, window.tab1.shown, window.preview.width })
+		end)
+
+		it("picks a text over the icon before the icon, as they are drawn, and brings up the designer", function()
+			local row = window.rows[1]
+			local levels = {}
+			for part, hit in pairs(row.hits) do
+				levels[part] = hit.level - row:GetFrameLevel()
+			end
+			assert.is_true(levels.name > levels.icon and levels.amount > levels.icon and levels.owned > levels.icon)
+			assert.is_true(row.Selected.level > levels.owned + row:GetFrameLevel())
+			LookWindow.ShowTab(LookWindow.CONTENT)
+			row.hits.owned.scripts.OnClick(row.hits.owned)
+			assert.same({ "owned", LookWindow.DESIGN }, { LookWindow.Selected(), window.selectedTab })
+		end)
+
 		it("chooses a part by clicking it, and the row by clicking its free space or between rows", function()
 			local hit = window.rows[1].hits.amount
 			hit.scripts.OnClick(hit)
@@ -273,31 +428,44 @@ describe("loot feed look window", function()
 		end)
 
 		it("offers every part, also a hidden one, in its part list", function()
-			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts, "owned"))
+			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned Count" }, menu(window.parts, "owned"))
 			assert.equals("owned", LookWindow.Selected())
 		end)
 
 		it("lists only what an Icons layout lets change, with its samples side by side", function()
 			ns.Feed.Looks.Create("Strip")
 			ns.Feed.Looks.SetView("Strip", "icons")
-			ns.Feed.Looks.Set("Strip", "size", 13)
 			LookWindow.Open("Strip")
 			assert.equals("row", LookWindow.Selected())
-			assert.same({ "Icon size: 36 in 12..80", "Gap between icons: 4 in 0..30" }, inspector())
-			assert.same({ "Icon*", "Amount", "Owned count" }, menu(window.parts))
+			assert.same({ "Icon Size: 36 in 12..80", "Quality Border: true" }, inspector())
+			-- The row is the icon, so its border is set here, on the icon's values.
+			local border = window.controls[2]
+			border.check.checked = false
+			border.check.scripts.OnClick(border.check)
+			assert.same({ false, false, "Quality Border: false" }, { ns.Feed.Design.Current(ns.Feed.Looks.Get("Strip")).parts.icon.qualityBorder,
+				window.rows[2].IconBorder.shown, inspector()[2] })
+			assert.same({ "Icon*", "Amount", "Owned Count" }, menu(window.parts))
 			-- The owned count set as the amount is, on the icon or beside it.
 			LookWindow.Select("owned")
 			assert.same({ "Shown: false" }, inspector())
 			LookWindow.Change("owned", "shown", true)
-			assert.same({ "Shown: true", "Counts: bags", "Anchor point: TOPRIGHT", "Text alignment: RIGHT", "Text size: 10 in 6..20",
-				"Horizontal offset: -2 in -60..36", "Vertical offset: -2 in -62..36", "With background: false",
+			assert.same({ "Shown: true", "Counts: bags", "Anchor Point: TOPRIGHT", "Text Alignment: RIGHT", "Text Size: 10 in 6..20",
+				"Text Style: none",
+				"Horizontal Offset: -2 in -60..36", "Vertical Offset: -2 in -62..36", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
 			LookWindow.Select("amount")
-			assert.same({ "Shown: true", "Anchor point: BOTTOMRIGHT", "Text alignment: RIGHT", "Text size: 13 in 8..24",
-				"Horizontal offset: -2 in -60..36", "Vertical offset: 2 in -36..59", "With background: false",
+			assert.same({ "Shown: true", "Anchor Point: BOTTOMRIGHT", "Text Alignment: RIGHT", "Text Size: 13 in 8..24",
+				"Text Style: none",
+				"Horizontal Offset: -2 in -60..36", "Vertical Offset: 2 in -36..59", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
-			-- Icons 36 wide and 4 apart, side by side.
-			assert.same({ "TOPLEFT", window.preview, "TOPLEFT", 52, -12 }, window.rows[2].points[1])
+			-- Icons 36 wide and 4 apart (33 and 4 drawn at 12 of 13), side by side in
+			-- one line, centred in the samples' area.
+			local count = #window.rows
+			local width = count * 33 + (count - 1) * 4
+			local left = math.floor((440 - width) / 2 + 0.5)
+			local top = -math.floor((504 - 33) / 2 + 0.5)
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", left, top }, window.rows[1].points[1])
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", left + 37 * (count - 1), top }, window.rows[count].points[1])
 			-- The icon stands for the row; the name cannot be chosen.
 			local rowFrame = window.rows[1]
 			-- A hidden owned count has no hit area either.
@@ -308,7 +476,7 @@ describe("loot feed look window", function()
 			assert.equals("row", LookWindow.Selected())
 			-- Back on rows, every part again.
 			LookWindow.Open("Default")
-			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned count" }, menu(window.parts))
+			assert.same({ "Row*", "Icon", "Name", "Amount", "Owned Count" }, menu(window.parts))
 		end)
 
 		it("hides on Escape and with its close button, and the command toggles it", function()
@@ -336,19 +504,138 @@ describe("loot feed look window", function()
 			window = LookWindow.window
 		end)
 
-		it("comes up first, with every setting of the look in its groups; a part chosen brings up Design", function()
-			assert.same({ 1, true, false }, { window.selectedTab, window.feedTab.shown, window.designTab.shown })
-			local headers = {}
+		it("comes up on Content, with every setting on its tab; a part chosen brings up the designer", function()
+			local function shown()
+				return { window.selectedTab, window.settingTabs[1].shown, window.settingTabs[2].shown, window.settingTabs[3].shown,
+					window.designTab.shown }
+			end
+			assert.same({ 1, true, false, false, false }, shown())
+			assert.same({ "Content", "Appearance", "Timings", "Layout" }, { window.tab1.text, window.tab2.text, window.tab3.text, window.tab4.text })
+			local headers, tabs = {}, {}
 			for _, control in ipairs(window.settings) do
 				if control.setting.kind == "header" then
 					headers[#headers + 1] = control.text.text
+				else
+					tabs[control.setting.key] = control.setting.tab
 				end
 			end
-			assert.same({ "What the feed shows", "Kept usable items", "Rows and timing", "Appearance", "Low-space warnings" }, headers)
+			assert.same({ "What the Feed Shows", "Kept Usable Items", "Low-Space Warning" }, headers)
+			assert.same({ "content", "content", "content", "appearance", "appearance", "appearance", "appearance", "timings", "timings", "timings" },
+				{ tabs.items, tabs.warnGeneral, tabs.junkRow, tabs.direction, tabs.maxRows, tabs.gap, tabs.backgroundOpacity, tabs.stagger,
+					tabs.duration, tabs.fade })
+			-- The view stands just before the fill direction, on Appearance.
+			for index, control in ipairs(window.settings) do
+				if control.setting.key == "direction" then
+					assert.equals("view", window.settings[index - 1].setting.key)
+				end
+			end
 			window.rows[1].hits.name.scripts.OnClick(window.rows[1].hits.name)
-			assert.same({ 2, false, true, "name" }, { window.selectedTab, window.feedTab.shown, window.designTab.shown, LookWindow.Selected() })
-			window.tab1.scripts.OnClick(window.tab1)
-			assert.equals(1, window.selectedTab)
+			assert.same({ 4, false, false, false, true }, shown())
+			assert.equals("name", LookWindow.Selected())
+			window.tab3.scripts.OnClick(window.tab3)
+			assert.same({ 3, false, false, true, false }, shown())
+		end)
+
+		it("picks the background's color on Appearance in the game's color picker, the feed following", function()
+			local swatch, picker = settingOf("backgroundColor").swatch, Loader.ui.colorPicker
+			assert.equals("appearance", settingOf("backgroundColor").setting.tab)
+			-- Under the switch: the colour first, then the opacity and the fade, all
+			-- greyed until the switch is on.
+			local order = {}
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+				if setting.key:find("^background") then
+					order[#order + 1] = setting.key .. ":" .. tostring(setting.parent)
+				end
+			end
+			assert.same({ "background:nil", "backgroundColor:background", "backgroundOpacity:background", "backgroundFade:background" }, order)
+			assert.same({ false, false, false }, { swatch.enabled, settingOf("backgroundOpacity").slider.enabled,
+				settingOf("backgroundFade").check.enabled })
+			LookWindow.Set("background", true)
+			assert.same({ true, true, true }, { swatch.enabled, settingOf("backgroundOpacity").slider.enabled,
+				settingOf("backgroundFade").check.enabled })
+			swatch.scripts.OnClick(swatch)
+			assert.same({ true, 0, 0, 0 }, { picker.shown, picker.info.r, picker.info.g, picker.info.b })
+			picker:Pick(0, 0.5, 1)
+			assert.same({ "0080ff", { 0, 128 / 255, 1 } }, { ns.Feed.Looks.Value("Default", "backgroundColor"), swatch.color })
+			assert.same({ 0, 128 / 255, 1 }, module.feed.frame.Back.pieces.center.vertex)
+			picker:Cancel()
+			assert.equals("000000", ns.Feed.Looks.Value("Default", "backgroundColor"))
+		end)
+
+		it("sets the gap between rows on Appearance, after the number of rows, both named after the view", function()
+			local gap = settingOf("gap")
+			assert.same({ "appearance", "Gap Between Rows", 7 }, { gap.setting.tab, gap.label.text, gap.slider.value })
+			assert.equals("Number of Rows", settingOf("maxRows").label.text)
+			for index, control in ipairs(window.settings) do
+				if control.setting.key == "gap" then
+					assert.equals("maxRows", window.settings[index - 1].setting.key)
+				end
+			end
+			gap.slider.callbacks.OnValueChanged[1](nil, 12)
+			assert.same({ 12, 11 }, { design().gap, module.feed.options.layout.gap })
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+				assert.is_not.equal("size", setting.key)
+			end
+			ns.Feed.Looks.SetView("Default", "icons")
+			LookWindow.Refresh()
+			assert.same({ "Gap Between Icons", 4, "Number of Icons" }, { gap.label.text, gap.slider.value, settingOf("maxRows").label.text })
+			-- Each view's settings are made once, not on every redraw (a drag
+			-- redraws at the frame rate) nor for every value read.
+			local Looks, made = ns.Feed.Looks, 0
+			local settings = Looks.Settings
+			Looks.Settings = function(...)
+				made = made + 1
+				return settings(...)
+			end
+			LookWindow.Refresh()
+			LookWindow.Refresh()
+			Looks.Set("Default", "maxRows", 6)
+			Looks.Value("Default", "fade")
+			Looks.Settings = settings
+			assert.same({ 0, "Number of Icons" }, { made, settingOf("maxRows").label.text })
+		end)
+
+		it("offers each text's style in the designer, after its size, and the samples follow it alone", function()
+			for _, setting in ipairs(ns.Feed.Looks.Settings("rows")) do
+				assert.is_not.equal("textStyle", setting.key)
+			end
+			LookWindow.Select("name")
+			local choices
+			for _, control in ipairs(window.controls) do
+				if control.label.shown and control.label.text == "Text Style" then
+					choices = control.choice.menu
+				end
+			end
+			assert.is_not_nil(choices)
+			LookWindow.Change("name", "style", "thick")
+			assert.same({ "THICKOUTLINE", "thick" }, { window.rows[1].Label.font[3], design().parts.name.style })
+			assert.is_falsy(window.rows[1].Amount.font[3] == "THICKOUTLINE")
+			-- Not a style it does not know.
+			assert.is_false(pcall(LookWindow.Change, "name", "style", "glitter"))
+			assert.equals("thick", design().parts.name.style)
+		end)
+
+		it("takes the warning's text in a field, a typed | kept single, and shows it in the sample", function()
+			local field = settingOf("slotsText")
+			assert.same({ "Warning Text", "{general}+{reagent||1eff00}" }, { field.label.text, field.input:GetText() })
+			field.input:SetText("{free} || {general}")
+			field.input.scripts.OnEditFocusLost(field.input)
+			assert.equals("{free} | {general}", ns.Feed.Looks.Value("Default", "slotsText"))
+			assert.equals("{free} || {general}", field.input:GetText())
+			assert.equals("|cffffffff3|r|cffffffff || |r|cffffffff2|r", window.rows[#window.rows].Amount.text)
+			-- A longer text is cut to 80 letters, Cyrillic ones too, and the field
+			-- shows what was kept.
+			field.input:SetText("{free} " .. ("я"):rep(90))
+			field.input.scripts.OnEditFocusLost(field.input)
+			assert.same({ "{free} " .. ("я"):rep(73), "{free} " .. ("я"):rep(73) },
+				{ ns.Feed.Looks.Value("Default", "slotsText"), field.input:GetText() })
+			-- Under the field, what each token stands for: the tokens in white, a bar
+			-- shown as typed; the field's room grows by the note's height.
+			local note = field.note.text
+			assert.truthy(note:find("|cffffffff{free}|r — free slots in all bags\n", 1, true), note)
+			assert.truthy(note:find("|cffffffff{general}|r, |cffffffff{reagent}|r, |cffffffff{profession}|r — free slots in", 1, true), note)
+			assert.truthy(note:find("A colour after a bar: |cffffffff{reagent||33ff33}|r", 1, true), note)
+			assert.same({ "GameFontDisableSmall", 48 + field.note:GetStringHeight() + 8 }, { field.note.fontObject, field.height })
 		end)
 
 		it("sets the look's settings, and the feed follows at once", function()
@@ -411,7 +698,7 @@ describe("loot feed look window", function()
 		end)
 
 		it("names it in its title and changes it, leaving the feed alone", function()
-			assert.same({ "Feed look: Raid", "Raid" }, { window.title, LookWindow.Edited() })
+			assert.same({ "Feed Look: Raid", "Raid" }, { window.title, LookWindow.Edited() })
 			LookWindow.Change("row", "height", 40)
 			LookWindow.Set("maxRows", 9)
 			assert.same({ { row = { height = 40 } }, 9 }, { ns.Feed.Looks.Get("Raid").changes, ns.Feed.Looks.Value("Raid", "maxRows") })
@@ -420,7 +707,7 @@ describe("loot feed look window", function()
 
 		it("follows it when it is renamed, and closes when it is deleted", function()
 			ns.Feed.Looks.Rename("Raid", "Party")
-			assert.same({ "Feed look: Party", "Party" }, { window.title, LookWindow.Edited() })
+			assert.same({ "Feed Look: Party", "Party" }, { window.title, LookWindow.Edited() })
 			ns.Feed.Looks.Delete("Party")
 			assert.is_false(window.shown)
 		end)
@@ -437,13 +724,24 @@ describe("loot feed look window", function()
 end)
 
 describe("loot feed look window, opened from", function()
-	it("Edit in the look menu, on the options page and in its Edit Mode dialog", function()
-		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 }, settings = {} }
-		function lib:AddFrame() end
+	it("Edit in the look menu, Edit on the options page, and the feed picked in Edit Mode", function()
+		local lib = { SettingType = { Dropdown = 0, Checkbox = 1, Slider = 2 }, settings = {}, frameSelections = {} }
+		-- The library's selection of a frame, which its click picks, and its dialog.
+		function lib:AddFrame(frame)
+			local selection = { parent = frame, scripts = {} }
+			function selection:HookScript(name, fn) self.scripts[name] = fn end
+			function selection:ShowSelected(selected) self.selected, self.isSelected = selected, true end
+			function selection:ShowHighlighted() self.isSelected = false end
+			self.frameSelections[frame] = selection
+		end
 		function lib:AddFrameSettings(frame, settings) self.settings[frame] = settings end
 		function lib:AddFrameSettingsButtons() end
-		function lib:RegisterCallback() end
-		function lib:IsInEditMode() return false end
+		lib.callbacks = {}
+		function lib:RegisterCallback(event, fn) self.callbacks[event] = fn end
+		function lib:IsInEditMode() return self.editing == true end
+		lib.internal = { dialog = { shown = false } }
+		function lib.internal.dialog:Update(selection) self.selection, self.shown = selection, true end
+		function lib.internal.dialog:Hide() self.shown = false end
 		rawset(_G, "LibStub", function(name) return name == "LibEditMode" and lib or nil end)
 		local api = SettingsAPI.Install()
 		local ns = Loader.LoadAddon({ skip = {} })
@@ -454,14 +752,63 @@ describe("loot feed look window, opened from", function()
 		local look, profile = ns.SettingsPanel.main.look, ns.SettingsPanel.main.profile
 		assert.same({ "WowStyle1DropdownTemplate", 260, 30 }, { look.template, look.width, look.height })
 		assert.equals("WowStyle2DropdownTemplate", profile.template)
+		-- While the window is open, the feed shows its sample rows where it stands, as in Edit
+		-- Mode, also with no loot.
+		local feed = ns.Modules:Get("LootFeed").feed
+		assert.same({ false, nil }, { feed.frame.shown, feed.preview })
 		api.OpenMenu(ns.SettingsPanel.main.look).entries[1].entries[1].callback()
-		assert.is_true(LookWindow.window.shown)
+		assert.same({ true, true, true }, { LookWindow.window.shown, feed.frame.shown, feed.preview ~= nil })
 		LookWindow.window:Hide()
-		-- The dialog's dropdown builds the look menu; Edit opens the window.
-		local dropdown = { menu = lib.settings[ns.Modules:Get("LootFeed").feed.frame][1].generator }
-		local root = api.OpenMenu(dropdown)
-		root.entries[1].entries[1].callback()
+		assert.same({ false, nil }, { feed.frame.shown, feed.preview })
+		-- Edit beside the dropdown: the profile's look, also when another one was edited.
+		ns.Feed.Looks.Create("Raid")
+		LookWindow.Open("Raid")
+		LookWindow.window:Hide()
+		local edit = ns.SettingsPanel.main.lookEdit
+		assert.same({ "Edit", true }, { edit.text, edit.enabled })
+		edit.scripts.OnClick(edit)
 		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
+		LookWindow.window:Hide()
+		-- In Edit Mode the library's dialog does not show for the feed: its window opens, and the
+		-- feed stays picked and movable, to be dragged.
+		local frame = ns.Modules:Get("LootFeed").feed.frame
+		local selection = lib.frameSelections[frame]
+		lib.editing = true
+		lib.internal.dialog:Update(selection)
+		selection.scripts.OnMouseDown(selection)
+		assert.same({ false, true, true, true }, { lib.internal.dialog.shown, selection.selected, frame.movable == true, LookWindow.window.shown })
+		-- Another frame or system picked: the window it opened closes; one opened otherwise stays.
+		selection:ShowHighlighted()
+		ns.Compat.Test.Advance(0)
+		assert.is_false(LookWindow.window.shown)
+		edit.scripts.OnClick(edit)
+		selection:ShowHighlighted()
+		ns.Compat.Test.Advance(0)
+		assert.is_true(LookWindow.window.shown)
+		-- A click on the feed keeps the look the window shows; opened by it, the window shows
+		-- the profile's look.
+		LookWindow.Open("Raid")
+		selection.scripts.OnMouseDown(selection)
+		assert.equals("Raid", LookWindow.Edited())
+		LookWindow.window:Hide()
+		selection.scripts.OnMouseDown(selection)
+		assert.same({ true, "Default" }, { LookWindow.window.shown, LookWindow.Edited() })
+		-- Another addon's frame keeps the dialog.
+		lib.internal.dialog:Update({ parent = {} })
+		assert.is_true(lib.internal.dialog.shown)
+		-- In Edit Mode the samples stay when the window closes.
+		lib.callbacks.enter()
+		LookWindow.window:Hide()
+		assert.same({ true, true }, { feed.frame.shown, feed.preview ~= nil })
+		selection.scripts.OnMouseDown(selection)
+		-- Opened from Edit Mode, it closes with it; opened otherwise, it stays, and so do the
+		-- samples.
+		lib.editing = false
+		lib.callbacks.exit()
+		assert.same({ false, false, nil }, { LookWindow.window.shown, feed.frame.shown, feed.preview })
+		edit.scripts.OnClick(edit)
+		lib.callbacks.exit()
+		assert.same({ true, true }, { LookWindow.window.shown, feed.preview ~= nil })
 	end)
 end)
 
@@ -477,20 +824,47 @@ describe("loot feed look window's buttons and view", function()
 		window = LookWindow.window
 	end)
 
-	it("returns the look to its defaults with Reset, after a confirmation", function()
-		Looks.SetDesign("Default", "row", "height", 40)
-		Looks.Set("Default", "maxRows", 9)
-		window.reset.scripts.OnClick(window.reset)
-		assert.equals("Default", api.popups[#api.popups].data.text_arg1)
-		api.AcceptPopup()
-		assert.same({ schema = 1, base = "large" }, Looks.Get("Default"))
+	local function lookEntry(name)
+		for _, entry in ipairs(api.OpenMenu(window.looks).entries) do
+			if entry.text == name then
+				return entry
+			end
+		end
+	end
+
+	it("has no Reset or Share buttons: both are in the look's menu", function()
+		assert.same({ nil, nil }, { window.reset, window.share })
 	end)
 
-	it("opens the dialog of look texts with Share, this look ticked", function()
-		local opened = {}
-		ns.Bus:On("OpenShareDialog", "test", function(_, mode, item) opened[#opened + 1] = mode .. ":" .. tostring(item) end)
-		window.share.scripts.OnClick(window.share)
-		assert.same({ "looks:Default" }, opened)
+	it("has Reset Position at the far end of its top row, greyed while no Edit Mode layout is known", function()
+		assert.same({ "Reset Position", { "TOPRIGHT", -24, -34 }, false },
+			{ window.resetPosition.text, window.resetPosition.points[1], window.resetPosition:IsEnabled() })
+	end)
+
+	it("edits the look chosen in its dropdown, and Apply makes the profile use it", function()
+		Looks.Create("Raid")
+		assert.same({ true, false }, { lookEntry("Default").isSelected(), window.apply:IsShown() })
+		lookEntry("Raid").setSelected()
+		assert.same({ "Raid", "Default", "Feed Look: Raid", true }, { LookWindow.Edited(), Looks.Current(), window.title, window.apply:IsShown() })
+		assert.is_true(lookEntry("Raid").isSelected())
+		window.apply.scripts.OnClick(window.apply)
+		assert.same({ "Raid", false }, { Looks.Current(), window.apply:IsShown() })
+	end)
+
+	it("shows Apply when the profile takes another look elsewhere", function()
+		Looks.Create("Raid")
+		Looks.Use("Raid")
+		assert.same({ "Default", true }, { LookWindow.Edited(), window.apply:IsShown() })
+	end)
+
+	it("edits a new look made from its menu", function()
+		for _, entry in ipairs(api.OpenMenu(window.looks).entries) do
+			if entry.text and entry.text:find("New look", 1, true) then
+				entry.callback()
+			end
+		end
+		api.AcceptPopup("Party")
+		assert.same({ "Party", "Party", false }, { LookWindow.Edited(), Looks.Current(), window.apply:IsShown() })
 	end)
 
 	it("asks before the View dropdown on the Feed tab turns the look into icons", function()
@@ -517,6 +891,8 @@ describe("loot feed look window's buttons and view", function()
 		api.AcceptPopup()
 		assert.same({ "icons", { schema = 1, base = "icons" } }, { Looks.View("Default"), Looks.Get("Default") })
 		assert.equals("row", LookWindow.Selected())
+		-- The designer's tab keeps its name, and the number of rows is one of icons.
+		assert.equals("Layout", window.tab4.text)
 		-- The same view again asks nothing.
 		local asked = #api.popups
 		LookWindow.SetView("icons")

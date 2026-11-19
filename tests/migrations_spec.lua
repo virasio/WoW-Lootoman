@@ -192,6 +192,30 @@ describe("migrations", function()
 		assert.same({ Default = {} }, fresh.profiles)
 	end)
 
+	it("switches the loot feed's background on in each 0.5.8 look that showed one", function()
+		local db = Migrations.Run(Migrations.account, dofile("tests/fixtures/saved_0_5_8.lua")().LootomanDB)
+		local looks = db.sections.feedLooks
+		assert.same({ true, 60, "336699" }, { looks.Glass.values.background, looks.Glass.values.backgroundOpacity,
+			looks.Glass.values.backgroundColor })
+		assert.same({ nil, nil }, { looks.Plain.values.background, looks.Default.values })
+	end)
+
+	it("folds each 0.5.8 look's size into its design, so drawn at 12 it is as big as it was", function()
+		local db = Migrations.Run(Migrations.account, dofile("tests/fixtures/saved_0_5_8.lua")().LootomanDB)
+		local looks = db.sections.feedLooks
+		-- Glass, size 14: its own row height of 40 and every base length scaled by 14 / 12.
+		local glass = looks.Glass.changes
+		assert.same({ 47, 8, 350 }, { glass.row.height, glass.row.gap, glass.row.width })
+		assert.same({ 15, 233, 13 }, { glass.name.fontSize, glass.name.width, glass.name.x })
+		assert.is_nil(looks.Glass.values.size)
+		-- Plain, icons at 11: smaller; its other values stay.
+		-- Its gap of 4 stays 4 (3.67 rounded), so it is no change.
+		assert.same({ 33, 33, nil }, { looks.Plain.changes.row.height, looks.Plain.changes.row.width, looks.Plain.changes.row.gap })
+		assert.same({ direction = "left" }, looks.Plain.values)
+		-- Default had no size of its own.
+		assert.same({ schema = 1, base = "large" }, looks.Default)
+	end)
+
 	it("runs every missing step in order", function()
 		local ran = {}
 		local steps = {

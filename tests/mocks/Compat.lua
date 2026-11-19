@@ -75,6 +75,8 @@ local state = {
 	questsInLog = {},
 	-- Item class names by class ID; the character's level; the item on the cursor.
 	itemClasses = {},
+	equipped = {},
+	linked = {},
 	playerLevel = 60,
 	cursorItem = nil,
 	cursorFiles = {},
@@ -412,6 +414,26 @@ end
 
 -- Items (state.items) may be equippable = true and usable = false (this
 -- character cannot use them).
+-- state.equipped: what EquipItem was asked for, in order.
+function Compat.EquipItem(item)
+	state.equipped[#state.equipped + 1] = item
+end
+
+-- state.modifiers holds the modified clicks held now ({ CHATLINK = true });
+-- state.linked: the links a modified click took, which takes one only with
+-- the chat-link or dressing-room modifier held.
+function Compat.IsChatLinkHeld()
+	return state.modifiers.CHATLINK == true
+end
+
+function Compat.ModifiedItemClick(link)
+	if state.modifiers.CHATLINK or state.modifiers.DRESSUP then
+		state.linked[#state.linked + 1] = link
+		return true
+	end
+	return false
+end
+
 function Compat.IsEquippableItem(item)
 	local info = findItem(item)
 	return info ~= nil and info.equippable == true

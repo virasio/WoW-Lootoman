@@ -1,5 +1,5 @@
 local _, ns = ...
-local Compat, L = ns.Compat, ns.L
+local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 local Feed = ns.Feed
 local Looks = Feed.Looks
 
@@ -18,8 +18,8 @@ local LootFeed = ns.Modules:Register({
 		-- The feed look the profile uses (Looks.lua).
 		look = "Default",
 	},
-	-- Under the switch, the look the profile uses, with the look menu: the
-	-- dropdown looks as it does in the feed's Edit Mode dialog, with the same menu.
+	-- Under the switch, the look the profile uses, with the look menu, and Edit,
+	-- which opens the look's window.
 	mainSettings = { { kind = "custom", build = function(page, indent)
 		local row = page:NewRow()
 		local dropdown = page:NewDropdown(row)
@@ -27,9 +27,29 @@ local LootFeed = ns.Modules:Register({
 		page:AddRow(L["Feed Look"], dropdown, { indent = indent, height = 30,
 			tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."] })
 		page.look = dropdown
+		-- Edit: the window of the look the profile uses.
+		local edit = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+		edit:SetSize(90, 22)
+		edit:SetPoint("LEFT", dropdown, "RIGHT", 8, 0)
+		edit:SetText(L["Edit"])
+		edit:SetScript("OnClick", function()
+			Feed.LookWindow.Open()
+		end)
+		edit:SetScript("OnEnter", function(button)
+			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+			GameTooltip_SetTitle(GameTooltip, L["Edit"])
+			GameTooltip_AddNormalLine(GameTooltip, L["Opens the window of the look this profile uses: its settings, its row design and the feed's position."])
+			GameTooltip:Show()
+		end)
+		edit:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		page.lookEdit = edit
 		page:OnRefresh(function()
 			dropdown:GenerateMenu()
-			dropdown:SetEnabled(ns.Storage:Get("LootFeed", "enabled"))
+			local enabled = ns.Storage:Get("LootFeed", "enabled")
+			dropdown:SetEnabled(enabled)
+			edit:SetEnabled(enabled)
 		end)
 	end } },
 })
@@ -134,6 +154,7 @@ function LootFeed:ModelOptions()
 		maxRows = self:Get("maxRows"),
 		duration = self:Get("duration"),
 		fade = self:Get("fade"),
+		stagger = self:Get("stagger"),
 		minQuality = self:Get("minQuality"),
 		kinds = {
 			item = self:Get("items"),
@@ -145,26 +166,98 @@ function LootFeed:ModelOptions()
 	}
 end
 
+-- The rows' layout, from the look's design.
+function LootFeed:Layout()
+	return Feed.Design.Layout(Feed.Design.Current(self:DesignSection()))
+end
+
+-- The feed shows its sample rows while Edit Mode is on or the look window is
+-- open, so the look is seen where the feed stands while it is edited.
+function LootFeed:UpdatePreview()
+	if self.feed and self:IsActive() then
+		local active = ns.EditMode.IsActive() or self.LookWindow.IsShown()
+		if active ~= (self.feed.preview ~= nil) then
+			self.feed:SetPreview(active)
+		end
+	end
+end
+
 -- The design of the rows: the look's (Looks.lua).
 function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
 end
 
--- The low-space warnings that hold now, each { kind, count, text }: few free
--- general slots, few free reagent bag slots (only with a reagent bag), each
--- by its own threshold. Nothing before the client has told the bags (no
--- slots at all).
-function LootFeed:Warnings()
-	local slots, warnings = ns.Bags.FreeSlots(), {}
-	if self:Get("warnGeneral") and slots.generalTotal > 0 and slots.general <= self:Get("warnGeneralAt") then
-		warnings[#warnings + 1] = { kind = "general", count = slots.general,
-			text = slots.general == 0 and L["No free bag slots"] or L["Free bag slots: %d"]:format(slots.general) }
+-- The low-space warning, or nil: shown while any threshold switched on is
+-- reached (free slots in all bags, in the general bags, in a reagent bag the
+-- character has), with every kind of bag's count in its amount, as the
+-- look's template writes them, and in its tooltip. A click opens the toss
+-- window while junk management is on.
+function LootFeed:Warning()
+	local slots = ns.Bags.FreeSlots()
+	local reached = (self:Get("warnTotal") and slots.total > 0 and slots.free <= self:Get("warnTotalAt"))
+		or (self:Get("warnGeneral") and slots.generalTotal > 0 and slots.general <= self:Get("warnGeneralAt"))
+		or (self:Get("warnReagent") and slots.reagentTotal > 0 and slots.reagent <= self:Get("warnReagentAt"))
+	if not reached then
+		return nil
 	end
-	if self:Get("warnReagent") and slots.reagentTotal > 0 and slots.reagent <= self:Get("warnReagentAt") then
-		warnings[#warnings + 1] = { kind = "reagent", count = slots.reagent,
-			text = slots.reagent == 0 and L["No free reagent bag slots"] or L["Free reagent bag slots: %d"]:format(slots.reagent) }
+	local junk = ns.Modules:Get("Junk")
+	return {
+		amount = Feed.SlotsText.Render(self:Get("slotsText"), slots, "ffffffff"),
+		lines = Feed.Frames.SlotLines(slots),
+		clickable = junk ~= nil and junk:IsActive(),
+	}
+end
+
+-- An item looted that Lootoman's junk rule calls junk (gray, or marked junk,
+-- and not marked not junk) becomes part of the one junk row, while the look
+-- wants it: { kind = "item", parts = { { key, link, amount } }, the item's
+-- quality for the minimum quality }. Below the minimum quality it stays as it
+-- is, to be dropped, or kept if the character can use it.
+function LootFeed:AsJunk(entry)
+	if entry.kind ~= "item" or not entry.id or not self:Get("junkRow") then
+		return entry
 	end
-	return warnings
+	if entry.quality ~= nil and entry.quality < self:Get("minQuality") then
+		return entry
+	end
+	if not ns.Rules.Junk.Decide({ itemID = entry.id, quality = entry.quality }).junk then
+		return entry
+	end
+	return {
+		kind = "item",
+		name = L["Junk"],
+		quality = entry.quality,
+		amount = entry.amount or 1,
+		parts = { { key = entry.id, link = entry.link or entry.name, amount = entry.amount or 1, entry = entry } },
+	}
+end
+
+-- A junk row's item the character turns out to be able to use, once the bags
+-- hold it (a picked lockbox, gray as it is), leaves the junk row for a row of
+-- its own, kept as any usable item; the junk row goes with its last item.
+function LootFeed:CheckJunk(row, now)
+	for index = #row.parts, 1, -1 do
+		local part = row.parts[index]
+		local kind, held, behind = ns.Rules.Usable.Find(part.key)
+		if held and not behind and kind and self:Keeps(kind) then
+			table.remove(row.parts, index)
+			row.amount = (row.amount or 0) - part.amount
+			part.entry.amount = part.amount
+			local own = self.model:Add(part.entry, now, true)
+			if own then
+				self:CheckUsable(own, now)
+			end
+		end
+	end
+	if #row.parts == 0 then
+		self.model:Release(row)
+	end
+end
+
+-- Asks for the junk module's toss window, the window that frees room in the
+-- bags; nothing opens while junk management is off.
+function LootFeed:OpenTossWindow()
+	Bus:Send("OpenTossWindow")
 end
 
 -- Whether the feed keeps items of a kind of usable item: not while it shows
@@ -204,6 +297,10 @@ end
 -- (or is no longer kept) fades out as any row, and sticks again if it becomes
 -- usable before it is gone.
 function LootFeed:CheckUsable(row, now)
+	if row.parts then
+		self:CheckJunk(row, now)
+		return
+	end
 	if row.kind ~= "item" or not row.id then
 		return
 	end
@@ -257,13 +354,15 @@ function LootFeed:Apply()
 	self.feed:SetOptions({
 		direction = self:Get("direction"),
 		maxRows = self:Get("maxRows"),
-		layout = Feed.Design.Layout(Feed.Design.Current(self:DesignSection()), self:Get("size")),
-		opacity = self:Get("backgroundOpacity") / 100,
+		layout = self:Layout(),
+		opacity = self:Get("background") and self:Get("backgroundOpacity") / 100 or 0,
+		color = { ns.Text.RGB(self:Get("backgroundColor")) },
+		fade = self:Get("backgroundFade"),
 		-- Whether the owned count shows is the design's (its part's Shown).
 		showOwned = Feed.Design.Current(self:DesignSection()).parts.owned.shown,
 		showGlow = self:Get("glow"),
 	})
-	self.feed:SetWarnings(self:Warnings())
+	self.feed:SetWarning(self:Warning())
 end
 
 function LootFeed:OnEnable()
@@ -274,23 +373,34 @@ function LootFeed:OnEnable()
 			-- In Edit Mode's title case, as its own frames are named.
 			name = L["Loot Feed"],
 			default = self.DEFAULT_POSITION,
-			-- Its look resets in the look's menu.
-			noReset = true,
-			-- Only the look: it holds every other setting, and its menu edits it.
-			settings = { { kind = "dropdown", key = "look", label = L["Feed Look"],
-				tooltip = L["The feed look this profile uses: every setting of the feed and its row design. Its menu opens it to edit."],
-				generator = Feed.LookMenu.Build } },
+			-- Picked in Edit Mode, the feed opens its look's window, which holds every
+			-- setting, the choice of look and the position's reset; opened so, it
+			-- closes when another frame is picked, and with Edit Mode.
+			window = function()
+				self.LookWindow.OpenFromEditMode()
+			end,
+			closeWindow = function()
+				self.LookWindow.CloseFromEditMode()
+			end,
 			onEditMode = function(active)
-				self.feed:SetPreview(active)
+				if not active then
+					self.LookWindow.CloseFromEditMode()
+				end
+				self:UpdatePreview()
 			end,
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
+		self.feed.onWarningClick = function()
+			self:OpenTossWindow()
+		end
 	end
 	self.feed.disabled = false
 	self.lowQuality = {}
 	self:Apply()
+	self:UpdatePreview()
 	Feed.Sources.Start(self, function(entry)
 		local now = Compat.GetTime()
+		entry = self:AsJunk(entry)
 		local row = self.model:Add(entry, now)
 		if row then
 			self:CheckUsable(row, now)
@@ -331,18 +441,28 @@ function LootFeed:OnEnable()
 	-- So does what the character can use, read from the bags once they are read
 	-- again; and taking a quest from an item.
 	self:On("InventoryChanged", function()
-		self.feed:SetWarnings(self:Warnings())
+		self.feed:SetWarning(self:Warning())
 		self:CheckAll()
 	end)
 	self:OnEvent("QUEST_ACCEPTED", function()
 		self:CheckAll()
+	end)
+	-- Shift held: every item row takes clicks, for its link into the chat.
+	self:OnEvent("MODIFIER_STATE_CHANGED", function()
+		self.feed:SetLinkModifier(Compat.IsChatLinkHeld())
+	end)
+	-- The warning's click opens the toss window only while junk management is on.
+	self:On("ModuleToggled", function(_, name)
+		if name == "Junk" then
+			self.feed:SetWarning(self:Warning())
+		end
 	end)
 end
 
 function LootFeed:OnDisable()
 	if self.feed then
 		self.feed:SetPreview(false)
-		self.feed:SetWarnings({})
+		self.feed:SetWarning(nil)
 		self.feed.frame:Hide()
 		-- The use button hides now, or after the fight.
 		self.feed.disabled = true

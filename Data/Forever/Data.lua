@@ -8,4 +8,8 @@ ns.Data = {
 	-- Gathering highlights (Modules/Highlights): the soft targeting they use
 	-- works there as Lueur found it.
 	highlights = true,
+	-- Collections the game has none of, though the client has their API: no
+	-- appearance sets and no heirlooms, so the loot feed does not offer to
+	-- keep them (Rules/Usable.lua).
+	noCollections = { set = true, heirloom = true },
 }
