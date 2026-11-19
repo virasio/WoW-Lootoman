@@ -49,6 +49,7 @@ Core\Share.lua
 Core\Diagnostics.lua
 Core\Slash.lua
 Core\SelfTest.lua
+Core\BugReport.lua
 Core\Startup.lua
 
 Rules\Junk.lua
@@ -103,6 +104,7 @@ Settings\Profiles.lua
 Settings\Share.lua
 Settings\CopyText.lua
 Settings\JunkList.lua
+Settings\BugReport.lua
 Settings\AutoLootBox.lua
 
 #@debug@

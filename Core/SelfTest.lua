@@ -67,7 +67,8 @@ end
 -- Runs every check; the lines go into the saved diagnostics, and are
 -- returned (a line from a timer may still come). With options.print the chat
 -- gets the failed checks, if any, and the verdict; a check not available on
--- the client is no failure.
+-- the client is no failure. With options.anonymous (the bug report) the
+-- character is not named, only whether its profile is the default one.
 function SelfTest.Run(options)
 	local toChat = options and options.print
 	local saved = ns.Diagnostics.StartSelfTest()
@@ -116,6 +117,9 @@ function SelfTest.Run(options)
 		return "Addon " .. tostring(Compat.GetAddOnMetadata(addonName, "Version"))
 	end)
 	report(function()
+		if options and options.anonymous then
+			return "Profile " .. (Storage:GetProfileName() == Storage.DEFAULT_PROFILE and "Default" or "not Default")
+		end
 		return ("Character %s, profile %s"):format(tostring(Storage.character), Storage:GetProfileName())
 	end)
 	local READ_ONLY = { newer = ", read-only (saved by a newer version)", failed = ", read-only (the upgrade failed)" }

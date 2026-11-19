@@ -193,6 +193,18 @@ ns.Locales.AddEnglish({
 	"The look window opens out of combat.",
 	"/ltm feed: open the loot feed's look window",
 
+	-- Settings/BugReport.lua
+	"Bug Report",
+	"Something went wrong? Copy this report and open a new issue at the address below: say what you did and what you saw.",
+	"Extended Log",
+	"Records what Lootoman decides as it happens, for every character. Turn it on, do what goes wrong, and come back here.",
+	"Where to send it",
+	"Select All",
+	"Refresh",
+	"Clear the Log",
+	"Errors from other addons, and some of Lootoman's, are in BugSack.",
+	"The bug report opens out of combat.",
+
 	-- Settings/Profiles.lua
 	"Profile",
 	"Default",

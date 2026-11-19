@@ -191,6 +191,16 @@ ns.Locales.AddTranslation("ruRU", {
 	-- Settings/Panel.lua
 
 	-- Settings/Profiles.lua
+	["Bug Report"] = "Отчёт об ошибке",
+	["Something went wrong? Copy this report and open a new issue at the address below: say what you did and what you saw."] = "Что-то пошло не так? Скопируйте этот отчёт и создайте новое обращение по адресу ниже: напишите, что вы делали и что увидели.",
+	["Extended Log"] = "Расширенный журнал",
+	["Records what Lootoman decides as it happens, for every character. Turn it on, do what goes wrong, and come back here."] = "Записывает, что Lootoman решает по ходу дела, для всех персонажей. Включите его, повторите то, что идёт не так, и вернитесь сюда.",
+	["Where to send it"] = "Куда отправить",
+	["Select All"] = "Выделить всё",
+	["Refresh"] = "Обновить",
+	["Clear the Log"] = "Очистить журнал",
+	["Errors from other addons, and some of Lootoman's, are in BugSack."] = "Ошибки других аддонов и часть ошибок Lootoman — в BugSack.",
+	["The bug report opens out of combat."] = "Отчёт об ошибке открывается вне боя.",
 	["Profile"] = "Профиль",
 	["Default"] = "По умолчанию",
 	["The profile this character uses. Every character can use its own profile."] = "Профиль этого персонажа. У каждого персонажа может быть свой профиль.",

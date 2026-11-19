@@ -96,6 +96,7 @@ files["Compat/"] = {
 		"WOW_PROJECT_ID",
 		"geterrorhandler",
 		"debugstack",
+		"date",
 		"issecretvalue",
 	},
 }

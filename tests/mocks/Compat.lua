@@ -80,6 +80,7 @@ local state = {
 	linked = {},
 	requested = {},
 	missingAtlases = {},
+	date = "2026-11-19 14:05",
 	playerLevel = 60,
 	cursorItem = nil,
 	cursorFiles = {},
@@ -595,6 +596,11 @@ function Compat.GetItemCount(item, bagsOnly)
 		return 0
 	end
 	return bagsOnly and (info.inBags or info.owned or 0) or (info.owned or 0)
+end
+
+-- state.date: the date and time now.
+function Compat.GetDate()
+	return state.date
 end
 
 -- state.missingAtlases: the atlases the fake client lacks ({ [name] = true }).

@@ -448,6 +448,11 @@ end
 
 -- An item's icon and quality, also before its full data is loaded; either can
 -- be nil.
+-- The date and time now, as "2026-11-19 14:05".
+function Compat.GetDate()
+	return date("%Y-%m-%d %H:%M")
+end
+
 -- Whether the client has a texture atlas of this name.
 function Compat.HasAtlas(name)
 	return C_Texture.GetAtlasInfo(name) ~= nil

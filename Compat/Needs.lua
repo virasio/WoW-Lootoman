@@ -65,6 +65,7 @@ ns.Compat.NEEDS = {
 	GetCursorBagSlot = { "C_Cursor.GetCursorItem" },
 	GetCursorFileID = { "GetFileIDFromPath", optional = { "issecretvalue" } },
 	GetCursorItemID = { "GetCursorInfo" },
+	GetDate = { "date" },
 	GetGameErrorName = { "GetGameMessageInfo" },
 	GetGatheringSkills = { "C_SkillInfo.GetNumSkillLines", optional = {
 		"C_SkillInfo.GetSkillLineInfoByID",

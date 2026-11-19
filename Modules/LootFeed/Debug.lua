@@ -181,6 +181,31 @@ ns.Slash.RegisterDebug("loot", function(argument)
 	end
 end, "/ltm debug loot <pieces>: made-up loot in the feed (alone: the pieces it takes)")
 
+-- The bug report: the profile's look and what in it differs from the defaults.
+ns.BugReport.AddPart(function()
+	local name = Feed.Looks.Current()
+	local look = Feed.Looks.Get(name) or {}
+	local lines = { ("Loot feed look “%s”: base %s, view %s"):format(name, tostring(look.base), Feed.Looks.View(name)) }
+	local function add(prefix, values)
+		local keys = {}
+		for key in pairs(values or {}) do
+			keys[#keys + 1] = key
+		end
+		table.sort(keys)
+		for _, key in ipairs(keys) do
+			local value = values[key]
+			if type(value) == "table" then
+				add(prefix .. key .. ".", value)
+			else
+				lines[#lines + 1] = ("%s%s = %s"):format(prefix, key, tostring(value))
+			end
+		end
+	end
+	add("look.", look.values)
+	add("look.design.", look.changes)
+	return lines
+end)
+
 local function kindOf(bag)
 	return bag.reagent and "reagent" or (bag.family ~= 0 and "profession" or "general")
 end
