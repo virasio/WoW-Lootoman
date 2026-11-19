@@ -448,6 +448,12 @@ end
 
 -- An item's icon and quality, also before its full data is loaded; either can
 -- be nil.
+-- Asks the server for an item's data; ITEM_DATA_LOAD_RESULT(itemID, success)
+-- tells when it came.
+function Compat.RequestItem(itemID)
+	C_Item.RequestLoadItemDataByID(itemID)
+end
+
 function Compat.GetItemLook(item)
 	return C_Item.GetItemIconByID(item), C_Item.GetItemQualityByID(item)
 end

@@ -132,6 +132,7 @@ ns.Compat.NEEDS = {
 	RegisterEvent = { "CreateFrame" },
 	RegisterSlashCommand = { "SlashCmdList" },
 	ReportError = { "geterrorhandler", optional = { "debugstack" } },
+	RequestItem = { "C_Item.RequestLoadItemDataByID" },
 	SetAutoLoot = { "C_CVar.GetCVarInfo", "C_CVar.SetCVar", "InCombatLockdown" },
 	SetAutoLootKey = { "InCombatLockdown", optional = { "GetCurrentBindingSet", "SaveBindings", "SetModifiedClick" } },
 	SetCVar = { "C_CVar.SetCVar", "InCombatLockdown" },

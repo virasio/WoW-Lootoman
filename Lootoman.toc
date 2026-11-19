@@ -90,6 +90,7 @@ Modules\LootFeed\Frames.lua
 Modules\LootFeed\UseButton.lua
 Modules\LootFeed\LootFeed.lua
 Modules\LootFeed\LookWindow.lua
+Modules\LootFeed\Debug.lua
 
 Modules\Highlights\GameSettings.lua
 Modules\Highlights\Sparkles.lua

@@ -177,7 +177,9 @@ local function known(value)
 	return value
 end
 
-local function itemEntry(link, count)
+-- An item's entry from its link and the stack's size; debug loot makes its
+-- own items with it.
+function Sources.ItemEntry(link, count)
 	local icon, quality = Compat.GetItemLook(link)
 	return {
 		kind = "item",
@@ -208,7 +210,7 @@ function Sources.Start(owner, emit)
 		for _, compiled in ipairs(itemFormats) do
 			local args = match(compiled, text)
 			if args then
-				emit(itemEntry(args[1], args[2]))
+				emit(Sources.ItemEntry(args[1], args[2]))
 				return
 			end
 		end

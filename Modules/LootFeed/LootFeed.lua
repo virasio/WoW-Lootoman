@@ -182,6 +182,22 @@ function LootFeed:UpdatePreview()
 	end
 end
 
+-- A gain for the feed, from the game's events or from /ltm debug loot: junk
+-- merges into its row, below the minimum quality it waits in case it turns
+-- out usable.
+function LootFeed:Take(entry)
+	local now = Compat.GetTime()
+	entry = self:AsJunk(entry)
+	local row = self.model:Add(entry, now)
+	if row then
+		self:CheckUsable(row, now)
+		self.feed:Wake()
+	elseif entry.kind == "item" and entry.id and self:Get("keepUsable") and self:Get("items") then
+		-- Below the minimum quality: shown anyway if it turns out usable.
+		self.lowQuality[#self.lowQuality + 1] = { entry = entry, at = now }
+	end
+end
+
 -- The design of the rows: the look's (Looks.lua).
 function LootFeed:DesignSection()
 	return Looks.Get(Looks.Current())
@@ -399,16 +415,7 @@ function LootFeed:OnEnable()
 	self:Apply()
 	self:UpdatePreview()
 	Feed.Sources.Start(self, function(entry)
-		local now = Compat.GetTime()
-		entry = self:AsJunk(entry)
-		local row = self.model:Add(entry, now)
-		if row then
-			self:CheckUsable(row, now)
-			self.feed:Wake()
-		elseif entry.kind == "item" and entry.id and self:Get("keepUsable") and self:Get("items") then
-			-- Below the minimum quality: shown anyway if it turns out usable.
-			self.lowQuality[#self.lowQuality + 1] = { entry = entry, at = now }
-		end
+		self:Take(entry)
 	end)
 	self:On("SettingChanged", function(_, module, key)
 		if module ~= self.name then

@@ -78,6 +78,7 @@ local state = {
 	equipped = {},
 	stack = "Interface/AddOns/Lootoman/Here.lua:1: in function <here>\n[C]: in function 'xpcall'",
 	linked = {},
+	requested = {},
 	playerLevel = 60,
 	cursorItem = nil,
 	cursorFiles = {},
@@ -593,6 +594,11 @@ function Compat.GetItemCount(item, bagsOnly)
 		return 0
 	end
 	return bagsOnly and (info.inBags or info.owned or 0) or (info.owned or 0)
+end
+
+-- state.requested: the item IDs asked for, in order.
+function Compat.RequestItem(itemID)
+	state.requested[#state.requested + 1] = itemID
 end
 
 function Compat.GetItemLook(item)
