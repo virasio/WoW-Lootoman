@@ -180,3 +180,30 @@ ns.Slash.RegisterDebug("loot", function(argument)
 		end
 	end
 end, "/ltm debug loot <pieces>: made-up loot in the feed (alone: the pieces it takes)")
+
+local function kindOf(bag)
+	return bag.reagent and "reagent" or (bag.family ~= 0 and "profession" or "general")
+end
+
+ns.Slash.RegisterDebug("bags", function()
+	for _, bag in ipairs(ns.Inventory.Bags()) do
+		ns.Print(("debug bags: bag %d, %s, family %d: %d of %d free"):format(bag.bag, kindOf(bag), bag.family or 0,
+			bag.free, bag.size))
+	end
+	local slots = ns.Bags.FreeSlots()
+	ns.Print(("  All: %d of %d free (%d used); general %d of %d; reagent %d of %d; profession %d of %d"):format(slots.free,
+		slots.total, slots.used, slots.general, slots.generalTotal, slots.reagent, slots.reagentTotal, slots.profession,
+		slots.professionTotal))
+	local thresholds = {}
+	for _, check in ipairs({
+		{ "all bags", "warnTotal", "warnTotalAt", slots.free, slots.total },
+		{ "general", "warnGeneral", "warnGeneralAt", slots.general, slots.generalTotal },
+		{ "reagent", "warnReagent", "warnReagentAt", slots.reagent, slots.reagentTotal },
+	}) do
+		local on, at = LootFeed:Get(check[2]), LootFeed:Get(check[3])
+		thresholds[#thresholds + 1] = ("%s %s at %d%s"):format(check[1], on and "on" or "off", at,
+			on and check[5] > 0 and check[4] <= at and ", reached" or "")
+	end
+	ns.Print(("  Look “%s”: %s"):format(Feed.Looks.Current(), table.concat(thresholds, "; ")))
+	ns.Print("  Warning text: " .. Feed.SlotsText.Render(LootFeed:Get("slotsText"), slots, "ffffffff"))
+end, "/ltm debug bags: the bags as the low-space warning counts them, and the look's thresholds")

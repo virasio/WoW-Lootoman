@@ -386,3 +386,40 @@ ns.SelfTest.AddReport(function()
 	return ("Highlights: %s; %s; cursors %d of %d; herbalism %s, mining %s, skinning %s"):format(table.concat(functions, ", "),
 		table.concat(settings, ", "), cursors, total, tostring(skill.herbs), tostring(skill.ore), tostring(skill.skinning))
 end)
+
+-- /ltm debug target: what the highlights see in the soft target and why it
+-- sparkles or not, and the game settings they hold. English, as all debug
+-- output.
+ns.Slash.RegisterDebug("target", function()
+	local facts = Compat.GetSoftInteract()
+	if not facts then
+		ns.Print("debug target: no soft target.")
+	else
+		ns.Print(("debug target: %s (object %s, cursor %s); living %s, dead %s, in reach %s; quest related %s, objective %s")
+			:format(tostring(facts.name or "?"), tostring(facts.objectID or "-"), tostring(facts.cursor or "none"),
+			tostring(facts.isLiving), tostring(facts.isDead), tostring(facts.inReach), tostring(facts.questRelated),
+			tostring(facts.questObjective)))
+		local seen = known or { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests(),
+			objectives = Objects.ObjectiveTexts(Compat.GetQuestObjectiveTexts()) }
+		local kind, extra, how = Objects.Classify(facts, seen)
+		local line
+		if not kind then
+			line = ("not a kind that sparkles (%s)"):format(tostring(extra))
+		elseif not Highlights:IsActive() then
+			line = ("%s, but gathering highlights are off"):format(kind)
+		else
+			local wanted, why = Highlights:Wants(kind)
+			line = wanted and ("%s%s: sparkles, %s"):format(kind, how and (" by " .. how) or "", Highlights.State(facts, extra))
+				or ("%s, not lit: %s"):format(kind, tostring(why))
+		end
+		ns.Print("  Kind: " .. line)
+	end
+	local settings = {}
+	for _, list in ipairs({ GameSettings.WANTED, GameSettings.GATED }) do
+		for _, setting in ipairs(list) do
+			settings[#settings + 1] = ("%s=%s%s"):format(setting[1], tostring(Compat.GetCVar(setting[1]) or "unknown"),
+				GameSettings.Holds(setting[1]) and " (held)" or "")
+		end
+	end
+	ns.Print("  Game settings: " .. table.concat(settings, ", "))
+end, "/ltm debug target: what the gathering highlights see in the soft target, and the game settings they hold")
