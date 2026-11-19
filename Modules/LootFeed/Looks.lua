@@ -171,8 +171,7 @@ function Looks.Settings(view)
 		{ kind = "checkbox", key = "warnReagent", label = L["Warn when Few Reagent Slots Are Free"],
 			tooltip = L["Shows the warning while no more reagent bag slots are free than the number below. Reagents go into the general bags when their bag is full."] },
 		{ kind = "slider", key = "warnReagentAt", label = L["Reagent Slots"], min = 0, max = 20, step = 1, format = "%d", parent = "warnReagent" },
-		{ kind = "text", key = "slotsText", label = L["Warning Text"], maxLetters = 80,
-			tooltip = L["The warning's number, from tokens in braces: %s. A colour after a bar: {reagent|33ff33}."]:format(ns.Feed.SlotsText.TokenList()) },
+		{ kind = "text", key = "slotsText", label = L["Warning Text"], maxLetters = 80, note = ns.Feed.SlotsText.Note() },
 	}
 	for _, setting in ipairs(warnings) do
 		content[#content + 1] = setting

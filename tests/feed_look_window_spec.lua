@@ -582,6 +582,13 @@ describe("loot feed look window", function()
 			assert.equals("{free} | {general}", ns.Feed.Looks.Value("Default", "slotsText"))
 			assert.equals("{free} || {general}", field.input:GetText())
 			assert.equals("|cffffffff3|r|cffffffff || |r|cffffffff2|r", window.rows[#window.rows].Amount.text)
+			-- Under the field, what each token stands for: the tokens in white, a bar
+			-- shown as typed; the field's room grows by the note's height.
+			local note = field.note.text
+			assert.truthy(note:find("|cffffffff{free}|r — free slots in all bags\n", 1, true), note)
+			assert.truthy(note:find("|cffffffff{general}|r, |cffffffff{reagent}|r, |cffffffff{profession}|r — free slots in", 1, true), note)
+			assert.truthy(note:find("A colour after a bar: |cffffffff{reagent||33ff33}|r", 1, true), note)
+			assert.same({ "GameFontDisableSmall", 48 + field.note:GetStringHeight() + 8 }, { field.note.fontObject, field.height })
 		end)
 
 		it("sets the look's settings, and the feed follows at once", function()

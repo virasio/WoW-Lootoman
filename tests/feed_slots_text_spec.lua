@@ -29,8 +29,14 @@ describe("loot feed's slots text", function()
 		assert.equals("|cffffffff26|r|cffffffff98|r|cffffffff72|r|cffffffff12|r|cffffffff52|r|cffffffff14|r|cffffffff36|r"
 			.. "|cffffffff0|r|cffffffff10|r", SlotsText.Render(table.concat(list), VALUES, WHITE))
 		assert.equals("|c80ff000012|r", SlotsText.Render("{ General | 80FF0000 }", VALUES, WHITE))
-		assert.equals("{free}, {total}, {used}, {general}, {general.total}, {reagent}, {reagent.total}, {profession}, {profession.total}",
-			SlotsText.TokenList())
+	end)
+
+	it("names every token in the note the look window shows under the template", function()
+		local note = SlotsText.Note()
+		for _, token in ipairs(SlotsText.TOKENS) do
+			assert.truthy(note:find("{" .. token[1] .. "}", 1, true), token[1])
+		end
+		assert.equals(6, select(2, note:gsub("\n", "")) + 1)
 	end)
 
 	it("leaves an unknown token, a bag family's, a broken colour and stray braces as typed", function()

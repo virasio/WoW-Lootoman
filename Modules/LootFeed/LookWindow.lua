@@ -792,6 +792,9 @@ local function labelOf(setting)
 	return type(setting.label) == "function" and setting.label() or setting.label
 end
 
+-- The room a note under a text setting may take, from the setting's left edge.
+local NOTE_WIDTH = LookWindow.PANEL_WIDTH - 48
+
 local function createSetting(parent, setting, y)
 	local control = { setting = setting }
 	local x = setting.parent and INDENT or 0
@@ -860,6 +863,16 @@ local function createSetting(parent, setting, y)
 			input:ClearFocus()
 		end)
 		control.input:SetScript("OnEditFocusLost", save)
+		-- A note under the box, such as the tokens a template takes: its
+		-- tokens in white, a "|" shown as typed.
+		if setting.note then
+			control.note = parent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+			control.note:SetPoint("TOPLEFT", x + 4, y - 46)
+			control.note:SetWidth(NOTE_WIDTH - x)
+			control.note:SetJustifyH("LEFT")
+			control.note:SetText((setting.note:gsub("|", "||"):gsub("{[^{}]*}", "|cffffffff%0|r")))
+			control.height = SETTING_HEIGHT.text + math.ceil(control.note:GetStringHeight()) + 8
+		end
 		if setting.tooltip then
 			control.input:SetScript("OnEnter", function(input)
 				GameTooltip:SetOwner(input, "ANCHOR_RIGHT")
@@ -955,8 +968,9 @@ local function buildSettingsTab(tab, which, controls)
 				controls[#controls + 1] = createSetting(content, VIEW_SETTING, y)
 				y = y - SETTING_HEIGHT.dropdown
 			end
-			controls[#controls + 1] = createSetting(content, setting, y)
-			y = y - SETTING_HEIGHT[setting.kind]
+			local control = createSetting(content, setting, y)
+			controls[#controls + 1] = control
+			y = y - (control.height or SETTING_HEIGHT[setting.kind])
 			if setting.key == "maxRows" then
 				controls[#controls + 1] = createSetting(content, GAP_SETTING, y)
 				y = y - SETTING_HEIGHT.slider

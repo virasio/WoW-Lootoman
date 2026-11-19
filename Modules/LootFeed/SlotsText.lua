@@ -6,6 +6,8 @@ local _, ns = ...
 -- and stand for the free slots Bags.FreeSlots() counts. A colour is six hex
 -- digits (RRGGBB) or eight (AARRGGBB). A token the template does not know, or
 -- a broken colour, stays as typed, so a typo shows.
+local L = ns.L
+
 ns.Feed = ns.Feed or {}
 local SlotsText = {}
 ns.Feed.SlotsText = SlotsText
@@ -14,8 +16,7 @@ ns.Feed.SlotsText = SlotsText
 -- items, joined by "+".
 SlotsText.DEFAULT = "{general}+{reagent|1eff00}"
 
--- Token names and the Bags.FreeSlots() value each one shows, in the order the
--- template's tooltip lists them.
+-- Token names and the Bags.FreeSlots() value each one shows.
 SlotsText.TOKENS = {
 	{ "free", "free" },
 	{ "total", "total" },
@@ -103,11 +104,15 @@ function SlotsText.Render(text, values, defaultColor)
 	return table.concat(pieces)
 end
 
--- The tokens as the template's tooltip lists them: "{free}, {total}, …".
-function SlotsText.TokenList()
-	local names = {}
-	for index, token in ipairs(SlotsText.TOKENS) do
-		names[index] = "{" .. token[1] .. "}"
-	end
-	return table.concat(names, ", ")
+-- What the tokens stand for, one line each (or one per kind of bag), for the
+-- look window to show under the template.
+function SlotsText.Note()
+	return table.concat({
+		L["%s — free slots in all bags"]:format("{free}"),
+		L["%s — slots taken in all bags"]:format("{used}"),
+		L["%s — all slots in all bags"]:format("{total}"),
+		L["%s — free slots in the general, reagent and profession bags"]:format("{general}, {reagent}, {profession}"),
+		L["%s — all slots in those bags"]:format("{general.total}, {reagent.total}, {profession.total}"),
+		L["A colour after a bar: %s"]:format("{reagent|33ff33}"),
+	}, "\n")
 end

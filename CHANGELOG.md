@@ -4,7 +4,7 @@
 
 The loot feed reads better, does more with a click, and its settings are easier to reach.
 
-- **The low-space warning stops crying wolf:** by default it warns only when your general bags run low (3 slots or fewer), since reagents go into the general bags when their own bag is full. Turn on a threshold for all bags or for the reagent bag if you like. Its number is a text you can write (`{general}+{reagent}` by default), its tooltip lists every kind of bag, and a click opens the window to throw away junk.
+- **The low-space warning stops crying wolf:** by default it warns only when your general bags run low (3 slots or fewer), since reagents go into the general bags when their own bag is full. Turn on a threshold for all bags or for the reagent bag if you like. Its number is a text you can write (`{general}+{reagent}` by default, every token explained under the field), its tooltip lists every kind of bag, and a click opens the window to throw away junk.
 - **All junk in one row:** gray items and items you marked as junk gather in one "Junk" row that lists them in its tooltip. An item you can still use, such as a picked lockbox, stays on its own.
 - **Quest items** carry the bags' gold quest border.
 - **Clicks:** Shift-click an item row to link it in the chat; right-click a piece of gear you just looted to equip it.
