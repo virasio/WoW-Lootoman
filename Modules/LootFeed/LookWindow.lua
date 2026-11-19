@@ -751,12 +751,8 @@ local INDENT = 20
 
 -- The choices a dropdown setting offers now: the directions follow the view.
 local function settingChoices(key)
-	for _, setting in ipairs(Looks.Settings(Looks.View(edited))) do
-		if setting.key == key then
-			return setting.choices or {}
-		end
-	end
-	return {}
+	local setting = Looks.Setting(Looks.View(edited), key)
+	return setting and setting.choices or {}
 end
 
 local function formatValue(setting, value)
@@ -795,12 +791,13 @@ local GAP_SETTING = {
 
 -- A setting's label now: the window's own settings say it by a function; the
 -- look's are made once, so their label is the one the look's view gives
--- (labels, by key: "Number of Icons" for a look of icons).
-local function labelOf(setting, labels)
+-- (Looks.Setting: "Number of Icons" for a look of icons).
+local function labelOf(setting, view)
 	if type(setting.label) == "function" then
 		return setting.label()
 	end
-	return labels and labels[setting.key] or setting.label
+	local declared = view and Looks.Setting(view, setting.key)
+	return declared and declared.label or setting.label
 end
 
 -- The room a note under a text setting may take, from the setting's left edge.
@@ -936,8 +933,8 @@ local function createSetting(parent, setting, y)
 		end)
 	end
 	control.label:SetText(labelOf(setting))
-	control.update = function(labels)
-		control.label:SetText(labelOf(setting, labels))
+	control.update = function(view)
+		control.label:SetText(labelOf(setting, view))
 		local value = setting.get and setting.get() or Looks.Value(edited, setting.key)
 		local enabled = not setting.parent or Looks.Value(edited, setting.parent) == true
 		control.label:SetFontObject(enabled and "GameFontHighlight" or "GameFontDisable")
@@ -995,12 +992,9 @@ end
 -- The settings' values, from the look.
 function LookWindow.UpdateFeed()
 	window.updating = true
-	local labels = {}
-	for _, setting in ipairs(Looks.Settings(Looks.View(edited))) do
-		labels[setting.key] = setting.label
-	end
+	local view = Looks.View(edited)
 	for _, control in ipairs(window.settings) do
-		control.update(labels)
+		control.update(view)
 	end
 	window.updating = false
 end

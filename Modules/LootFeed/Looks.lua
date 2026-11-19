@@ -215,12 +215,21 @@ function Looks.Settings(view)
 	return list
 end
 
-local function declared(view, key)
-	for _, setting in ipairs(Looks.Settings(view)) do
-		if setting.key == key and setting.kind ~= "header" then
-			return setting
+-- One setting of a view's list by its key (not a header), or nil. Each view's
+-- list is made once: it follows only what the client has (its collections,
+-- its quality names), which does not change while it runs. The setting is
+-- shared: read it, never change it.
+local byKey = {}
+function Looks.Setting(view, key)
+	if not byKey[view] then
+		byKey[view] = {}
+		for _, setting in ipairs(Looks.Settings(view)) do
+			if setting.kind ~= "header" then
+				byKey[view][setting.key] = setting
+			end
 		end
 	end
+	return byKey[view][key]
 end
 
 -- Whether a look of this view may hold the value: of its default's type, and
@@ -231,7 +240,7 @@ local function allows(view, key, value)
 	if default == nil or type(value) ~= type(default) then
 		return false
 	end
-	local setting = declared(view, key)
+	local setting = Looks.Setting(view, key)
 	if not setting then
 		-- A kind of usable item this client has no collection for keeps its value.
 		return type(default) == "boolean"

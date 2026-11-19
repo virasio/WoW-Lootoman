@@ -572,6 +572,20 @@ describe("loot feed look window", function()
 			ns.Feed.Looks.SetView("Default", "icons")
 			LookWindow.Refresh()
 			assert.same({ "Gap Between Icons", 4, "Number of Icons" }, { gap.label.text, gap.slider.value, settingOf("maxRows").label.text })
+			-- Each view's settings are made once, not on every redraw (a drag
+			-- redraws at the frame rate) nor for every value read.
+			local Looks, made = ns.Feed.Looks, 0
+			local settings = Looks.Settings
+			Looks.Settings = function(...)
+				made = made + 1
+				return settings(...)
+			end
+			LookWindow.Refresh()
+			LookWindow.Refresh()
+			Looks.Set("Default", "maxRows", 6)
+			Looks.Value("Default", "fade")
+			Looks.Settings = settings
+			assert.same({ 0, "Number of Icons" }, { made, settingOf("maxRows").label.text })
 		end)
 
 		it("offers each text's style in the designer, after its size, and the samples follow it alone", function()
