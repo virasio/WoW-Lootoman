@@ -485,7 +485,7 @@ describe("loot feed module", function()
 		local corner = module.feed.frame.Back.pieces.topLeft
 		assert.same({ ns.Feed.Frames.FADE, { 0, 0.5, 0, 0.5 } }, { corner.texture, corner.texCoord })
 		local back = module.feed.frame.Back
-		assert.equals(11, back.pieces.top.height)
+		assert.equals(16, back.pieces.top.height)
 		module:Set("backgroundFade", false)
 		-- Solid, and only 4 pixels past the rows.
 		assert.same({ nil, { 1, 1, 1, 1 }, 4, 4 }, { corner.texture, corner.colorTexture, back.pieces.top.height, corner.width })

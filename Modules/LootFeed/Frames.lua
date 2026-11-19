@@ -678,12 +678,13 @@ end
 
 -- The shared background spans the rows on screen and the warning, from the
 -- anchor edge to the farthest one, in the look's colour and opacity, and
--- reaches past them on every side by a third of a row's height (or an icon's
+-- reaches past them on every side by half a row's height (or of an icon's
 -- size), fading out there. It is nine pieces of one texture of Lootoman's
 -- own, made by a script in the project (Art/Fade.tga: white, its alpha
--- falling off smoothly from its centre): the corners as they are, so the
--- falloff is round there, the edges stretched only along their length, and a
--- solid centre over the rows. Its size eases to the rows' in EASE seconds.
+-- falling off smoothly from its centre to its edges): each corner piece takes
+-- a quarter of it and each edge piece a strip of half of it, stretched to the
+-- margin, so the whole falloff spans the margin whatever its size and is
+-- round at the corners; a solid centre lies over the rows. Its size eases to the rows' in EASE seconds.
 Frames.FADE = [[Interface\AddOns\Lootoman\Art\Fade]]
 Frames.EASE = 0.15
 -- Each piece and its texture coordinates (left, right, top, bottom).
@@ -700,16 +701,17 @@ local PIECES = {
 }
 local CORNERS = { "topLeft", "topRight", "bottomLeft", "bottomRight" }
 
--- How far the background reaches past the rows: with the fade, a third of a
--- row's height (or of an icon's size), over which it fades out; without it,
+-- How far the background reaches past the rows: with the fade, FADE_SHARE of
+-- a row's height (or of an icon's size), over which it fades out; without it,
 -- SOLID_MARGIN pixels.
+Frames.FADE_SHARE = 0.5
 Frames.SOLID_MARGIN = 4
 
 function Frames.BackgroundMargin(layout, fade)
 	if fade == false then
 		return Frames.SOLID_MARGIN
 	end
-	return math.max(1, math.floor(layout.height / 3 + 0.5))
+	return math.max(1, math.floor(layout.height * Frames.FADE_SHARE + 0.5))
 end
 
 function Frames.CreateBackground(frame)

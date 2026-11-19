@@ -347,8 +347,8 @@ describe("loot feed look window", function()
 			LookWindow.Set("background", true)
 			LookWindow.Set("backgroundColor", "336699")
 			assert.same({ true, 0.5, { 0.2, 0.4, 0.6 } }, { back.shown, back.alpha, back.pieces.center.vertex })
-			-- Around the samples, its margin a third of a row.
-			assert.same({ 277, 11 }, { back.width, back.pieces.top.height })
+			-- Around the samples, its margin half a row.
+			assert.same({ 277, 16 }, { back.width, back.pieces.top.height })
 			LookWindow.Set("backgroundFade", false)
 			assert.same({ { 1, 1, 1, 1 }, 4 }, { back.pieces.topLeft.colorTexture, back.pieces.top.height })
 		end)

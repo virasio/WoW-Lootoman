@@ -299,9 +299,9 @@ describe("loot feed frames", function()
 			assert.same({ "100 copper@40" }, layout())
 			assert.same({ "BOTTOMLEFT", feed.frame, "BOTTOMLEFT", 0, 0 }, warning.points[1])
 			assert.same({ false, true, 36 }, { warning.Label.shown, warning.Amount.shown, warning.Icon.width })
-			-- The background spans both, and fades out past them by a third of an icon.
+			-- The background spans both, and fades out past them by half an icon.
 			local back = feed.frame.Back
-			assert.same({ 76, 36, 12, 12 }, { back.width, back.height, back.pieces.left.width, back.pieces.top.height })
+			assert.same({ 76, 36, 18, 18 }, { back.width, back.height, back.pieces.left.width, back.pieces.top.height })
 			feed:SetOptions(options({ direction = "left", layout = icons }))
 			assert.same({ "BOTTOMRIGHT", feed.frame, "BOTTOMRIGHT", 0, 0 }, warning.points[1])
 			-- A stuck icon comes after the warning.
@@ -623,10 +623,10 @@ describe("loot feed frames", function()
 			assert.same({ true, "5" }, { frameWith("Linen Cloth").Owned.shown, frameWith("Linen Cloth").Owned.text })
 		end)
 
-		it("spans one background over the rows on screen, past them by a third of a row where it fades, easing to their size", function()
+		it("spans one background over the rows on screen, past them by half a row where it fades, easing to their size", function()
 			local rows = feed.options.layout
 			local two, three = 2 * rows.height + rows.gap, 3 * rows.height + 2 * rows.gap
-			local margin = math.floor(rows.height / 3 + 0.5)
+			local margin = math.floor(rows.height / 2 + 0.5)
 			model:Add({ kind = "money", amount = 100 }, 0)
 			model:Add({ kind = "xp", amount = 50 }, 0)
 			feed:Draw(1)
