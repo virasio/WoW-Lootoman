@@ -162,6 +162,12 @@ The Default look and default options unless a check says otherwise.
   - *Edit* on a look the profile does not use edits that look and leaves the feed alone; renaming it renames the title, deleting it closes the window.
 - [ ] **Tabs (0.5.9).** *Expected:* on the left four tabs, *Content* first: *What the feed shows*, *Kept usable items* (its kinds under the switch, greyed out while it is off) and *Low-space warning*; *Appearance* (with *View* before *Fill direction*); *Timings*; and the designer's tab, named *Row*, or *Icon* for a look of icons. The samples on the right. Choosing another *View* asks first, then starts the look's design afresh, and the designer's tab is renamed.
 - [ ] **Samples.** *Expected:* sample rows of every kind, the experience row with a thousands amount, and the stuck quest item with the quest mark and "+1".
+- [ ] **Zoom (0.5.9).** Over the samples, choose 150 % and 200 % in the dropdown, then click the maximize button beside it, and click it again.
+  - *Expected:* the samples are drawn larger and still wrap or cut at the preview's edge; parts are chosen and dragged as before, and a drag moves a part as far on screen as the pointer goes.
+  - The maximize button widens the samples over the whole window, the tabs and their panel hidden; clicking again brings them back.
+  - Close and reopen the window: the zoom and the width are as you left them; after `/reload`, back to 100 % and narrow.
+- [ ] **Text style (0.5.9).** On the *Appearance* tab, each *Text style*: *None*, *Shadow*, *Outline*, *Thick outline*.
+  - *Expected:* the names, amounts and owned counts in the feed and in the samples, the stuck row's waiting count and the warning's text follow at once and after `/reload`; *None* (the default) looks as before 0.5.9.
 - [ ] **Row tab.** Choose each part (Row, Icon, Name, Amount, Owned count) by clicking it and from the *Part* list, and click a row's free space and the space between rows.
   - *Expected:* the *Row* tab comes up; the clicked part, or the row, is chosen; the gold frame marks it (a text shows the most room it may take).
   - The first line sits clear of the tab's top edge: *Part* and, for a part but the row, *Shown* to its right with its checkbox first; a divider under it.
@@ -173,6 +179,10 @@ The Default look and default options unless a check says otherwise.
   - *Expected:* the swatch and *Opacity* are greyed out and do nothing until *With background* is ticked; the default colour is black.
   - The feed follows each colour as it is picked; *Cancel* puts the old one back.
   - The row's background lies behind the whole row, under its icon and texts.
+- [ ] **Row border (0.5.9).** A look of rows, the *Row* part: tick *With border*, pick a colour with the swatch beside it, then move *Border width* (1 to 4) and *Opacity* under it; also with *With background* ticked, and with the look's *Size* changed.
+  - *Expected:* the swatch, *Border width* and *Opacity* are greyed out until *With border* is ticked; the default is a white 1-pixel border at half opacity.
+  - Four thin edges along the row's box, inside it, over its own background and under its icon and texts; the feed and the samples follow each change at once, and after `/reload`.
+  - The width stays the same at every *Size*. A look of icons has no border controls.
 - [ ] **Owned count per look.** Tick the owned count's *Shown* in one look, and set *Counts* to *Bags only* with some of an item in the bank and some in the bags; loot that item. *Expected:* with *Bags only* the bank's are not counted; the other looks keep their own.
 - [ ] **Top row (0.5.9).** *Expected:* the looks' dropdown at the top left with the look menu, the edited look chosen; no *Reset* or *Share* buttons (both are in the menu). Choose another look in it: the window edits it, the feed keeps the profile's look, and *Apply* appears beside the dropdown; *Apply* makes the profile use it and goes away. *Reset Position*, at the far right of the row, puts the feed back at its default place in the current Edit Mode layout.
 

@@ -11,6 +11,7 @@ The loot feed reads better, does more with a click, and its settings are easier 
 - **Rows come in one after another** when you loot a lot at once, and leave the same way; the delay is a setting.
 - **The background** takes the colour you pick, reaches a little past the rows and fades out there, and follows them smoothly.
 - **The look window, rebuilt:** an *Edit* button beside the look on the options page; in Edit Mode, clicking the feed opens the window directly. At its top the look you edit, with *Apply* to use another one and *Reset Position*; its settings on four tabs: *Content*, *Appearance*, *Timings* and *Row* (or *Icon*).
+- **More to set:** the rows' texts can have a shadow or an outline, a row's background can have a border in a colour, width and opacity of your choice, and the look window draws its samples at 150 or 200 percent, or widens them over the whole window.
 
 ## 0.5.8
 
