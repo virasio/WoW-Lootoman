@@ -12,14 +12,9 @@ ns.Locales.AddEnglish({
 	"Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page.",
 
 	-- Core/Slash.lua
-	"Debug messages are on for all characters.",
-	"Debug messages are off for all characters.",
-	"Unknown value “%s”. Use /lootoman debug on, off or clear.",
 	"Commands:",
-	"/lootoman or /ltm: open the settings",
-	"/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones",
-	"The saved debug messages and self-test are cleared.",
-	"/lootoman selftest: check the addon against the game client",
+	"/ltm or /lootoman: open the options",
+	"/ltm help: list the commands",
 
 	-- Core/Share.lua
 	"%s settings",
@@ -196,7 +191,7 @@ ns.Locales.AddEnglish({
 	"Size, Percent of the Row Height",
 	"Click a part to choose it, drag it to move it.",
 	"The look window opens out of combat.",
-	"/lootoman design: open the window of the loot feed's look",
+	"/ltm feed: open the loot feed's look window",
 
 	-- Settings/Panel.lua
 	"The junk list opens out of combat.",
@@ -346,7 +341,7 @@ ns.Locales.AddEnglish({
 	"Delete %s? Type “%s” to confirm.",
 	"Delete %s?",
 	"Junk management is off. Turn it on in the options.",
-	"/lootoman toss: open the window to throw away junk",
+	"/ltm junk: open the junk window",
 	"Drag it out of the window to delete it.",
 
 	-- Modules/Junk/SellQueue.lua

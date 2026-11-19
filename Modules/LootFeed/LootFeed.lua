@@ -254,10 +254,10 @@ function LootFeed:CheckJunk(row, now)
 	end
 end
 
--- Asks for the junk module's toss window, the window that frees room in the
+-- Asks for the junk module's window, which frees room in the
 -- bags; nothing opens while junk management is off.
-function LootFeed:OpenTossWindow()
-	Bus:Send("OpenTossWindow")
+function LootFeed:OpenJunkWindow()
+	Bus:Send("OpenJunkWindow")
 end
 
 -- Whether the feed keeps items of a kind of usable item: not while it shows
@@ -391,7 +391,7 @@ function LootFeed:OnEnable()
 		})
 		self.feed.useButton = Feed.UseButton.Create(self.feed)
 		self.feed.onWarningClick = function()
-			self:OpenTossWindow()
+			self:OpenJunkWindow()
 		end
 	end
 	self.feed.disabled = false

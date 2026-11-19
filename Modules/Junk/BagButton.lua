@@ -10,7 +10,7 @@ local L = ns.L
 -- the backpack (when the bags are separate), so it shows and hides with them;
 -- nothing of Blizzard's is changed or hooked. A bag addon that replaces the
 -- game's bags leaves those windows closed: there, the button on its own and
--- /lootoman toss open the window.
+-- /ltm junk open the window.
 local Junk = ns.Modules:Get("Junk")
 local BagButton = {}
 Junk.BagButton = BagButton

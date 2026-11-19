@@ -12,14 +12,9 @@ ns.Locales.AddTranslation("ruRU", {
 	["Lootoman could not upgrade your settings to this version. They are kept as they were, and this session uses default settings. Please report it on the addon's page."] = "Lootoman не смог обновить настройки для этой версии. Они остались без изменений, а в этом сеансе используются настройки по умолчанию. Пожалуйста, сообщите об этом на странице аддона.",
 
 	-- Core/Slash.lua
-	["Debug messages are on for all characters."] = "Отладочные сообщения включены для всех персонажей.",
-	["Debug messages are off for all characters."] = "Отладочные сообщения выключены для всех персонажей.",
-	["Unknown value “%s”. Use /lootoman debug on, off or clear."] = "Неизвестное значение «%s». Используйте /lootoman debug on, off или clear.",
 	["Commands:"] = "Команды:",
-	["/lootoman or /ltm: open the settings"] = "/lootoman или /ltm: открыть настройки",
-	["/lootoman debug [on | off | clear]: show, turn on or turn off debug messages, or clear the saved ones"] = "/lootoman debug [on | off | clear]: показать, включить или выключить отладочные сообщения либо очистить сохранённые",
-	["The saved debug messages and self-test are cleared."] = "Сохранённые отладочные сообщения и самопроверка очищены.",
-	["/lootoman selftest: check the addon against the game client"] = "/lootoman selftest: проверить работу аддона с клиентом игры",
+	["/ltm or /lootoman: open the options"] = "/ltm или /lootoman: открыть настройки",
+	["/ltm help: list the commands"] = "/ltm help: список команд",
 
 	-- Core/Share.lua
 	["%s settings"] = "Настройки: %s",
@@ -191,7 +186,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Size, Percent of the Row Height"] = "Размер в процентах от высоты строки",
 	["Click a part to choose it, drag it to move it."] = "Щёлкните часть, чтобы выбрать её, и перетащите, чтобы сдвинуть.",
 	["The look window opens out of combat."] = "Окно вида открывается вне боя.",
-	["/lootoman design: open the window of the loot feed's look"] = "/lootoman design: открыть окно вида ленты лута",
+	["/ltm feed: open the loot feed's look window"] = "/ltm feed: открыть окно вида ленты лута",
 
 	-- Settings/Panel.lua
 	["The junk list opens out of combat."] = "Список хлама открывается вне боя.",
@@ -341,7 +336,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",
 	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
-	["/lootoman toss: open the window to throw away junk"] = "/lootoman toss: открыть окно, чтобы выбросить хлам",
+	["/ltm junk: open the junk window"] = "/ltm junk: открыть окно хлама",
 	["Drag it out of the window to delete it."] = "Перетащите за пределы окна, чтобы удалить.",
 
 	-- Modules/Junk/SellQueue.lua

@@ -2,7 +2,7 @@ local _, ns = ...
 local Bus, Compat = ns.Bus, ns.Compat
 
 -- Exists only when the addon runs from the repository: the packager removes
--- the #@debug@ block from the TOC. After /lootoman debug on, it prints the loot
+-- the #@debug@ block from the TOC. After /ltm debug log on, it prints the loot
 -- window and the loot events with their times, and shows values the client
 -- keeps secret as <secret>, to check the loot functions in combat.
 -- Development text is not translated.

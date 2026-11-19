@@ -6,7 +6,7 @@ local Compat, Storage = ns.Compat, ns.Storage
 -- while debug messages are on, the last LOG_SIZE of them, each with the
 -- session time. An account-wide section, no part of any profile text; it holds
 -- the character's name and realm as the self-test prints them, and stays in
--- the player's own saved data. /lootoman debug clear empties it.
+-- the player's own saved data. /ltm debug log clear empties it.
 --
 --   { schema = 1, selfTest = { at, client, lines = { … } }, log = { "12.34 text", … } }
 local Diagnostics = {}

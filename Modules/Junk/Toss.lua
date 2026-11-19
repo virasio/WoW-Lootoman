@@ -4,7 +4,7 @@ local Compat, Inventory, L, Prices, Text = ns.Compat, ns.Inventory, ns.L, ns.Pri
 -- The toss window: the bags as an item grid (ItemGrid.lua), junk on top, to
 -- throw things away. It opens from the loot window's button, next to the loot
 -- window (right of it, or left when there is no room) and closes with the
--- loot; or from the bag button and with /lootoman toss, in the middle of the
+-- loot; or from the bag button and with /ltm junk, in the middle of the
 -- screen. Every move in it marks the item for good.
 --
 -- Dragging an item out of the window deletes its stack: a gray one at once;
@@ -248,13 +248,13 @@ function Toss.Grid()
 	return grid
 end
 
-ns.Slash.Register("toss", function()
+ns.Slash.Register("junk", function()
 	if active then
 		Toss.Open(false)
 	else
 		ns.Print(L["Junk management is off. Turn it on in the options."])
 	end
-end, L["/lootoman toss: open the window to throw away junk"])
+end, L["/ltm junk: open the junk window"])
 
 Junk.AddPart({
 	Enable = function()
@@ -292,7 +292,7 @@ Junk.AddPart({
 		end)
 		-- Another part of Lootoman asks for the window (the loot feed's low-space
 		-- warning): in the middle of the screen, as from the bags.
-		Junk.Listen("OpenTossWindow", function()
+		Junk.Listen("OpenJunkWindow", function()
 			Toss.Open(false)
 		end)
 		-- An item taken from the loot: the best of what is left.

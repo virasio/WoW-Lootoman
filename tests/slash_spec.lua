@@ -32,14 +32,62 @@ describe("slash commands", function()
 		assert.equals(2, opened)
 	end)
 
-	it("list the commands for help and for an unknown one", function()
+	-- The printed lines without the chat prefix.
+	local function lines(from, to)
+		local found = {}
+		for index = from or 1, to or #printed do
+			found[#found + 1] = (printed[index]:gsub("^|cff%x+Lootoman|r: ", ""))
+		end
+		return found
+	end
+
+	it("list the player's commands for help and for an unknown one, nothing of debug", function()
 		run("help")
-		local lines = #printed
+		local count = #printed
 		run("dance")
-		assert.matches("Commands:", printed[1])
-		assert.matches("Commands:", printed[lines + 1])
-		assert.equals(2 * lines, #printed)
-		assert.matches("/lootoman design", table.concat(printed, "\n"))
+		local help = lines(1, count)
+		assert.same({ "Commands:", "/ltm or /lootoman: open the options" }, { help[1], help[2] })
+		assert.equals("/ltm help: list the commands", help[#help])
+		assert.matches("\n/ltm feed: open the loot feed's look window\n/ltm junk: open the junk window\n", table.concat(help, "\n"))
+		assert.same(help, lines(count + 1))
+		assert.not_matches("debug", output())
+	end)
+
+	it("have no old names: design, toss and selftest show the help", function()
+		for _, old in ipairs({ "design", "toss", "selftest" }) do
+			Test.state.printed = {}
+			printed = Test.state.printed
+			run(old)
+			assert.equals("Commands:", lines()[1], old)
+		end
+	end)
+
+	describe("for debugging", function()
+		it("say how to list them, alone", function()
+			run("debug")
+			assert.same({ "Debug commands for testing and bug reports: /ltm debug help" }, lines())
+		end)
+
+		it("are listed by debug help and for an unknown one, in English", function()
+			run("debug help")
+			local count = #printed
+			run("debug dance")
+			assert.equals("Debug commands:", lines()[1])
+			assert.same(lines(1, count), lines(count + 1))
+			local text = output()
+			for _, name in ipairs({ "help", "log", "selftest" }) do
+				assert.matches("/ltm debug " .. name, text)
+			end
+		end)
+
+		it("are added by the parts that own them, each once", function()
+			local heard
+			ns.Slash.RegisterDebug("probe", function(argument) heard = argument end, "/ltm debug probe: test")
+			run("DEBUG Probe  some words ")
+			assert.equals("some words", heard)
+			assert.has_error(function() ns.Slash.RegisterDebug("probe", function() end) end)
+			assert.has_error(function() ns.Slash.Register("feed", function() end) end)
+		end)
 	end)
 
 	describe("debug", function()
@@ -48,18 +96,18 @@ describe("slash commands", function()
 		end
 
 		it("shows the switch without changing it", function()
-			run("debug")
+			run("debug log")
 			assert.is_false(debugOn())
 			assert.matches("off for all characters%.", printed[1])
 			ns.Storage:SetGlobal("debug", true)
-			run("DEBUG")
+			run("DEBUG LOG")
 			assert.is_true(debugOn())
 			assert.matches("on for all characters%.", printed[2])
 		end)
 
 		for _, value in ipairs({ "on", "On", "ON", "1" }) do
 			it("turns debug messages on with “" .. value .. "”", function()
-				run("debug " .. value)
+				run("debug log " .. value)
 				assert.is_true(debugOn())
 				assert.matches("on for all characters%.", printed[1])
 			end)
@@ -68,7 +116,7 @@ describe("slash commands", function()
 		for _, value in ipairs({ "off", "Off", "OFF", "0" }) do
 			it("turns debug messages off with “" .. value .. "”", function()
 				ns.Storage:SetGlobal("debug", true)
-				run("debug " .. value)
+				run("debug log " .. value)
 				assert.is_false(debugOn())
 				assert.matches("off for all characters%.", printed[1])
 			end)
@@ -76,7 +124,7 @@ describe("slash commands", function()
 
 		it("explains an unknown value and changes nothing", function()
 			ns.Storage:SetGlobal("debug", true)
-			run("debug  maybe ")
+			run("debug log  maybe ")
 			assert.is_true(debugOn())
 			assert.equals(1, #printed)
 			assert.matches("Unknown value “maybe”", printed[1])
@@ -84,9 +132,9 @@ describe("slash commands", function()
 
 		it("prints debug messages only while it is on", function()
 			ns.Debug("hidden")
-			run("debug on")
+			run("debug log on")
 			ns.Debug("shown")
-			run("debug off")
+			run("debug log off")
 			ns.Debug("hidden again")
 			assert.equals(3, #printed)
 			assert.matches("shown", printed[2])
@@ -95,7 +143,7 @@ describe("slash commands", function()
 
 	describe("selftest", function()
 		it("passes every check on a working client", function()
-			run(" SelfTest ")
+			run(" debug SelfTest ")
 			assert.not_matches("FAILED", output())
 			assert.matches("All checks passed%.", output())
 			assert.matches("Has: OK", output())
@@ -104,21 +152,21 @@ describe("slash commands", function()
 
 		it("reports a failing check", function()
 			Test.state.capabilities["C_AddOns.GetAddOnMetadata"] = nil
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Has: FAILED, wrong answer", output())
 			assert.matches("1 check%(s%) failed%.", output())
 		end)
 
 		it("reports a check that raises an error", function()
 			Test.state.build = {}
-			run("selftest")
+			run("debug selftest")
 			assert.matches("GetBuildInfo: FAILED", output())
 		end)
 
 		it("finishes the report when game calls raise errors", function()
 			ns.Compat.GetBuildInfo = function() error("broken build info") end
 			ns.Compat.GetAddOnMetadata = function() error("broken metadata") end
-			run("selftest")
+			run("debug selftest")
 			assert.matches("GetBuildInfo: FAILED", output())
 			assert.matches("GetAddOnMetadata: FAILED", output())
 			assert.matches("%(.*broken build info%)", output())
@@ -145,11 +193,11 @@ describe("slash commands", function()
 				end
 				return found
 			end
-			run("selftest")
+			run("debug selftest")
 			assert.equals(("Compat: %d of %d functions have what they need"):format(total, total), line())
 			Test.state.capabilities["C_Timer.After"] = nil
 			Test.state.capabilities["C_EncodingUtil.SerializeCBOR"] = nil
-			run("selftest")
+			run("debug selftest")
 			assert.equals(("Compat: %d of %d functions have what they need; missing: After (C_Timer.After); "
 				.. "not on this client: CanEncode (C_EncodingUtil.SerializeCBOR); Decode (C_EncodingUtil.SerializeCBOR); "
 				.. "Encode (C_EncodingUtil.SerializeCBOR)"):format(total - 1, total), line())
@@ -157,13 +205,13 @@ describe("slash commands", function()
 
 		it("reports a timer that cannot be scheduled", function()
 			ns.Compat.After = function() error("no timers") end
-			run("selftest")
+			run("debug selftest")
 			assert.matches("After: FAILED, .*no timers", output())
 			assert.matches("1 check%(s%) failed%.", output())
 		end)
 
 		it("describes the client, the character, the data and the modules", function()
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Client 12%.1%.5 %(70575%), interface 120105\n", output())
 			assert.matches("Addon @project%-version@", output())
 			assert.matches("Character Tester%-Realm, profile Default", output())
@@ -177,7 +225,7 @@ describe("slash commands", function()
 			Loader.Start(fresh)
 			-- The project number Forever will have is not known yet.
 			fresh.Compat.Test.state.projectID = nil
-			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
+			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
 			assert.matches("Game Camelot, family Mainline, project nil; data set: Forever; locale: enUS", text)
 		end)
@@ -191,27 +239,27 @@ describe("slash commands", function()
 				OnEnable = function(self) self:OnEvent("CHAT_MSG_LOOT", function() end) end,
 			})
 			Loader.Start(fresh)
-			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "selftest")
+			fresh.Compat.Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 			local text = table.concat(fresh.Compat.Test.state.printed, "\n")
 			assert.is_true(module:IsActive())
 			assert.matches("Module Feed: on, events: CHAT_MSG_LOOT", text)
 		end)
 
 		it("checks that a profile text reads back", function()
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Encode: OK", output())
 		end)
 
 		it("reports a profile text that does not read back", function()
 			ns.Compat.Decode = function() return nil end
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Encode: FAILED, a text did not read back", output())
 			assert.matches("1 check%(s%) failed%.", output())
 		end)
 
 		it("does not count a client without an encoder as a failure", function()
 			Test.state.encoder = false
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Encode: not available, no C_EncodingUtil, so Import and Share are off", output())
 			assert.matches("All checks passed%.", output())
 		end)
@@ -222,19 +270,19 @@ describe("slash commands", function()
 				[1] = { size = 20, family = 32 },
 				[5] = { size = 36 },
 			})
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Bags: 0 %(16 slots, 15 free%), 1 %(20 slots, 20 free, family 32%), "
 				.. "reagent 5 %(36 slots, 36 free%)\n", output())
 		end)
 
 		it("says when no bag is equipped", function()
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Bags: none\n", output())
 		end)
 
 		it("counts the chat formats the loot feed can read", function()
 			Test.SetGlobalStrings(Formats.ruRU)
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Loot feed chat formats: 20 of 20\n", output())
 		end)
 
@@ -246,14 +294,14 @@ describe("slash commands", function()
 			strings.LOOT_ITEM_SELF = nil
 			strings.FACTION_STANDING_DECREASED = "Reputation with %s decreased by %i."
 			Test.SetGlobalStrings(strings)
-			run("selftest")
+			run("debug selftest")
 			assert.matches("Loot feed chat formats: 18 of 20; LOOT_ITEM_SELF missing, "
 				.. "FACTION_STANDING_DECREASED unreadable\n", output())
 			assert.matches("All checks passed%.", output())
 		end)
 
 		it("confirms timers once they run", function()
-			run("selftest")
+			run("debug selftest")
 			assert.not_matches("After: OK", output())
 			Test.Advance(0)
 			assert.matches("After: OK", output())

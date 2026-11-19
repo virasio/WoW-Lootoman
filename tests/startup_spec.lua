@@ -63,7 +63,7 @@ describe("startup", function()
 		first.Profiles.Create("Main")
 		first.Profiles.Switch("Main")
 		first.Modules:SetEnabled("Feed", true)
-		first.Compat.Test.RunSlashCommand("LOOTOMAN", "debug on")
+		first.Compat.Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		local saved = first.Compat.Test.state.saved.LootomanDB
 
 		-- Session 2, Bo: switches to Main and deletes it.
@@ -106,7 +106,7 @@ describe("startup", function()
 		assert.equals(1, #Test.state.errors)
 		assert.equals(1, #Test.state.printed)
 		assert.matches("could not upgrade", Test.state.printed[1])
-		Test.RunSlashCommand("LOOTOMAN", "selftest")
+		Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 		local line
 		for _, printed in ipairs(Test.state.printed) do
 			line = line or printed:match("Saved data: .*")

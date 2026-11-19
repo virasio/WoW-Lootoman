@@ -229,7 +229,7 @@ describe("gathering highlights", function()
 	end)
 
 	it("lights an object a quest's objective names at once, until the quest no longer wants it, and never learns it", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		Test.state.questObjectives = { "Waterlogged Saw: 0/1" }
 		Test.FireEvent("QUEST_LOG_UPDATE")
 		Test.Advance(0.2)
@@ -272,7 +272,7 @@ describe("gathering highlights", function()
 	end)
 
 	it("says in the debug output when a lit object has no nameplate to draw on", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		Test.state.nameplates = {}
 		target(herb())
 		assert.matches("Highlights: Peacebloom %(object 1617, cursor 3%), herbs, ready, no nameplate",
@@ -280,7 +280,7 @@ describe("gathering highlights", function()
 	end)
 
 	it("tells each new target once in the debug output, with its object ID and cursor", function()
-		Test.RunSlashCommand("LOOTOMAN", "debug on")
+		Test.RunSlashCommand("LOOTOMAN", "debug log on")
 		target({ isObject = true, cursor = 99, name = "Windstone", objectID = 3658 })
 		target({ isObject = true, cursor = 99, name = "Windstone", objectID = 3658 })
 		local lines = {}
@@ -337,7 +337,7 @@ describe("gathering highlights", function()
 	end)
 
 	it("reports to the self-test", function()
-		Test.RunSlashCommand("LOOTOMAN", "selftest")
+		Test.RunSlashCommand("LOOTOMAN", "debug selftest")
 		local report
 		for _, line in ipairs(Test.state.printed) do
 			if line:find("SoftTargetInteract=", 1, true) then
