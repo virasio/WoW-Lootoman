@@ -114,7 +114,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Color"] = "Цвет",
 	["Fade at the Edges"] = "Затухание по краям",
 	["Light Backdrop"] = "Светлая подложка",
-	["The background reaches a little past the rows on every side and fades out there; without this, it ends there sharply."] = "Фон выходит немного за строки со всех сторон и там затухает; без этого он обрывается резко.",
+	["The background reaches past the rows on every side by a third of a row and fades out there; without this, it ends sharply 4 pixels past them."] = "Фон выходит за строки со всех сторон на треть строки и там затухает; без этого он резко кончается в 4 пикселях от них.",
 	["%d %%"] = "%d %%",
 	["Owned Count"] = "Сколько у вас есть",
 	["Glow for Rare Items"] = "Свечение редких предметов",

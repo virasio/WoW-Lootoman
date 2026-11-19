@@ -700,8 +700,15 @@ local PIECES = {
 }
 local CORNERS = { "topLeft", "topRight", "bottomLeft", "bottomRight" }
 
--- The fade's width: a third of a row's height, or of an icon's size.
-function Frames.BackgroundMargin(layout)
+-- How far the background reaches past the rows: with the fade, a third of a
+-- row's height (or of an icon's size), over which it fades out; without it,
+-- SOLID_MARGIN pixels.
+Frames.SOLID_MARGIN = 4
+
+function Frames.BackgroundMargin(layout, fade)
+	if fade == false then
+		return Frames.SOLID_MARGIN
+	end
 	return math.max(1, math.floor(layout.height / 3 + 0.5))
 end
 
@@ -891,8 +898,8 @@ function FeedMixin:SetOptions(options)
 	end
 	Frames.ApplyLayout(self.warningRow, layout)
 	placeWarnings(self)
-	Frames.StyleBackground(self.frame.Back, Frames.BackgroundMargin(layout), options.color or { 0, 0, 0 }, options.opacity or 0,
-		options.fade ~= false)
+	Frames.StyleBackground(self.frame.Back, Frames.BackgroundMargin(layout, options.fade ~= false), options.color or { 0, 0, 0 },
+		options.opacity or 0, options.fade ~= false)
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 	end

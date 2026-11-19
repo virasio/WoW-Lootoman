@@ -350,7 +350,7 @@ describe("loot feed look window", function()
 			-- Around the samples, its margin a third of a row.
 			assert.same({ 277, 11 }, { back.width, back.pieces.top.height })
 			LookWindow.Set("backgroundFade", false)
-			assert.same({ 1, 1, 1, 1 }, back.pieces.topLeft.colorTexture)
+			assert.same({ { 1, 1, 1, 1 }, 4 }, { back.pieces.topLeft.colorTexture, back.pieces.top.height })
 		end)
 
 		it("switches the samples' backdrop between dark and light", function()

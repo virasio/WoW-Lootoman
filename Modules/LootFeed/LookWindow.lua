@@ -323,8 +323,9 @@ function LookWindow.Refresh()
 	-- The feed's background behind them, as the feed draws it.
 	local back = window.stage.Back
 	local opacity = Looks.Value(edited, "background") and Looks.Value(edited, "backgroundOpacity") / 100 or 0
-	Frames.StyleBackground(back, Frames.BackgroundMargin(layout), { Design.RGB(Looks.Value(edited, "backgroundColor")) }, opacity,
-		Looks.Value(edited, "backgroundFade"))
+	local fade = Looks.Value(edited, "backgroundFade")
+	Frames.StyleBackground(back, Frames.BackgroundMargin(layout, fade), { Design.RGB(Looks.Value(edited, "backgroundColor")) }, opacity,
+		fade)
 	back:ClearAllPoints()
 	back:SetPoint("TOPLEFT", window.stage, "TOPLEFT", originX, -originY)
 	back:SetSize(blockWidth, blockHeight)

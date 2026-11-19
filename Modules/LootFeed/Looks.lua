@@ -190,7 +190,7 @@ function Looks.Settings(view)
 		{ kind = "slider", key = "backgroundOpacity", label = L["Opacity"], min = 0, max = 100, step = 5, format = L["%d %%"],
 			parent = "background" },
 		{ kind = "checkbox", key = "backgroundFade", label = L["Fade at the Edges"], parent = "background",
-			tooltip = L["The background reaches a little past the rows on every side and fades out there; without this, it ends there sharply."] },
+			tooltip = L["The background reaches past the rows on every side by a third of a row and fades out there; without this, it ends sharply 4 pixels past them."] },
 	}
 	local timings = {
 		{ kind = "slider", key = "stagger", label = L["Delay Between Rows"],

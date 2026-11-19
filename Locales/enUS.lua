@@ -118,7 +118,7 @@ ns.Locales.AddEnglish({
 	"Color",
 	"Fade at the Edges",
 	"Light Backdrop",
-	"The background reaches a little past the rows on every side and fades out there; without this, it ends there sharply.",
+	"The background reaches past the rows on every side by a third of a row and fades out there; without this, it ends sharply 4 pixels past them.",
 	"%d %%",
 	"Owned Count",
 	"Glow for Rare Items",
