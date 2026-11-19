@@ -117,6 +117,7 @@ ns.Locales.AddEnglish({
 	"One background behind all the rows, in a colour of your choosing.",
 	"Color",
 	"Fade at the Edges",
+	"Light Backdrop",
 	"The background reaches a little past the rows on every side and fades out there; without this, it ends there sharply.",
 	"%d %%",
 	"Owned Count",

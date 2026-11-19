@@ -322,6 +322,54 @@ describe("loot feed look window", function()
 			assert.is_true(window.inset:IsShown())
 		end)
 
+		it("centres the samples, or starts them at the corner and cuts them when they do not fit", function()
+			-- Rows of 277 in an area of 440: centred across; nine rows of 32 and gaps of 6, centred down.
+			local count = #window.rows
+			local height = count * 32 + (count - 1) * 6
+			local top = height + 24 <= 504 and math.floor((504 - height) / 2 + 0.5) or 12
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", math.floor((440 - 277) / 2 + 0.5), -top }, window.rows[1].points[1])
+			-- At 200 % they do not fit: from the corner, cut at the edge.
+			LookWindow.SetZoom(2)
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 12, -12 }, window.rows[1].points[1])
+			assert.is_true(window.preview.clipsChildren)
+			LookWindow.SetZoom(1)
+		end)
+
+		it("shows the feed's background behind the samples, as the feed draws it", function()
+			local back = window.stage.Back
+			assert.is_false(back.shown)
+			LookWindow.Set("background", true)
+			LookWindow.Set("backgroundColor", "336699")
+			assert.same({ true, 0.5, { 0.2, 0.4, 0.6 } }, { back.shown, back.alpha, back.pieces.center.vertex })
+			-- Around the samples, its margin a third of a row.
+			assert.same({ 277, 11 }, { back.width, back.pieces.top.height })
+			LookWindow.Set("backgroundFade", false)
+			assert.same({ 1, 1, 1, 1 }, back.pieces.topLeft.colorTexture)
+		end)
+
+		it("switches the samples' backdrop between dark and light", function()
+			assert.same({ 0, 0, 0, 0.6 }, window.backdrop.colorTexture)
+			window.lightBackdrop.checked = true
+			window.lightBackdrop.scripts.OnClick(window.lightBackdrop)
+			assert.same({ 1, 1, 1, 0.5 }, window.backdrop.colorTexture)
+			LookWindow.SetLightBackdrop(false)
+			assert.same({ { 0, 0, 0, 0.6 }, false }, { window.backdrop.colorTexture, window.lightBackdrop.checked })
+		end)
+
+		it("is resized from its corner, never below its first size, and its samples' area grows with it", function()
+			assert.same({ true, 900, 640 }, { window.resizable, window.resizeBounds[1], window.resizeBounds[2] })
+			window.grip.scripts.OnMouseDown(window.grip)
+			assert.equals("BOTTOMRIGHT", window.sizing)
+			window.grip.scripts.OnMouseUp(window.grip)
+			LookWindow.Resize(1200, 800)
+			assert.same({ 740, 664 }, { window.preview.width, window.preview.height })
+			LookWindow.SetWide(true)
+			assert.equals(1168, window.preview.width)
+			LookWindow.SetWide(false)
+			LookWindow.Resize(500, 300)
+			assert.same({ 900, 640, 440, 504 }, { window.width, window.height, window.preview.width, window.preview.height })
+		end)
+
 		it("widens the samples over the tabs, and back", function()
 			LookWindow.SetWide(true)
 			assert.same({ false, false, LookWindow.WIDTH - 32 }, { window.panel.shown, window.tab1.shown, window.preview.width })
@@ -365,8 +413,14 @@ describe("loot feed look window", function()
 				"Text Style: none",
 				"Horizontal Offset: -2 in -60..36", "Vertical Offset: 2 in -36..59", "With Background: false",
 				"Opacity: 60 in 0..100" }, inspector())
-			-- Icons 36 wide and 4 apart (33 and 4 drawn at 12 of 13), side by side.
-			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", 49, -12 }, window.rows[2].points[1])
+			-- Icons 36 wide and 4 apart (33 and 4 drawn at 12 of 13), side by side in
+			-- one line, centred in the samples' area.
+			local count = #window.rows
+			local width = count * 33 + (count - 1) * 4
+			local left = math.floor((440 - width) / 2 + 0.5)
+			local top = -math.floor((504 - 33) / 2 + 0.5)
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", left, top }, window.rows[1].points[1])
+			assert.same({ "TOPLEFT", window.stage, "TOPLEFT", left + 37 * (count - 1), top }, window.rows[count].points[1])
 			-- The icon stands for the row; the name cannot be chosen.
 			local rowFrame = window.rows[1]
 			-- A hidden owned count has no hit area either.

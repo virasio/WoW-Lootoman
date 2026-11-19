@@ -705,7 +705,7 @@ function Frames.BackgroundMargin(layout)
 	return math.max(1, math.floor(layout.height / 3 + 0.5))
 end
 
-local function createBackground(frame)
+function Frames.CreateBackground(frame)
 	local back = CreateFrame("Frame", nil, frame)
 	-- Under the rows, which are the feed frame's children too.
 	back:SetFrameLevel(frame:GetFrameLevel())
@@ -737,7 +737,7 @@ end
 
 -- The look's margin, colour ({ r, g, b }), opacity (0 to 1) and whether the
 -- margin fades out (else it is solid, as the middle is).
-local function styleBackground(back, margin, color, opacity, fade)
+function Frames.StyleBackground(back, margin, color, opacity, fade)
 	local pieces = back.pieces
 	if back.fade ~= fade then
 		back.fade = fade
@@ -814,7 +814,7 @@ function Frames.Create(model)
 	frame.PreviewBackground:SetAllPoints()
 	frame.PreviewBackground:SetColorTexture(0, 0, 0, 0.2)
 	frame.PreviewBackground:Hide()
-	frame.Back = createBackground(frame)
+	frame.Back = Frames.CreateBackground(frame)
 	local feed = setmetatable({
 		frame = frame,
 		model = model,
@@ -891,7 +891,7 @@ function FeedMixin:SetOptions(options)
 	end
 	Frames.ApplyLayout(self.warningRow, layout)
 	placeWarnings(self)
-	styleBackground(self.frame.Back, Frames.BackgroundMargin(layout), options.color or { 0, 0, 0 }, options.opacity or 0,
+	Frames.StyleBackground(self.frame.Back, Frames.BackgroundMargin(layout), options.color or { 0, 0, 0 }, options.opacity or 0,
 		options.fade ~= false)
 	for _, rowFrame in ipairs(self.rows) do
 		Frames.ApplyLayout(rowFrame, layout)

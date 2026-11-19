@@ -37,6 +37,8 @@ local LookWindow = {}
 Feed.LookWindow = LookWindow
 LootFeed.LookWindow = LookWindow
 
+-- Its smallest size; it is resized from its bottom right corner, for the
+-- session, and the samples' area grows with it.
 LookWindow.WIDTH = 900
 LookWindow.HEIGHT = 640
 LookWindow.PREVIEW_WIDTH = 440
@@ -185,7 +187,11 @@ end
 local window
 local selected = "row"
 local drag
-local zoom, wide = 1, false
+local zoom, wide, light = 1, false, false
+-- The samples' backdrop, dark or light, each half transparent.
+LookWindow.BACKDROPS = { dark = { 0, 0, 0, 0.6 }, light = { 1, 1, 1, 0.5 } }
+-- Room between the samples and their area's edge, when they do not fit.
+LookWindow.STAGE_MARGIN = 12
 -- The look the window edits.
 local edited = Looks.DEFAULT
 
@@ -295,22 +301,35 @@ function LookWindow.Refresh()
 	local options = { layout = layout, showOwned = design.parts.owned.shown, showGlow = Looks.Value(edited, "glow") }
 	-- The warning's sample in the look's own text.
 	window.samples[#window.samples].row = Frames.SampleWarning(Looks.Value(edited, "slotsText"))
-	-- Rows one under another; icons side by side, wrapping at the preview's
-	-- edge; all at the zoom.
-	local previewWidth = wide and LookWindow.WIDTH - 32 or LookWindow.PREVIEW_WIDTH
+	-- Rows one under another, icons side by side in one line, all at the
+	-- zoom: centred in their area, or from its top left corner when they do
+	-- not fit, and cut at its edge.
 	window.stage:SetScale(zoom)
-	window.stage:SetSize(previewWidth / zoom, LookWindow.PREVIEW_HEIGHT / zoom)
+	local stageWidth, stageHeight = window.previewWidth / zoom, window.previewHeight / zoom
+	window.stage:SetSize(stageWidth, stageHeight)
+	local count = #window.rows
+	local blockWidth = isIcons(design) and count * layout.width + (count - 1) * layout.gap or layout.width
+	local blockHeight = isIcons(design) and layout.height or count * layout.height + (count - 1) * layout.gap
+	local margin = LookWindow.STAGE_MARGIN
+	local originX = blockWidth + 2 * margin <= stageWidth and math.floor((stageWidth - blockWidth) / 2 + 0.5) or margin
+	local originY = blockHeight + 2 * margin <= stageHeight and math.floor((stageHeight - blockHeight) / 2 + 0.5) or margin
+	-- The feed's background behind them, as the feed draws it.
+	local back = window.stage.Back
+	local opacity = Looks.Value(edited, "background") and Looks.Value(edited, "backgroundOpacity") / 100 or 0
+	Frames.StyleBackground(back, Frames.BackgroundMargin(layout), { Design.RGB(Looks.Value(edited, "backgroundColor")) }, opacity,
+		Looks.Value(edited, "backgroundFade"))
+	back:ClearAllPoints()
+	back:SetPoint("TOPLEFT", window.stage, "TOPLEFT", originX, -originY)
+	back:SetSize(blockWidth, blockHeight)
+	back:SetShown(opacity > 0)
+	window.backdrop:SetColorTexture(unpack(LookWindow.BACKDROPS[light and "light" or "dark"]))
 	local left, top = 0, 0
-	local room = previewWidth / zoom - 24
 	for index, rowFrame in ipairs(window.rows) do
 		Frames.ApplyLayout(rowFrame, layout)
 		local sample = window.samples[index]
 		Frames.Fill(rowFrame, sample.row, options, sample.stuck and { waiting = sample.waiting } or nil)
-		if isIcons(design) and left > 0 and left + layout.width > room then
-			left, top = 0, top + layout.height + layout.gap
-		end
 		rowFrame:ClearAllPoints()
-		rowFrame:SetPoint("TOPLEFT", window.stage, "TOPLEFT", 12 + left, -12 - top)
+		rowFrame:SetPoint("TOPLEFT", window.stage, "TOPLEFT", originX + left, -originY - top)
 		rowFrame:Show()
 		if isIcons(design) then
 			left = left + layout.width + layout.gap
@@ -384,22 +403,48 @@ function LookWindow.Zoom()
 	return zoom
 end
 
--- The samples over the whole width of the window, the tabs hidden; and back.
-function LookWindow.SetWide(on)
-	wide = on == true
+-- The samples' area by the window's size: right of the tabs' panel, or over
+-- the whole width while wide.
+function LookWindow.Layout()
 	if not window then
 		return
 	end
+	local width = window.width or LookWindow.WIDTH
+	local height = window.height or LookWindow.HEIGHT
+	window.previewWidth = wide and width - 32 or width - LookWindow.PANEL_WIDTH - 48
+	window.previewHeight = height + LookWindow.PANEL_TOP - 36
 	local preview = window.preview
 	preview:ClearAllPoints()
 	preview:SetPoint("TOPRIGHT", -16, LookWindow.PANEL_TOP)
-	preview:SetSize(wide and LookWindow.WIDTH - 32 or LookWindow.PREVIEW_WIDTH, LookWindow.PREVIEW_HEIGHT)
+	preview:SetSize(window.previewWidth, window.previewHeight)
 	window.panel:SetShown(not wide)
 	window.inset:SetShown(not wide)
 	for id = 1, 4 do
 		window["tab" .. id]:SetShown(not wide)
 	end
 	LookWindow.Refresh()
+end
+
+-- The samples over the whole width of the window, the tabs hidden; and back.
+function LookWindow.SetWide(on)
+	wide = on == true
+	LookWindow.Layout()
+end
+
+-- A light backdrop under the samples, or the dark one; for the session.
+function LookWindow.SetLightBackdrop(on)
+	light = on == true
+	if window then
+		window.lightBackdrop:SetChecked(light)
+	end
+	LookWindow.Refresh()
+end
+
+-- The window resized (from its corner, or by a test).
+function LookWindow.Resize(width, height)
+	if window then
+		window:SetSize(math.max(LookWindow.WIDTH, width), math.max(LookWindow.HEIGHT, height))
+	end
 end
 
 -- Switches the window to another look, which the profile may not use: Apply
@@ -926,6 +971,26 @@ local function build()
 	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 	frame:SetScript("OnUpdate", LookWindow.OnUpdate)
 	frame:SetScript("OnHide", stopDrag)
+	-- Resized from its bottom right corner, never smaller than it starts.
+	frame:SetResizable(true)
+	local screenWidth, screenHeight = UIParent:GetWidth(), UIParent:GetHeight()
+	frame:SetResizeBounds(LookWindow.WIDTH, LookWindow.HEIGHT, math.max(LookWindow.WIDTH, screenWidth or 0),
+		math.max(LookWindow.HEIGHT, screenHeight or 0))
+	frame.grip = CreateFrame("Button", nil, frame)
+	frame.grip:SetSize(16, 16)
+	frame.grip:SetPoint("BOTTOMRIGHT", -4, 4)
+	frame.grip:SetNormalTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up]])
+	frame.grip:SetHighlightTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight]])
+	frame.grip:SetPushedTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down]])
+	frame.grip:SetScript("OnMouseDown", function()
+		frame:StartSizing("BOTTOMRIGHT")
+	end)
+	frame.grip:SetScript("OnMouseUp", function()
+		frame:StopMovingOrSizing()
+	end)
+	frame:SetScript("OnSizeChanged", function()
+		LookWindow.Layout()
+	end)
 
 	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")
 	close:SetPoint("TOPRIGHT", 1, 0)
@@ -988,9 +1053,11 @@ local function build()
 	frame.preview = CreateFrame("Frame", nil, frame)
 	frame.preview:SetPoint("TOPRIGHT", -16, LookWindow.PANEL_TOP)
 	frame.preview:SetSize(LookWindow.PREVIEW_WIDTH, LookWindow.PREVIEW_HEIGHT)
-	-- The samples stand on a stage that takes the zoom.
+	-- The samples stand on a stage that takes the zoom, the feed's background
+	-- behind them.
 	frame.stage = CreateFrame("Frame", nil, frame.preview)
 	frame.stage:SetPoint("TOPLEFT")
+	frame.stage.Back = Frames.CreateBackground(frame.stage)
 	-- Over the samples: the zoom, and the button that widens them over the tabs.
 	frame.wideButton = CreateFrame("Frame", nil, frame, "MaximizeMinimizeButtonFrameTemplate")
 	frame.wideButton:SetPoint("BOTTOMRIGHT", frame.preview, "TOPRIGHT", 0, 2)
@@ -1014,6 +1081,17 @@ local function build()
 		end
 	end)
 
+	-- The samples' backdrop, dark or light, at the left over them.
+	frame.lightBackdrop = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	frame.lightBackdrop:SetSize(24, 24)
+	frame.lightBackdrop:SetPoint("BOTTOMLEFT", frame.preview, "TOPLEFT", 0, 1)
+	frame.lightBackdrop.label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	frame.lightBackdrop.label:SetPoint("LEFT", frame.lightBackdrop, "RIGHT", 2, 0)
+	frame.lightBackdrop.label:SetText(L["Light Backdrop"])
+	frame.lightBackdrop:SetScript("OnClick", function(button)
+		LookWindow.SetLightBackdrop(button:GetChecked())
+	end)
+
 	local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	hint:SetPoint("TOPLEFT", frame.preview, "BOTTOMLEFT", 4, -8)
 	hint:SetText(L["Click a part to choose it, drag it to move it."])
@@ -1030,9 +1108,9 @@ local function build()
 	frame.panel:SetFrameLevel(frame.inset:GetFrameLevel() + 1)
 	-- A wide row is cut off at the preview's edge.
 	frame.preview:SetClipsChildren(true)
-	local previewBackground = frame.preview:CreateTexture(nil, "BACKGROUND")
-	previewBackground:SetAllPoints()
-	previewBackground:SetColorTexture(0, 0, 0, 0.6)
+	frame.backdrop = frame.preview:CreateTexture(nil, "BACKGROUND")
+	frame.backdrop:SetAllPoints()
+	frame.backdrop:SetColorTexture(unpack(LookWindow.BACKDROPS.dark))
 	frame.preview:EnableMouse(true)
 	frame.preview:SetScript("OnMouseDown", function()
 		LookWindow.Select("row")
@@ -1168,6 +1246,8 @@ function LookWindow.Open(name)
 		end
 		window = build()
 		LookWindow.window = window
+		edited = Looks.Get(name) and name or Looks.Current()
+		LookWindow.Layout()
 	end
 	edited = Looks.Get(name) and name or Looks.Current()
 	if not window:IsShown() then

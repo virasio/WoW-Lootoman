@@ -79,9 +79,19 @@ function methods:SetPoint(...)
 end
 function methods:SetSize(width, height)
 	if not blocked(self, "SetSize") then
+		local changed = self.width ~= width or self.height ~= height
 		self.width, self.height = width, height
+		-- As the game does, a frame hears that its size changed.
+		if changed and self.scripts and self.scripts.OnSizeChanged then
+			self.scripts.OnSizeChanged(self, width, height)
+		end
 	end
 end
+function methods:SetResizable(resizable) self.resizable = resizable end
+function methods:SetClipsChildren(clips) self.clipsChildren = clips end
+function methods:SetResizeBounds(...) self.resizeBounds = { ... } end
+function methods:StartSizing(point) self.sizing = point end
+function methods:StopMovingOrSizing() self.sizing = nil end
 function methods:SetAttribute(name, value)
 	if not blocked(self, "SetAttribute") then
 		self.attributes = self.attributes or {}

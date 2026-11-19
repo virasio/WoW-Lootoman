@@ -113,6 +113,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["One background behind all the rows, in a colour of your choosing."] = "Один фон за всеми строками, в цвете на ваш выбор.",
 	["Color"] = "Цвет",
 	["Fade at the Edges"] = "Затухание по краям",
+	["Light Backdrop"] = "Светлая подложка",
 	["The background reaches a little past the rows on every side and fades out there; without this, it ends there sharply."] = "Фон выходит немного за строки со всех сторон и там затухает; без этого он обрывается резко.",
 	["%d %%"] = "%d %%",
 	["Owned Count"] = "Сколько у вас есть",
