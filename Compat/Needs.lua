@@ -169,6 +169,7 @@ ns.Compat.NEEDS = {
 	GetUnitGUID = { "UnitGUID", optional = { "issecretvalue" } },
 	GetUnitLevel = { "UnitLevel", optional = { "issecretvalue" } },
 	GetUnitName = { "UnitName", optional = { "issecretvalue" } },
+	HasGameLootHistory = { optional = { "GroupLootHistoryFrame" } },
 	IsFriend = { "C_FriendList.IsFriend" },
 	IsGuildMember = { optional = { "IsGuildMember" } },
 	IsInRaid = { "IsInRaid" },

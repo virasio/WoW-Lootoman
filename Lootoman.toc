@@ -113,6 +113,7 @@ Modules\Rolls\Groups.lua
 Modules\Rolls\Panel.lua
 Modules\Rolls\Marks.lua
 Modules\Rolls\DropRow.lua
+Modules\Rolls\LiveWindow.lua
 Modules\Rolls\SuspiciousNeeds.lua
 Modules\Rolls\Demo.lua
 Modules\Rolls\Rolls.lua

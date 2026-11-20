@@ -255,6 +255,21 @@ function Model.Drop(key)
 	return drops[key]
 end
 
+-- Every drop known now, in the order they came.
+function Model.Drops()
+	local list = {}
+	for _, drop in pairs(drops) do
+		list[#list + 1] = drop
+	end
+	table.sort(list, function(a, b) return (a.seen or 0) < (b.seen or 0) end)
+	return list
+end
+
+-- Whether a drop is still rolled on.
+function Model.IsOpen(drop)
+	return drop ~= nil and isOpen(drop)
+end
+
 -- The drop a roll is bound to, or nil.
 function Model.DropOf(rollID)
 	local roll = rolls[rollID]

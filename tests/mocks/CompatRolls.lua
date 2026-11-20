@@ -109,6 +109,12 @@ function Compat.GetGameRollSlots()
 	return slots
 end
 
+-- state.gameLootHistory: whether the fake client has the game's loot
+-- history window.
+function Compat.HasGameLootHistory()
+	return state.gameLootHistory == true
+end
+
 function Compat.GetGameRollContainer()
 	return state.gameRollContainer
 end

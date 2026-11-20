@@ -555,4 +555,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Opens Edit Mode with the loot roll frames picked."] = "Открывает режим редактирования с выбранными окнами розыгрыша лута.",
 	["Rolling…"] = "Идёт розыгрыш…",
 	["All passed"] = "Все отказались",
+	["Show the Loot Rolls Window After Your Choice"] = "Показывать окно розыгрышей после своего выбора",
+	["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it."] = "Когда вы сделали выбор в розыгрыше, окно покажет его вместе с другими розыгрышами группы по ходу дела и будет хранить все разыгранные предметы, пока вы его не закроете.",
+	["Loot Rolls"] = "Розыгрыши добычи",
 })

@@ -27,11 +27,19 @@ local Rolls = ns.Modules:Register({
 		minQuality = 2,
 		spareFriends = true,
 		summary = true,
+		-- The live window, where the game has no loot history window.
+		liveWindow = true,
 	},
 	-- Under the switch: the detection's checkbox with the Ninja Rules button
 	-- beside it. The demo is a debug command's, not the player's.
 	mainSettings = {
 		{ kind = "custom", build = function(page, indent)
+			-- Only on a client without the game's loot history window.
+			if ns.Rolls.LiveWindow.Available() then
+				page:AddCheckbox("Rolls", "liveWindow", L["Show the Loot Rolls Window After Your Choice"],
+					L["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it."],
+					indent, "Rolls")
+			end
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
 				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
 			local row = check:GetParent()
@@ -133,6 +141,7 @@ function Rolls.RedrawAll()
 			Rolls.Redraw(panel.rollID)
 		end
 	end
+	ns.Rolls.LiveWindow.Redraw()
 end
 
 -- An item's stats are asked for: once an item comes in, the marks are
@@ -176,6 +185,7 @@ Model.Subscribe(function(kind, value)
 			History.Record(value)
 		end
 	end
+	ns.Rolls.LiveWindow.OnModel(kind, value)
 end)
 
 local function hookFrames()
@@ -199,6 +209,7 @@ end
 function Rolls:OnEnable()
 	Rolls.starting = true
 	hookFrames()
+	ns.Rolls.LiveWindow.Build()
 	-- In Edit Mode, the roll frames' look-alikes get panels of made-up choices.
 	self:On("RollFramesPreview", function(_, active, frames, strata, level)
 		if active then
@@ -212,6 +223,7 @@ function Rolls:OnEnable()
 		Compat.OnRollChosen(function(rollID, rollType)
 			if Rolls.active then
 				Model.Chose(rollID, rollType)
+				ns.Rolls.LiveWindow.Chose(rollID)
 			end
 		end)
 	end
@@ -283,6 +295,7 @@ function Rolls:OnDisable()
 	waiting = false
 	ns.Rolls.Demo.EndPreview()
 	ns.Rolls.Demo.Stop()
+	ns.Rolls.LiveWindow.Hide()
 	for _, panel in pairs(panels) do
 		Panel.Hide(panel)
 	end

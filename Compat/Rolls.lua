@@ -136,6 +136,12 @@ function Compat.GetGameRollSlots()
 	return slots
 end
 
+-- Whether the game has a loot history window of its own (retail's Loot
+-- Rolls, GroupLootHistoryFrame), which opens after the player's choice.
+function Compat.HasGameLootHistory()
+	return _G["GroupLootHistoryFrame"] ~= nil
+end
+
 -- The container the game stacks its roll frames from, where it stands now.
 function Compat.GetGameRollContainer()
 	return GroupLootContainer

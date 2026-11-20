@@ -562,4 +562,7 @@ ns.Locales.AddEnglish({
 	"Opens Edit Mode with the loot roll frames picked.",
 	"Rolling…",
 	"All passed",
+	"Show the Loot Rolls Window After Your Choice",
+	"Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it.",
+	"Loot Rolls",
 })
