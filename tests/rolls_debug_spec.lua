@@ -88,7 +88,7 @@ describe("the demos", function()
 		assert.same({ "Demos, in the repository's version only:",
 			"/ltm demo chime [object IDs | copper]: play the highlights' chime, or make this character chime on those objects (copper veins) until /reload",
 			"/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
-			"/ltm demo lootrolls: the Loot Rolls window on made-up drops, where the client has no loot history window of its own",
+			"/ltm demo lootrolls: the Loot Rolls window on made-up drops",
 			"/ltm demo roll: play the loot rolls' demo, with no group",
 			"/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits" }, printed(ns, "demo"))
 		for _, command in ipairs({ "help", "debug help" }) do
@@ -122,10 +122,20 @@ describe("the demos", function()
 		assert.same({ "Rolling…", "All passed" }, { window.rows[1].item.status:GetText(), window.rows[4].item.status:GetText() })
 		assert.matches(ns.Rolls.Demo.Heroes()[1].name, window.rows[1].panel.lines[1].text:GetText(), 1, true)
 		assert.same({}, ns.Rolls.History.Groups())
-		-- Where the game has its own window, a line instead.
+		-- Where the game has its own window: shown anyway, saying so; a real choice still does not open it.
 		local retail = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		retail.Compat.Test.state.gameLootHistory = true
+		retail.Compat.Test.SetItems({ [5191] = { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 } })
 		Loader.Start(retail)
 		assert.matches("game's own loot history window", printed(retail, "demo lootrolls")[1], 1, true)
+		for _ = 1, retail.Rolls.DemoHistory.TRIES do
+			retail.Compat.Test.Advance(retail.Rolls.DemoHistory.WAIT)
+		end
+		local shown = retail.Rolls.LiveWindow.Frame()
+		assert.is_true(shown:IsShown())
+		shown:Hide()
+		retail.Compat.Test.StartRoll(7, { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 })
+		retail.Compat.Test.ChooseRoll(7, 0)
+		assert.is_false(shown:IsShown())
 	end)
 end)

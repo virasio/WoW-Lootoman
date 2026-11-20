@@ -50,9 +50,10 @@ local function newRow()
 	return row
 end
 
--- Builds the window, hidden, with its first rows.
-function LiveWindow.Build()
-	if frame or not LiveWindow.Available() then
+-- Builds the window, hidden, with its first rows; force: also where the game
+-- has its own (the repository's demo), where only the demo opens it.
+function LiveWindow.Build(force)
+	if frame or not (force or LiveWindow.Available()) then
 		return frame
 	end
 	frame = CreateFrame("Frame", LiveWindow.NAME, UIParent, "DefaultPanelFlatTemplate")
@@ -193,7 +194,7 @@ end
 -- The player chose on a roll: the window opens with it, and with the other
 -- rolls still going when it was closed.
 function LiveWindow.Chose(rollID)
-	if not frame or not Storage:Get("Rolls", "liveWindow") then
+	if not frame or not LiveWindow.Available() or not Storage:Get("Rolls", "liveWindow") then
 		return
 	end
 	if not frame:IsShown() then
