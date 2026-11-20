@@ -185,10 +185,10 @@ local told
 -- read once every QUEST_REFRESH seconds.
 local questFacts
 
--- A chime for one character, on one object, as it starts to sparkle; again
+-- A chime for one character, on one kind of object, as it starts to sparkle; again
 -- only after CHIME.wait seconds. The character is known by a djb2 hash of
 -- its key, not by name.
-Highlights.CHIME = { key = 3911091847, objectID = 176589, file = "Interface\\AddOns\\Lootoman\\Art\\Sounds\\chime.mp3", wait = 60 }
+Highlights.CHIME = { key = 3911091847, objects = { [176589] = true }, file = "Interface\\AddOns\\Lootoman\\Art\\Sounds\\chime.mp3", wait = 60 }
 local chimes, chiming, chimed = false, false, nil
 
 function Highlights.Hash(text)
@@ -206,7 +206,7 @@ function Highlights.ReadChimes()
 end
 
 local function chime(facts, lit, now)
-	local wanted = lit and chimes and facts ~= nil and facts.objectID == Highlights.CHIME.objectID
+	local wanted = lit and chimes and facts ~= nil and Highlights.CHIME.objects[facts.objectID] == true
 	if wanted and not chiming and (not chimed or now - chimed >= Highlights.CHIME.wait) then
 		chimed = now
 		Compat.PlaySoundFile(Highlights.CHIME.file, "Master")
