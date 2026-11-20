@@ -72,6 +72,9 @@ describe("the live window", function()
 		-- The finished drop before it opened is not taken in.
 		assert.same({ "|cff1eff00Mail Helm|r", "|cff1eff00Ring|r" }, items())
 		assert.is_true(window.rows[1].light:IsShown())
+		-- On the screen, right of the roll frames and their panels: not on the
+		-- game's container, which the game lays out nowhere while it is hidden.
+		assert.same({ "BOTTOMLEFT", Loader.ui.UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM }, window.points[1])
 		-- Each row's panel is its own, with the drop's choices.
 		assert.equals(window.rows[2].frame, window.rows[2].panel.frame.parent)
 		assert.matches("Brina", window.rows[2].panel.lines[1].text:GetText())

@@ -34,7 +34,12 @@ ns.Slash.Register("demo", function(argument)
 	local name, rest = (argument or ""):match("^%s*(%S*)%s*(.-)%s*$")
 	local demo = name ~= "" and demos[Text.FoldCase(name)]
 	if demo then
-		demo.handler(rest)
+		-- An error goes to the journal (and BugSack) instead of passing unseen.
+		if not xpcall(function()
+			demo.handler(rest)
+		end, ns.Compat.ReportError) then
+			ns.Print(("demo %s failed: /ltm debug log"):format(name))
+		end
 	else
 		list()
 	end

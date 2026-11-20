@@ -196,7 +196,14 @@ function DemoHistory.WithItems(name, fn, tries)
 		ns.Print(("demo %s: the client has none of its items yet; try again"):format(name))
 		return false
 	end
-	return fn(items)
+	-- Later than the command, from a timer: an error goes to the journal.
+	local ok, result = xpcall(function()
+		return fn(items)
+	end, Compat.ReportError)
+	if not ok then
+		ns.Print(("demo %s failed: /ltm debug log"):format(name))
+	end
+	return ok and result
 end
 
 -- Opens the Roll History window on the made-up history.

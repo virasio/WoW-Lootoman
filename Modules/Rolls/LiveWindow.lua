@@ -174,19 +174,19 @@ local function add(entry)
 	table.insert(entries, 1, entry)
 end
 
--- Where the window first opens: to the right of the game's roll frames and
--- their panels, or right of the screen's centre.
+-- Where the window first opens: on the screen, right of where the game
+-- stacks its roll frames (half of their width) and their panels, near the
+-- bottom. Not on the game's container of the roll frames: hidden, the game
+-- lays it out nowhere, and a window placed on it would not show.
+LiveWindow.LEFT = 140 + Panel.GAP + Panel.WIDTH + 16
+LiveWindow.BOTTOM = 200
+
 local function place()
 	if frame.placed then
 		return
 	end
 	frame:ClearAllPoints()
-	local container = Compat.GetGameRollContainer()
-	if container then
-		frame:SetPoint("BOTTOMLEFT", container, "BOTTOMRIGHT", Panel.GAP + Panel.WIDTH + 16, 0)
-	else
-		frame:SetPoint("LEFT", UIParent, "CENTER", 250, 0)
-	end
+	frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM)
 end
 
 -- Opens the window with a roll, and with the other rolls still going; open
