@@ -4,8 +4,8 @@ local Loader = require("tests.helpers.loader")
 
 local HELM = "|cff1eff00|Hitem:100::::::::40|h[Mail Helm]|h|r"
 local RING = "|cff0070dd|Hitem:200::::::::40|h[Ring]|h|r"
-local DAGGER = "|cff0070dd|Hitem:5616::::::::40|h[Gutwrencher]|h|r"
-local STAFF = "|cffa335ee|Hitem:812::::::::60|h[Glowing Brightwood Staff]|h|r"
+local BAND = "|cffa335ee|Hitem:284716::::::::40|h[Band of the Better Half]|h|r"
+local SWORD = "|cffa335ee|Hitem:17075::::::::60|h[Vis'kag the Bloodletter]|h|r"
 
 describe("the loot rolls' demo", function()
 	local ns, Test, Demo
@@ -17,10 +17,10 @@ describe("the loot rolls' demo", function()
 		Test.SetItems({
 			[100] = { name = "Mail Helm", link = HELM, quality = 2, classID = 4, subclassID = 3, equipLoc = "INVTYPE_HEAD", icon = 1, stats = {} },
 			[200] = { name = "Ring", link = RING, quality = 3, classID = 4, subclassID = 0, equipLoc = "INVTYPE_FINGER", icon = 2, stats = {} },
-			[5616] = { name = "Gutwrencher", link = DAGGER, quality = 3, classID = 2, subclassID = 15, equipLoc = "INVTYPE_WEAPON", icon = 3,
-				bindType = 2, stats = { ITEM_MOD_AGILITY_SHORT = 5 } },
-			[812] = { name = "Glowing Brightwood Staff", link = STAFF, quality = 4, classID = 2, subclassID = 10, equipLoc = "INVTYPE_2HWEAPON",
-				icon = 4, stats = { ITEM_MOD_INTELLECT_SHORT = 29 } },
+			[284716] = { name = "Band of the Better Half", link = BAND, quality = 4, classID = 4, subclassID = 0, equipLoc = "INVTYPE_FINGER", icon = 3,
+				stats = { ITEM_MOD_INTELLECT_SHORT = 9 } },
+			[17075] = { name = "Vis'kag the Bloodletter", link = SWORD, quality = 4, classID = 2, subclassID = 7, equipLoc = "INVTYPE_WEAPON",
+				icon = 4, stats = {} },
 		})
 		Test.state.worn = { [1] = HELM, [11] = RING }
 		Test.SetUnits({ player = { name = "Tester", class = "WARRIOR", level = 30, guid = Test.state.playerGUID } })
@@ -44,12 +44,12 @@ describe("the loot rolls' demo", function()
 		-- toast's border, the icon in its quality's border, the name in its colour.
 		assert.is_nil(group.frame.label)
 		assert.same({ 286, 76 }, { group.frame.border.width, group.frame.border.height })
-		assert.same({ "loottoast-itemborder-3", "loottoast-itemborder-4" }, { group.frame.iconBorder.atlas, raid.frame.iconBorder.atlas })
-		assert.same({ 0, 0.44, 0.87 }, group.frame.name.color)
+		assert.same({ "loottoast-itemborder-4", "loottoast-itemborder-4" }, { group.frame.iconBorder.atlas, raid.frame.iconBorder.atlas })
+		assert.same({ 0.64, 0.21, 0.93 }, group.frame.name.color)
 		assert.same({ 0.64, 0.21, 0.93 }, raid.frame.name.color)
 		assert.same({ "TOPRIGHT", group.frame, "TOPRIGHT", -44, -6 }, group.buttons[3].points[1])
-		-- A blue dagger for the group, a purple staff for the raid.
-		assert.same({ "Gutwrencher", "Glowing Brightwood Staff" }, { group.frame.name:GetText(), raid.frame.name:GetText() })
+		-- On WoW Forever a purple ring from a dungeon for the group, Onyxia's sword for the raid.
+		assert.same({ "Band of the Better Half", "Vis'kag the Bloodletter" }, { group.frame.name:GetText(), raid.frame.name:GetText() })
 		assert.equals(5, #group.view.players)
 		-- The player's own line stands under a hero's name too: no real character in the pictures.
 		assert.is_true(group.view.players[1].isSelf)
@@ -121,12 +121,12 @@ describe("the loot rolls' demo", function()
 	end)
 
 	it("waits a moment for an item the game has not loaded, then takes worn gear in its place", function()
-		Test.state.items[5616] = nil
+		Test.state.items[284716] = nil
 		assert.is_true(Demo.Start())
 		assert.is_nil(Demo.cards[1])
-		assert.same({ 5616 }, { Test.state.requested[1] })
+		assert.same({ 284716 }, { Test.state.requested[1] })
 		Test.Advance(Demo.WAIT * Demo.TRIES)
-		assert.same({ "Mail Helm", "Glowing Brightwood Staff" }, { Demo.cards[1].frame.name:GetText(), Demo.cards[2].frame.name:GetText() })
+		assert.same({ "Mail Helm", "Vis'kag the Bloodletter" }, { Demo.cards[1].frame.name:GetText(), Demo.cards[2].frame.name:GetText() })
 	end)
 
 	it("waits until real rolls are over, and starts out of combat only", function()

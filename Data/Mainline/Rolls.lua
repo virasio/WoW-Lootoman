@@ -58,7 +58,8 @@ ns.Data.rolls = {
 		DEMONHUNTER = { armor = { [2] = true }, stats = { "AGILITY" } },
 		EVOKER = { armor = { [3] = true }, stats = { "INTELLECT" } },
 	},
-	-- The demo's items: a blue dagger for the group roll (Gutwrencher, BoE),
-	-- a purple staff for the raid roll (Glowing Brightwood Staff).
-	demoItems = { group = 5616, raid = 812 },
+	-- The demo's items: a blue dagger for the group roll (Gutwrencher, BoE; WoW
+	-- Forever's ring is not on retail), a sword of Onyxia's for the raid roll
+	-- (Vis'kag the Bloodletter).
+	demoItems = { group = 5616, raid = 17075 },
 }

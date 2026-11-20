@@ -49,7 +49,8 @@ ns.Data.rolls = {
 		WARLOCK = { armor = { [1] = true }, stats = { "INTELLECT", "SPIRIT" } },
 		DRUID = { armor = { [2] = true, [1] = true, [8] = true }, stats = { "STRENGTH", "AGILITY", "INTELLECT", "SPIRIT" } },
 	},
-	-- The demo's items: a blue dagger for the group roll (Gutwrencher, BoE),
-	-- a purple staff for the raid roll (Glowing Brightwood Staff).
-	demoItems = { group = 5616, raid = 812 },
+	-- The demo's items: a purple ring from a dungeon for the group roll (Band
+	-- of the Better Half, WoW Forever's own), a sword of Onyxia's for the raid
+	-- roll of forty (Vis'kag the Bloodletter).
+	demoItems = { group = 284716, raid = 17075 },
 }
