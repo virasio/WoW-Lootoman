@@ -104,6 +104,7 @@ Modules\Highlights\GameSettings.lua
 Modules\Highlights\Sparkles.lua
 Modules\Highlights\Highlights.lua
 Modules\Rolls\Model.lua
+Modules\Rolls\Chat.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
