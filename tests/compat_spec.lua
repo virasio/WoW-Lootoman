@@ -1,10 +1,17 @@
 -- The real Compat against stubbed game globals, and the mock's contract.
 
-local function loadCompat(path)
+local function loadCompat(path, ...)
 	local ns = {}
 	assert(loadfile(path))("Lootoman", ns)
+	-- Files that add to the same Compat (the loot rolls' part).
+	for _, more in ipairs({ ... }) do
+		assert(loadfile(more))("Lootoman", ns)
+	end
 	return ns.Compat
 end
+
+-- Compat is made of these files, each with its mock.
+local PARTS = { { "Compat/Compat.lua", "tests/mocks/Compat.lua" }, { "Compat/Rolls.lua", "tests/mocks/CompatRolls.lua" } }
 
 local function functionNames(object)
 	local names = {}
@@ -31,10 +38,11 @@ describe("Compat", function()
 	end)
 
 	it("has the same functions as its test mock", function()
-		assert.same(functionNames(Compat), functionNames(loadCompat("tests/mocks/Compat.lua")))
+		assert.same(functionNames(loadCompat(PARTS[1][1], PARTS[2][1])), functionNames(loadCompat(PARTS[1][2], PARTS[2][2])))
 	end)
 
 	it("names what each function needs from the client, and every game namespace it calls", function()
+		Compat = loadCompat(PARTS[1][1], PARTS[2][1])
 		local ns = { Compat = Compat }
 		assert(loadfile("Compat/Needs.lua"))("Lootoman", ns)
 		local needs = Compat.NEEDS
@@ -48,9 +56,12 @@ describe("Compat", function()
 			end
 		end
 		-- A call into a C_ namespace written in a function is listed for it.
-		local file = assert(io.open("Compat/Compat.lua"))
-		local source = file:read("*a")
-		file:close()
+		local source = ""
+		for _, part in ipairs(PARTS) do
+			local file = assert(io.open(part[1]))
+			source = source .. file:read("*a")
+			file:close()
+		end
 		local checked = 0
 		for name, body in source:gmatch("\nfunction Compat%.([%w_]+)%((.-)\nend") do
 			local listed = {}
@@ -418,13 +429,14 @@ describe("Compat", function()
 					GetItemFamily = function(item) return item == 765 and 32 or nil end,
 					GetItemInfo = function(item)
 						if item == 2589 then
-							return "Linen Cloth", "link", 1, 5, 0, "Tradeskill", "Cloth", 200, "", 1, 13, 7, 5, 0, 0, nil, true
+							-- The 14th value: the bind type (2, when equipped).
+							return "Linen Cloth", "link", 1, 5, 0, "Tradeskill", "Cloth", 200, "", 1, 13, 7, 5, 2, 0, nil, true
 						end
 					end,
 				},
 			})
 			assert.same({ name = "Linen Cloth", link = "link", quality = 1, stackSize = 200, sellPrice = 13, isCraftingReagent = true,
-				requiredLevel = 0, classID = 7, subclassID = 5 }, Compat.GetItemInfo(2589))
+				requiredLevel = 0, classID = 7, subclassID = 5, bindType = 2 }, Compat.GetItemInfo(2589))
 			assert.is_nil(Compat.GetItemInfo(999))
 			assert.equals(32, Compat.GetItemFamily(765))
 			assert.equals(0, Compat.GetItemFamily(2589))

@@ -584,6 +584,7 @@ function Compat.GetItemInfo(item)
 		requiredLevel = info.requiredLevel,
 		classID = info.classID,
 		subclassID = info.subclassID,
+		bindType = info.bindType,
 	}
 end
 
@@ -601,6 +602,10 @@ end
 -- state.date: the date and time now.
 function Compat.GetDate()
 	return state.date
+end
+
+function Compat.FormatDay(time)
+	return os.date("!%Y-%m-%d", time)
 end
 
 -- state.missingAtlases: the atlases the fake client lacks ({ [name] = true }).

@@ -237,9 +237,9 @@ local function build()
 end
 
 ns.Slash.Register("junk", function()
-	if not Window.Open("auto") then
-		ns.Print(L["Junk management is off. Turn it on in the options."])
-	end
+	ns.TurnOn.WhenOn("Junk", function()
+		Window.Open("auto")
+	end)
 end, L["/ltm junk: open the junk window"])
 
 Junk.AddPart({

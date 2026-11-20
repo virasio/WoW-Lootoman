@@ -107,7 +107,8 @@ describe("toss window", function()
 		assert.is_false(frame:IsShown())
 		Test.RunSlashCommand("LOOTOMAN", "junk")
 		assert.is_false(frame:IsShown())
-		assert.matches("is off", Test.state.printed[#Test.state.printed])
+		-- Without the game's dialogs in this test, the question comes in the chat.
+		assert.matches("turn on “Enable Junk Management”", Test.state.printed[#Test.state.printed])
 	end)
 
 	it("opens in the middle of the screen when another part asks for it, and not while junk management is off", function()

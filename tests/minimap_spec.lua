@@ -3,10 +3,10 @@ local SettingsAPI = require("tests.mocks.SettingsAPI")
 local UI = require("tests.mocks.UI")
 
 describe("minimap icon", function()
-	local ns, Test, Icon, button, compartment, opened, minimap
+	local ns, Test, Icon, button, compartment, opened, minimap, settings
 
 	local function start(saved)
-		SettingsAPI.Install()
+		settings = SettingsAPI.Install()
 		ns = Loader.LoadAddon({ skip = {} })
 		Test = ns.Compat.Test
 		minimap = UI.NewFake(Loader.ui.UIParent)
@@ -106,9 +106,8 @@ describe("minimap icon", function()
 		assert.equals(1, opened)
 		button.scripts.OnClick(button, "RightButton")
 		local entries = Loader.ui.contextMenu.entries
-		assert.same({ "Options", "Loot Feed Look", "Junk", "Bug Report" },
-			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text })
-		assert.is_true(entries[3].enabled)
+		assert.same({ "Options", "Loot Feed Look", "Junk", "Ninja Rules", "Bug Report" },
+			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text, entries[5].text })
 		entries[1].callback()
 		assert.equals(2, opened)
 		entries[2].callback()
@@ -117,12 +116,37 @@ describe("minimap icon", function()
 		ns.Bus:On("OpenJunkWindow", "test", function() junk = junk + 1 end)
 		entries[3].callback()
 		assert.equals(1, junk)
-		entries[4].callback()
+		entries[5].callback()
 		assert.is_true(ns.BugReportWindow.Frame().shown)
-		-- Junk is greyed while junk management is off.
+		-- The loot rolls' ninja rules, while the detection is on; the demo is no player's entry.
+		assert.same({}, entries[4].entries)
+		ns.Storage:Set("Rolls", "ninja", true)
+		entries[4].callback()
+		assert.is_true(ns.Rolls.NinjaRules.Frame().shown)
+	end)
+
+	it("asks to turn on a feature that is off, from its entry, with Options and Cancel", function()
+		local function ask(index)
+			button.scripts.OnClick(button, "RightButton")
+			Loader.ui.contextMenu.entries[index].callback()
+			local popup = settings.popups[#settings.popups]
+			return popup.which, popup.data.text_arg1, popup.data.acceptText, popup.data.cancelText, popup.data
+		end
+		-- The detection off, the loot rolls on.
+		local which, first, accept, cancel = ask(4)
+		assert.same({ "GENERIC_CONFIRMATION", "Detect Ninja Looters", "Options", "Cancel" }, { which, first, accept, cancel })
+		ns.Modules:SetEnabled("Rolls", false)
+		assert.equals("Show Who Rolled What", select(2, ask(4)))
 		ns.Modules:SetEnabled("Junk", false)
-		button.scripts.OnClick(button, "RightButton")
-		assert.is_false(Loader.ui.contextMenu.entries[3].enabled)
+		assert.equals("Enable Junk Management", select(2, ask(3)))
+		ns.Modules:SetEnabled("LootFeed", false)
+		local _, label, _, _, data = ask(2)
+		assert.equals("Show the Loot Feed", label)
+		assert.equals("To use this, turn on “%s” in the addon's options.", data.text)
+		-- Options opens the options.
+		data.callback()
+		assert.equals(1, opened)
+		assert.is_nil(ns.Modules:Get("LootFeed").LookWindow.window)
 	end)
 
 	it("has an entry in the addon compartment where the client has one, also with the icon hidden", function()

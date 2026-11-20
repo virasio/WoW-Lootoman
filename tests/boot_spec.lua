@@ -18,8 +18,9 @@ describe("the addon", function()
 				assert.is_true(ready)
 				assert.same({}, ns.Compat.Test.state.errors)
 				assert.is_table(ns.SettingsPanel.main)
+				-- Every module starts as its default says (moving the roll frames is off).
 				for _, module in ipairs(ns.Modules:List()) do
-					assert.is_true(module:IsActive(), module.name .. " did not start")
+					assert.equals(module.defaults.enabled, module:IsActive(), module.name)
 				end
 			end)
 		end
