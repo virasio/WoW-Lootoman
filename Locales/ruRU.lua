@@ -204,7 +204,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["/ltm report: open the bug report window"] = "/ltm report: открыть окно отчёта об ошибке",
 	["Options"] = "Настройки",
 	["Loot Feed Look"] = "Вид ленты лута",
-	["Loot Rolls"] = "Розыгрыш лута",
 	["Click: options"] = "Щелчок: настройки",
 	["Right-click: menu"] = "Правый щелчок: меню",
 	["Drag: move"] = "Перетаскивание: переместить",
@@ -447,7 +446,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Not chosen: %d"] = "Не выбрали: %d",
 
 	-- Modules/Rolls/Demo.lua
-	["Demo"] = "Демо",
 	["The demo starts out of combat."] = "Демо запускается вне боя.",
 	["The demo waits until the rolls in progress are over."] = "Демо подождёт, пока не закончатся текущие розыгрыши.",
 

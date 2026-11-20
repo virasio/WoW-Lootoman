@@ -209,7 +209,6 @@ ns.Locales.AddEnglish({
 	-- Settings/Minimap.lua
 	"Options",
 	"Loot Feed Look",
-	"Loot Rolls",
 	"Click: options",
 	"Right-click: menu",
 	"Drag: move",
@@ -454,7 +453,6 @@ ns.Locales.AddEnglish({
 	"Not chosen: %d",
 
 	-- Modules/Rolls/Demo.lua
-	"Demo",
 	"The demo starts out of combat.",
 	"The demo waits until the rolls in progress are over.",
 

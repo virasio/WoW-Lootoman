@@ -76,7 +76,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - **Ninja Rules** (`/ltm ninja`, or the button beside the checkbox) sets, for each class, which armor types (up to which level), weapon types and primary stats count as its own, and which checks run, how strict they are, and from which quality items are judged.
 - **Exceptions:** right-click a marked name to excuse a need the group agreed to; on leaving a group, a window lists its marked needs to excuse them there.
 - The rolls are kept by group, from joining to leaving, for the marks.
-- *Show Demo* plays two rolls with made-up players beside look-alikes of the game's roll frames, with no group needed.
+- *Show Demo*, on the options page, plays two rolls with heroes of Azeroth beside look-alikes of the game's roll frames, with no group needed.
 - In Edit Mode, *Loot Roll Frames* moves the game's roll frames, a place per layout; until you move them, the game places them as always.
 
 ### Options and profiles
@@ -84,7 +84,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 ![The options page](screenshots/options.png)
 
 - One options page in the game's AddOns options, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk, the loot feed, gathering highlights on WoW Forever and the loot rolls, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window, the junk window and the ninja rules. At the page's top right, *Show the Minimap Icon*, for this character.
-- **The minimap icon**, Lootoman's own picture (the game's AddOns list shows it too), opens the options on a click; a right click opens a menu: *Options*, *Loot Feed Look*, *Junk*, *Loot Rolls* (*Ninja Rules* and *Show Demo*) and *Bug Report*. Drag it round the minimap's edge (a square minimap too, when a minimap addon makes it square); it stays where you put it. The game's addon compartment has the same entry, also with the icon hidden.
+- **The minimap icon**, Lootoman's own picture (the game's AddOns list shows it too), opens the options on a click; a right click opens a menu: *Options*, *Loot Feed Look*, *Junk*, *Ninja Rules* and *Bug Report*. Drag it round the minimap's edge (a square minimap too, when a minimap addon makes it square); it stays where you put it. The game's addon compartment has the same entry, also with the icon hidden.
 - Every character can use its own profile; new characters use the Default profile.
 - **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's options, the loot feed's position and the look it uses, and any of your feed looks. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one; texts from earlier versions are read too. When an imported look's name is taken, choose for each one: keep both, replace yours, or keep yours. Feed looks can also be shared and imported on their own, from the look menu.
 - Changes apply at once, without `/reload`.

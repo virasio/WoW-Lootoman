@@ -33,7 +33,14 @@ describe("the loot rolls' demo", function()
 	it("plays a group roll and a raid roll beside look-alikes of the game's roll frame, with heroes of Azeroth, no group needed", function()
 		assert.is_true(Demo.Start())
 		local group, raid = Demo.cards[1], Demo.cards[2]
-		assert.same({ true, true, "Demo" }, { group.frame:IsShown(), group.panel.frame:IsShown(), group.frame.label:GetText() })
+		assert.same({ true, true }, { group.frame:IsShown(), group.panel.frame:IsShown() })
+		-- Drawn as the game draws its roll frame: no label of its own; the loot
+		-- toast's border, the icon in its quality's border, the name in its colour.
+		assert.is_nil(group.frame.label)
+		assert.same({ 286, 76 }, { group.frame.border.width, group.frame.border.height })
+		assert.same({ "loottoast-itemborder-2", "loottoast-itemborder-3" }, { group.frame.iconBorder.atlas, raid.frame.iconBorder.atlas })
+		assert.same({ 0.12, 1, 0 }, group.frame.name.color)
+		assert.same({ "TOPRIGHT", group.frame, "TOPRIGHT", -44, -6 }, group.buttons[3].points[1])
 		assert.same({ "Mail Helm", "Ring" }, { group.frame.name:GetText(), raid.frame.name:GetText() })
 		assert.equals(5, #group.view.players)
 		assert.same({ "Tester", true }, { group.view.players[1].name, group.view.players[1].isSelf })

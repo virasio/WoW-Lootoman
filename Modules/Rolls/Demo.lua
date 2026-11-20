@@ -1,13 +1,17 @@
 local _, ns = ...
 local Compat, L = ns.Compat, ns.L
 
--- The demo: two look-alikes of the game's roll frame, drawn with the game's
--- art and marked "Demo", stand where the game's frames would, each with its
--- panel, and play for about 15 seconds. A group roll: the player and four
--- heroes of Azeroth choose and roll one by one, the leader changes, and
--- there is a winner. A raid roll: twenty heroes. Each hero has the class his
--- stories give him, among the classes the client has. It needs no group and
--- no real roll: everything in it is made up. The look-alikes' buttons only mark the player's choice on the
+-- The demo: two look-alikes of the game's roll frame, drawn as the game draws
+-- it (its loot toast art and border, the item's icon in its quality border,
+-- the name in its quality colour, the need, greed and pass buttons, the
+-- timer), stand where the game's frames would, each with its panel, and play
+-- for about 15 seconds. A group roll: the player and four heroes of Azeroth
+-- choose and roll one by one, the leader changes, and there is a winner. A
+-- raid roll: twenty heroes. Each hero has the class his stories give him,
+-- among the classes the client has. It needs no group and no real roll:
+-- everything in it is made up. Show Demo on the options page and /ltm debug
+-- demoroll play it; Edit Mode shows its look-alikes still, where the moved
+-- frames will stand. The look-alikes' buttons only mark the player's choice on the
 -- look-alike: nothing goes to the game, and nothing into the history. The
 -- items are the character's worn gear, which the game has loaded; with
 -- nothing worn, a few items of the client's data. No demo while a real roll
@@ -34,10 +38,14 @@ Demo.HEROES = {
 Demo.LENGTH = 15
 Demo.STEP = 1.5
 Demo.RAID = 20
+-- The game's roll frame (GroupLootFrameTemplate): its size, and the parts of
+-- its loot toast texture for the background and the border around it.
 Demo.WIDTH, Demo.HEIGHT = 277, 67
--- The game's roll frame's background: a part of its loot toast texture.
 Demo.TEXTURE = [[Interface\LootFrame\LootToast]]
 Demo.COORDS = { 0.28222656, 0.55273438, 0.30859375, 0.57031250 }
+Demo.BORDER_COORDS = { 0.00097656, 0.28027344, 0.43750000, 0.73437500 }
+Demo.BORDER_WIDTH, Demo.BORDER_HEIGHT = 286, 76
+Demo.TIMER = [[Interface\PaperDollInfoFrame\UI-Character-Skills-Bar]]
 -- The inventory slots whose gear the demo shows (no shirt, no tabard).
 Demo.SLOTS = { 1, 5, 7, 3, 10, 8, 6, 9, 16, 17, 15, 2, 11, 13 }
 
@@ -83,18 +91,20 @@ function Demo.Heroes()
 	return list
 end
 
-local function choiceButton(card, state, atlas, offset)
+-- A choice's button, with the game's three atlases of it.
+local function choiceButton(card, state, name)
 	local button = CreateFrame("Button", nil, card.frame)
 	button:SetSize(32, 32)
-	button:SetPoint("RIGHT", card.frame, "RIGHT", offset, 4)
-	button:SetNormalAtlas(atlas)
+	button:SetNormalAtlas("lootroll-toast-icon-" .. name .. "-up")
+	button:SetPushedAtlas("lootroll-toast-icon-" .. name .. "-down")
+	button:SetHighlightAtlas("lootroll-toast-icon-" .. name .. "-highlight", "ADD")
 	button:SetScript("OnClick", function()
 		Demo.Choose(card, state)
 	end)
 	return button
 end
 
--- A look-alike of the game's roll frame.
+-- A look-alike of the game's roll frame, laid out as its template is.
 local function newCard()
 	local card = {}
 	local frame = CreateFrame("Frame", nil, UIParent)
@@ -105,28 +115,40 @@ local function newCard()
 	frame.background:SetAllPoints(frame)
 	frame.background:SetTexture(Demo.TEXTURE)
 	frame.background:SetTexCoord(unpack(Demo.COORDS))
-	frame.icon = frame:CreateTexture(nil, "ARTWORK")
-	frame.icon:SetSize(42, 42)
-	frame.icon:SetPoint("LEFT", frame, "LEFT", 12, 2)
+	frame.border = frame:CreateTexture(nil, "BORDER")
+	frame.border:SetSize(Demo.BORDER_WIDTH, Demo.BORDER_HEIGHT)
+	frame.border:SetPoint("CENTER")
+	frame.border:SetTexture(Demo.TEXTURE)
+	frame.border:SetTexCoord(unpack(Demo.BORDER_COORDS))
 	frame.name = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	frame.name:SetPoint("LEFT", frame.icon, "RIGHT", 8, 6)
-	frame.name:SetWidth(110)
+	frame.name:SetSize(125, 30)
+	frame.name:SetPoint("TOPLEFT", frame, "TOPLEFT", 60, -15)
 	frame.name:SetJustifyH("LEFT")
+	frame.name:SetJustifyV("MIDDLE")
+	frame.icon = frame:CreateTexture(nil, "ARTWORK")
+	frame.icon:SetSize(34, 34)
+	frame.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -13)
+	frame.iconBorder = frame:CreateTexture(nil, "OVERLAY")
+	frame.iconBorder:SetSize(42, 42)
+	frame.iconBorder:SetPoint("CENTER", frame.icon, "CENTER", 0, 0)
 	frame.timer = CreateFrame("StatusBar", nil, frame)
-	frame.timer:SetSize(180, 8)
-	frame.timer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 62, 12)
-	frame.timer:SetStatusBarTexture([[Interface\PaperDollInfoFrame\UI-Character-Skills-Bar]])
-	frame.timer:SetStatusBarColor(1, 0.82, 0)
+	frame.timer:SetSize(190, 8)
+	frame.timer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 3, 2)
+	frame.timer.background = frame.timer:CreateTexture(nil, "BACKGROUND")
+	frame.timer.background:SetAllPoints(frame.timer)
+	frame.timer.background:SetColorTexture(0, 0, 0, 1)
+	frame.timer:SetStatusBarTexture(Demo.TIMER)
+	frame.timer:SetStatusBarColor(1, 1, 0)
 	frame.timer:SetMinMaxValues(0, Demo.LENGTH)
-	frame.label = frame:CreateFontString(nil, "OVERLAY", "GameFontRedLarge")
-	frame.label:SetPoint("TOP", frame, "TOP", 0, 10)
-	frame.label:SetText(L["Demo"])
 	card.frame = frame
-	card.buttons = {
-		choiceButton(card, STATE.PASS, "lootroll-toast-icon-pass-up", -8),
-		choiceButton(card, STATE.GREED, "lootroll-toast-icon-greed-up", -40),
-		choiceButton(card, STATE.NEED, "lootroll-toast-icon-need-up", -72),
-	}
+	-- Need at the top right, pass right of it, greed under it, as in the game.
+	local need = choiceButton(card, STATE.NEED, "need")
+	need:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -44, -6)
+	local pass = choiceButton(card, STATE.PASS, "pass")
+	pass:SetPoint("LEFT", need, "RIGHT", 6, 2)
+	local greed = choiceButton(card, STATE.GREED, "greed")
+	greed:SetPoint("TOP", need, "BOTTOM", 0, 5)
+	card.buttons = { pass, greed, need }
 	card.panel = Panel.New()
 	card.panel.onRightClick = function(owner, player, view)
 		ns.Rolls.SuspiciousNeeds.Menu(owner, player, view)
@@ -411,8 +433,16 @@ function Demo.Start(static)
 		local link = items[((slot - 1) % math.max(1, #items)) + 1]
 		local info = link and Compat.GetItemInfo(link)
 		local kind = link and Compat.GetItemKind(link)
+		-- The name in its quality's colour, the icon in its quality's border.
+		local quality = info and info.quality or 2
+		local color = ColorManager.GetColorDataForItemQuality(quality)
 		card.frame.name:SetText(info and info.name or "?")
+		if color then
+			card.frame.name:SetTextColor(color.r, color.g, color.b)
+		end
 		card.frame.icon:SetTexture(kind and kind.icon or 134400)
+		card.frame.iconBorder:SetAtlas(ColorManager.GetAtlasDataForLootBorderItemQuality(quality)
+			or ColorManager.GetAtlasDataForLootBorderItemQuality(2))
 		card.frame.timer:SetValue(Demo.LENGTH)
 		local group = slot == 1
 		local players = newPlayers(group and 5 or Demo.RAID, turn + slot, group)

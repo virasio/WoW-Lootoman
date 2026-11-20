@@ -106,7 +106,7 @@ describe("minimap icon", function()
 		assert.equals(1, opened)
 		button.scripts.OnClick(button, "RightButton")
 		local entries = Loader.ui.contextMenu.entries
-		assert.same({ "Options", "Loot Feed Look", "Junk", "Loot Rolls", "Bug Report" },
+		assert.same({ "Options", "Loot Feed Look", "Junk", "Ninja Rules", "Bug Report" },
 			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text, entries[5].text })
 		assert.is_true(entries[3].enabled)
 		entries[1].callback()
@@ -119,14 +119,12 @@ describe("minimap icon", function()
 		assert.equals(1, junk)
 		entries[5].callback()
 		assert.is_true(ns.BugReportWindow.Frame().shown)
-		-- The loot rolls' submenu: their rules and their demo.
-		local rolls = entries[4]
-		assert.same({ true, "Ninja Rules", "Show Demo" }, { rolls.enabled, rolls.entries[1].text, rolls.entries[2].text })
-		rolls.entries[1].callback()
+		-- The loot rolls' ninja rules; the demo is no player's entry.
+		assert.is_true(entries[4].enabled)
+		assert.same({}, entries[4].entries)
+		entries[4].callback()
 		assert.is_true(ns.Rolls.NinjaRules.Frame().shown)
-		rolls.entries[2].callback()
-		assert.is_true(ns.Rolls.Demo.IsRunning())
-		-- Junk is greyed while junk management is off, the loot rolls while theirs are.
+		-- Junk is greyed while junk management is off, the ninja rules while the loot rolls are.
 		ns.Modules:SetEnabled("Junk", false)
 		ns.Modules:SetEnabled("Rolls", false)
 		button.scripts.OnClick(button, "RightButton")

@@ -3,8 +3,8 @@ local Bus, Compat, L, Storage = ns.Bus, ns.Compat, ns.L, ns.Storage
 
 -- The minimap icon and the addon compartment entry, so a player finds the
 -- addon after installing it. A click opens the options; a right click a menu:
--- the options, the loot feed's look, the junk window, the loot rolls' rules
--- and demo, and the bug report.
+-- the options, the loot feed's look, the junk window, the loot rolls' ninja
+-- rules, and the bug report.
 --
 -- The icon is a round button on the minimap's edge, as LibDBIcon draws its
 -- buttons (the same textures), with a global name so minimap button
@@ -98,17 +98,12 @@ function Icon.ShowMenu(owner)
 		end)
 		local module = ns.Modules:Get("Junk")
 		junk:SetEnabled(module ~= nil and module:IsActive())
-		-- The loot rolls: their rules and their demo.
-		-- A submenu: its own click does nothing.
-		local rolls = root:CreateButton(L["Loot Rolls"], function() end)
-		rolls:CreateButton(L["Ninja Rules"], function()
+		-- The loot rolls' rules for ninja detection.
+		local rules = root:CreateButton(L["Ninja Rules"], function()
 			Bus:Send("OpenNinjaRules")
 		end)
-		rolls:CreateButton(L["Show Demo"], function()
-			Bus:Send("ShowRollDemo")
-		end)
-		local rollsModule = ns.Modules:Get("Rolls")
-		rolls:SetEnabled(rollsModule ~= nil and rollsModule:IsActive())
+		local rolls = ns.Modules:Get("Rolls")
+		rules:SetEnabled(rolls ~= nil and rolls:IsActive())
 		root:CreateButton(L["Bug Report"], function()
 			ns.BugReportWindow.Open()
 		end)
