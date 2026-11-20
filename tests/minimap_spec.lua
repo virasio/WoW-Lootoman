@@ -106,8 +106,8 @@ describe("minimap icon", function()
 		assert.equals(1, opened)
 		button.scripts.OnClick(button, "RightButton")
 		local entries = Loader.ui.contextMenu.entries
-		assert.same({ "Options", "Loot Feed Look", "Junk", "Bug Report" },
-			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text })
+		assert.same({ "Options", "Loot Feed Look", "Junk", "Loot Rolls", "Bug Report" },
+			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text, entries[5].text })
 		assert.is_true(entries[3].enabled)
 		entries[1].callback()
 		assert.equals(2, opened)
@@ -117,12 +117,21 @@ describe("minimap icon", function()
 		ns.Bus:On("OpenJunkWindow", "test", function() junk = junk + 1 end)
 		entries[3].callback()
 		assert.equals(1, junk)
-		entries[4].callback()
+		entries[5].callback()
 		assert.is_true(ns.BugReportWindow.Frame().shown)
-		-- Junk is greyed while junk management is off.
+		-- The loot rolls' submenu: their rules and their demo.
+		local rolls = entries[4]
+		assert.same({ true, "Ninja Rules", "Show Demo" }, { rolls.enabled, rolls.entries[1].text, rolls.entries[2].text })
+		rolls.entries[1].callback()
+		assert.is_true(ns.Rolls.NinjaRules.Frame().shown)
+		rolls.entries[2].callback()
+		assert.is_true(ns.Rolls.Demo.IsRunning())
+		-- Junk is greyed while junk management is off, the loot rolls while theirs are.
 		ns.Modules:SetEnabled("Junk", false)
+		ns.Modules:SetEnabled("Rolls", false)
 		button.scripts.OnClick(button, "RightButton")
 		assert.is_false(Loader.ui.contextMenu.entries[3].enabled)
+		assert.is_false(Loader.ui.contextMenu.entries[4].enabled)
 	end)
 
 	it("has an entry in the addon compartment where the client has one, also with the icon hidden", function()

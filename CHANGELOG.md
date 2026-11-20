@@ -1,5 +1,17 @@
 # Lootoman changelog
 
+## 0.6
+
+Loot rolls: see who chose what, and who is ninja looting.
+
+- **A panel beside each of the game's loot roll frames** shows who chose what on that roll and what they rolled, in class colours, as it happens: in a group of five a line per player, with the game's icons, the leader and the winner; in a raid a few short lines with who leads, how many needed, greed and pass, and who has not chosen. The game's roll frames work as before.
+- **Ninja detection**, off until you tick *Detect Ninja Looters*: a need on an armor type, a weapon type or primary stats the needer's class does not count as its own is marked, with the reason in its tooltip; for BoE items it says what the player did on the group's other BoE items; players who need nearly everything in the group are marked, and so is a player who did so the last time you were in a group with him. In a raid the marked players show as squares in class colours.
+- **Ninja Rules** (`/ltm ninja`): for each class, which armor types (up to which level: on WoW Forever a warrior's mail counts up to 40), weapon types and primary stats are its own, and which checks run and how strictly.
+- **Exceptions:** right-click a marked name to excuse a need the group agreed to; leaving a group, a window lists its marked needs.
+- **Show Demo** plays two rolls with made-up players, no group needed.
+- **The game's roll frames can be moved** in Edit Mode (*Loot Roll Frames*).
+- The minimap icon's menu has *Loot Rolls* with the rules and the demo.
+
 ## 0.5.10
 
 Lootoman is easier to find, to reach and to report about.

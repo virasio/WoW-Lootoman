@@ -436,6 +436,70 @@ On WoW Forever, with the default settings unless the check says otherwise.
 - [ ] **Kept.** `/reload`, and a profile text shared and imported. *Expected:* the four settings kept; a new character gets *Icon and name*.
 - [ ] **Russian client.** *Expected:* «Яркость искр», «Цвет искр», «Что подсвечивать» with «Трупы для свежевания» and «Только то, что можно собрать», «Над объектом», «Непрозрачность», «Ничего», «Иконка», «Иконка и название», «Размер текста», «Цвет текста», «Оформление текста» with «Тень», «Обводка», «Толстая обводка», «Подложка»; nothing cut.
 
+## Loot rolls
+
+On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); the demo needs none. Before the first check, `/ltm debug selftest` and the report in *Bug Report*. *Expected:* a `Loot rolls:` line with 4 of the game's roll frames found and their container found (note any other count).
+
+### The panel beside the game's roll frames
+
+- [ ] **On the options page.** *Show Who Rolled What* (on), under it *Detect Ninja Looters* (off) with *Ninja Rules* beside it, and *Show Demo*. *Expected:* hovering the checkbox lights only its row, the button takes its own click; with the module off, all three are greyed.
+- [ ] **A roll in a group.** An item to roll on. *Expected:* beside the game's roll frame, at its right, a dark panel with a thin gold edge: *Waiting for the rolls…*, then a line per player in the game's order: the choice's icon (the dice, the coin, the cross; a dot while undecided), the name in class colour, the roll once there is one, the leader brighter, your own line faintly lit, the winner's checkmark at the end. The game's frame works as before: its buttons, the bind question, the timer. Hover a line: the name, the choice and the roll.
+- [ ] **Several items.** Two or more items at once, more than four if a boss gives them. *Expected:* a panel beside each frame, none touching the next; a fifth item waits for a free frame as in the game, and its panel comes with it.
+- [ ] **The screen's edge.** With the roll frames moved near the right edge (Edit Mode below). *Expected:* the panels stand at the frames' left.
+- [ ] **After a /reload.** `/reload` during a roll. *Expected:* the game shows its frame again, with its panel.
+- [ ] **Two copies of one item.** If a boss drops two of the same, choose differently on each. *Expected:* each panel shows the choices of its own copy; your line shows what you chose there.
+- [ ] **A raid.** Or a group of more than five where possible. *Expected:* short lines: the leading roll and name, *Need: N*, greed and pass as the game's icons with counts (transmog too on retail), *Not chosen: N*; each line's tooltip names its players; never taller than the room the game leaves per frame.
+- [ ] **The loot history's own.** After a roll, the game's loot history (its button, or the loot history window). *Expected:* the panel's choices and rolls match it.
+- [ ] **Trash.** Roll on an item from trash, not a boss. *Expected:* the panel fills too; if it stays on *Waiting for the rolls…* for more than two seconds, then fills from the chat's lines, note it (the loot history did not have the drop).
+- [ ] **Off.** Untick *Show Who Rolled What*. *Expected:* no panels, at once; the game's frames as before.
+
+### The demo
+
+- [ ] **Show Demo.** On the options page, then from the minimap menu's *Loot Rolls*. *Expected:* two look-alikes of the game's roll frame marked *Demo* where the game's frames stand, with items you wear: a group roll (you and four made-up players of your client's classes) and a raid roll of twenty; for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. The names are not ForeverLootRoll's or anyone's.
+- [ ] **With the detection on.** *Detect Ninja Looters* on, *Show Demo* again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
+- [ ] **Not during a roll, not in a fight.** *Show Demo* while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
+
+### Ninja detection
+
+With *Detect Ninja Looters* on, in a group with group loot. Where the group cannot be made to need, the demo shows the marks.
+
+- [ ] **Armor not their own.** A cloth wearer needs mail, a plate wearer needs cloth (on WoW Forever a warrior's leather is his own up to 40). *Expected:* the skull after the name, the reason in the tooltip (*Mail: not a Mage's armor*); on a BoE item *(BoE)* after it.
+- [ ] **Past the level.** On WoW Forever, a warrior past level 40 needs mail. *Expected:* *Mail: not a Warrior's armor past level 40*. Note whether Forever lets warriors wear plate only from 40 (the rule the defaults follow).
+- [ ] **Stats.** A warrior needs a ring or a dagger with Intellect. *Expected:* *Intellect: not a Warrior's stat*; a dagger without Intellect: no mark.
+- [ ] **BoE after a greed.** A player greeds a BoE item that fits him, then needs a BoE item that does not. *Expected:* *Greed on a fitting BoE ([item]), need on this one*.
+- [ ] **Needs nearly everything.** A player needs four items of four. *Expected:* *Needed 4 of 4 items in this group*, on each of his needs.
+- [ ] **Last time.** Leave the group with that player marked, join another with him (or the same one again later). *Expected:* his first need there carries *Last time: needed … (the day, the place)*; after four fair choices, it goes.
+- [ ] **Friends.** A friend or a guild member needs against the rules. *Expected:* no mark; untick *Never Mark Friends and Guild Members*: the mark shows.
+- [ ] **The raid's squares.** In a raid, several ninjas. *Expected:* *Need: N, ninja: M*; under it, a little indented, a square in class colour per ninja, their names and reasons in the squares' tooltips; *+N* for those that do not fit; no squares' line without a ninja.
+
+### The Ninja Rules window
+
+- [ ] **Opening.** `/ltm ninja`, the options page's *Ninja Rules*, the minimap menu's *Loot Rolls → Ninja Rules*, also with the detection off. *Expected:* *Ninja Rules* with two tabs, *Classes* first, on your own class; Escape closes it; the first time in a fight it refuses with a chat line.
+- [ ] **Classes.** *Expected:* the client's classes in their colours (nine on WoW Forever); for each, *Armor* with the game's names of the types and *up to level* boxes beside cloth, leather, mail and plate; *Weapons* in three columns; *Primary Stats* (Spirit only on WoW Forever); what the class cannot equip greyed. Tick a type, untick another, type a level and press Enter, empty a box, type 99. *Expected:* each kept at once (the demo's marks follow); 99 refused; an empty box means any level; *Reset Class* and *Reset All* bring the defaults back.
+- [ ] **The defaults.** On WoW Forever, look at each class. *Expected:* as they were agreed (paladin cloth, druid cloth and leather, warrior and paladin mail and leather up to 40, hunter and shaman leather up to 40). Note any that look wrong.
+- [ ] **Checks.** *Expected:* *Detect Ninja Looters* (the same as the options page's), each check, *Strictness* (*Normal*), *Lowest Quality Judged* (the game's *Uncommon*), the friends' and the summary's checkboxes; the others greyed while the detection is off. Each applies at once to open panels; kept per profile.
+
+### Exceptions
+
+- [ ] **On the panel.** Right-click a marked name, then a raid's square. *Expected:* *Exception: Agreed in the Chat*; chosen, the skull becomes a green tick and the need counts no more (a *Needed 4 of 4* mark may go); right-click again: *Undo the Exception*. No menu on an unmarked name.
+- [ ] **On leaving a group.** Leave a group with marked needs. *Expected:* the *Suspicious Needs* window: each need with the player in class colour, the item, the reasons and an *Exception* checkbox; ticked, it is excused (*Excused*), also in the next group's *Last time*. Left in a fight, it opens after the fight. No window without marked needs, or with its checkbox off in *Checks*.
+
+### Moving the game's roll frames
+
+- [ ] **In Edit Mode.** Open Edit Mode. *Expected:* *Loot Roll Frames* to pick and drag, with the demo's look-alikes on it; drag it, close Edit Mode; at the next roll, the game's frames stand there, stacked upwards as the game stacks them, the panels beside them.
+- [ ] **Layouts.** Another Edit Mode layout. *Expected:* the game's place there until moved in that layout too.
+- [ ] **Reset.** *Reset To Default* in Edit Mode. *Expected:* the game's own place again.
+- [ ] **In a fight.** A roll in a fight with the frames moved. *Expected:* the frames on our place; no errors, no blocked action.
+- [ ] **The rest stays.** With the frames moved, an extra action button shown (a quest or a boss that gives one) and an achievement or loot alert. *Expected:* both where the game puts them.
+- [ ] **Off.** Turn the module off with the frames moved. *Expected:* the game's place again.
+
+### The history and debugging
+
+- [ ] **Kept by group.** Run a dungeon, `/ltm debug rolls` in the middle and after leaving. *Expected:* the open rolls and their drops; the group with the day it began and its last drops (place, players, winner). `/reload` in the middle: the same group goes on.
+- [ ] **In the bug report.** *Expected:* under the options, `Loot rolls: on; detection …, strictness …; classes with changed rules …; history … groups, … drops; roll frames …`.
+- [ ] **The game's strings.** On each client: `/dump LOOT_ROLL_NEED`, `/dump LOOT_ROLL_ROLLED_NEED`, `/dump LOOT_ROLL_WON`, `/dump LOOT_ROLL_ALL_PASSED`. *Expected:* note the texts (the chat fallback reads them).
+- [ ] **Names in the chat.** On WoW Forever, after a roll, the chat's roll lines. *Expected:* note how a name of two words is written there.
+
 ## The journal and bug reports
 
 - [ ] **Errors kept.** Make an error Lootoman catches, if one is at hand (otherwise skip). *Expected:* `/ltm debug log` prints it with its time even while the extended log is off, then «The extended log is off: /ltm debug log on»; it is in *Bug Report* under *Errors this session*, with the start of its stack; BugSack has it too.
@@ -465,7 +529,7 @@ On WoW Forever, with the default settings unless the check says otherwise.
 ## Minimap icon
 
 - [ ] **The icon.** Log in. *Expected:* a round icon with Lootoman's picture (a bag of coins and a purple gem) at the minimap's bottom left, sharp, its corners hidden under the round border; its tooltip *Lootoman* and the version, *Click: options*, *Right-click: menu*, *Drag: move*. A click opens the options.
-- [ ] **The menu.** Right-click it. *Expected:* *Options*, *Loot Feed Look*, *Junk*, *Bug Report*, each opening its window; *Junk* is greyed while junk management is off.
+- [ ] **The menu.** Right-click it. *Expected:* *Options*, *Loot Feed Look*, *Junk*, *Loot Rolls* (a submenu of *Ninja Rules* and *Show Demo*), *Bug Report*, each opening its window; *Junk* is greyed while junk management is off, *Loot Rolls* while the loot rolls are.
 - [ ] **Dragging.** Drag it round the minimap, `/reload`. *Expected:* it follows the edge and stays where it was put; another character has it at the bottom left. In Edit Mode, make the minimap bigger and smaller: the icon stays on its edge.
 - [ ] **Square minimap.** With a minimap addon that makes the map square (if one is at hand). *Expected:* the icon goes along the square's edge.
 - [ ] **The checkbox.** At the top right of the options page, on the title's line: *Show the Minimap Icon* in small letters with its checkbox right of it; only the two light on hover. Untick it. *Expected:* the icon goes at once, also in a fight; another character still has it; its tooltip says *For this character.*
@@ -475,10 +539,10 @@ On WoW Forever, with the default settings unless the check says otherwise.
 
 ## Taint
 
-- [ ] **Taint log.** After the rounds above, `/reload` and look at `Logs/taint.log`. *Expected:* no lines blaming Lootoman for the loot window, the merchant frame, the game menu or a protected action of the loot feed's use button.
+- [ ] **Taint log.** After the rounds above, `/reload` and look at `Logs/taint.log`. *Expected:* no lines blaming Lootoman for the loot window, the merchant frame, the game menu, a protected action of the loot feed's use button, the game's roll frames or the bottom frames beside them (the extra action button).
 
 ## Russian client
 
-- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка у окна добычи*, *Кнопка у сумок*, *У торговца*, *Выбросить хлам*, *Продать хлам*, *Список хлама*, *Отчёт об ошибке*, *Иконка у мини-карты*, *Расширенный журнал*, *Предложения*, *Изменить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns.
+- [ ] **Strings.** Game language Russian. *Expected:* every option, menu, window and message in Russian, the new ones too: *Вид ленты*, *Лента* and *Оформление* in the look window, *С фоном*, *Кнопка у окна добычи*, *Кнопка у сумок*, *У торговца*, *Выбросить хлам*, *Продать хлам*, *Список хлама*, *Отчёт об ошибке*, *Иконка у мини-карты*, *Расширенный журнал*, *Предложения*, *Изменить список хлама*, and the Auto Loot box's header with the game's own names; on WoW Forever *Подсвечивать объекты с добычей* with *Травы*, *Руда*, *Сундуки*, *Объекты заданий* and *Только травы и руду, которые можно собрать*. Nothing is cut off in the main page's dropdowns. The loot rolls: *Показывать, кто что выбрал*, *Определять ниндзя-лутеров*, *Правила ниндзя* with *Классы* and *Проверки*, *Показать демо*, *Подозрительные ниды*, *Ждём бросков…*, *Нид: …*, *Не выбрали: …*; the reasons read without broken grammar; nothing cut in the panels or the window.
 - [ ] **Feed messages.** Loot items and gain reputation. *Expected:* rows like «Репутация Штормграда +250» («Фракция «…»» for a faction name the message does not decline); the self-test still shows `20 of 20`.
 - [ ] **Numbers.** With a look of icons, loot money and gain experience in the thousands; point at the experience row. *Expected:* note the decimal point the client gives ("1.23" or "1,23"), the K and M, and the thousands separator in the tooltip.

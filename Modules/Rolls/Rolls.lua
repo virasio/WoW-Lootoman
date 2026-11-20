@@ -213,6 +213,13 @@ function Rolls:OnEnable()
 			end
 		end)
 	end
+	-- The minimap menu's entries.
+	self:On("OpenNinjaRules", function()
+		ns.Rolls.NinjaRules.Open()
+	end)
+	self:On("ShowRollDemo", function()
+		ns.Rolls.Demo.Start()
+	end)
 	-- New rules or checks mean new marks.
 	self:On("NeedRulesChanged", function()
 		ns.Rolls.Marks.Invalidate()

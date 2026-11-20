@@ -204,6 +204,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["/ltm report: open the bug report window"] = "/ltm report: открыть окно отчёта об ошибке",
 	["Options"] = "Настройки",
 	["Loot Feed Look"] = "Вид ленты лута",
+	["Loot Rolls"] = "Розыгрыш лута",
 	["Click: options"] = "Щелчок: настройки",
 	["Right-click: menu"] = "Правый щелчок: меню",
 	["Drag: move"] = "Перетаскивание: переместить",
@@ -437,13 +438,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["Loot rolls"] = "Розыгрыш лута",
 	["Show Who Rolled What"] = "Показывать, кто что выбрал",
 	["Beside the game's loot roll frames: who chose what and rolled what, in class colours, as it happens."] = "Рядом с окнами розыгрыша лута: кто что выбрал и сколько выбросил, в цветах классов, по ходу розыгрыша.",
+	["Show Demo"] = "Показать демо",
+	["Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand."] = "Два розыгрыша с выдуманными игроками рядом с копиями окон розыгрыша игры, там, где стоят настоящие.",
 
 	-- Modules/Rolls/Panel.lua
 	["Waiting for the rolls…"] = "Ждём бросков…",
 	["Need: %d"] = "Нид: %d",
 	["Not chosen: %d"] = "Не выбрали: %d",
-	["Show Demo"] = "Показать демо",
-	["Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand."] = "Два розыгрыша с выдуманными игроками рядом с копиями окон розыгрыша игры, там, где стоят настоящие.",
 
 	-- Modules/Rolls/Demo.lua
 	["Demo"] = "Демо",

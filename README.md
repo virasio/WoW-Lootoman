@@ -69,12 +69,22 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - To work, it turns on the game's soft targeting of objects (Options, Controls, *Enable Interact Key*) and a few related game options while highlights are on, and gives them back when you turn highlights off or log out; a setting you change yourself meanwhile stays yours. If soft targeting was off before, Lootoman pauses it next to a living creature or player and as a fight begins, so a spell cast without a target never lands on someone else. The soft target's nameplate is switched on only for an object that sparkles, and the game's interact icon over it (a herb leaf, a pickaxe) is switched off meanwhile, so nothing shows under the stars; your icons come back with the next target, and a vein you can't mine shows nothing.
 - Other addons don't change what sparkles: with a nameplate addon the stars show all the same, and with another addon that lights objects you see both.
 
+### Loot rolls
+
+- Beside each of the game's loot roll frames, a panel shows who chose what on that roll and what they rolled, in class colours, as it happens: in a group of five a line per player (the game's icon for the choice, the roll, the leader, the winner's checkmark, your own line), in a raid a few short lines (who leads, how many needed, greed and pass with their counts, who has not chosen), each naming its players in its tooltip. The game's roll frames, their buttons and the bind question stay as they are.
+- **Ninja detection**, off until you tick *Detect Ninja Looters*, marks a need that breaks the rules of the needer's class: an armor type not its own (or past the level it counts to, such as a warrior's mail past 40 on WoW Forever), a weapon type not its own, or primary stats it does not use (a dagger is a warrior's weapon, a dagger with Intellect is not). For a BoE item it says what the player did on the group's other BoE items, such as greeding one that fits him. It also marks a player who needs nearly everything in the group, and brings back a mark from the last group you were in with him until he is fair. In a raid, the marked players show as squares in class colours. Friends and guild members can be spared.
+- **Ninja Rules** (`/ltm ninja`, or the button beside the checkbox) sets, for each class, which armor types (up to which level), weapon types and primary stats count as its own, and which checks run, how strict they are, and from which quality items are judged.
+- **Exceptions:** right-click a marked name to excuse a need the group agreed to; on leaving a group, a window lists its marked needs to excuse them there.
+- The rolls are kept by group, from joining to leaving, for the marks.
+- *Show Demo* plays two rolls with made-up players beside look-alikes of the game's roll frames, with no group needed.
+- In Edit Mode, *Loot Roll Frames* moves the game's roll frames, a place per layout; until you move them, the game places them as always.
+
 ### Options and profiles
 
 ![The options page](screenshots/options.png)
 
-- One options page in the game's AddOns options, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk, the loot feed and, on WoW Forever, gathering highlights, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window and the junk window. At the page's top right, *Show the Minimap Icon*, for this character.
-- **The minimap icon**, Lootoman's own picture (the game's AddOns list shows it too), opens the options on a click; a right click opens a menu: *Options*, *Loot Feed Look*, *Junk* and *Bug Report*. Drag it round the minimap's edge (a square minimap too, when a minimap addon makes it square); it stays where you put it. The game's addon compartment has the same entry, also with the icon hidden.
+- One options page in the game's AddOns options, with no subpages: the profile on top, chosen from a menu like Edit Mode's layout menu (copy, rename, reset, delete, new profile, import, share); then a switch for fast autoloot, junk, the loot feed, gathering highlights on WoW Forever and the loot rolls, each with its options under it. What does not fit is in Lootoman's own windows: a feed look's window, the junk window and the ninja rules. At the page's top right, *Show the Minimap Icon*, for this character.
+- **The minimap icon**, Lootoman's own picture (the game's AddOns list shows it too), opens the options on a click; a right click opens a menu: *Options*, *Loot Feed Look*, *Junk*, *Loot Rolls* (*Ninja Rules* and *Show Demo*) and *Bug Report*. Drag it round the minimap's edge (a square minimap too, when a minimap addon makes it square); it stays where you put it. The game's addon compartment has the same entry, also with the icon hidden.
 - Every character can use its own profile; new characters use the Default profile.
 - **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's options, the loot feed's position and the look it uses, and any of your feed looks. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one; texts from earlier versions are read too. When an imported look's name is taken, choose for each one: keep both, replace yours, or keep yours. Feed looks can also be shared and imported on their own, from the look menu.
 - Changes apply at once, without `/reload`.
@@ -90,9 +100,10 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 - `/ltm` or `/lootoman`: open the options.
 - `/ltm feed`: open the loot feed's look window.
 - `/ltm junk`: open the junk window.
+- `/ltm ninja`: open the ninja rules.
 - `/ltm report`: open the bug report window.
 - `/ltm help`: list the commands.
-- `/ltm debug help` lists the commands for testing and bug reports: `debug log` (the journal: errors and the extended log), `debug selftest`, `debug loot` (made-up loot in the feed), `debug junk` (why an item is junk or not), `debug bags` and, on WoW Forever, `debug target`.
+- `/ltm debug help` lists the commands for testing and bug reports: `debug log` (the journal: errors and the extended log), `debug selftest`, `debug loot` (made-up loot in the feed), `debug junk` (why an item is junk or not), `debug bags`, `debug rolls` (the open rolls and the group's last drops) and, on WoW Forever, `debug target`.
 
 ### Bug reports
 
