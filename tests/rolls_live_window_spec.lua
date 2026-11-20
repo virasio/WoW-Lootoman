@@ -71,7 +71,8 @@ describe("the live window", function()
 		assert.is_true(window:IsShown())
 		-- The finished drop before it opened is not taken in.
 		assert.same({ "|cff1eff00Mail Helm|r", "|cff1eff00Ring|r" }, items())
-		assert.is_true(window.rows[1].light:IsShown())
+		-- Only the roll that brought it is lit, for a moment.
+		assert.same({ true, false }, { window.rows[1].light:IsShown(), window.rows[2].light:IsShown() })
 		-- On the screen, right of the roll frames and their panels: not on the
 		-- game's container, which the game lays out nowhere while it is hidden.
 		assert.same({ "BOTTOMLEFT", Loader.ui.UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM }, window.points[1])
@@ -87,6 +88,8 @@ describe("the live window", function()
 		choose(7, 3)
 		Test.SetLootDrop({ encounterID = 2, listID = 1, link = RING, rolls = { player("Brina", "MAGE", 4) } })
 		assert.same({ "|cff1eff00Ring|r", "|cff1eff00Mail Helm|r" }, items())
+		-- A drop that comes later is new: lit.
+		assert.is_true(window.rows[1].light:IsShown())
 		Test.SetLootDrop({ encounterID = 2, listID = 1, link = RING, rolls = { player("Brina", "MAGE", 0, 61) } })
 		assert.equals("61", window.rows[1].panel.lines[1].roll:GetText())
 		-- A second choice while it is open adds nothing twice.

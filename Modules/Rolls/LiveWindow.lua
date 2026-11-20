@@ -168,9 +168,11 @@ local function find(rollID, key)
 	return nil
 end
 
-local function add(entry)
+-- A row at the top; lit for a moment unless quiet (the rolls already going
+-- when the window opens: only the one that brought it is new).
+local function add(entry, quiet)
 	entry.group = History.Open()
-	entry.light = true
+	entry.light = not quiet or nil
 	table.insert(entries, 1, entry)
 end
 
@@ -197,7 +199,7 @@ local function open(rollID)
 		local mine = Model.Roll(rollID) and Model.Roll(rollID).drop
 		for _, drop in ipairs(Model.Drops()) do
 			if drop.key ~= mine and Model.IsOpen(drop) then
-				add({ key = drop.key })
+				add({ key = drop.key }, true)
 			end
 			known[drop.key] = true
 		end
@@ -250,7 +252,7 @@ function LiveWindow.ShowViews(views)
 	end
 	entries, known = {}, {}
 	for index = #views, 1, -1 do
-		add({ view = views[index] })
+		add({ view = views[index] }, index > 1)
 	end
 	place()
 	frame:Show()
