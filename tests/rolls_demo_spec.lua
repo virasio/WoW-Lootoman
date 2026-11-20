@@ -30,21 +30,32 @@ describe("the loot rolls' demo", function()
 		return list
 	end
 
-	it("plays a group roll and a raid roll beside look-alikes of the game's roll frame, with made-up names", function()
+	it("plays a group roll and a raid roll beside look-alikes of the game's roll frame, with heroes of Azeroth, no group needed", function()
 		assert.is_true(Demo.Start())
 		local group, raid = Demo.cards[1], Demo.cards[2]
 		assert.same({ true, true, "Demo" }, { group.frame:IsShown(), group.panel.frame:IsShown(), group.frame.label:GetText() })
 		assert.same({ "Mail Helm", "Ring" }, { group.frame.name:GetText(), raid.frame.name:GetText() })
 		assert.equals(5, #group.view.players)
 		assert.same({ "Tester", true }, { group.view.players[1].name, group.view.players[1].isSelf })
-		local made = {}
-		for _, name in ipairs(Demo.NAMES) do
-			made[name] = true
+		-- Heroes of Azeroth, each with the class of his stories.
+		local heroes = {}
+		for _, hero in ipairs(Demo.HEROES) do
+			heroes[hero[1]] = hero[2]
 		end
 		for index = 2, 5 do
-			assert.is_true(made[group.view.players[index].name], group.view.players[index].name)
+			local player = group.view.players[index]
+			assert.equals(heroes[player.name], player.class, player.name)
 		end
+		assert.equals("SHAMAN", heroes.Thrall)
 		assert.equals(20, #raid.view.players)
+		-- Twenty different heroes, of the nine classes of WoW Forever only.
+		local seen = {}
+		for _, player in ipairs(raid.view.players) do
+			assert.is_nil(seen[player.name], player.name)
+			seen[player.name] = true
+			assert.equals(heroes[player.name], player.class)
+		end
+		assert.is_false(Test.state.group)
 		-- The classes are the client's.
 		local known = {}
 		for _, class in ipairs(ns.Data.rolls.classes) do

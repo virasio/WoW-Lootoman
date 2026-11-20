@@ -230,7 +230,8 @@ describe("ninja detection", function()
 		ns.Rolls.Demo.Draw(group)
 		assert.same({ "WARRIOR", 45 }, { group.view.players[2].class, group.view.players[2].level })
 		assert.is_string(group.view.players[2].mark)
-		assert.matches("^Last time", group.view.players[5].notes[1])
+		local notes = group.view.players[5].notes
+		assert.matches("^Last time", notes[#notes])
 		for _, each in ipairs(raid.view.players) do
 			each.state = 0
 		end
