@@ -20,22 +20,27 @@ Suspicious.NAME = "LootomanSuspiciousNeeds"
 Suspicious.WIDTH, Suspicious.HEIGHT = 620, 400
 Suspicious.ROW = 34
 
--- Excuses a need on a real roll (in the open group's history) or on the
--- demo's, or takes it back.
+-- Excuses a need on a real roll (in the open group's history), on a kept
+-- drop of any group (the roll history's, view.group), on the demo's, or on
+-- the made-up history's (view.history), or takes it back.
 function Suspicious.SetExcused(view, player, excused)
 	if view.demo then
-		ns.Rolls.Demo.SetExcused(view, player.guid, excused)
+		-- The played demo's (in the repository's version only).
+		if ns.Rolls.Demo.SetExcused then
+			ns.Rolls.Demo.SetExcused(view, player.guid, excused)
+		end
 		return
 	end
-	local group = History.Open()
+	local group = view.group or History.Open()
 	local key = view.drop and view.drop.key
 	if not group or not key or not player.guid then
 		return
 	end
-	if not History.Find(group, key) then
+	if not view.group and not History.Find(group, key) then
 		History.Record(view.drop)
 	end
-	History.SetExcused(group, key, player.guid, excused)
+	local history = view.history or History
+	history.SetExcused(group, key, player.guid, excused)
 	Marks.Invalidate()
 	ns.Rolls.Module.RedrawAll()
 	if Suspicious.refresh then

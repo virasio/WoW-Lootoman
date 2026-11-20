@@ -255,6 +255,21 @@ function Model.Drop(key)
 	return drops[key]
 end
 
+-- Every drop known now, in the order they came.
+function Model.Drops()
+	local list = {}
+	for _, drop in pairs(drops) do
+		list[#list + 1] = drop
+	end
+	table.sort(list, function(a, b) return (a.seen or 0) < (b.seen or 0) end)
+	return list
+end
+
+-- Whether a drop is still rolled on.
+function Model.IsOpen(drop)
+	return drop ~= nil and isOpen(drop)
+end
+
 -- The drop a roll is bound to, or nil.
 function Model.DropOf(rollID)
 	local roll = rolls[rollID]
@@ -272,16 +287,7 @@ end
 -- is the winner, the leader or the player himself:
 -- { rollID, link, bound, players = { { name, guid, class, state, roll,
 -- isSelf, isWinner, isLeader } }, winner, leader }.
-function Model.View(rollID)
-	local roll = rolls[rollID]
-	if not roll then
-		return nil
-	end
-	local drop = Model.DropOf(rollID)
-	local view = { rollID = rollID, link = roll.link, item = roll.item, bound = drop ~= nil, players = {} }
-	if not drop then
-		return view
-	end
+local function fill(view, drop)
 	local leader = drop.currentLeader and drop.currentLeader.guid
 	for index, player in ipairs(drop.rolls) do
 		local entry = {}
@@ -293,4 +299,27 @@ function Model.View(rollID)
 	end
 	view.winner, view.leader, view.allPassed, view.drop = drop.winner, drop.currentLeader, drop.allPassed, drop
 	return view
+end
+
+function Model.View(rollID)
+	local roll = rolls[rollID]
+	if not roll then
+		return nil
+	end
+	local drop = Model.DropOf(rollID)
+	local view = { rollID = rollID, link = roll.link, item = roll.item, bound = drop ~= nil, players = {} }
+	if not drop then
+		return view
+	end
+	return fill(view, drop)
+end
+
+-- A drop's view as a roll's, without a roll: for the loot rolls' windows,
+-- which show drops the player had no roll frame for too.
+function Model.DropView(key)
+	local drop = drops[key]
+	if not drop then
+		return nil
+	end
+	return fill({ link = drop.link, bound = true, players = {} }, drop)
 end

@@ -139,7 +139,7 @@ describe("bug report window", function()
 			help[#help + 1] = (line:gsub("^|cff%x+Lootoman|r: ", ""))
 		end
 		assert.same({ "/ltm junk: open the junk window", "/ltm ninja: open the ninja rules", "/ltm report: open the bug report window",
-			"/ltm help: list the commands" }, { help[#help - 3], help[#help - 2], help[#help - 1], help[#help] })
+			"/ltm rolls: open the roll history", "/ltm help: list the commands" }, { help[#help - 4], help[#help - 3], help[#help - 2], help[#help - 1], help[#help] })
 	end)
 
 	it("closes with Escape, and opens the first time only out of combat", function()

@@ -49,7 +49,7 @@ describe("moving the game's roll frames", function()
 	local ns, Test, lib, RollFrames, frames, container
 
 	local function start(saved)
-		ns = Loader.LoadAddon({ gameType = "camelot", skip = saved and saved.settings and {} or nil })
+		ns = Loader.LoadAddon({ gameType = "camelot", debug = true, skip = saved and saved.settings and {} or nil })
 		Test = ns.Compat.Test
 		container = UI.NewFake(Loader.ui.UIParent)
 		frames = {}

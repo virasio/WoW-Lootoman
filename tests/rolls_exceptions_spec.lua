@@ -13,7 +13,7 @@ describe("exceptions", function()
 	local ns, Test, Rolls, frames, list
 
 	before_each(function()
-		ns = Loader.LoadAddon({ gameType = "camelot" })
+		ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Test = ns.Compat.Test
 		frames = {}
 		for index = 1, 4 do

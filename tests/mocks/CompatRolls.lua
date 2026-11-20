@@ -109,6 +109,12 @@ function Compat.GetGameRollSlots()
 	return slots
 end
 
+-- state.gameLootHistoryShown: whether the game's loot history window is on
+-- the fake screen.
+function Compat.IsGameLootHistoryShown()
+	return state.gameLootHistoryShown == true
+end
+
 function Compat.GetGameRollContainer()
 	return state.gameRollContainer
 end

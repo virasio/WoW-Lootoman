@@ -67,6 +67,7 @@ ns.Compat.NEEDS = {
 	GetCursorItemID = { "GetCursorInfo" },
 	GetDate = { "date" },
 	FormatDay = { "date" },
+	FormatTime = { "date" },
 	GetGameErrorName = { "GetGameMessageInfo" },
 	GetGatheringSkills = { "C_SkillInfo.GetNumSkillLines", optional = {
 		"C_SkillInfo.GetSkillLineInfoByID",
@@ -131,6 +132,7 @@ ns.Compat.NEEDS = {
 	LootSlot = { "LootSlot" },
 	ModifiedItemClick = { "IsModifiedClick", optional = { "ChatFrameUtil.InsertLink", "HandleModifiedItemClick" } },
 	PickupBagItem = { "C_Container.PickupContainerItem" },
+	PlaySoundFile = { "PlaySoundFile" },
 	Print = { "DEFAULT_CHAT_FRAME" },
 	RegisterEvent = { "CreateFrame" },
 	RegisterSlashCommand = { "SlashCmdList" },
@@ -169,6 +171,7 @@ ns.Compat.NEEDS = {
 	GetUnitLevel = { "UnitLevel", optional = { "issecretvalue" } },
 	GetUnitName = { "UnitName", optional = { "issecretvalue" } },
 	IsFriend = { "C_FriendList.IsFriend" },
+	IsGameLootHistoryShown = { optional = { "GroupLootHistoryFrame" } },
 	IsGuildMember = { optional = { "IsGuildMember" } },
 	IsInRaid = { "IsInRaid" },
 	OnRollChosen = { "hooksecurefunc", "RollOnLoot" },

@@ -182,7 +182,7 @@ function LootFeed:UpdatePreview()
 	end
 end
 
--- A gain for the feed, from the game's events or from /ltm debug loot: junk
+-- A gain for the feed, from the game's events or from /ltm demo loot: junk
 -- merges into its row, below the minimum quality it waits in case it turns
 -- out usable.
 function LootFeed:Take(entry)

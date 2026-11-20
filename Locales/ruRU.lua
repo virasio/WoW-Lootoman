@@ -443,8 +443,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Not chosen: %d"] = "Не выбрали: %d",
 
 	-- Modules/Rolls/Demo.lua
-	["The demo starts out of combat."] = "Демо запускается вне боя.",
-	["The demo waits until the rolls in progress are over."] = "Демо подождёт, пока не закончатся текущие розыгрыши.",
 
 	-- Modules/Rolls/Marks.lua
 	["%s: not a %s's armor"] = "%s: не броня класса «%s»",
@@ -553,4 +551,25 @@ ns.Locales.AddTranslation("ruRU", {
 	["Lets you place the game's loot roll frames where you want in Edit Mode, a place for each Edit Mode layout. Until you move them, the game places them as always."] = "Позволяет поставить окна розыгрыша лута куда угодно в режиме редактирования, отдельно для каждого макета. Пока вы их не передвинули, игра ставит их как обычно.",
 	["In Edit Mode (the game menu, Edit Mode), drag “Loot Roll Frames”."] = "В режиме редактирования (меню игры, «Редактирование интерфейса») перетащите «Окна розыгрыша лута».",
 	["Opens Edit Mode with the loot roll frames picked."] = "Открывает режим редактирования с выбранными окнами розыгрыша лута.",
+	["Rolling…"] = "Идёт розыгрыш…",
+	["All passed"] = "Все отказались",
+	["Show the Loot Rolls Window After Your Choice"] = "Показывать окно розыгрышей после своего выбора",
+	["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."] = "Когда вы сделали выбор в розыгрыше, окно покажет его вместе с другими розыгрышами группы по ходу дела и будет хранить все разыгранные предметы, пока вы его не закроете; кроме клиентов, где игра открывает своё окно истории добычи.",
+	["Loot Rolls"] = "Розыгрыши добычи",
+	["Roll History"] = "История розыгрышей",
+	["Players"] = "Игроки",
+	["Drops"] = "Добыча",
+	["Need: %d, greed: %d, pass: %d, won: %d"] = "Нид: %d, грид: %d, пас: %d, выиграно: %d",
+	["%d drops, %d players"] = "Добычи: %d, игроков: %d",
+	["No rolls kept yet. The rolls in your groups are kept here, by group, from joining to leaving."] = "Пока ничего нет. Здесь хранятся розыгрыши в ваших группах, по группам: от вступления до выхода.",
+	["The roll history opens out of combat."] = "История розыгрышей открывается вне боя.",
+	["/ltm rolls: open the roll history"] = "/ltm rolls: открыть историю розыгрышей",
+	["Opens the rolls kept in your groups: who chose what, who won and with which button."] = "Открывает розыгрыши ваших групп: кто что выбрал, кто выиграл и какой кнопкой.",
+	["Back"] = "Назад",
+	["Lowest Quality"] = "Качество не ниже",
+	["Only Marked Needs"] = "Только отмеченные ниды",
+	["Clear the History"] = "Очистить историю",
+	["Delete This Group"] = "Удалить эту группу",
+	["Delete the rolls of “%s”? This cannot be undone."] = "Удалить розыгрыши группы «%s»? Это нельзя отменить.",
+	["Delete every roll kept in the history? This cannot be undone."] = "Удалить все розыгрыши из истории? Это нельзя отменить.",
 })
