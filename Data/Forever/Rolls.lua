@@ -49,7 +49,7 @@ ns.Data.rolls = {
 		WARLOCK = { armor = { [1] = true }, stats = { "INTELLECT", "SPIRIT" } },
 		DRUID = { armor = { [2] = true, [1] = true, [8] = true }, stats = { "STRENGTH", "AGILITY", "INTELLECT", "SPIRIT" } },
 	},
-	-- Items for the demo when the character wears nothing: Lionheart Helm,
-	-- Robe of the Archmage, Thunderfury.
-	demoItems = { 12640, 14152, 19019 },
+	-- The demo's items: a blue dagger for the group roll (Gutwrencher, BoE),
+	-- a purple staff for the raid roll (Glowing Brightwood Staff).
+	demoItems = { group = 5616, raid = 812 },
 }

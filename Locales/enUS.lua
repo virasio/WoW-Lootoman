@@ -359,7 +359,6 @@ ns.Locales.AddEnglish({
 	"Deleted %s.",
 	"Delete %s? Type “%s” to confirm.",
 	"Delete %s?",
-	"Junk management is off. Turn it on in the options.",
 	"/ltm junk: open the junk window",
 	"Drag it out of the window to delete it.",
 
@@ -548,4 +547,10 @@ ns.Locales.AddEnglish({
 	"Kayn",
 	"Wrathion",
 	"Ebyssian",
+
+	-- Modules/Shared/TurnOn.lua
+	"To use this, turn on “%s” in the addon's options.",
+
+	-- Settings/JunkList.lua
+	"Junk management is off. Turn it on in the options.",
 })

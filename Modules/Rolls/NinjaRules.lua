@@ -5,12 +5,14 @@ local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 -- Classes: the client's classes in their colours on the left; for the chosen
 -- class, which armor types (each up to a level, or at any level), weapon
 -- types and primary stats count as its own, named by the game; what the class
--- cannot equip at all is greyed. Checks: the detection's switch (the same as
--- on the options page), each check, the strictness, the lowest quality judged,
+-- cannot equip at all is greyed. Checks: each check, the strictness, the
+-- lowest quality judged,
 -- friends and guild members spared, and the summary on leaving a group. The
 -- rules are the account's (Core/NeedRules.lua), the checks the profile's.
--- /ltm ninja and the options page open it, also with the detection off;
--- it is built the first time it opens, out of combat; Escape closes it.
+-- The detection's own switch is on the options page only. /ltm ninja, the
+-- minimap menu and the options page's button open the window while the
+-- detection is on; off, the first two ask to turn it on. It is built the
+-- first time it opens, out of combat; Escape closes it.
 ns.Rolls = ns.Rolls or {}
 local NinjaRules = {}
 ns.Rolls.NinjaRules = NinjaRules
@@ -239,8 +241,6 @@ end
 
 -- The checks: the setting, its label, its tooltip.
 NinjaRules.CHECK_KEYS = {
-	{ "ninja", L["Detect Ninja Looters"],
-		L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."] },
 	{ "checkArmor", L["Armor Types"], L["A need on an armor type the needer's class does not count as its own, or past the level it counts to."] },
 	{ "checkWeapons", L["Weapon Types"], L["A need on a weapon type the needer's class does not count as its own."] },
 	{ "checkStats", L["Primary Stats"], L["A need on an item with primary stats, none of which the needer's class counts as its own."] },
@@ -255,9 +255,7 @@ NinjaRules.CHECK_KEYS = {
 local function refreshChecks()
 	for _, check in ipairs(frame.checks) do
 		check:SetChecked(Storage:Get("Rolls", check.key) == true)
-		if check.key ~= "ninja" then
-			setEnabled(check, Storage:Get("Rolls", "ninja") == true)
-		end
+		setEnabled(check, Storage:Get("Rolls", "ninja") == true)
 	end
 	for _, dropdown in ipairs(frame.dropdowns) do
 		dropdown:GenerateMenu()
@@ -291,14 +289,13 @@ local function buildChecks(tab)
 	frame.checksContent = content
 	local y = -6
 	for index, entry in ipairs(NinjaRules.CHECK_KEYS) do
-		local indent = (entry[1] == "ninja") and 0 or 20
 		local check = checkbox(content, entry[2], function(button)
 			Storage:Set("Rolls", button.key, button:GetChecked() == true)
 			refreshChecks()
-		end, 520 - indent)
+		end, 520)
 		check.key = entry[1]
-		check:SetPoint("TOPLEFT", content, "TOPLEFT", 8 + indent, y)
-		y = y - 26 - (index == 1 and 8 or 0)
+		check:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+		y = y - 26
 		check:SetScript("OnEnter", function(button)
 			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 			GameTooltip_SetTitle(GameTooltip, entry[2])
@@ -414,6 +411,17 @@ function NinjaRules.Frame()
 	return frame
 end
 
-ns.Slash.Register("ninja", function()
-	NinjaRules.Open()
-end, L["/ltm ninja: open the ninja rules"])
+-- Opens the window while the detection is on; else asks to turn on what is
+-- off: the loot rolls, or their detection.
+function NinjaRules.OpenOrAsk()
+	local rolls = ns.Modules:Get("Rolls")
+	if not (rolls and rolls:IsActive()) then
+		ns.TurnOn.Ask(L["Show Who Rolled What"])
+	elseif not Storage:Get("Rolls", "ninja") then
+		ns.TurnOn.Ask(L["Detect Ninja Looters"])
+	else
+		NinjaRules.Open()
+	end
+end
+
+ns.Slash.Register("ninja", NinjaRules.OpenOrAsk, L["/ltm ninja: open the ninja rules"])

@@ -70,6 +70,8 @@ describe("moving the game's roll frames", function()
 		Test.LayOutGameRolls()
 		assert.same({ "CENTER", container, "BOTTOM", 0, 50 }, frames[1].points[1])
 		assert.equals("Loot Roll Frames", lib.frames[Mover.Frame()].name)
+		-- Above the look-alikes (DIALOG), so Edit Mode's selection covers them.
+		assert.equals("FULLSCREEN", Mover.Frame():GetFrameStrata())
 	end)
 
 	it("stands the frames on its place once moved, after each of the game's layouts, 100 apart, the panels with them", function()

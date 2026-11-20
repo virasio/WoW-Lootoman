@@ -132,7 +132,8 @@ describe("exceptions", function()
 	it("shows the demo's marked needs when its made-up group leaves, its exceptions only the demo's", function()
 		Test.state.worn = { [1] = MAIL }
 		ns.Rolls.Demo.Start()
-		Test.Advance(ns.Rolls.Demo.LENGTH + ns.Rolls.Demo.STEP)
+		-- The demo waits a moment for its own items first, then takes worn gear.
+		Test.Advance(ns.Rolls.Demo.WAIT * ns.Rolls.Demo.TRIES + ns.Rolls.Demo.LENGTH + ns.Rolls.Demo.STEP)
 		local window = ns.Rolls.SuspiciousNeeds.Frame()
 		assert.is_true(window.shown)
 		assert.is_true(window.count >= 1)

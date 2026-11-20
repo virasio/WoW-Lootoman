@@ -22,6 +22,7 @@ Mover.WIDTH, Mover.HEIGHT = 277, 200
 Mover.DEFAULT = { point = "BOTTOM", x = 0, y = 230 }
 -- The room the game leaves per roll frame.
 Mover.SLOT = 100
+Mover.STRATA = "FULLSCREEN"
 
 local frame
 local hooked = false
@@ -88,6 +89,9 @@ end
 function Mover.Create(module)
 	if not frame then
 		frame = CreateFrame("Frame", nil, UIParent)
+		-- Above the look-alikes (DIALOG): Edit Mode's selection, a child of this
+		-- frame, covers them as it covers the game's own frames.
+		frame:SetFrameStrata(Mover.STRATA)
 		frame:SetSize(Mover.WIDTH, Mover.HEIGHT)
 		frame:SetPoint(Mover.DEFAULT.point, Mover.DEFAULT.x, Mover.DEFAULT.y)
 		frame:SetMovable(true)

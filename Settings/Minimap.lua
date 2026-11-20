@@ -4,7 +4,7 @@ local Bus, Compat, L, Storage = ns.Bus, ns.Compat, ns.L, ns.Storage
 -- The minimap icon and the addon compartment entry, so a player finds the
 -- addon after installing it. A click opens the options; a right click a menu:
 -- the options, the loot feed's look, the junk window, the loot rolls' ninja
--- rules, and the bug report.
+-- rules, and the bug report. An entry whose feature is off asks to turn it on.
 --
 -- The icon is a round button on the minimap's edge, as LibDBIcon draws its
 -- buttons (the same textures), with a global name so minimap button
@@ -87,23 +87,21 @@ function Icon.ShowMenu(owner)
 		root:CreateButton(L["Options"], function()
 			Bus:Send("OpenSettings")
 		end)
+		-- An entry whose feature is off asks to turn it on (TurnOn.lua).
 		root:CreateButton(L["Loot Feed Look"], function()
-			local feed = ns.Modules:Get("LootFeed")
-			if feed and feed.LookWindow then
-				feed.LookWindow.Open()
-			end
+			ns.TurnOn.WhenOn("LootFeed", function()
+				ns.Modules:Get("LootFeed").LookWindow.Open()
+			end)
 		end)
-		local junk = root:CreateButton(L["Junk"], function()
-			Bus:Send("OpenJunkWindow")
+		root:CreateButton(L["Junk"], function()
+			ns.TurnOn.WhenOn("Junk", function()
+				Bus:Send("OpenJunkWindow")
+			end)
 		end)
-		local module = ns.Modules:Get("Junk")
-		junk:SetEnabled(module ~= nil and module:IsActive())
 		-- The loot rolls' rules for ninja detection.
-		local rules = root:CreateButton(L["Ninja Rules"], function()
-			Bus:Send("OpenNinjaRules")
+		root:CreateButton(L["Ninja Rules"], function()
+			ns.Rolls.NinjaRules.OpenOrAsk()
 		end)
-		local rolls = ns.Modules:Get("Rolls")
-		rules:SetEnabled(rolls ~= nil and rolls:IsActive())
 		root:CreateButton(L["Bug Report"], function()
 			ns.BugReportWindow.Open()
 		end)

@@ -71,6 +71,7 @@ Integrations\QuestieDB.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua
+Modules\Shared\TurnOn.lua
 
 Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua

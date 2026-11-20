@@ -44,8 +44,9 @@ local Rolls = ns.Modules:Register({
 			button:SetScript("OnClick", function()
 				ns.Rolls.NinjaRules.Open()
 			end)
+			-- Greyed while the detection is off, the checkbox's own row with it.
 			page:OnRefresh(function()
-				button:SetEnabled(ns.Storage:Get("Rolls", "enabled") == true)
+				button:SetEnabled(ns.Storage:Get("Rolls", "enabled") == true and ns.Storage:Get("Rolls", "ninja") == true)
 			end)
 			page.ninjaRules = button
 		end },
@@ -209,10 +210,6 @@ function Rolls:OnEnable()
 			end
 		end)
 	end
-	-- The minimap menu's entries.
-	self:On("OpenNinjaRules", function()
-		ns.Rolls.NinjaRules.Open()
-	end)
 	-- New rules or checks mean new marks.
 	self:On("NeedRulesChanged", function()
 		ns.Rolls.Marks.Invalidate()

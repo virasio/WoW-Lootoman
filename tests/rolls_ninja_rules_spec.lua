@@ -5,14 +5,16 @@ local UI = require("tests.mocks.UI")
 -- The Ninja Rules window (Modules/Rolls/NinjaRules.lua) and its place on the options page.
 
 describe("the ninja rules window", function()
-	local ns, Test, Window, frame
+	local ns, Test, Window, frame, settings
 
 	before_each(function()
-		SettingsAPI.Install()
+		settings = SettingsAPI.Install()
 		ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
 		Test = ns.Compat.Test
 		Loader.Start(ns)
 		Window = ns.Rolls.NinjaRules
+		-- The window opens while the detection is on.
+		ns.Storage:Set("Rolls", "ninja", true)
 	end)
 
 	local function open()
@@ -102,16 +104,17 @@ describe("the ninja rules window", function()
 		assert.equals(0, ns.NeedRules.ChangedCount())
 	end)
 
-	it("sets the checks in their tab, for the profile, the detection's switch the same as the options page's", function()
+	it("sets the checks in their tab, for the profile; the detection's switch is the options page's", function()
 		open()
 		frame.tab2.scripts.OnClick(frame.tab2)
 		assert.is_true(frame.checksTab:IsShown())
 		local checks = frame.checks
-		assert.same({ "ninja", false, false }, { checks[1].key, checks[1]:GetChecked(), checks[2]:IsEnabled() })
-		click(checks[1], true)
-		assert.is_true(ns.Storage:Get("Rolls", "ninja"))
-		assert.is_true(checks[2]:IsEnabled())
-		click(checks[2], false)
+		-- The detection's own switch is on the options page only.
+		assert.same({ "checkArmor", true, true }, { checks[1].key, checks[1]:GetChecked(), checks[1]:IsEnabled() })
+		for _, check in ipairs(checks) do
+			assert.not_equals("ninja", check.key)
+		end
+		click(checks[1], false)
 		assert.is_false(ns.Storage:Get("Rolls", "checkArmor"))
 		local root = UI.OpenMenu(frame.dropdowns[1])
 		assert.same({ "Lenient", "Normal", "Strict" }, { root.entries[1].text, root.entries[2].text, root.entries[3].text })
@@ -132,6 +135,23 @@ describe("the ninja rules window", function()
 		end
 		assert.is_true(found.region:GetChecked())
 		assert.is_true(page.ninjaRules:IsEnabled())
+		-- With the detection off, the button is greyed, and so are the window's checks.
+		ns.Storage:Set("Rolls", "ninja", false)
+		page:Refresh()
+		assert.is_false(page.ninjaRules:IsEnabled())
+		Window.ShowTab(2)
+		assert.is_false(checks[1]:IsEnabled())
+	end)
+
+	it("asks to turn on what is off instead of opening: the detection, or the loot rolls", function()
+		ns.Storage:Set("Rolls", "ninja", false)
+		Test.RunSlashCommand("LOOTOMAN", "ninja")
+		assert.is_nil(Window.Frame())
+		local popup = settings.popups[#settings.popups]
+		assert.same({ "GENERIC_CONFIRMATION", "Detect Ninja Looters", "Options" }, { popup.which, popup.data.text_arg1, popup.data.acceptText })
+		ns.Modules:SetEnabled("Rolls", false)
+		Test.RunSlashCommand("LOOTOMAN", "ninja")
+		assert.equals("Show Who Rolled What", settings.popups[#settings.popups].data.text_arg1)
 	end)
 
 	it("opens from the options page's button, closes with Escape, and opens the first time only out of combat", function()

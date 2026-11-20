@@ -135,7 +135,7 @@ describe("need rules", function()
 				assert.is_true(next(ns.Rules.Need.Rules(rolls, file).weapons) ~= nil, file)
 			end
 			assert.is_number(rolls.maxLevel)
-			assert.is_true(#rolls.demoItems > 0)
+			assert.same({ "number", "number" }, { type(rolls.demoItems.group), type(rolls.demoItems.raid) })
 		end
 	end)
 end)

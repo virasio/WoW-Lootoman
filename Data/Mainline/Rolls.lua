@@ -58,7 +58,7 @@ ns.Data.rolls = {
 		DEMONHUNTER = { armor = { [2] = true }, stats = { "AGILITY" } },
 		EVOKER = { armor = { [3] = true }, stats = { "INTELLECT" } },
 	},
-	-- Items for the demo when the character wears nothing: Lionheart Helm,
-	-- Robe of the Archmage, Thunderfury.
-	demoItems = { 12640, 14152, 19019 },
+	-- The demo's items: a blue dagger for the group roll (Gutwrencher, BoE),
+	-- a purple staff for the raid roll (Glowing Brightwood Staff).
+	demoItems = { group = 5616, raid = 812 },
 }

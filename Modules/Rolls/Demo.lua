@@ -5,17 +5,18 @@ local Compat, L = ns.Compat, ns.L
 -- it (its loot toast art and border, the item's icon in its quality border,
 -- the name in its quality colour, the need, greed and pass buttons, the
 -- timer), stand where the game's frames would, each with its panel, and play
--- for about 15 seconds. A group roll: the player and four heroes of Azeroth
--- choose and roll one by one, the leader changes, and there is a winner. A
+-- for about 15 seconds. A group roll: five heroes of Azeroth, the first in
+-- the player's place (his own line), choose and roll one by one, the leader changes, and there is a winner. A
 -- raid roll: twenty heroes. Each hero has the class his stories give him,
 -- among the classes the client has. It needs no group and no real roll:
 -- everything in it is made up. /ltm debug demoroll plays it, for testing and
 -- pictures, not as a player's feature; Edit Mode shows its look-alikes still, where the moved
 -- frames will stand. The look-alikes' buttons only mark the player's choice on the
 -- look-alike: nothing goes to the game, and nothing into the history. The
--- items are the character's worn gear, which the game has loaded; with
--- nothing worn, a few items of the client's data. No demo while a real roll
--- is open, or in a fight (its frames are made out of combat).
+-- items are the data's: a blue dagger for the group, a purple staff for the
+-- raid, asked of the game and waited for a moment; one the game does not give
+-- is replaced by worn gear. No demo while a real roll is open, or in a fight
+-- (its frames are made out of combat).
 ns.Rolls = ns.Rolls or {}
 local Demo = {}
 ns.Rolls.Demo = Demo
@@ -56,8 +57,11 @@ local running = false
 -- What the demo plays: its rolls' views, for tests and the marks.
 Demo.cards = cards
 
--- The items of the demo: links of worn gear, else the data's.
-function Demo.Items()
+-- How many times the demo waits for its items, and how long each time.
+Demo.TRIES, Demo.WAIT = 5, 0.3
+
+-- The links of worn gear, for an item the game does not give.
+local function worn()
 	local links, seen = {}, {}
 	for _, slot in ipairs(Demo.SLOTS) do
 		local link = Compat.GetEquippedLink(slot)
@@ -67,17 +71,27 @@ function Demo.Items()
 			links[#links + 1] = link
 		end
 	end
-	if #links == 0 then
-		for _, itemID in ipairs(ns.Data.rolls.demoItems) do
-			local info = Compat.GetItemInfo(itemID)
-			if info and info.link then
-				links[#links + 1] = info.link
-			else
+	return links
+end
+
+-- The demo's two items, the group's then the raid's: the data's when the game
+-- has them, else worn gear; and whether one is still asked for.
+function Demo.Items()
+	local links, missing, spare = {}, false, worn()
+	for slot, which in ipairs({ "group", "raid" }) do
+		local itemID = ns.Data.rolls.demoItems[which]
+		local info = itemID and Compat.GetItemInfo(itemID)
+		if info and info.link then
+			links[slot] = info.link
+		else
+			if itemID then
 				Compat.RequestItem(itemID)
+				missing = true
 			end
+			links[slot] = spare[slot] or spare[1]
 		end
 	end
-	return links
+	return links, missing
 end
 
 -- The heroes whose class the client has: { name, class, guid }.
@@ -221,18 +235,15 @@ function Demo.Choose(card, state)
 	end
 end
 
--- count players, from a turn of the clock so each demo differs; the player
--- himself first in the group roll.
+-- count heroes, from a turn of the clock so each demo differs. In the group
+-- roll the first stands for the player (his line marked as one's own), with a
+-- hero's name too: the demo is for pictures, and names no real character.
 local function newPlayers(count, turn, withSelf)
 	local players, heroes = {}, Demo.Heroes()
-	if withSelf then
-		local own = Compat.GetUnitName("player") or (Compat.GetCharacterKey() or "?"):match("^[^%-]+")
-		players[1] = { name = own, class = Compat.GetPlayerClass(), guid = Compat.GetPlayerGUID(),
-			level = Compat.GetPlayerLevel(), isSelf = true, state = STATE.NONE }
-	end
-	for index = 1, math.min(#heroes, count - (withSelf and 1 or 0)) do
+	for index = 1, math.min(#heroes, count) do
 		local hero = heroes[((index + turn) % #heroes) + 1]
-		players[#players + 1] = { name = hero.name, class = hero.class, guid = hero.guid, level = 30 + ((index * 7 + turn) % 30), state = STATE.NONE }
+		players[index] = { name = hero.name, class = hero.class, guid = hero.guid, level = 30 + ((index * 7 + turn) % 30), state = STATE.NONE,
+			isSelf = withSelf and index == 1 or nil }
 	end
 	return players
 end
@@ -415,7 +426,7 @@ function Demo.Blocked()
 end
 
 -- Starts the demo (again). Returns false, with why, when it cannot.
-function Demo.Start(static)
+function Demo.Start(static, tries)
 	local blocked = Demo.Blocked()
 	if blocked then
 		ns.Print(blocked)
@@ -425,12 +436,22 @@ function Demo.Start(static)
 	generation = generation + 1
 	running = true
 	local mine = generation
-	local items = Demo.Items()
+	local items, missing = Demo.Items()
+	-- The game loads an item it has not seen this session a moment later.
+	tries = tries or 1
+	if missing and not static and tries < Demo.TRIES then
+		Compat.After(Demo.WAIT, function()
+			if generation == mine then
+				Demo.Start(static, tries + 1)
+			end
+		end)
+		return true
+	end
 	local turn = math.floor(Compat.GetTime())
 	for slot = 1, 2 do
 		local card = cards[slot] or newCard()
 		cards[slot] = card
-		local link = items[((slot - 1) % math.max(1, #items)) + 1]
+		local link = items[slot]
 		local info = link and Compat.GetItemInfo(link)
 		local kind = link and Compat.GetItemKind(link)
 		-- The name in its quality's colour, the icon in its quality's border.
@@ -447,7 +468,7 @@ function Demo.Start(static)
 		local group = slot == 1
 		local players = newPlayers(group and 5 or Demo.RAID, turn + slot, group)
 		card.view = { rollID = "demo" .. slot, link = link, item = info, bound = true, demo = true, players = players }
-		card.context = Demo.Context(card, group, items[(slot % math.max(1, #items)) + 1])
+		card.context = Demo.Context(card, group, items[group and 2 or 1])
 		Demo.Place(card, slot)
 		card.frame:Show()
 		if Demo.OnStart then

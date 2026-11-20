@@ -442,7 +442,7 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 ### The panel beside the game's roll frames
 
-- [ ] **On the options page.** *Show Who Rolled What* (on), under it *Detect Ninja Looters* (off) with *Ninja Rules* beside it, and no demo. *Expected:* hovering the checkbox lights only its row, the button takes its own click; with the module off, both are greyed.
+- [ ] **On the options page.** *Show Who Rolled What* (on), under it *Detect Ninja Looters* (off) with *Ninja Rules* beside it, and no demo. *Expected:* hovering the checkbox lights only its row, the button takes its own click; *Ninja Rules* is greyed until *Detect Ninja Looters* is ticked; with the module off, both are greyed.
 - [ ] **A roll in a group.** An item to roll on. *Expected:* beside the game's roll frame, at its right, a dark panel with a thin gold edge: *Waiting for the rolls…*, then a line per player in the game's order: the choice's icon (the dice, the coin, the cross; a dot while undecided), the name in class colour, the roll once there is one, the leader brighter, your own line faintly lit, the winner's checkmark at the end. The game's frame works as before: its buttons, the bind question, the timer. Hover a line: the name, the choice and the roll.
 - [ ] **Several items.** Two or more items at once, more than four if a boss gives them. *Expected:* a panel beside each frame, none touching the next; a fifth item waits for a free frame as in the game, and its panel comes with it.
 - [ ] **The screen's edge.** With the roll frames moved near the right edge (Edit Mode below). *Expected:* the panels stand at the frames' left.
@@ -455,7 +455,7 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 ### The demo
 
-- [ ] **The demo.** `/ltm debug demoroll`, out of a group (it is on no menu and not on the options page). *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own, and items you wear: a group roll (you and four heroes of Azeroth) and a raid roll of twenty heroes, each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. Put a real roll frame beside them, if you can: note what differs.
+- [ ] **The demo.** `/ltm debug demoroll`, out of a group (it is on no menu and not on the options page). *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own: a group roll with a blue dagger (Gutwrencher) of five heroes of Azeroth, the first in your own place with its line lit, and a raid roll with a purple staff (Glowing Brightwood Staff) of twenty heroes, each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. No real character's name anywhere (it is for the store's pictures). The first time in a session the items may take a moment; if the game does not give them, worn gear stands in. Put a real roll frame beside them, if you can: note what differs.
 - [ ] **With the detection on.** *Detect Ninja Looters* on, `/ltm debug demoroll` again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
 - [ ] **Not during a roll, not in a fight.** `/ltm debug demoroll` while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
 
@@ -474,10 +474,10 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 ### The Ninja Rules window
 
-- [ ] **Opening.** `/ltm ninja`, the options page's *Ninja Rules*, the minimap menu's *Ninja Rules*, also with the detection off. *Expected:* *Ninja Rules* with two tabs, *Classes* first, on your own class; Escape closes it; the first time in a fight it refuses with a chat line.
+- [ ] **Opening.** With *Detect Ninja Looters* ticked: `/ltm ninja`, the options page's *Ninja Rules*, the minimap menu's *Ninja Rules*. *Expected:* *Ninja Rules* with two tabs, *Classes* first, on your own class; Escape closes it; the first time in a fight it refuses with a chat line. With the detection off: `/ltm ninja` and the menu's entry show the game's dialog «To use this, turn on “Detect Ninja Looters” in the addon's options.» with *Options* (opens the options) and *Cancel*; with the loot rolls off, the same with “Show Who Rolled What”.
 - [ ] **Classes.** *Expected:* the client's classes in their colours (nine on WoW Forever); for each, *Armor* with the game's names of the types and *up to level* boxes beside cloth, leather, mail and plate; *Weapons* in three columns; *Primary Stats* (Spirit only on WoW Forever); what the class cannot equip greyed. Tick a type, untick another, type a level and press Enter, empty a box, type 99. *Expected:* each kept at once (the demo's marks follow); 99 refused; an empty box means any level; *Reset Class* and *Reset All* bring the defaults back.
 - [ ] **The defaults.** On WoW Forever, look at each class. *Expected:* as they were agreed (paladin cloth, druid cloth and leather, warrior and paladin mail and leather up to 40, hunter and shaman leather up to 40). Note any that look wrong.
-- [ ] **Checks.** *Expected:* *Detect Ninja Looters* (the same as the options page's), each check, *Strictness* (*Normal*), *Lowest Quality Judged* (the game's *Uncommon*), the friends' and the summary's checkboxes; the others greyed while the detection is off. Each applies at once to open panels; kept per profile.
+- [ ] **Checks.** *Expected:* no *Detect Ninja Looters* here (it is on the options page); each check, *Strictness* (*Normal*), *Lowest Quality Judged* (the game's *Uncommon*), the friends' and the summary's checkboxes; the others greyed while the detection is off. Each applies at once to open panels; kept per profile.
 
 ### Exceptions
 
@@ -486,7 +486,7 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 ### Moving the game's roll frames
 
-- [ ] **In Edit Mode.** Open Edit Mode. *Expected:* *Loot Roll Frames* to pick and drag, with the demo's look-alikes on it; drag it, close Edit Mode; at the next roll, the game's frames stand there, stacked upwards as the game stacks them, the panels beside them.
+- [ ] **In Edit Mode.** Open Edit Mode. *Expected:* *Loot Roll Frames* to pick and drag, with the demo's look-alikes on it and Edit Mode's blue and yellow selection over them, covering them as it covers the game's own frames; drag it, close Edit Mode; at the next roll, the game's frames stand there, stacked upwards as the game stacks them, the panels beside them.
 - [ ] **Layouts.** Another Edit Mode layout. *Expected:* the game's place there until moved in that layout too.
 - [ ] **Reset.** *Reset To Default* in Edit Mode. *Expected:* the game's own place again.
 - [ ] **In a fight.** A roll in a fight with the frames moved. *Expected:* the frames on our place; no errors, no blocked action.
@@ -530,7 +530,7 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 ## Minimap icon
 
 - [ ] **The icon.** Log in. *Expected:* a round icon with Lootoman's picture (a bag of coins and a purple gem) at the minimap's bottom left, sharp, its corners hidden under the round border; its tooltip *Lootoman* and the version, *Click: options*, *Right-click: menu*, *Drag: move*. A click opens the options.
-- [ ] **The menu.** Right-click it. *Expected:* *Options*, *Loot Feed Look*, *Junk*, *Ninja Rules*, *Bug Report*, each opening its window, and no demo; *Junk* is greyed while junk management is off, *Ninja Rules* while the loot rolls are.
+- [ ] **The menu.** Right-click it. *Expected:* *Options*, *Loot Feed Look*, *Junk*, *Ninja Rules*, *Bug Report*, each opening its window, and no demo. Turn junk management off and choose *Junk*, turn the loot feed off and choose *Loot Feed Look*, untick *Detect Ninja Looters* and choose *Ninja Rules*. *Expected:* each time the game's dialog «To use this, turn on “…” in the addon's options.» naming the option, with *Options* and *Cancel*; the same from `/ltm junk`, `/ltm feed` and `/ltm ninja`.
 - [ ] **Dragging.** Drag it round the minimap, `/reload`. *Expected:* it follows the edge and stays where it was put; another character has it at the bottom left. In Edit Mode, make the minimap bigger and smaller: the icon stays on its edge.
 - [ ] **Square minimap.** With a minimap addon that makes the map square (if one is at hand). *Expected:* the icon goes along the square's edge.
 - [ ] **The checkbox.** At the top right of the options page, on the title's line: *Show the Minimap Icon* in small letters with its checkbox right of it; only the two light on hover. Untick it. *Expected:* the icon goes at once, also in a fight; another character still has it; its tooltip says *For this character.*

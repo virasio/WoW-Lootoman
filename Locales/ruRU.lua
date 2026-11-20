@@ -352,7 +352,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Deleted %s."] = "Удалено: %s.",
 	["Delete %s? Type “%s” to confirm."] = "Удалить %s? Для подтверждения введите «%s».",
 	["Delete %s?"] = "Удалить %s?",
-	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
 	["/ltm junk: open the junk window"] = "/ltm junk: открыть окно хлама",
 	["Drag it out of the window to delete it."] = "Перетащите за пределы окна, чтобы удалить.",
 
@@ -541,4 +540,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["Kayn"] = "Кайн",
 	["Wrathion"] = "Гневион",
 	["Ebyssian"] = "Эбиссиан",
+
+	-- Modules/Shared/TurnOn.lua
+	["To use this, turn on “%s” in the addon's options."] = "Необходимо включить функцию «%s» в настройках аддона.",
+
+	-- Settings/JunkList.lua
+	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
 })
