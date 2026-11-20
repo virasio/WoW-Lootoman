@@ -1348,4 +1348,6 @@ function LookWindow.Toggle()
 	end
 end
 
-ns.Slash.Register("feed", LookWindow.Toggle, L["/ltm feed: open the loot feed's look window"])
+ns.Slash.Register("feed", function()
+	ns.TurnOn.WhenOn("LootFeed", LookWindow.Toggle)
+end, L["/ltm feed: open the loot feed's look window"])

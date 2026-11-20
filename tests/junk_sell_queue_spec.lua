@@ -203,8 +203,9 @@ describe("sale queue", function()
 		assert.matches("Sold 1 items for 2 copper%.", table.concat(Test.state.printed, "\n"))
 		assert.is_nil(Test.state.saved.LootomanCharDB.session)
 		-- No command lists the sales any more: it shows the help.
+		local before = #Test.state.printed
 		Test.RunSlashCommand("LOOTOMAN", "sales")
-		assert.matches("Commands:", Test.state.printed[#Test.state.printed - 4])
+		assert.matches("Commands:", Test.state.printed[before + 1])
 	end)
 
 	it("reports the last sale in the self-test", function()

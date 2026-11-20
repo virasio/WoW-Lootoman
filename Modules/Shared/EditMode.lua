@@ -49,6 +49,23 @@ local layoutName
 -- True while a value set in the Edit Mode dialog is being stored.
 local fromDialog = false
 
+-- The selection LibEditMode draws over a frame (its own frame, a child of
+-- ours), or nil without the library.
+function EditMode.Selection(frame)
+	return lib and type(lib.frameSelections) == "table" and lib.frameSelections[frame] or nil
+end
+
+-- Picks a frame as a click on its selection does (the library's own
+-- handler), now in Edit Mode, or as soon as Edit Mode opens.
+local pendingPick
+local function pick(frame)
+	local selection = EditMode.Selection(frame)
+	local onMouseDown = selection and selection.GetScript and selection:GetScript("OnMouseDown")
+	if onMouseDown and not Compat.InCombat() then
+		onMouseDown(selection)
+	end
+end
+
 local function positions()
 	return Storage:GetSection("positions")
 end
@@ -149,6 +166,11 @@ local function setup()
 	lib:RegisterCallback("enter", function()
 		for _, entry in ipairs(entries) do
 			preview(entry, true)
+		end
+		if pendingPick then
+			local frame = pendingPick
+			pendingPick = nil
+			pick(frame)
 		end
 	end)
 	lib:RegisterCallback("exit", function()
@@ -418,6 +440,32 @@ function EditMode.ResetPosition(frame)
 			end
 			apply(entry)
 			return true
+		end
+	end
+	return false
+end
+
+function EditMode.PickWhenOpen(frame)
+	if EditMode.IsActive() then
+		pick(frame)
+	else
+		pendingPick = frame
+	end
+end
+
+-- Whether the layout in use has a place saved for the frame other than its
+-- default: whether the player moved it there.
+function EditMode.HasPosition(frame)
+	for _, entry in ipairs(entries) do
+		if entry.frame == frame then
+			local layouts = layoutName and positions()[entry.key]
+			local position = layouts and layouts[layoutName]
+			if not position then
+				return false
+			end
+			local default = entry.default
+			return not (default and position.point == default.point and math.abs(position.x - default.x) < 0.5
+				and math.abs(position.y - default.y) < 0.5)
 		end
 	end
 	return false

@@ -17,6 +17,9 @@
     "type-check": "Any"
   },
   "diagnostics.globals": [
+    "GroupLootContainer",
+    "GroupLootContainer_Update",
+    "RAID_CLASS_COLORS",
     "AddonCompartmentFrame",
     "GetMinimapShape",
     "Auctionator",

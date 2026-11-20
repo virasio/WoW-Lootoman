@@ -524,6 +524,48 @@ function MainPage:AddBox(header, height, options)
 	return self:Add("box", box, height, { indent = options.indent, text = header, wide = true, visible = options.visible, gap = 8 })
 end
 
+-- A button on a module's switch row, at the control column (switchButton =
+-- { label, tooltip, onClick } or, for a secure macro, { label, tooltip,
+-- macro, preClick }), enabled while the module is on. A macro button is
+-- the game's secure action button: on the player's click the game runs the
+-- macro itself (a slash command of its own, untainted). It can only be made
+-- and changed out of combat: made in a fight, the page goes without it.
+local function addSwitchButton(page, check, module)
+	local spec = module.switchButton
+	if spec.macro and Compat.InCombat() then
+		return
+	end
+	local row = check:GetParent()
+	local button = CreateFrame("Button", nil, row, spec.macro and "SecureActionButtonTemplate, UIPanelButtonTemplate" or "UIPanelButtonTemplate")
+	button:SetSize(120, 22)
+	-- Right after the label, whatever its length. The client refuses to anchor
+	-- a protected frame to a font string, so it stands on the checkbox, as far
+	-- right as the label ends.
+	local labelEnd = Panel.LABEL_X - Panel.CHECKBOX_WIDTH + check.label:GetStringWidth()
+	button:SetPoint("LEFT", check, "RIGHT", labelEnd + 12, 0)
+	-- Above the checkbox's hit area, which spans the row.
+	button:SetFrameLevel(check:GetFrameLevel() + 2)
+	button:SetText(spec.label)
+	if spec.macro then
+		button:RegisterForClicks("AnyUp", "AnyDown")
+		button:SetAttribute("type", "macro")
+		button:SetAttribute("macrotext", spec.macro)
+		if spec.preClick then
+			button:HookScript("PreClick", spec.preClick)
+		end
+	else
+		button:SetScript("OnClick", spec.onClick)
+	end
+	addTooltip(button, spec.label, spec.tooltip)
+	page:OnRefresh(function()
+		if not Compat.InCombat() then
+			button:SetEnabled(Storage:Get(module.name, "enabled") == true)
+		end
+	end)
+	page.switchButtons = page.switchButtons or {}
+	page.switchButtons[module.name] = button
+end
+
 -- A module's block on the main page: its switch (with switchNote, a text
 -- under it, or a function that gives it or nil as the page is built), or its title for a module that has none (switchLabel = false);
 -- then what goes under it, indented: the module's main settings, which can be
@@ -544,8 +586,11 @@ local function addModule(page, module)
 		if type(note) == "function" then
 			note = note()
 		end
-		page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0, nil, nil, nil, note)
+		local switch = page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0, nil, nil, nil, note)
 		requires = module.name
+		if module.switchButton then
+			addSwitchButton(page, switch, module)
+		end
 	end
 	for _, setting in ipairs(module.mainSettings or {}) do
 		local indent = Panel.INDENT * (setting.level or 1)

@@ -30,12 +30,15 @@ Locales\enUS.lua
 Locales\ruRU.lua
 
 Compat\Compat.lua
+Compat\Rolls.lua
 Compat\Needs.lua
 
 # The retail client does not know the game type camelot and loads a file
 # allowed only for it; the exclusion keeps the Forever data off retail.
 Data\Mainline\Data.lua [AllowLoadGameType standard]
 Data\Forever\Data.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
+Data\Mainline\Rolls.lua [AllowLoadGameType standard]
+Data\Forever\Rolls.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
 
 Core\Init.lua
 Core\Text.lua
@@ -45,6 +48,7 @@ Core\Storage.lua
 Core\Profiles.lua
 Core\Modules.lua
 Core\Marks.lua
+Core\NeedRules.lua
 Core\Share.lua
 Core\Diagnostics.lua
 Core\Slash.lua
@@ -56,6 +60,7 @@ Rules\Junk.lua
 Rules\Usable.lua
 Rules\Objects.lua
 Rules\Suggest.lua
+Rules\Need.lua
 
 Providers\Inventory.lua
 Providers\Bags.lua
@@ -66,6 +71,8 @@ Integrations\QuestieDB.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua
+Modules\Shared\TurnOn.lua
+Modules\Shared\RollLookalike.lua
 
 Modules\AutoLoot\AutoLoot.lua
 Modules\AutoLoot\LootWindow.lua
@@ -98,6 +105,18 @@ Modules\LootFeed\Debug.lua
 Modules\Highlights\GameSettings.lua
 Modules\Highlights\Sparkles.lua
 Modules\Highlights\Highlights.lua
+Modules\RollFrames\RollFrames.lua
+Modules\Rolls\Model.lua
+Modules\Rolls\Chat.lua
+Modules\Rolls\History.lua
+Modules\Rolls\Groups.lua
+Modules\Rolls\Panel.lua
+Modules\Rolls\Marks.lua
+Modules\Rolls\SuspiciousNeeds.lua
+Modules\Rolls\Demo.lua
+Modules\Rolls\Rolls.lua
+Modules\Rolls\NinjaRules.lua
+Modules\Rolls\Debug.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
