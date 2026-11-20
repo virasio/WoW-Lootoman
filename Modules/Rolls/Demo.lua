@@ -251,6 +251,59 @@ local function play(card, moves, steps, mine)
 	end)
 end
 
+-- No history in the demo: its marks come from its own made-up past.
+local NO_HISTORY = {
+	Open = function() return nil end,
+	Choices = function() return {} end,
+	LastShared = function() return nil end,
+}
+
+-- The demo's marks, for the detection when it is on. In the group roll the
+-- first made-up player needs an item that does not fit his class (a warrior
+-- past 40 on mail, when the item is mail) after greeding a BoE item that
+-- fits; the fourth carries a mark from a made-up last group. In the raid
+-- roll, three of those who need are marked as needing nearly everything.
+function Demo.Context(card, group, otherLink)
+	local context = { history = NO_HISTORY, reasons = {}, levels = {}, excused = card.excused or {} }
+	card.excused = context.excused
+	local facts = ns.Rolls.Marks.Facts(card.view.link)
+	local made = {}
+	for _, player in ipairs(card.view.players) do
+		if not player.isSelf then
+			made[#made + 1] = player
+		end
+	end
+	if group then
+		local first, fourth = made[1], made[4]
+		if first and facts then
+			if facts.classID == ns.Rules.Need.ARMOR and facts.subclassID == 3 then
+				first.class, first.level = "WARRIOR", 45
+			else
+				first.class = ns.Rolls.Marks.BreakingClass(facts, first.level) or first.class
+			end
+			if facts.bindType == ns.Rolls.Marks.BOE then
+				context.reasons[first.guid] = { { kind = "greedFitting", link = otherLink } }
+			end
+		end
+		if fourth then
+			context.reasons[fourth.guid] = { { kind = "lastTime", needs = 6, total = 7, day = Compat.FormatDay(Compat.GetServerTime() - 86400),
+				place = Compat.GetPlace() } }
+		end
+	else
+		local marked = 0
+		for index, player in ipairs(made) do
+			if index % 3 == 1 and marked < 3 then
+				marked = marked + 1
+				context.reasons[player.guid] = { { kind = "everything", needs = 5, total = 6 } }
+			end
+		end
+	end
+	for _, player in ipairs(card.view.players) do
+		context.levels[player.guid] = player.level
+	end
+	return context
+end
+
 -- Why the demo cannot start now, or nil.
 function Demo.Blocked()
 	if Compat.InCombat() then
@@ -286,7 +339,7 @@ function Demo.Start(static)
 		local group = slot == 1
 		local players = newPlayers(group and 5 or Demo.RAID, turn + slot, group)
 		card.view = { rollID = "demo" .. slot, link = link, item = info, bound = true, demo = true, players = players }
-		card.context = nil
+		card.context = Demo.Context(card, group, items[(slot % math.max(1, #items)) + 1])
 		Demo.Place(card, slot)
 		card.frame:Show()
 		if Demo.OnStart then

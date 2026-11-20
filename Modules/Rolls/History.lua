@@ -162,7 +162,8 @@ function History.Find(group, key)
 end
 
 -- A player's choices in a group in time order, up to the drop with the key
--- untilKey (not included) when given: { link, state, roll, excused, key, time }.
+-- untilKey (not included) when given: { link, state, roll, excused, key, time,
+-- place, level }.
 function History.Choices(group, guid, untilKey)
 	local choices = {}
 	for _, entry in ipairs(group and group.drops or {}) do
@@ -172,7 +173,7 @@ function History.Choices(group, guid, untilKey)
 		for _, player in ipairs(entry.rolls) do
 			if player.guid == guid then
 				choices[#choices + 1] = { link = entry.link, state = player.state, roll = player.roll, excused = player.excused, key = entry.key,
-					time = entry.time, place = entry.place }
+					time = entry.time, place = entry.place, level = player.level }
 			end
 		end
 	end

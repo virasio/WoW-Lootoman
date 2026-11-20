@@ -456,4 +456,17 @@ ns.Locales.AddEnglish({
 	"Demo",
 	"The demo starts out of combat.",
 	"The demo waits until the rolls in progress are over.",
+
+	-- Modules/Rolls/Marks.lua
+	"%s: not a %s's armor",
+	"%s: not a %s's armor past level %d",
+	"%s: not a %s's weapon",
+	"%s: not a %s's stat",
+	"Needed %d of %d items in this group",
+	"Greed on a fitting BoE (%s), need on this one",
+	"Needs every BoE: %d of %d",
+	"(BoE)",
+	"Last time: needed BoE items that did not fit (%s, %s)",
+	"Last time: needed %d of %d items (%s, %s)",
+	"Need: %d, ninja: %d",
 })

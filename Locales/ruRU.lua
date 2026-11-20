@@ -449,4 +449,17 @@ ns.Locales.AddTranslation("ruRU", {
 	["Demo"] = "Демо",
 	["The demo starts out of combat."] = "Демо запускается вне боя.",
 	["The demo waits until the rolls in progress are over."] = "Демо подождёт, пока не закончатся текущие розыгрыши.",
+
+	-- Modules/Rolls/Marks.lua
+	["%s: not a %s's armor"] = "%s: не броня класса «%s»",
+	["%s: not a %s's armor past level %d"] = "%s: не броня класса «%s» после %d уровня",
+	["%s: not a %s's weapon"] = "%s: не оружие класса «%s»",
+	["%s: not a %s's stat"] = "%s: не характеристика класса «%s»",
+	["Needed %d of %d items in this group"] = "Нид на %d из %d вещей в этой группе",
+	["Greed on a fitting BoE (%s), need on this one"] = "Грид на подходящую BoE-вещь (%s), а на эту — нид",
+	["Needs every BoE: %d of %d"] = "Нид на все BoE: %d из %d",
+	["(BoE)"] = "(BoE)",
+	["Last time: needed BoE items that did not fit (%s, %s)"] = "В прошлый раз: нид на неподходящие BoE (%s, %s)",
+	["Last time: needed %d of %d items (%s, %s)"] = "В прошлый раз: нид на %d из %d вещей (%s, %s)",
+	["Need: %d, ninja: %d"] = "Нид: %d, ниндзя: %d",
 })

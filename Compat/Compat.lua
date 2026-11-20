@@ -455,6 +455,11 @@ function Compat.GetDate()
 	return date("%Y-%m-%d %H:%M")
 end
 
+-- The day of a time (GetServerTime's seconds), as 2026-11-18.
+function Compat.FormatDay(time)
+	return date("%Y-%m-%d", time)
+end
+
 -- Whether the client has a texture atlas of this name.
 function Compat.HasAtlas(name)
 	return C_Texture.GetAtlasInfo(name) ~= nil

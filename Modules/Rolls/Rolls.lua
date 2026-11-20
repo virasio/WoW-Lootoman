@@ -117,6 +117,21 @@ function Rolls.RedrawAll()
 	end
 end
 
+-- An item's stats are asked for: once an item comes in, the marks are
+-- judged again; the module listens only while it waits.
+local waiting = false
+function Rolls.WaitForItem()
+	if waiting or not on() then
+		return
+	end
+	waiting = true
+	Rolls:OnEvent("ITEM_DATA_LOAD_RESULT", function()
+		waiting = false
+		ns.Bus:OffEvent("ITEM_DATA_LOAD_RESULT", Rolls)
+		Rolls.RedrawAll()
+	end)
+end
+
 -- The panel of a game roll frame (for tests and the demo's place).
 function Rolls.PanelOf(frame)
 	return panels[frame]
@@ -164,7 +179,17 @@ function Rolls:OnEnable()
 			end
 		end)
 	end
-	Model.WatchRules(self)
+	-- New rules or checks mean new marks.
+	self:On("NeedRulesChanged", function()
+		ns.Rolls.Marks.Invalidate()
+		Rolls.RedrawAll()
+	end)
+	self:On("SettingChanged", function(_, module)
+		if module == Rolls.name then
+			ns.Rolls.Marks.Invalidate()
+			Rolls.RedrawAll()
+		end
+	end)
 	self:OnEvent("START_LOOT_ROLL", function(_, rollID)
 		Model.AddRoll(rollID)
 		Compat.After(Chat.WAIT, function()
@@ -219,6 +244,7 @@ end
 
 function Rolls:OnDisable()
 	Rolls.starting = false
+	waiting = false
 	ns.Rolls.Demo.Stop()
 	for _, panel in pairs(panels) do
 		Panel.Hide(panel)
