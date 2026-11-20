@@ -69,10 +69,8 @@ describe("moving the game's roll frames", function()
 		lib = newLibEditMode()
 		rawset(_G, "LibStub", function(name) return name == "LibEditMode" and lib or nil end)
 		start()
-		-- Off by default: the game's place, nothing in Edit Mode.
-		assert.is_false(RollFrames:IsActive())
-		assert.is_nil(RollFrames.frame)
-		ns.Modules:SetEnabled("RollFrames", true)
+		-- On by default.
+		assert.is_true(RollFrames:IsActive())
 	end)
 
 	after_each(function()
@@ -122,9 +120,11 @@ describe("moving the game's roll frames", function()
 		assert.is_true(RollFrames.frame:IsShown())
 		local card = RollFrames.Cards()[1]
 		assert.same({ true, "CENTER", RollFrames.frame }, { card.frame:IsShown(), card.frame.points[1][1], card.frame.points[1][2] })
-		-- The selection reaches over the panels at the frames' right.
+		-- The selection reaches over the panels at the frames' right, raised above
+		-- them: its template fixes it at MEDIUM, under the look-alikes' DIALOG.
 		local selection = lib.frameSelections[RollFrames.frame]
 		assert.same({ "BOTTOMRIGHT", RollFrames.frame, "BOTTOMRIGHT", 194, 0 }, selection.points[2])
+		assert.equals("FULLSCREEN", selection:GetFrameStrata())
 		local panel = nil
 		for _, frame in ipairs(Loader.ui.frames) do
 			if frame.points[1] and frame.points[1][2] == card.frame and frame.points[1][3] == "RIGHT" then
@@ -161,6 +161,13 @@ describe("moving the game's roll frames", function()
 		assert.is_false(RollFrames.frame:IsShown())
 	end)
 
+	it("shows worn gear on the look-alikes for an item the game has not loaded", function()
+		Test.state.worn = { [7] = "|cff1eff00|Hitem:100|h[Tracker's Pants]|h|r" }
+		Test.SetItems({ [100] = { name = "Tracker's Pants", link = "|cff1eff00|Hitem:100|h[Tracker's Pants]|h|r", quality = 2 } })
+		lib.Fire("enter")
+		assert.equals("Tracker's Pants", RollFrames.Cards()[2].frame.name:GetText())
+	end)
+
 	it("picks its frame as Edit Mode opens, after the Edit button's click", function()
 		ns.EditMode.PickWhenOpen(RollFrames.frame)
 		local selection = lib.frameSelections[RollFrames.frame]
@@ -180,11 +187,19 @@ describe("the Edit button beside the roll frames' checkbox", function()
 		local button = page.switchButtons.RollFrames
 		assert.same({ "SecureActionButtonTemplate, UIPanelButtonTemplate", "macro", "/editmode", "Edit" },
 			{ button.template, button:GetAttribute("type"), button:GetAttribute("macrotext"), button.text })
-		page:Refresh()
-		assert.is_false(button:IsEnabled())
-		ns.Modules:SetEnabled("RollFrames", true)
+		-- Right after the checkbox's label; enabled while moving is allowed, which it is by default.
+		local check
+		for _, item in ipairs(page.items) do
+			if item.text == "Move the Loot Roll Frames in Edit Mode" then
+				check = item.region
+			end
+		end
+		assert.same({ "LEFT", check.label, "RIGHT", 12, 0 }, button.points[1])
 		page:Refresh()
 		assert.is_true(button:IsEnabled())
+		ns.Modules:SetEnabled("RollFrames", false)
+		page:Refresh()
+		assert.is_false(button:IsEnabled())
 		-- The note under the checkbox says where Edit Mode is; the block stands above the loot rolls'.
 		local at, rolls
 		for index, item in ipairs(page.items) do

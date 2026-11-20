@@ -1,8 +1,8 @@
 local _, ns = ...
 local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 
--- Moving the game's roll frames in Edit Mode, a module of its own, off until
--- its checkbox is ticked: a frame of its own in Edit Mode, Loot Roll Frames,
+-- Moving the game's roll frames in Edit Mode, a module of its own, on by
+-- default: a frame of its own in Edit Mode, Loot Roll Frames,
 -- with a place per Edit Mode layout. While it has never been moved, the game
 -- places its roll frames as always. Once moved, after each of the game's
 -- layouts of them (GroupLootContainer_Update) the four frames stand on its
@@ -24,7 +24,7 @@ local RollFrames = ns.Modules:Register({
 	switchLabel = L["Move the Loot Roll Frames in Edit Mode"],
 	description = L["Lets you place the game's loot roll frames where you want in Edit Mode, a place for each Edit Mode layout. Until you move them, the game places them as always."],
 	switchNote = L["In Edit Mode (the game menu, Edit Mode), drag “Loot Roll Frames”."],
-	defaults = { enabled = false },
+	defaults = { enabled = true },
 	switchButton = {
 		label = L["Edit"],
 		tooltip = L["Opens Edit Mode with the loot roll frames picked."],
@@ -43,8 +43,9 @@ RollFrames.WIDTH, RollFrames.HEIGHT = 277, 200
 RollFrames.DEFAULT = { point = "BOTTOM", x = 0, y = 230 }
 -- The room the game leaves per roll frame.
 RollFrames.SLOT = 100
--- Above the look-alikes and the panels (DIALOG): Edit Mode's selection, a
--- child of the frame, covers them as it covers the game's own frames.
+-- Above the look-alikes and the panels (DIALOG). Edit Mode's selection
+-- template fixes its own strata at MEDIUM, so the selection is raised too, to
+-- cover them as it covers the game's own frames.
 RollFrames.STRATA = "FULLSCREEN"
 -- How far right of the frames the loot rolls' panels reach: their gap and width.
 RollFrames.PANELS = 4 + 190
@@ -104,14 +105,17 @@ end
 -- while the loot rolls are on.
 local function fitSelection()
 	local selection = ns.EditMode.Selection(RollFrames.frame)
-	if not selection then
+	if not (selection and selection.SetFrameStrata and selection.SetPoint) then
 		return
 	end
+	selection:SetFrameStrata(RollFrames.STRATA)
 	selection:ClearAllPoints()
 	selection:SetPoint("TOPLEFT", RollFrames.frame, "TOPLEFT", 0, 0)
 	selection:SetPoint("BOTTOMRIGHT", RollFrames.frame, "BOTTOMRIGHT", panelsOn and RollFrames.PANELS or 0, 0)
 end
 
+-- Edit Mode's look-alikes show the demo's items if the game has them, else
+-- worn gear (a pair of trousers will do).
 local function preview(active)
 	updateAnchor()
 	local frames = {}

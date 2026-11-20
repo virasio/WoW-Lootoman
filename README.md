@@ -76,7 +76,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - **Ninja Rules** (`/ltm ninja`, or the button beside the checkbox, while the detection is on) sets, for each class, which armor types (up to which level), weapon types and primary stats count as its own, and which checks run, how strict they are, and from which quality items are judged.
 - **Exceptions:** right-click a marked name to excuse a need the group agreed to; on leaving a group, a window lists its marked needs to excuse them there.
 - The rolls are kept by group, from joining to leaving, for the marks.
-- **Moving the game's roll frames**, off until you tick *Move the Loot Roll Frames in Edit Mode*: in Edit Mode, *Loot Roll Frames* moves them, a place for each layout (*Edit* beside the checkbox opens Edit Mode with it picked); until you move them, the game places them as always.
+- **Moving the game's roll frames** (*Move the Loot Roll Frames in Edit Mode*, on by default): in Edit Mode, *Loot Roll Frames* moves them, a place for each layout (*Edit* beside the checkbox opens Edit Mode with it picked); until you move them, the game places them as always.
 
 ### Options and profiles
 

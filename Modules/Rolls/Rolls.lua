@@ -37,7 +37,8 @@ local Rolls = ns.Modules:Register({
 			local row = check:GetParent()
 			local button = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
 			button:SetSize(120, 22)
-			button:SetPoint("LEFT", row, "LEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - indent, 0)
+			-- Right after the label, whatever its length.
+			button:SetPoint("LEFT", check.label, "RIGHT", 12, 0)
 			-- Above the checkbox's hit area, which spans the row.
 			button:SetFrameLevel(check:GetFrameLevel() + 2)
 			button:SetText(L["Ninja Rules"])

@@ -538,7 +538,8 @@ local function addSwitchButton(page, check, module)
 	local row = check:GetParent()
 	local button = CreateFrame("Button", nil, row, spec.macro and "SecureActionButtonTemplate, UIPanelButtonTemplate" or "UIPanelButtonTemplate")
 	button:SetSize(120, 22)
-	button:SetPoint("TOPLEFT", row, "TOPLEFT", Panel.CONTROL_X - Panel.LEFT, -1)
+	-- Right after the label, whatever its length.
+	button:SetPoint("LEFT", check.label, "RIGHT", 12, 0)
 	-- Above the checkbox's hit area, which spans the row.
 	button:SetFrameLevel(check:GetFrameLevel() + 2)
 	button:SetText(spec.label)
