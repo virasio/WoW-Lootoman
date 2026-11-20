@@ -13,7 +13,10 @@ local Compat, L = ns.Compat, ns.L
 -- first such player. A player is known by GUID, under their latest name.
 -- Above the drops, two filters kept in the profile: the lowest quality shown,
 -- and, with the detection on, only the drops with marked needs (in a
--- player's view, their own).
+-- player's view, their own). A marked need has an Exception checkbox beside
+-- its line (in a raid's roll, the right click on its square, as on the
+-- panels; in a player's view, beside the drop): ticked, the need is excused
+-- and counts nowhere; unticked, it is marked again, in any kept group.
 -- Long lists reuse a pool of rows,
 -- made as they are first needed. Marks show only with ninja detection on,
 -- judged by the rules of the day, once per drawing of a group (Marks.lua).
@@ -55,6 +58,7 @@ local function judge(group)
 	local result = { views = {}, marked = {}, total = 0 }
 	for _, entry in ipairs(group.drops) do
 		local view = DropRow.Marked(DropRow.EntryView(entry, group), group, source())
+		view.history = frame and frame.source
 		result.views[entry.key] = view
 		for _, player in ipairs(view.players) do
 			if player.mark == Marks.NINJA and player.guid then
@@ -137,6 +141,65 @@ local function newPlayerLine()
 	end)
 	frame.playerLines[#frame.playerLines + 1] = line
 	return line
+end
+
+-- A need's Exception checkbox on a row, the index-th.
+local function exceptionCheck(row, index)
+	row.checks = row.checks or {}
+	local check = row.checks[index]
+	if not check then
+		check = CreateFrame("CheckButton", nil, row.frame, "UICheckButtonTemplate")
+		check:SetSize(18, 18)
+		check.label = row.frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+		check.label:SetPoint("LEFT", check, "RIGHT", 1, 0)
+		check.label:SetText(L["Exception"])
+		check:SetScript("OnClick", function(button)
+			if button.view and button.player then
+				ns.Rolls.SuspiciousNeeds.SetExcused(button.view, button.player, button:GetChecked() == true)
+			end
+		end)
+		row.checks[index] = check
+	end
+	return check
+end
+
+-- The Exception checkboxes of a drawn row: beside each line of a marked or
+-- excused need, or, for one player (their view), beside the row.
+local function drawExceptions(row, view, guid)
+	local used = 0
+	local detection = ns.Storage:Get("Rolls", "ninja") == true
+	local function place(player, anchor, x)
+		used = used + 1
+		local check = exceptionCheck(row, used)
+		check.view, check.player = view, player
+		check:ClearAllPoints()
+		check:SetPoint("LEFT", anchor, "RIGHT", x, 0)
+		check:SetChecked(player.excused == true)
+		check:Show()
+		check.label:Show()
+	end
+	local function excusable(player)
+		return detection and ns.Rules.Need.IsNeed(player.state) and (player.mark ~= nil or player.excused == true)
+	end
+	if guid then
+		for _, player in ipairs(view.players) do
+			if player.guid == guid and excusable(player) then
+				place(player, row.panel.frame, 6)
+			end
+		end
+	else
+		-- On each line's height, past the panel's edge.
+		for _, line in ipairs(row.panel.lines) do
+			if line:IsShown() and line.player and excusable(line.player) then
+				place(line.player, line, 6 + Panel.PAD)
+			end
+		end
+	end
+	for index = used + 1, #(row.checks or {}) do
+		row.checks[index]:Hide()
+		row.checks[index].label:Hide()
+		row.checks[index].view, row.checks[index].player = nil, nil
+	end
 end
 
 local function newDropRow()
@@ -421,10 +484,12 @@ local function drawGroup(group)
 				note = note ~= "" and (note .. ", " .. entry.place) or entry.place
 			end
 			y = y + DropRow.Draw(row, view, note) + HistoryWindow.GAP
+			drawExceptions(row, view)
 		end
 	end
 	for index = shown + 1, #frame.dropRows do
 		DropRow.Hide(frame.dropRows[index])
+		drawExceptions(frame.dropRows[index], { players = {} })
 	end
 	frame.dropCount = shown
 	frame.detailContent:SetHeight(math.max(1, y))
@@ -438,6 +503,7 @@ local function hideDetail()
 	end
 	for _, row in ipairs(frame.dropRows) do
 		DropRow.Hide(row)
+		drawExceptions(row, { players = {} })
 	end
 	for _, label in ipairs(frame.groupHeadings) do
 		label:Hide()
@@ -494,6 +560,7 @@ local function drawPlayer(guid)
 				end
 				local note = drop.entry.time and Compat.FormatTime(drop.entry.time) or ""
 				y = y + DropRow.Draw(row, view, ("%s  %s"):format(note, choice)) + HistoryWindow.GAP
+				drawExceptions(row, view, guid)
 			end
 		end
 	end
@@ -502,6 +569,7 @@ local function drawPlayer(guid)
 	end
 	for index = shown + 1, #frame.dropRows do
 		DropRow.Hide(frame.dropRows[index])
+		drawExceptions(frame.dropRows[index], { players = {} })
 	end
 	frame.dropCount = shown
 	frame.detailContent:SetHeight(math.max(1, y))

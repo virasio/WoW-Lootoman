@@ -267,6 +267,90 @@ describe("the roll history window", function()
 		assert.equals(2, frame.dropCount)
 	end)
 
+	-- The checkboxes shown on a row, with their players' names.
+	local function checks(row)
+		local list = {}
+		for _, check in ipairs(row.checks or {}) do
+			if check:IsShown() then
+				list[#list + 1] = { check.player.name, check:GetChecked() == true }
+			end
+		end
+		return list
+	end
+
+	local function tick(check, checked)
+		check:SetChecked(checked)
+		check.scripts.OnClick(check)
+	end
+
+	it("excuses a marked need of a closed group with its checkbox, and marks it again", function()
+		local first = fixture()
+		ns.Storage:Set("Rolls", "ninja", true)
+		Window.Open()
+		local frame = Window.Frame()
+		frame.groupButtons[2].scripts.OnClick(frame.groupButtons[2], "LeftButton")
+		local row = frame.dropRows[1]
+		-- Only the marked need has one, beside its line.
+		assert.same({ { "Brina", false } }, checks(row))
+		assert.same({ "LEFT", row.panel.lines[1], "RIGHT", 12, 0 }, row.checks[1].points[1])
+		tick(row.checks[1], true)
+		assert.is_true(first.drops[1].rolls[1].excused)
+		assert.is_truthy(row.panel.lines[1].text:GetText():find("ReadyCheck-Ready", 1, true))
+		assert.same({ { "Brina", true } }, checks(row))
+		-- The group has no marked need left.
+		assert.is_nil(frame.groupButtons[2].counts:GetText():find("RaidTargetingIcon", 1, true))
+		tick(row.checks[1], false)
+		assert.is_nil(first.drops[1].rolls[1].excused)
+		assert.is_truthy(row.panel.lines[1].text:GetText():find("RaidTargetingIcon", 1, true))
+		-- In her view, beside the drop.
+		Window.ShowPlayer("g-brina")
+		assert.same({ { "Brina", false } }, checks(frame.dropRows[1]))
+		assert.same({ "LEFT", frame.dropRows[1].panel.frame, "RIGHT", 6, 0 }, frame.dropRows[1].checks[1].points[1])
+	end)
+
+	it("shows the exceptions made before, ticked", function()
+		local first = fixture()
+		first.drops[1].rolls[1].excused = true
+		ns.Storage:Set("Rolls", "ninja", true)
+		Window.Open()
+		local frame = Window.Frame()
+		frame.groupButtons[2].scripts.OnClick(frame.groupButtons[2], "LeftButton")
+		assert.same({ { "Brina", true } }, checks(frame.dropRows[1]))
+	end)
+
+	it("takes a mark from last time away once the needs of that group are excused, and the other windows follow", function()
+		ns.Storage:Set("Rolls", "ninja", true)
+		ns.Storage:Set("Rolls", "strictness", "strict")
+		Test.SetGroup(true)
+		Groups.Joined(1, "Party-1")
+		for index = 1, 3 do
+			History.Record({ key = "1:" .. index, link = RING, rolls = { choice("Brina", "MAGE", 0, 50 + index) } })
+		end
+		local first = History.Open()
+		Test.SetGroup(false)
+		Groups.Left(1, "Party-1")
+		Test.SetGroup(true)
+		Groups.Joined(1, "Party-2")
+		History.Record({ key = "2:1", link = RING, rolls = { choice("Brina", "MAGE", 0, 70) } })
+		-- The Suspicious Needs window of the first group is open too.
+		ns.Rolls.SuspiciousNeeds.Open(function()
+			return ns.Rolls.SuspiciousNeeds.Rows(first)
+		end)
+		Window.Open()
+		local frame = Window.Frame()
+		local line = frame.dropRows[1].panel.lines[1]
+		line.scripts.OnEnter(line)
+		assert.matches("^Last time: needed 3 of 3 items", Loader.ui.tooltip.lines[3])
+		-- In the first group only the third need was marked: by then she had needed everything.
+		frame.groupButtons[2].scripts.OnClick(frame.groupButtons[2], "LeftButton")
+		assert.same({ {}, {}, { { "Brina", false } } }, { checks(frame.dropRows[1]), checks(frame.dropRows[2]), checks(frame.dropRows[3]) })
+		tick(frame.dropRows[3].checks[1], true)
+		assert.is_true(ns.Rolls.SuspiciousNeeds.Frame().rows[1].exception:GetChecked())
+		frame.groupButtons[1].scripts.OnClick(frame.groupButtons[1], "LeftButton")
+		assert.is_nil(frame.dropRows[1].panel.lines[1].text:GetText():find("RaidTargetingIcon", 1, true))
+		assert.same({}, checks(frame.dropRows[1]))
+	end)
+
 	it("closes as the loot rolls turn off", function()
 		Window.Open()
 		ns.Modules:SetEnabled("Rolls", false)

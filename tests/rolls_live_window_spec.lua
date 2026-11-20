@@ -107,6 +107,21 @@ describe("the live window", function()
 		assert.matches("Brina|r 44$", window.rows[1].item.status:GetText())
 	end)
 
+	it("follows an exception made on one of its rows' lines", function()
+		Test.SetItems({ [100] = { name = "Mail Helm", link = HELM, quality = 2, classID = 4, subclassID = 3, equipLoc = "INVTYPE_HEAD", bindType = 1, stats = {} } })
+		ns.Storage:Set("Rolls", "ninja", true)
+		local window = LiveWindow.Frame()
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = HELM, rolls = { player("Brina", "MAGE", 0, 50) } })
+		Test.ChooseRoll(7, 3)
+		local line = window.rows[1].panel.lines[1]
+		assert.is_truthy(line.text:GetText():find("RaidTargetingIcon", 1, true))
+		-- The right click's menu, as on the panels.
+		line.scripts.OnClick(line, "RightButton")
+		Loader.ui.contextMenu.entries[1].callback()
+		assert.is_truthy(window.rows[1].panel.lines[1].text:GetText():find("ReadyCheck-Ready", 1, true))
+	end)
+
 	it("stays closed with its option off", function()
 		ns.Storage:Set("Rolls", "liveWindow", false)
 		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
