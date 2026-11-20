@@ -111,6 +111,7 @@ Modules\Rolls\Panel.lua
 Modules\Rolls\Marks.lua
 Modules\Rolls\Demo.lua
 Modules\Rolls\Rolls.lua
+Modules\Rolls\NinjaRules.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua

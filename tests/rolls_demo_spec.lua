@@ -112,6 +112,10 @@ describe("the loot rolls' demo", function()
 		Demo.Start()
 		ns.Modules:SetEnabled("Rolls", false)
 		assert.is_false(Demo.cards[1].frame:IsShown())
-		assert.equals("Show Demo", ns.Modules:Get("Rolls").mainSettings[1].label)
+		local labels = {}
+		for _, setting in ipairs(ns.Modules:Get("Rolls").mainSettings) do
+			labels[#labels + 1] = setting.label or setting.kind
+		end
+		assert.same({ "custom", "Show Demo" }, labels)
 	end)
 end)

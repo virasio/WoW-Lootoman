@@ -28,8 +28,27 @@ local Rolls = ns.Modules:Register({
 		spareFriends = true,
 		summary = true,
 	},
-	-- Under the switch: the demo.
+	-- Under the switch: the detection's checkbox with the Ninja Rules button
+	-- beside it, then the demo.
 	mainSettings = {
+		{ kind = "custom", build = function(page, indent)
+			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
+				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
+			local row = check:GetParent()
+			local button = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+			button:SetSize(120, 22)
+			button:SetPoint("LEFT", row, "LEFT", ns.SettingsPanel.CONTROL_X - ns.SettingsPanel.LEFT - indent, 0)
+			-- Above the checkbox's hit area, which spans the row.
+			button:SetFrameLevel(check:GetFrameLevel() + 2)
+			button:SetText(L["Ninja Rules"])
+			button:SetScript("OnClick", function()
+				ns.Rolls.NinjaRules.Open()
+			end)
+			page:OnRefresh(function()
+				button:SetEnabled(ns.Storage:Get("Rolls", "enabled") == true)
+			end)
+			page.ninjaRules = button
+		end },
 		{ kind = "button", label = L["Show Demo"], tooltip = L["Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand."],
 			click = function()
 				ns.Rolls.Demo.Start()
