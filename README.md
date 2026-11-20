@@ -81,7 +81,13 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 ![The Suspicious Needs window on leaving a group: each marked need with its reasons and an Exception checkbox](screenshots/suspicious-needs.png)
 
 - **The Loot Rolls window**, where the game does not open a loot history window of its own (WoW Forever; retail opens the game's): once you have chosen on a roll, it opens with that roll and the group's other rolls still going, and every item rolled on while it is open joins it at the top, each with its item, who won it with which button and roll (or *All passed*), and the panel's lines beside it. Closed, it opens again at your next choice. *Show the Loot Rolls Window After Your Choice*, under the loot rolls' switch, turns it off.
+
+![The Loot Rolls window: a roll still going, two won and one all passed, each with everyone's choices beside it](screenshots/loot-rolls-window.png)
+
 - **Roll History** (`/ltm rolls`, the button beside *Show Who Rolled What*, or the minimap menu): the rolls are kept by group, from joining to leaving (the newest 30 groups and 400 drops), and this window shows them: your groups newest first, each with its day, places and counts; the chosen group's players with their needs, greeds, passes, wins and marks, and its drops in time order with their time, place, winner and choices. Click a player for everything they did in your groups, group by group, or find them by name in the search box. Filter the drops by quality or to marked needs, excuse a marked need with its *Exception* checkbox (in any group: the marks it caused later follow), and delete a group or the whole history.
+
+![Roll History on a made-up history: the groups on the left; the chosen group's players with their counts and marks, and its drops with the winner and everyone's choices](screenshots/roll-history.png)
+
 - **Moving the game's roll frames** (*Move the Loot Roll Frames in Edit Mode*, on by default): in Edit Mode, *Loot Roll Frames* moves them, a place for each layout (*Edit* beside the checkbox opens Edit Mode with it picked); until you move them, the game places them as always.
 
 ### Options and profiles
@@ -94,7 +100,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 - **Share** makes a text of the current profile to give to another character or player. Tick what goes into it: each feature's options, the loot feed's position and the look it uses, and any of your feed looks. **Import** reads such a text, shows what it holds and takes what you tick, into a new profile or into the current one; texts from earlier versions are read too. When an imported look's name is taken, choose for each one: keep both, replace yours, or keep yours. Feed looks can also be shared and imported on their own, from the look menu.
 - Changes apply at once, without `/reload`.
 
-![The minimap icon and its menu](screenshots/minimap.png)
+![The minimap icon and its menu: Options, Loot Feed Look, Junk, Ninja Rules, Roll History, Bug Report](screenshots/minimap.png)
 
 ### Languages and clients
 
