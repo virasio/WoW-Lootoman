@@ -3,9 +3,10 @@ local Compat, Storage = ns.Compat, ns.Storage
 
 -- /ltm debug rolls: the open rolls and how each is bound to the loot history,
 -- the history's drops the model knows, and the open group's last drops, in
--- English as all debug output; /ltm debug demoroll plays the demo. The bug
--- report says how the loot rolls are set, and the self-test what the client
--- has of the game's roll frames.
+-- English as all debug output; /ltm debug demoroll plays the demo
+-- (/ltm debug demohistory, the made-up history, is DemoHistory.lua's). The
+-- bug report says how the loot rolls are set, and the self-test what the
+-- client has of the game's roll frames.
 local Model, History = ns.Rolls.Model, ns.Rolls.History
 
 local function nameOf(link)
@@ -47,9 +48,10 @@ end, "/ltm debug demoroll: play the loot rolls' demo, with no group")
 ns.BugReport.AddPart(function()
 	local groups, drops = History.Size()
 	return {
-		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops"):format(
+		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops; live window %s"):format(
 			Storage:Get("Rolls", "enabled") and "on" or "off", Storage:Get("Rolls", "ninja") and "on" or "off", tostring(Storage:Get("Rolls", "strictness")),
-			ns.NeedRules.ChangedCount(), groups, drops),
+			ns.NeedRules.ChangedCount(), groups, drops,
+			not ns.Rolls.LiveWindow.Available() and "the game's" or (Storage:Get("Rolls", "liveWindow") and "on" or "off")),
 	}
 end)
 

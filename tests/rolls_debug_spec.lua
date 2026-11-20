@@ -56,7 +56,7 @@ describe("the loot rolls' debugging", function()
 
 	it("says in the bug report how the loot rolls are set, in plain ASCII", function()
 		local text = ns.BugReport.Build()
-		assert.matches("\n  Loot rolls: on; detection off, strictness normal; classes with changed rules 0; history 0 groups, 0 drops\n", text)
+		assert.matches("\n  Loot rolls: on; detection off, strictness normal; classes with changed rules 0; history 0 groups, 0 drops; live window on\n", text)
 		assert.matches("\n  Loot roll frames: movable; in the game's place\n", text)
 		assert.is_nil(text:find("[\128-\255]"))
 	end)

@@ -495,10 +495,42 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 - [ ] **The rest stays.** With the frames moved, an extra action button shown (a quest or a boss that gives one) and an achievement or loot alert. *Expected:* both where the game puts them.
 - [ ] **Off.** Untick *Move the Loot Roll Frames in Edit Mode* with the frames moved. *Expected:* the game's place again.
 
+### The Loot Rolls window
+
+On WoW Forever, where the game has no loot history window of its own, in a dungeon with group loot.
+
+- [ ] **Whether the game has its own.** On each client: `/dump GroupLootHistoryFrame ~= nil`, then `/loot`. *Expected:* note both. On retail `true` and the game's *Loot Rolls* window; if WoW Forever says `true` too, Lootoman's window never shows there: say so.
+- [ ] **On the options page.** On WoW Forever, under *Show Who Rolled What*: *Show the Loot Rolls Window After Your Choice* (on), with its tooltip. *Expected:* on retail, no such checkbox.
+- [ ] **After your choice.** An item to roll on; choose need, greed or pass. *Expected:* the game's frame goes as always; Lootoman's *Loot Rolls* window opens to the right of the roll frames and their panels, the roll at its top, lit for a moment, with the other rolls still going under it. Each row: the item (its icon, its name in its quality colour, its tooltip on hover, Shift-click links it), under it *Rolling…*, then the winner in class colour with their button's icon and roll, or *All passed*; at its right the panel's lines as beside the game's frames, filling as the others choose.
+- [ ] **It keeps them.** Leave it open through the next pulls. *Expected:* every item rolled on joins it at the top, also those you had no frame for; past four rows it scrolls. Drag it by its title: it stays there for the session.
+- [ ] **Closed.** Close it (its X, or Escape), then choose on the next roll. *Expected:* it opens again with that roll only, and any other roll still going.
+- [ ] **Leaving.** With it open, leave the dungeon. *Expected:* its rows stay as they were (note any row that empties). After a `/reload` it is closed.
+- [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
+- [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
+- [ ] **Off.** Untick *Show the Loot Rolls Window After Your Choice*. *Expected:* no window at your choice.
+
+### The roll history
+
+- [ ] **Opening.** `/ltm rolls`, *Roll History* on the loot rolls' switch row of the options page (greyed while they are off), *Roll History* in the minimap menu after *Ninja Rules*. *Expected:* the *Roll History* window; Escape closes it; the first time in a fight it refuses with a chat line. With the loot rolls off, the command and the menu ask to turn on “Show Who Rolled What”.
+- [ ] **Empty.** On a character with no rolls kept. *Expected:* a line saying so; *Clear the History* greyed.
+- [ ] **The groups.** After two dungeon runs. *Expected:* on the left, newest first, each with its day, its places, how many drops and players, and a skull where needs were marked (detection on); the newest shown on the right.
+- [ ] **A group.** *Expected:* its players in class colours with *Need, greed, pass, won* and, with marks, the skull and how many; then its drops in time order, each with its time and place under the item, the winner with their button and roll, and the choices beside it as on the panels.
+- [ ] **A player.** Click a name, in the players or on a drop's line. *Expected:* *Back* appears; their counts over every group with them, then each group, newest first, with the drops they chose on, their choice and roll under each item. *Back* returns to the group.
+- [ ] **The search.** Type part of a name in another case (on the Russian client, a Cyrillic name too). *Expected:* only the groups with such a player; Enter shows that player; the box's clear button brings every group back.
+- [ ] **Filters.** *Lowest Quality*: *Rare*. *Expected:* the green items go, and it is kept per profile. *Only Marked Needs* (greyed while the detection is off): only the drops with a marked need; in a player's view, those where theirs was marked.
+- [ ] **Exceptions.** With the detection on, a marked need has an *Exception* checkbox beside its line (beside the drop in a player's view). Tick it. *Expected:* the skull becomes the green tick; the group's skull and counts follow; a *Last time* mark it caused in a later group may go; an open *Suspicious Needs* window and the panels follow. Untick: marked again. In a raid's drop: the right click on its square, as on the panels.
+- [ ] **Deleting.** Right-click a group, *Delete This Group*. *Expected:* the game's dialog says it cannot be undone; *Cancel* keeps the group, *Delete* removes it. *Clear the History*: the same for every group. Delete the open group while still in it: the next drop starts a new one.
+- [ ] **Items not loaded.** After a login, open a group from days ago. *Expected:* the items' names at once, their icons a moment later.
+
+### The made-up history
+
+- [ ] **The demo.** `/ltm debug demohistory`. *Expected:* *Roll History (Demo)* on three made-up groups of heroes of Azeroth: two dungeon runs and a raid of twenty, with dungeon items (the first time some may take a moment; one the client lacks is left out). With the detection on: the first hero marked for needing everything in the first run, *Last time* on his first need in the second, an exception ticked in the first. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
+- [ ] **Full.** `/ltm debug demohistory full`. *Expected:* 30 groups, 400 drops; opening, scrolling and choosing groups stay quick (note any stutter).
+
 ### The history and debugging
 
 - [ ] **Kept by group.** Run a dungeon, `/ltm debug rolls` in the middle and after leaving. *Expected:* the open rolls and their drops; the group with the day it began and its last drops (place, players, winner). `/reload` in the middle: the same group goes on.
-- [ ] **In the bug report.** *Expected:* under the options, `Loot rolls: on; detection …, strictness …; classes with changed rules …; history … groups, … drops; roll frames …`.
+- [ ] **In the bug report.** *Expected:* under the options, `Loot rolls: on; detection …, strictness …; classes with changed rules …; history … groups, … drops; live window …` (*the game's* on retail), then the roll frames' line.
 - [ ] **The game's strings.** On each client: `/dump LOOT_ROLL_NEED`, `/dump LOOT_ROLL_ROLLED_NEED`, `/dump LOOT_ROLL_WON`, `/dump LOOT_ROLL_ALL_PASSED`. *Expected:* note the texts (the chat fallback reads them).
 - [ ] **Names in the chat.** On WoW Forever, after a roll, the chat's roll lines. *Expected:* note how a name of two words is written there.
 
