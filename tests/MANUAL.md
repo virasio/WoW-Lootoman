@@ -531,7 +531,7 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 ### The history and debugging
 
 - [ ] **Kept by group.** Run a dungeon, `/ltm debug rolls` in the middle and after leaving. *Expected:* the open rolls and their drops; the group with the day it began and its last drops (place, players, winner). `/reload` in the middle: the same group goes on.
-- [ ] **In the bug report.** *Expected:* under the options, `Loot rolls: on; detection …, strictness …; classes with changed rules …; history … groups, … drops; live window …` (*the game's* on retail), then the roll frames' line.
+- [ ] **In the bug report.** *Expected:* under the options, `Loot rolls: on; detection …, strictness …; classes with changed rules …; history … groups, … drops; live window …`, then the roll frames' line.
 - [ ] **The game's strings.** On each client: `/dump LOOT_ROLL_NEED`, `/dump LOOT_ROLL_ROLLED_NEED`, `/dump LOOT_ROLL_WON`, `/dump LOOT_ROLL_ALL_PASSED`. *Expected:* note the texts (the chat fallback reads them).
 - [ ] **Names in the chat.** On WoW Forever, after a roll, the chat's roll lines. *Expected:* note how a name of two words is written there.
 
