@@ -169,6 +169,65 @@ describe("the roll history window", function()
 		assert.equals(2, frame.dropCount)
 	end)
 
+	local function search(frame, text)
+		frame.search:SetText(text)
+		for _, hook in ipairs(frame.search.hooks.OnTextChanged) do
+			hook(frame.search)
+		end
+	end
+
+	it("shows a player over every group by GUID, under their latest name, and goes back to the group", function()
+		local first, second = fixture()
+		History.Record({ key = "2:2", link = HELM, rolls = { choice("Kael", "PRIEST", 0, 77) }, winner = { guid = "g-kael" } })
+		second.drops[2].rolls[1].name = "Kaelán"
+		Window.Open()
+		local frame = Window.Frame()
+		-- Kael's line in the newest group.
+		frame.playerLines[1].scripts.OnClick(frame.playerLines[1])
+		assert.same({ "g-kael", true }, { frame.player, frame.back:IsShown() })
+		assert.matches("Kaelán", frame.header:GetText())
+		assert.equals("Need: 1, greed: 2, pass: 1, won: 2", frame.playerLines[1].counts:GetText())
+		-- The groups newest first, each with the drops they chose on and their choice.
+		assert.same({ "2025-11-19  Wailing Caverns", "2025-11-18  The Deadmines, Wailing Caverns" },
+			{ frame.groupHeadings[1]:GetText(), frame.groupHeadings[2]:GetText() })
+		assert.equals(4, frame.dropCount)
+		assert.equals("10:00  Greed 40", frame.dropRows[3].item.note:GetText())
+		frame.back.scripts.OnClick(frame.back)
+		assert.same({ nil, false, 2 }, { frame.player, frame.back:IsShown(), frame.dropCount })
+		assert.equals(second, frame.group)
+		-- A drop's line opens its player too.
+		frame.groupButtons[2].scripts.OnClick(frame.groupButtons[2], "LeftButton")
+		local line = frame.dropRows[1].panel.lines[1]
+		line.scripts.OnClick(line, "LeftButton")
+		assert.equals("g-brina", frame.player)
+		assert.equals(first, frame.group)
+	end)
+
+	it("keeps the groups with a player whose name holds the search's text, whatever the case, and Enter shows that player", function()
+		local first = fixture()
+		first.drops[1].rolls[1].name = "Брина"
+		first.drops[2].rolls[1].name = "Брина"
+		Window.Open()
+		local frame = Window.Frame()
+		search(frame, "БРИ")
+		local buttons = frame.groupButtons
+		assert.same({ first, false }, { buttons[1].group, buttons[2]:IsShown() })
+		-- The chosen group was the newest: the search shows the one it kept.
+		assert.equals(first, frame.group)
+		search(frame, "KAEL")
+		assert.same({ true, true }, { buttons[1]:IsShown(), buttons[2]:IsShown() })
+		search(frame, "nobody")
+		assert.is_false(buttons[1]:IsShown())
+		search(frame, "брин")
+		for _, hook in ipairs(frame.search.hooks.OnEnterPressed) do
+			hook(frame.search)
+		end
+		assert.equals("g-brina", frame.player)
+		assert.matches("Брина", frame.header:GetText())
+		search(frame, "")
+		assert.same({ true, true }, { buttons[1]:IsShown(), buttons[2]:IsShown() })
+	end)
+
 	it("closes as the loot rolls turn off", function()
 		Window.Open()
 		ns.Modules:SetEnabled("Rolls", false)

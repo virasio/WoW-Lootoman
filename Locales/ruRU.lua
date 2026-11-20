@@ -567,4 +567,5 @@ ns.Locales.AddTranslation("ruRU", {
 	["The roll history opens out of combat."] = "История розыгрышей открывается вне боя.",
 	["/ltm rolls: open the roll history"] = "/ltm rolls: открыть историю розыгрышей",
 	["Opens the rolls kept in your groups: who chose what, who won and with which button."] = "Открывает розыгрыши ваших групп: кто что выбрал, кто выиграл и какой кнопкой.",
+	["Back"] = "Назад",
 })

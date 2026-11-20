@@ -6,7 +6,12 @@ local Compat, L = ns.Compat, ns.L
 -- had, and a skull when it had marked needs; on the right the chosen group:
 -- its players with their needs, greeds, passes, wins and marks, and its drops
 -- in time order, each a row with the item, the outcome and the choices
--- (DropRow.lua), with its time and place. Long lists reuse a pool of rows,
+-- (DropRow.lua), with its time and place. A click on a player (on their
+-- line, or on a drop's line) shows them over all the kept groups: their
+-- counts and every drop they chose on, group by group; the search box keeps
+-- the groups with a player whose name holds its text, and Enter shows the
+-- first such player. A player is known by GUID, under their latest name.
+-- Long lists reuse a pool of rows,
 -- made as they are first needed. Marks show only with ninja detection on,
 -- judged by the rules of the day, once per drawing of a group (Marks.lua).
 -- Built at its first opening, out of combat.
@@ -212,13 +217,75 @@ local function build()
 	frame.empty:SetPoint("RIGHT", frame.detailContent, "RIGHT", -4, 0)
 	frame.empty:SetJustifyH("LEFT")
 	frame.empty:SetText(L["No rolls kept yet. The rolls in your groups are kept here, by group, from joining to leaving."])
-	frame.groupButtons, frame.playerLines, frame.dropRows = {}, {}, {}
+	frame.groupButtons, frame.playerLines, frame.dropRows, frame.groupHeadings = {}, {}, {}, {}
+	-- The search, above the groups.
+	frame.search = CreateFrame("EditBox", nil, frame, "SearchBoxTemplate")
+	frame.search:SetSize(HistoryWindow.LEFT - 12, 20)
+	frame.search:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -HistoryWindow.TOP - 4)
+	frame.search:SetAutoFocus(false)
+	-- The template's own script keeps its clear button and hint: hooked, not replaced.
+	frame.search:HookScript("OnTextChanged", function(box)
+		frame.searchText = box:GetText() or ""
+		HistoryWindow.Redraw()
+	end)
+	frame.search:HookScript("OnEnterPressed", function(box)
+		box:ClearFocus()
+		local guid = HistoryWindow.Found()
+		if guid then
+			HistoryWindow.ShowPlayer(guid)
+		end
+	end)
+	-- Back from a player to the group.
+	frame.back = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.back:SetSize(80, 22)
+	frame.back:SetPoint("RIGHT", frame.ninjaRules, "LEFT", -6, 0)
+	frame.back:SetText(L["Back"])
+	frame.back:SetScript("OnClick", function()
+		frame.player = nil
+		HistoryWindow.Redraw()
+	end)
+	frame.back:Hide()
 	frame:SetScript("OnHide", function()
 		judged = {}
 	end)
 	if HistoryWindow.OnBuild then
 		HistoryWindow.OnBuild(frame)
 	end
+end
+
+-- Whether a name holds the search's text, whatever the case.
+local function matches(name, text)
+	return type(name) == "string" and ns.Text.FoldCase(name):find(ns.Text.FoldCase(text), 1, true) ~= nil
+end
+
+-- The search keeps the groups with a player whose name holds its text.
+function HistoryWindow.Keeps(group)
+	local text = frame and frame.searchText or ""
+	if text == "" then
+		return true
+	end
+	for _, player in ipairs(History.Players(group)) do
+		if matches(player.name, text) then
+			return true
+		end
+	end
+	return false
+end
+
+-- The first player the search finds, newest group first: their GUID.
+function HistoryWindow.Found()
+	local text = frame and frame.searchText or ""
+	if text == "" then
+		return nil
+	end
+	for _, group in ipairs(HistoryWindow.Groups()) do
+		for _, player in ipairs(History.Players(group)) do
+			if player.guid and matches(player.name, text) then
+				return player.guid
+			end
+		end
+	end
+	return nil
 end
 
 -- The groups shown on the left, newest first: those with drops.
@@ -321,7 +388,83 @@ local function hideDetail()
 	for _, row in ipairs(frame.dropRows) do
 		DropRow.Hide(row)
 	end
+	for _, label in ipairs(frame.groupHeadings) do
+		label:Hide()
+	end
 	frame.dropCount = 0
+end
+
+-- A player over every kept group: their counts, then each group with the
+-- drops they chose on, each noting their choice and roll.
+local function drawPlayer(guid)
+	local found = History.Across(guid)
+	if not found then
+		frame.player = nil
+		return false
+	end
+	local player = found.player
+	frame.header:SetText(Panel.ClassName(player.name, player.class))
+	local y = 0
+	local marked = 0
+	for _, each in ipairs(found.groups) do
+		marked = marked + (judge(each.group).marked[guid] or 0)
+	end
+	local summary = frame.playerLines[1] or newPlayerLine()
+	summary.player = nil
+	summary:ClearAllPoints()
+	summary:SetPoint("TOPLEFT", frame.detailContent, "TOPLEFT", 0, -y)
+	summary.name:SetText(Panel.ClassName(player.name, player.class))
+	summary.counts:SetText(countsOf(player) .. (marked > 0 and ("   %s %d"):format(Marks.NINJA, marked) or ""))
+	summary:Show()
+	y = y + HistoryWindow.LINE + 8
+	local shown = 0
+	for index, each in ipairs(found.groups) do
+		local label = frame.groupHeadings[index]
+		if not label then
+			label = heading(frame.detailContent, "")
+			frame.groupHeadings[index] = label
+		end
+		label:ClearAllPoints()
+		label:SetPoint("TOPLEFT", frame.detailContent, "TOPLEFT", 4, -y)
+		label:SetText(titleOf(each.group))
+		label:Show()
+		y = y + 20
+		local result = judge(each.group)
+		for _, drop in ipairs(each.drops) do
+			local view = result.views[drop.entry.key]
+			if view and shows(drop.entry, view) then
+				shown = shown + 1
+				local row = frame.dropRows[shown] or newDropRow()
+				row.frame:ClearAllPoints()
+				row.frame:SetPoint("TOPLEFT", frame.detailContent, "TOPLEFT", 0, -y)
+				local choice = Panel.ChoiceName(drop.choice.state) or ""
+				if drop.choice.roll then
+					choice = ("%s %d"):format(choice, drop.choice.roll)
+				end
+				local note = drop.entry.time and Compat.FormatTime(drop.entry.time) or ""
+				y = y + DropRow.Draw(row, view, ("%s  %s"):format(note, choice)) + HistoryWindow.GAP
+			end
+		end
+	end
+	for index = #found.groups + 1, #frame.groupHeadings do
+		frame.groupHeadings[index]:Hide()
+	end
+	for index = shown + 1, #frame.dropRows do
+		DropRow.Hide(frame.dropRows[index])
+	end
+	frame.dropCount = shown
+	frame.detailContent:SetHeight(math.max(1, y))
+	return true
+end
+HistoryWindow.DrawPlayer = drawPlayer
+
+-- Shows a player over every kept group, by GUID.
+function HistoryWindow.ShowPlayer(guid)
+	if not frame or not guid then
+		return
+	end
+	frame.player = guid
+	HistoryWindow.Redraw()
 end
 
 -- Draws the window as the history stands now.
@@ -331,10 +474,13 @@ function HistoryWindow.Redraw()
 	end
 	local groups = HistoryWindow.Groups()
 	local still, any = false, false
-	for _, group in ipairs(source().Groups()) do
+	-- The chosen group stays while the list (searched) still has it.
+	for _, group in ipairs(groups) do
 		if group == frame.group then
 			still = true
 		end
+	end
+	for _, group in ipairs(source().Groups()) do
 		any = any or #group.drops > 0
 	end
 	if not still then
@@ -342,14 +488,16 @@ function HistoryWindow.Redraw()
 	end
 	drawGroups(groups)
 	frame.empty:SetShown(not any)
-	if frame.player and HistoryWindow.DrawPlayer then
-		hideDetail()
-		HistoryWindow.DrawPlayer(frame.player)
-	elseif frame.group then
+	hideDetail()
+	if frame.player and drawPlayer(frame.player) then
+		frame.back:Show()
+		return
+	end
+	frame.back:Hide()
+	if frame.group then
 		drawGroup(frame.group)
 	else
 		frame.header:SetText("")
-		hideDetail()
 	end
 end
 

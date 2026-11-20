@@ -278,13 +278,15 @@ function History.Across(guid)
 	for index = #groups, 1, -1 do
 		local group = groups[index]
 		local drops = {}
+		-- The newest group with them gives their latest name: its last drop's.
+		local newest = player == nil
 		for _, entry in ipairs(group.drops) do
 			for _, kept in ipairs(entry.rolls) do
 				if kept.guid == guid then
 					drops[#drops + 1] = { entry = entry, choice = kept }
-					if not player then
-						-- The newest group first: its name is the latest.
-						player = newCounts(kept)
+					player = player or newCounts(kept)
+					if newest then
+						player.name, player.class = kept.name or player.name, kept.class or player.class
 					end
 					count(player, kept.state, entry.winner == guid)
 				end
