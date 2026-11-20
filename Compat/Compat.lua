@@ -419,7 +419,7 @@ end
 -- classID and subclassID (Enum.ItemClass and its subclasses). Nil while the
 -- client has not loaded the item yet.
 function Compat.GetItemInfo(item)
-	local name, link, quality, _, requiredLevel, _, _, stackSize, _, _, sellPrice, classID, subclassID, _, _, _,
+	local name, link, quality, _, requiredLevel, _, _, stackSize, _, _, sellPrice, classID, subclassID, bindType, _, _,
 		isCraftingReagent = C_Item.GetItemInfo(item)
 	if not name then
 		return nil
@@ -434,6 +434,8 @@ function Compat.GetItemInfo(item)
 		requiredLevel = requiredLevel,
 		classID = classID,
 		subclassID = subclassID,
+		-- Enum.ItemBind: 1 when picked up, 2 when equipped (BoE).
+		bindType = bindType,
 	}
 end
 

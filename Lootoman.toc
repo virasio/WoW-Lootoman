@@ -30,6 +30,7 @@ Locales\enUS.lua
 Locales\ruRU.lua
 
 Compat\Compat.lua
+Compat\Rolls.lua
 Compat\Needs.lua
 
 # The retail client does not know the game type camelot and loads a file

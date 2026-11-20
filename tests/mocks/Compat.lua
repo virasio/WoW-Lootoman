@@ -584,6 +584,7 @@ function Compat.GetItemInfo(item)
 		requiredLevel = info.requiredLevel,
 		classID = info.classID,
 		subclassID = info.subclassID,
+		bindType = info.bindType,
 	}
 end
 

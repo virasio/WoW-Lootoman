@@ -126,7 +126,7 @@ end
 function Loader.LoadAddon(options)
 	Loader.ui = UI.Install()
 	local merged = {
-		replace = { ["Compat/Compat.lua"] = "tests/mocks/Compat.lua" },
+		replace = { ["Compat/Compat.lua"] = "tests/mocks/Compat.lua", ["Compat/Rolls.lua"] = "tests/mocks/CompatRolls.lua" },
 		skip = { "Settings/" },
 	}
 	for key, value in pairs(options or {}) do
