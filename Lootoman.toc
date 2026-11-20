@@ -37,6 +37,8 @@ Compat\Needs.lua
 # allowed only for it; the exclusion keeps the Forever data off retail.
 Data\Mainline\Data.lua [AllowLoadGameType standard]
 Data\Forever\Data.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
+Data\Mainline\Rolls.lua [AllowLoadGameType standard]
+Data\Forever\Rolls.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
 
 Core\Init.lua
 Core\Text.lua
@@ -57,6 +59,7 @@ Rules\Junk.lua
 Rules\Usable.lua
 Rules\Objects.lua
 Rules\Suggest.lua
+Rules\Need.lua
 
 Providers\Inventory.lua
 Providers\Bags.lua
