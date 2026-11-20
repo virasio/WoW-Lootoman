@@ -8,7 +8,7 @@ Loot rolls: see who chose what, and who is ninja looting.
 - **Ninja detection**, off until you tick *Detect Ninja Looters*: a need on an armor type, a weapon type or primary stats the needer's class does not count as its own is marked, with the reason in its tooltip; for BoE items it says what the player did on the group's other BoE items; players who need nearly everything in the group are marked, and so is a player who did so the last time you were in a group with him. In a raid the marked players show as squares in class colours.
 - **Ninja Rules** (`/ltm ninja`): for each class, which armor types (up to which level: on WoW Forever a warrior's mail counts up to 40), weapon types and primary stats are its own, and which checks run and how strictly.
 - **Exceptions:** right-click a marked name to excuse a need the group agreed to; leaving a group, a window lists its marked needs.
-- **The game's roll frames can be moved** in Edit Mode (*Loot Roll Frames*).
+- **The game's roll frames can be moved** in Edit Mode, once you tick *Move the Loot Roll Frames in Edit Mode*; *Edit* beside it opens Edit Mode with them picked.
 - The minimap icon's menu has *Ninja Rules*.
 
 ## 0.5.10

@@ -486,12 +486,14 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 ### Moving the game's roll frames
 
-- [ ] **In Edit Mode.** Open Edit Mode. *Expected:* *Loot Roll Frames* to pick and drag, with the demo's look-alikes on it and Edit Mode's blue and yellow selection over them, covering them as it covers the game's own frames; drag it, close Edit Mode; at the next roll, the game's frames stand there, stacked upwards as the game stacks them, the panels beside them.
+- [ ] **On the options page.** Above *Show Who Rolled What*, *Move the Loot Roll Frames in Edit Mode* (off) with *Edit* beside it and a note under it on where Edit Mode is. *Expected:* *Edit* greyed while the checkbox is off. Off: nothing of ours in Edit Mode, and the game's roll frames where the game puts them.
+- [ ] **Edit.** Tick the checkbox, press *Edit*. *Expected:* Edit Mode opens (note whether the options window closes or stays over it) with *Loot Roll Frames* picked. On WoW Forever note whether `/editmode` works at all: if not, the note's way (the game menu, Edit Mode) still does. No errors, no blocked action, nothing in the taint log about Edit Mode or the action bars.
+- [ ] **In Edit Mode.** *Expected:* *Loot Roll Frames* to pick and drag, with two look-alikes on it and, while *Show Who Rolled What* is on, their panels at their right; Edit Mode's blue and yellow selection over all of them. Untick *Show Who Rolled What*: no panels, the selection over the look-alikes only. Drag it, close Edit Mode; at the next roll, the game's frames stand there, stacked upwards as the game stacks them, the panels beside them.
 - [ ] **Layouts.** Another Edit Mode layout. *Expected:* the game's place there until moved in that layout too.
 - [ ] **Reset.** *Reset To Default* in Edit Mode. *Expected:* the game's own place again.
 - [ ] **In a fight.** A roll in a fight with the frames moved. *Expected:* the frames on our place; no errors, no blocked action.
 - [ ] **The rest stays.** With the frames moved, an extra action button shown (a quest or a boss that gives one) and an achievement or loot alert. *Expected:* both where the game puts them.
-- [ ] **Off.** Turn the module off with the frames moved. *Expected:* the game's place again.
+- [ ] **Off.** Untick *Move the Loot Roll Frames in Edit Mode* with the frames moved. *Expected:* the game's place again.
 
 ### The history and debugging
 

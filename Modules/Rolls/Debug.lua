@@ -47,9 +47,9 @@ end, "/ltm debug demoroll: play the loot rolls' demo, with no group")
 ns.BugReport.AddPart(function()
 	local groups, drops = History.Size()
 	return {
-		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops; roll frames %s"):format(
+		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops"):format(
 			Storage:Get("Rolls", "enabled") and "on" or "off", Storage:Get("Rolls", "ninja") and "on" or "off", tostring(Storage:Get("Rolls", "strictness")),
-			ns.NeedRules.ChangedCount(), groups, drops, ns.Rolls.Mover.Moved() and "moved" or "in the game's place"),
+			ns.NeedRules.ChangedCount(), groups, drops),
 	}
 end)
 

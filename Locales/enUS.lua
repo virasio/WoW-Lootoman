@@ -553,4 +553,11 @@ ns.Locales.AddEnglish({
 
 	-- Settings/JunkList.lua
 	"Junk management is off. Turn it on in the options.",
+
+	-- Modules/RollFrames/RollFrames.lua
+	"Loot roll frames",
+	"Move the Loot Roll Frames in Edit Mode",
+	"Lets you place the game's loot roll frames where you want in Edit Mode, a place for each Edit Mode layout. Until you move them, the game places them as always.",
+	"In Edit Mode (the game menu, Edit Mode), drag “Loot Roll Frames”.",
+	"Opens Edit Mode with the loot roll frames picked.",
 })

@@ -1,0 +1,200 @@
+local Loader = require("tests.helpers.loader")
+local UI = require("tests.mocks.UI")
+
+-- Moving the game's roll frames in Edit Mode (Modules/RollFrames/RollFrames.lua).
+
+-- A stand-in for LibEditMode, as far as the mover uses it.
+local function newLibEditMode()
+	local lib = { frames = {}, callbacks = {}, editing = false }
+	-- Each frame gets its selection, as the library makes it: a child of the
+	-- frame whose click picks the frame.
+	lib.frameSelections = {}
+	function lib:AddFrame(frame, callback, default, name)
+		self.frames[frame] = { callback = callback, default = default, name = name }
+		local selection = UI.NewFake(frame)
+		selection:SetScript("OnMouseDown", function(picked) picked.picked = true end)
+		self.frameSelections[frame] = selection
+	end
+	function lib:RegisterCallback(event, callback)
+		self.callbacks[event] = self.callbacks[event] or {}
+		table.insert(self.callbacks[event], callback)
+		if event == "layout" and self.layout then
+			callback(self.layout, 1)
+		end
+	end
+	function lib:IsInEditMode()
+		return self.editing
+	end
+	function lib.Fire(event, ...)
+		if event == "enter" or event == "exit" then
+			lib.editing = event == "enter"
+		end
+		for _, callback in ipairs(lib.callbacks[event] or {}) do
+			callback(...)
+		end
+	end
+	function lib.SetLayout(name)
+		lib.layout = name
+		lib.Fire("layout", name, 1)
+	end
+	function lib.Drag(frame, point, x, y)
+		frame:ClearAllPoints()
+		frame:SetPoint(point, x, y)
+		lib.frames[frame].callback(frame, lib.layout, point, x, y)
+	end
+	return lib
+end
+
+describe("moving the game's roll frames", function()
+	local ns, Test, lib, RollFrames, frames, container
+
+	local function start(saved)
+		ns = Loader.LoadAddon({ gameType = "camelot", skip = saved and saved.settings and {} or nil })
+		Test = ns.Compat.Test
+		container = UI.NewFake(Loader.ui.UIParent)
+		frames = {}
+		for index = 1, 4 do
+			frames[index] = UI.NewFake(Loader.ui.UIParent)
+			frames[index]:Hide()
+		end
+		Test.state.gameRollFrames = frames
+		Test.state.gameRollContainer = container
+		Test.state.gameRollSlots = { { frame = frames[1], slot = 1 }, { frame = frames[2], slot = 2 } }
+		Loader.Start(ns)
+		lib.SetLayout("Modern")
+		RollFrames = ns.RollFrames
+	end
+
+	before_each(function()
+		lib = newLibEditMode()
+		rawset(_G, "LibStub", function(name) return name == "LibEditMode" and lib or nil end)
+		start()
+		-- Off by default: the game's place, nothing in Edit Mode.
+		assert.is_false(RollFrames:IsActive())
+		assert.is_nil(RollFrames.frame)
+		ns.Modules:SetEnabled("RollFrames", true)
+	end)
+
+	after_each(function()
+		rawset(_G, "LibStub", nil)
+	end)
+
+	it("leaves the game's place alone while the frames were never moved", function()
+		assert.is_false(RollFrames.Moved())
+		Test.LayOutGameRolls()
+		assert.same({ "CENTER", container, "BOTTOM", 0, 50 }, frames[1].points[1])
+		assert.equals("Loot Roll Frames", lib.frames[RollFrames.frame].name)
+		-- Above the look-alikes (DIALOG), so Edit Mode's selection covers them.
+		assert.equals("FULLSCREEN", RollFrames.frame:GetFrameStrata())
+	end)
+
+	it("stands the frames on its place once moved, after each of the game's layouts, 100 apart, the panels with them", function()
+		lib.Drag(RollFrames.frame, "BOTTOMLEFT", 300, 400)
+		assert.is_true(RollFrames.Moved())
+		Test.LayOutGameRolls()
+		assert.same({ "CENTER", RollFrames.frame, "BOTTOM", 0, 50 }, frames[1].points[#frames[1].points])
+		assert.same({ "CENTER", RollFrames.frame, "BOTTOM", 0, 150 }, frames[2].points[#frames[2].points])
+		-- The container itself is never touched.
+		assert.same({}, container.points)
+		-- The panel stands beside its frame, wherever that is.
+		Test.StartRoll(7, { name = "Item", link = "|Hitem:100|h" })
+		frames[1].rollID = 7
+		frames[1]:Show()
+		assert.equals(frames[1], ns.Rolls.Module.PanelOf(frames[1]).frame.points[1][2])
+	end)
+
+	it("keeps a place per Edit Mode layout, and gives the game its place back on a reset", function()
+		lib.Drag(RollFrames.frame, "BOTTOMLEFT", 300, 400)
+		lib.SetLayout("Classic")
+		assert.is_false(RollFrames.Moved())
+		lib.SetLayout("Modern")
+		assert.is_true(RollFrames.Moved())
+		-- Reset To Default saves the default place: the game's place again.
+		lib.Drag(RollFrames.frame, RollFrames.DEFAULT.point, RollFrames.DEFAULT.x, RollFrames.DEFAULT.y)
+		assert.is_false(RollFrames.Moved())
+		lib.Fire("enter")
+		lib.Fire("exit")
+		assert.same({ "CENTER", container, "BOTTOM", 0, 50 }, frames[1].points[#frames[1].points])
+	end)
+
+	it("shows look-alikes on its place in Edit Mode, with the loot rolls' panels beside them under the selection", function()
+		lib.Fire("enter")
+		assert.is_true(RollFrames.frame:IsShown())
+		local card = RollFrames.Cards()[1]
+		assert.same({ true, "CENTER", RollFrames.frame }, { card.frame:IsShown(), card.frame.points[1][1], card.frame.points[1][2] })
+		-- The selection reaches over the panels at the frames' right.
+		local selection = lib.frameSelections[RollFrames.frame]
+		assert.same({ "BOTTOMRIGHT", RollFrames.frame, "BOTTOMRIGHT", 194, 0 }, selection.points[2])
+		local panel = nil
+		for _, frame in ipairs(Loader.ui.frames) do
+			if frame.points[1] and frame.points[1][2] == card.frame and frame.points[1][3] == "RIGHT" then
+				panel = frame
+			end
+		end
+		assert.is_true(panel ~= nil and panel:IsShown())
+		lib.Fire("exit")
+		assert.same({ false, false, false }, { RollFrames.frame:IsShown(), card.frame:IsShown(), panel:IsShown() })
+	end)
+
+	it("shows no panels in Edit Mode while the loot rolls are off, the selection over the look-alikes only", function()
+		ns.Modules:SetEnabled("Rolls", false)
+		lib.Fire("enter")
+		local card = RollFrames.Cards()[1]
+		assert.is_true(card.frame:IsShown())
+		local selection = lib.frameSelections[RollFrames.frame]
+		assert.same({ "BOTTOMRIGHT", RollFrames.frame, "BOTTOMRIGHT", 0, 0 }, selection.points[2])
+		for _, frame in ipairs(Loader.ui.frames) do
+			local anchored = frame.points[1] and frame.points[1][2] == card.frame and frame.points[1][3] == "RIGHT"
+			assert.is_falsy(anchored and frame:IsShown())
+		end
+	end)
+
+	it("gives the game its place back when turned off, and leaves its layouts alone then", function()
+		lib.Drag(RollFrames.frame, "BOTTOMLEFT", 300, 400)
+		Test.LayOutGameRolls()
+		ns.Modules:SetEnabled("RollFrames", false)
+		assert.same({ "CENTER", container, "BOTTOM", 0, 50 }, frames[1].points[#frames[1].points])
+		Test.LayOutGameRolls()
+		assert.same({ "CENTER", container, "BOTTOM", 0, 50 }, frames[1].points[#frames[1].points])
+		-- Off, nothing in Edit Mode.
+		lib.Fire("enter")
+		assert.is_false(RollFrames.frame:IsShown())
+	end)
+
+	it("picks its frame as Edit Mode opens, after the Edit button's click", function()
+		ns.EditMode.PickWhenOpen(RollFrames.frame)
+		local selection = lib.frameSelections[RollFrames.frame]
+		assert.is_nil(selection.picked)
+		lib.Fire("enter")
+		assert.is_true(selection.picked)
+	end)
+end)
+
+describe("the Edit button beside the roll frames' checkbox", function()
+	it("is a secure button running the game's /editmode, enabled while moving is allowed", function()
+		local SettingsAPI = require("tests.mocks.SettingsAPI")
+		SettingsAPI.Install()
+		local ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
+		Loader.Start(ns)
+		local page = ns.SettingsPanel.main
+		local button = page.switchButtons.RollFrames
+		assert.same({ "SecureActionButtonTemplate, UIPanelButtonTemplate", "macro", "/editmode", "Edit" },
+			{ button.template, button:GetAttribute("type"), button:GetAttribute("macrotext"), button.text })
+		page:Refresh()
+		assert.is_false(button:IsEnabled())
+		ns.Modules:SetEnabled("RollFrames", true)
+		page:Refresh()
+		assert.is_true(button:IsEnabled())
+		-- The note under the checkbox says where Edit Mode is; the block stands above the loot rolls'.
+		local at, rolls
+		for index, item in ipairs(page.items) do
+			if item.text == "Move the Loot Roll Frames in Edit Mode" then
+				at = index
+			elseif item.text == "Show Who Rolled What" then
+				rolls = index
+			end
+		end
+		assert.is_true(at < rolls)
+		assert.matches("Edit Mode", page.items[at].region.note:GetText())
+	end)
+end)

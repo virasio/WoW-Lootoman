@@ -35,6 +35,8 @@ Bus.MESSAGES = {
 		from = "AutoLoot" },
 	OpenJunkWindow = { payload = "", from = "the loot feed, a click on its low-space warning; the junk module opens its window" },
 	NeedRulesChanged = { payload = "classFile: the class whose rules changed, nil when every class was reset", from = "NeedRules" },
+	RollFramesPreview = { payload = "active, frames: Edit Mode opened or closed, and the look-alikes of the game's roll frames shown in it",
+		from = "RollFrames; the loot rolls put panels beside the look-alikes" },
 }
 
 local messageListeners = {}

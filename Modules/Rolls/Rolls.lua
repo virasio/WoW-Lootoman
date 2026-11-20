@@ -63,9 +63,6 @@ local Rolls = ns.Modules:Register({
 local Model, Chat, Groups, History, Panel = ns.Rolls.Model, ns.Rolls.Chat, ns.Rolls.Groups, ns.Rolls.History, ns.Rolls.Panel
 ns.Rolls.Module = Rolls
 
--- In profile texts (Share): where the game's roll frames were moved, under
--- the module's settings.
-ns.EditMode.SharePosition(Rolls.name, ns.Rolls.Mover.KEY)
 
 -- Whether the module works now: on, or starting (the registry calls it
 -- active only once OnEnable is over).
@@ -201,7 +198,14 @@ end
 function Rolls:OnEnable()
 	Rolls.starting = true
 	hookFrames()
-	ns.Rolls.Mover.Create(self)
+	-- In Edit Mode, the roll frames' look-alikes get panels of made-up choices.
+	self:On("RollFramesPreview", function(_, active, frames)
+		if active then
+			ns.Rolls.Demo.Preview(frames)
+		else
+			ns.Rolls.Demo.EndPreview()
+		end
+	end)
 	if not chosenHooked then
 		chosenHooked = true
 		Compat.OnRollChosen(function(rollID, rollType)
@@ -276,10 +280,7 @@ end
 function Rolls:OnDisable()
 	Rolls.starting = false
 	waiting = false
-	-- The game's frames back on its own place.
-	if ns.Rolls.Mover.Moved() then
-		ns.Rolls.Mover.Restore()
-	end
+	ns.Rolls.Demo.EndPreview()
 	ns.Rolls.Demo.Stop()
 	for _, panel in pairs(panels) do
 		Panel.Hide(panel)

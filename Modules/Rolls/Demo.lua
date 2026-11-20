@@ -39,16 +39,6 @@ Demo.HEROES = {
 Demo.LENGTH = 15
 Demo.STEP = 1.5
 Demo.RAID = 20
--- The game's roll frame (GroupLootFrameTemplate): its size, and the parts of
--- its loot toast texture for the background and the border around it.
-Demo.WIDTH, Demo.HEIGHT = 277, 67
-Demo.TEXTURE = [[Interface\LootFrame\LootToast]]
-Demo.COORDS = { 0.28222656, 0.55273438, 0.30859375, 0.57031250 }
-Demo.BORDER_COORDS = { 0.00097656, 0.28027344, 0.43750000, 0.73437500 }
-Demo.BORDER_WIDTH, Demo.BORDER_HEIGHT = 286, 76
-Demo.TIMER = [[Interface\PaperDollInfoFrame\UI-Character-Skills-Bar]]
--- The inventory slots whose gear the demo shows (no shirt, no tabard).
-Demo.SLOTS = { 1, 5, 7, 3, 10, 8, 6, 9, 16, 17, 15, 2, 11, 13 }
 
 local cards = {}
 local generation = 0
@@ -60,38 +50,9 @@ Demo.cards = cards
 -- How many times the demo waits for its items, and how long each time.
 Demo.TRIES, Demo.WAIT = 5, 0.3
 
--- The links of worn gear, for an item the game does not give.
-local function worn()
-	local links, seen = {}, {}
-	for _, slot in ipairs(Demo.SLOTS) do
-		local link = Compat.GetEquippedLink(slot)
-		local id = link and link:match("item:(%d+)")
-		if id and not seen[id] then
-			seen[id] = true
-			links[#links + 1] = link
-		end
-	end
-	return links
-end
-
--- The demo's two items, the group's then the raid's: the data's when the game
--- has them, else worn gear; and whether one is still asked for.
+-- The demo's two items, the group's then the raid's (Modules/Shared/RollLookalike.lua).
 function Demo.Items()
-	local links, missing, spare = {}, false, worn()
-	for slot, which in ipairs({ "group", "raid" }) do
-		local itemID = ns.Data.rolls.demoItems[which]
-		local info = itemID and Compat.GetItemInfo(itemID)
-		if info and info.link then
-			links[slot] = info.link
-		else
-			if itemID then
-				Compat.RequestItem(itemID)
-				missing = true
-			end
-			links[slot] = spare[slot] or spare[1]
-		end
-	end
-	return links, missing
+	return ns.RollLookalike.Items()
 end
 
 -- The heroes whose class the client has: { name, class, guid }.
@@ -105,87 +66,18 @@ function Demo.Heroes()
 	return list
 end
 
--- A choice's button, with the game's three atlases of it.
-local function choiceButton(card, state, name)
-	local button = CreateFrame("Button", nil, card.frame)
-	button:SetSize(32, 32)
-	button:SetNormalAtlas("lootroll-toast-icon-" .. name .. "-up")
-	button:SetPushedAtlas("lootroll-toast-icon-" .. name .. "-down")
-	button:SetHighlightAtlas("lootroll-toast-icon-" .. name .. "-highlight", "ADD")
-	button:SetScript("OnClick", function()
-		Demo.Choose(card, state)
-	end)
-	return button
-end
-
--- A look-alike of the game's roll frame, laid out as its template is.
+-- A look-alike of the game's roll frame (Modules/Shared/RollLookalike.lua)
+-- with its panel; its buttons mark the player's choice on it.
 local function newCard()
-	local card = {}
-	local frame = CreateFrame("Frame", nil, UIParent)
-	frame:SetSize(Demo.WIDTH, Demo.HEIGHT)
-	frame:SetFrameStrata("DIALOG")
-	frame:Hide()
-	frame.background = frame:CreateTexture(nil, "BACKGROUND")
-	frame.background:SetAllPoints(frame)
-	frame.background:SetTexture(Demo.TEXTURE)
-	frame.background:SetTexCoord(unpack(Demo.COORDS))
-	frame.border = frame:CreateTexture(nil, "BORDER")
-	frame.border:SetSize(Demo.BORDER_WIDTH, Demo.BORDER_HEIGHT)
-	frame.border:SetPoint("CENTER")
-	frame.border:SetTexture(Demo.TEXTURE)
-	frame.border:SetTexCoord(unpack(Demo.BORDER_COORDS))
-	frame.name = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	frame.name:SetSize(125, 30)
-	frame.name:SetPoint("TOPLEFT", frame, "TOPLEFT", 60, -15)
-	frame.name:SetJustifyH("LEFT")
-	frame.name:SetJustifyV("MIDDLE")
-	frame.icon = frame:CreateTexture(nil, "ARTWORK")
-	frame.icon:SetSize(34, 34)
-	frame.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -13)
-	frame.iconBorder = frame:CreateTexture(nil, "OVERLAY")
-	frame.iconBorder:SetSize(42, 42)
-	frame.iconBorder:SetPoint("CENTER", frame.icon, "CENTER", 0, 0)
-	frame.timer = CreateFrame("StatusBar", nil, frame)
-	frame.timer:SetSize(190, 8)
-	frame.timer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 3, 2)
-	frame.timer.background = frame.timer:CreateTexture(nil, "BACKGROUND")
-	frame.timer.background:SetAllPoints(frame.timer)
-	frame.timer.background:SetColorTexture(0, 0, 0, 1)
-	frame.timer:SetStatusBarTexture(Demo.TIMER)
-	frame.timer:SetStatusBarColor(1, 1, 0)
-	frame.timer:SetMinMaxValues(0, Demo.LENGTH)
-	card.frame = frame
-	-- Need at the top right, pass right of it, greed under it, as in the game.
-	local need = choiceButton(card, STATE.NEED, "need")
-	need:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -44, -6)
-	local pass = choiceButton(card, STATE.PASS, "pass")
-	pass:SetPoint("LEFT", need, "RIGHT", 6, 2)
-	local greed = choiceButton(card, STATE.GREED, "greed")
-	greed:SetPoint("TOP", need, "BOTTOM", 0, 5)
-	card.buttons = { pass, greed, need }
+	local card = ns.RollLookalike.New()
+	card.onChoose = function(_, state)
+		Demo.Choose(card, state)
+	end
 	card.panel = Panel.New()
 	card.panel.onRightClick = function(owner, player, view)
 		ns.Rolls.SuspiciousNeeds.Menu(owner, player, view)
 	end
 	return card
-end
-
--- Where the look-alikes stand: the moved roll frames' place, else the game's
--- container, else above the action bars.
-function Demo.Place(card, slot)
-	card.frame:ClearAllPoints()
-	local anchor = ns.Rolls.Mover and ns.Rolls.Mover.Anchor()
-	if not anchor then
-		local container = Compat.GetGameRollContainer()
-		if container and container.GetBottom and container:GetBottom() then
-			anchor = container
-		end
-	end
-	if anchor then
-		card.frame:SetPoint("CENTER", anchor, "BOTTOM", 0, 100 * (slot - 0.5))
-	else
-		card.frame:SetPoint("CENTER", UIParent, "BOTTOM", 0, 250 + 100 * (slot - 1))
-	end
 end
 
 -- The leader now: the highest need's roll, else the highest greed's.
@@ -415,6 +307,33 @@ function Demo.Context(card, group, otherLink)
 	return context
 end
 
+-- Edit Mode shows the roll frames' look-alikes (the roll frames' module's)
+-- where the moved frames will stand; while the loot rolls are on, a panel of
+-- made-up choices stands beside each, at its right, so Edit Mode's selection
+-- covers them too.
+local previews = {}
+
+function Demo.Preview(frames)
+	local items = Demo.Items()
+	for slot, frame in ipairs(frames) do
+		local panel = previews[slot] or Panel.New()
+		previews[slot] = panel
+		local group = slot == 1
+		local view = { rollID = "preview" .. slot, link = items[slot], bound = true, demo = true,
+			players = newPlayers(group and 5 or Demo.RAID, slot, group) }
+		local card = { view = view }
+		card.context = Demo.Context(card, group, items[group and 2 or 1])
+		ns.Rolls.Marks.Add(view, card.context)
+		Panel.Show(panel, frame, view, "right")
+	end
+end
+
+function Demo.EndPreview()
+	for _, panel in ipairs(previews) do
+		Panel.Hide(panel)
+	end
+end
+
 -- Why the demo cannot start now, or nil.
 function Demo.Blocked()
 	if Compat.InCombat() then
@@ -452,24 +371,12 @@ function Demo.Start(static, tries)
 		local card = cards[slot] or newCard()
 		cards[slot] = card
 		local link = items[slot]
-		local info = link and Compat.GetItemInfo(link)
-		local kind = link and Compat.GetItemKind(link)
-		-- The name in its quality's colour, the icon in its quality's border.
-		local quality = info and info.quality or 2
-		local color = ColorManager.GetColorDataForItemQuality(quality)
-		card.frame.name:SetText(info and info.name or "?")
-		if color then
-			card.frame.name:SetTextColor(color.r, color.g, color.b)
-		end
-		card.frame.icon:SetTexture(kind and kind.icon or 134400)
-		card.frame.iconBorder:SetAtlas(ColorManager.GetAtlasDataForLootBorderItemQuality(quality)
-			or ColorManager.GetAtlasDataForLootBorderItemQuality(2))
-		card.frame.timer:SetValue(Demo.LENGTH)
+		local info = ns.RollLookalike.Fill(card, link, Demo.LENGTH)
 		local group = slot == 1
 		local players = newPlayers(group and 5 or Demo.RAID, turn + slot, group)
 		card.view = { rollID = "demo" .. slot, link = link, item = info, bound = true, demo = true, players = players }
 		card.context = Demo.Context(card, group, items[group and 2 or 1])
-		Demo.Place(card, slot)
+		ns.RollLookalike.Place(card, slot)
 		card.frame:Show()
 		if Demo.OnStart then
 			Demo.OnStart(card, slot)

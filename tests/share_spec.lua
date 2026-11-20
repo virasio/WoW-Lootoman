@@ -36,8 +36,8 @@ describe("profile texts", function()
 		end
 		assert.same({
 			"module:AutoLoot=Fast autoloot options", "module:Junk=Junk options", "module:Junk > marks=Junk List", "module:LootFeed=Loot feed options",
-			"module:LootFeed > positions:LootFeed=Position", "module:LootFeed > look:LootFeed=Use look “Raid”", "module:Rolls=Loot rolls options",
-			"module:Rolls > positions:RollFrames=Position",
+			"module:LootFeed > positions:LootFeed=Position", "module:LootFeed > look:LootFeed=Use look “Raid”", "module:RollFrames=Loot roll frames options",
+			"module:RollFrames > positions:RollFrames=Position", "module:Rolls=Loot rolls options",
 		}, list)
 		assert.same({ "looks", "Loot feed looks" }, { Share.Collections()[1].name, Share.Collections()[1].label })
 		assert.same({ "looks", "Raid" }, { Share.Needs("look:LootFeed", { look = "Raid" }) })

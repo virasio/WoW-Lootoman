@@ -546,4 +546,11 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Settings/JunkList.lua
 	["Junk management is off. Turn it on in the options."] = "Управление хламом выключено. Включите его в настройках.",
+
+	-- Modules/RollFrames/RollFrames.lua
+	["Loot roll frames"] = "Окна розыгрыша лута",
+	["Move the Loot Roll Frames in Edit Mode"] = "Перемещать окна розыгрыша в режиме редактирования",
+	["Lets you place the game's loot roll frames where you want in Edit Mode, a place for each Edit Mode layout. Until you move them, the game places them as always."] = "Позволяет поставить окна розыгрыша лута куда угодно в режиме редактирования, отдельно для каждого макета. Пока вы их не передвинули, игра ставит их как обычно.",
+	["In Edit Mode (the game menu, Edit Mode), drag “Loot Roll Frames”."] = "В режиме редактирования (меню игры, «Редактирование интерфейса») перетащите «Окна розыгрыша лута».",
+	["Opens Edit Mode with the loot roll frames picked."] = "Открывает режим редактирования с выбранными окнами розыгрыша лута.",
 })

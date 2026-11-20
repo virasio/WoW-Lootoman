@@ -128,12 +128,13 @@ function Panel.New()
 end
 
 -- Places a panel beside a frame: at its right, at its left when the right
--- would run off the screen.
-function Panel.Place(panel, frame)
+-- would run off the screen; side "right" keeps it at the right (Edit Mode's
+-- look-alikes, under the selection).
+function Panel.Place(panel, frame, side)
 	local right = frame.GetRight and frame:GetRight()
 	local screen = UIParent.GetRight and UIParent:GetRight()
 	panel.frame:ClearAllPoints()
-	if type(right) == "number" and type(screen) == "number" and right + Panel.GAP + Panel.WIDTH > screen then
+	if side ~= "right" and type(right) == "number" and type(screen) == "number" and right + Panel.GAP + Panel.WIDTH > screen then
 		panel.frame:SetPoint("RIGHT", frame, "LEFT", -Panel.GAP, 0)
 		panel.side = "left"
 	else
@@ -365,8 +366,8 @@ function Panel.Draw(panel, view)
 end
 
 -- Shows a panel beside a frame with a view.
-function Panel.Show(panel, frame, view)
-	Panel.Place(panel, frame)
+function Panel.Show(panel, frame, view, side)
+	Panel.Place(panel, frame, side)
 	panel.anchor = frame
 	Panel.Draw(panel, view)
 end
