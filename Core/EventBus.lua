@@ -34,6 +34,7 @@ Bus.MESSAGES = {
 	LootSkipped = { payload = "entry: the loot slot that does not fit into the bags (link, name, icon, quality, amount)",
 		from = "AutoLoot" },
 	OpenJunkWindow = { payload = "", from = "the loot feed, a click on its low-space warning; the junk module opens its window" },
+	NeedRulesChanged = { payload = "classFile: the class whose rules changed, nil when every class was reset", from = "NeedRules" },
 }
 
 local messageListeners = {}
