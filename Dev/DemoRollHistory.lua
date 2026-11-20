@@ -1,14 +1,15 @@
 local _, ns = ...
 local Compat = ns.Compat
 
--- The made-up roll history, for testing and pictures: /ltm debug demohistory
+-- Exists only when the addon runs from the repository (Dev/Demo.lua): the
+-- made-up roll history, for testing and pictures. /ltm demo rollhistory
 -- opens the Roll History window on three made-up groups of the demo's heroes
--- of Azeroth (Demo.lua): two dungeon runs and a raid, with drops of a few
+-- of Azeroth (Modules/Rolls/Demo.lua): two dungeon runs and a raid, with drops of a few
 -- items the client has, a hero who needs nearly everything in the first run
 -- and comes back in the second, and an exception; "full" fills it to the
 -- history's limits (30 groups, 400 drops), to see that it stays quick. It is
--- never saved, and exceptions or deletions in it touch only it. Like the
--- demo, it is no player's thing.
+-- never saved, and exceptions or deletions in it touch only it.
+-- Development text is not translated.
 ns.Rolls = ns.Rolls or {}
 local DemoHistory = {}
 ns.Rolls.DemoHistory = DemoHistory
@@ -50,7 +51,7 @@ end
 -- A stand-in for History over made-up groups, with the calls the window and
 -- the marks use.
 function DemoHistory.StandIn(groups)
-	local stand = { demo = true }
+	local stand = { demo = true, title = "Roll History (Demo)" }
 	function stand.Groups()
 		return groups
 	end
@@ -177,25 +178,35 @@ function DemoHistory.Groups(items, full, now)
 	return groups
 end
 
--- Opens the Roll History window on the made-up history, once its items are
--- in (the game loads an item it has not seen this session a moment later).
-function DemoHistory.Open(full, tries)
+DemoHistory.NewDrop = newDrop
+
+-- fn(items) once the items are in (the game loads an item it has not seen
+-- this session a moment later); a line in the chat, under the demo's name,
+-- when none came.
+function DemoHistory.WithItems(name, fn, tries)
 	local items, missing = DemoHistory.Items()
 	tries = tries or 1
 	if missing and tries < DemoHistory.TRIES then
 		Compat.After(DemoHistory.WAIT, function()
-			DemoHistory.Open(full, tries + 1)
+			DemoHistory.WithItems(name, fn, tries + 1)
 		end)
 		return true
 	end
 	if #items == 0 then
-		ns.Print("debug demohistory: the client has none of its items yet; try again")
+		ns.Print(("demo %s: the client has none of its items yet; try again"):format(name))
 		return false
 	end
-	DemoHistory.history = DemoHistory.StandIn(DemoHistory.Groups(items, full, Compat.GetServerTime()))
-	return ns.Rolls.HistoryWindow.Open(DemoHistory.history)
+	return fn(items)
 end
 
-ns.Slash.RegisterDebug("demohistory", function(rest)
+-- Opens the Roll History window on the made-up history.
+function DemoHistory.Open(full)
+	return DemoHistory.WithItems("rollhistory", function(items)
+		DemoHistory.history = DemoHistory.StandIn(DemoHistory.Groups(items, full, Compat.GetServerTime()))
+		return ns.Rolls.HistoryWindow.Open(DemoHistory.history)
+	end)
+end
+
+ns.Slash.RegisterDemo("rollhistory", function(rest)
 	DemoHistory.Open(rest == "full")
-end, "/ltm debug demohistory [full]: open the roll history on a made-up history, full to its limits")
+end, "/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits")

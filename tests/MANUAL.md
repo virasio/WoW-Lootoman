@@ -3,7 +3,7 @@
 What the unit tests cannot cover: checks in the game, grouped by feature. Together they are the full regression. Before a release, run *Clients and start* and the checks of every feature the release adds or changes; a new feature adds its checks to its feature's section, or a new section.
 
 **Setup for every round:**
-- The branch under test checked out into `Interface/AddOns/Lootoman`. After TOC changes (files added or removed), restart the client; `/reload` is enough otherwise.
+- The branch under test checked out into `Interface/AddOns/Lootoman`. After TOC changes (files added or removed), restart the client; `/reload` is enough otherwise. The demos (`/ltm demo`, which lists them) exist only in this version from the repository, not in a released one.
 - BugSack and BugGrabber on. After each section, open BugSack (`/bugsack`): no Lootoman errors and no `ADDON_ACTION_BLOCKED` or `ADDON_ACTION_FORBIDDEN` for Lootoman.
 - The taint log on: `/console taintLog 1`, then `/reload`.
 - A character with some gray items and some items above gray in the bags, a few free general slots, and gold to buy a few cheap items. A reagent bag on retail; a herb bag on WoW Forever.
@@ -455,9 +455,9 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 ### The demo
 
-- [ ] **The demo.** `/ltm debug demoroll`, out of a group (it is on no menu and not on the options page). *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own: a group roll of five heroes of Azeroth, the first in your own place with its line lit, on a purple ring (Band of the Better Half on WoW Forever; a blue dagger, Gutwrencher, on retail), and a raid roll of twenty heroes on Onyxia's sword (Vis'kag the Bloodletter), each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. No real character's name anywhere (it is for the store's pictures). The first time in a session the items may take a moment; if the game does not give them, worn gear stands in. Put a real roll frame beside them, if you can: note what differs.
-- [ ] **With the detection on.** *Detect Ninja Looters* on, `/ltm debug demoroll` again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
-- [ ] **Not during a roll, not in a fight.** `/ltm debug demoroll` while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
+- [ ] **The demo.** `/ltm demo roll`, out of a group (it is on no menu and not on the options page). *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own: a group roll of five heroes of Azeroth, the first in your own place with its line lit, on a purple ring (Band of the Better Half on WoW Forever; a blue dagger, Gutwrencher, on retail), and a raid roll of twenty heroes on Onyxia's sword (Vis'kag the Bloodletter), each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. No real character's name anywhere (it is for the store's pictures). The first time in a session the items may take a moment; if the game does not give them, worn gear stands in. Put a real roll frame beside them, if you can: note what differs.
+- [ ] **With the detection on.** *Detect Ninja Looters* on, `/ltm demo roll` again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
+- [ ] **Not during a roll, not in a fight.** `/ltm demo roll` while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
 
 ### Ninja detection
 
@@ -508,6 +508,7 @@ On WoW Forever, where the game has no loot history window of its own, in a dunge
 - [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
 - [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
 - [ ] **Off.** Untick *Show the Loot Rolls Window After Your Choice*. *Expected:* no window at your choice.
+- [ ] **Its demo.** Out of a group, `/ltm demo lootrolls`. *Expected:* on WoW Forever the window on four made-up drops of five heroes: the newest still rolled on (two heroes yet to choose), two won, the oldest all passed; on retail a chat line saying the game has its own window there.
 
 ### The roll history
 
@@ -524,8 +525,8 @@ On WoW Forever, where the game has no loot history window of its own, in a dunge
 
 ### The made-up history
 
-- [ ] **The demo.** `/ltm debug demohistory`. *Expected:* *Roll History (Demo)* on three made-up groups of heroes of Azeroth: two dungeon runs and a raid of twenty, with dungeon items (the first time some may take a moment; one the client lacks is left out). With the detection on: the first hero marked for needing everything in the first run, *Last time* on his first need in the second, an exception ticked in the first. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
-- [ ] **Full.** `/ltm debug demohistory full`. *Expected:* 30 groups, 400 drops; opening, scrolling and choosing groups stay quick (note any stutter).
+- [ ] **The demo.** `/ltm demo rollhistory`. *Expected:* *Roll History (Demo)* on three made-up groups of heroes of Azeroth: two dungeon runs and a raid of twenty, with dungeon items (the first time some may take a moment; one the client lacks is left out). With the detection on: the first hero marked for needing everything in the first run, *Last time* on his first need in the second, an exception ticked in the first. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
+- [ ] **Full.** `/ltm demo rollhistory full`. *Expected:* 30 groups, 400 drops; opening, scrolling and choosing groups stay quick (note any stutter).
 
 ### The history and debugging
 
@@ -549,16 +550,16 @@ On WoW Forever, where the game has no loot history window of its own, in a dunge
 
 ## Debug commands
 
-- [ ] **debug loot.** `/ltm debug loot` alone. *Expected:* the pieces it takes, in English. Then each set below; *Expected:* the rows come as for real loot (merged, the junk row, the minimum quality, the delay between rows), and a piece it cannot read is named in the chat:
-  - every kind of row: `/ltm debug loot 2589x5, 2592, exp+12345, rep["Stormwind"]+250, rep["Stormwind"]-25, gold+1.2345`, and on retail `/ltm debug loot currency[3008]+50` (a currency the character has);
-  - junk in one row: `/ltm debug loot 4865x3, 2589` (a gray pelt, a cloth), and a Shift-clicked link of a gray item from the bags with `x2`;
-  - the delay between rows: `/ltm debug loot 2589, 2592, 4306, 4338, 14047, 2770, 2771, 2772`;
-  - an item the client has not seen this session (on retail, an ID from the current expansion): it comes a moment later; `/ltm debug loot 999999` names it as not existing;
-  - a bad piece: `/ltm debug loot dance, 2589x0, gold+0.00001`;
+- [ ] **demo loot.** `/ltm demo loot` alone. *Expected:* the pieces it takes, in English. Then each set below; *Expected:* the rows come as for real loot (merged, the junk row, the minimum quality, the delay between rows), and a piece it cannot read is named in the chat:
+  - every kind of row: `/ltm demo loot 2589x5, 2592, exp+12345, rep["Stormwind"]+250, rep["Stormwind"]-25, gold+1.2345`, and on retail `/ltm demo loot currency[3008]+50` (a currency the character has);
+  - junk in one row: `/ltm demo loot 4865x3, 2589` (a gray pelt, a cloth), and a Shift-clicked link of a gray item from the bags with `x2`;
+  - the delay between rows: `/ltm demo loot 2589, 2592, 4306, 4338, 14047, 2770, 2771, 2772`;
+  - an item the client has not seen this session (on retail, an ID from the current expansion): it comes a moment later; `/ltm demo loot 999999` names it as not existing;
+  - a bad piece: `/ltm demo loot dance, 2589x0, gold+0.00001`;
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
-- [ ] **debug demoroll.** `/ltm debug demoroll` out of a group. *Expected:* the loot rolls' demo plays (the checks under *The demo*).
+- [ ] **The demos.** `/ltm demo`. *Expected:* the four demos listed (`loot`, `lootrolls`, `roll`, `rollhistory`); neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll` out of a group: the loot rolls' demo plays (the checks under *The demo*).
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon

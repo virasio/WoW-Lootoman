@@ -450,8 +450,6 @@ ns.Locales.AddEnglish({
 	"Not chosen: %d",
 
 	-- Modules/Rolls/Demo.lua
-	"The demo starts out of combat.",
-	"The demo waits until the rolls in progress are over.",
 
 	-- Modules/Rolls/Marks.lua
 	"%s: not a %s's armor",
@@ -581,5 +579,4 @@ ns.Locales.AddEnglish({
 	"Delete This Group",
 	"Delete the rolls of “%s”? This cannot be undone.",
 	"Delete every roll kept in the history? This cannot be undone.",
-	"Roll History (Demo)",
 })

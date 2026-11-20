@@ -7,6 +7,7 @@ Loot rolls: follow the rolls as they go, and look back on them.
 - **The Loot Rolls window** on WoW Forever, where the game has none of its own: once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it, each with who won it, with which button and roll, and everyone's choices. It opens again at your next choice; an option under *Show Who Rolled What* turns it off.
 - **Roll History** (`/ltm rolls`, the *Roll History* button on the options page, or the minimap menu): your groups newest first; for each, its players with their needs, greeds, passes, wins and marks, and its drops in time order with the winner and everyone's choices. Click a player to see everything they did in your groups, or search for them by name. Filter by quality or to marked needs, and delete a group or the whole history.
 - **Exceptions in the history:** a marked need in any of your groups can be excused with its checkbox, or marked again; the marks it caused later follow.
+- `/ltm debug loot` and `/ltm debug demoroll` are gone: made-up loot and the loot rolls' demo were for testing the addon, and are no longer in the released version.
 
 ## 0.6
 

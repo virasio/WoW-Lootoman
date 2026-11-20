@@ -109,7 +109,7 @@ English and Russian. For World of Warcraft (retail) and WoW Forever.
 - `/ltm rolls`: open the roll history.
 - `/ltm report`: open the bug report window.
 - `/ltm help`: list the commands.
-- `/ltm debug help` lists the commands for testing and bug reports: `debug log` (the journal: errors and the extended log), `debug selftest`, `debug loot` (made-up loot in the feed), `debug junk` (why an item is junk or not), `debug bags`, `debug rolls` (the open rolls and the group's last drops), `debug demoroll` (the loot rolls' demo), `debug demohistory` (the roll history on a made-up history; `full` fills it to its limits) and, on WoW Forever, `debug target`.
+- `/ltm debug help` lists the commands for testing and bug reports: `debug log` (the journal: errors and the extended log), `debug selftest`, `debug junk` (why an item is junk or not), `debug bags`, `debug rolls` (the open rolls and the group's last drops) and, on WoW Forever, `debug target`.
 
 ### Bug reports
 

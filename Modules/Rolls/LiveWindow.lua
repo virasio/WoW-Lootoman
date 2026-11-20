@@ -105,9 +105,12 @@ local function keyOf(entry)
 	return entry.key
 end
 
--- An entry's view, marked: from its roll, from the model's drop, from the
--- history, or as it was drawn last.
+-- An entry's view, marked: its own (a made-up one), from its roll, from the
+-- model's drop, from the history, or as it was drawn last.
 local function viewOf(entry)
+	if entry.view then
+		return entry.view
+	end
 	local view
 	local key = keyOf(entry)
 	local roll = entry.rollID and Model.Roll(entry.rollID)
@@ -224,6 +227,22 @@ function LiveWindow.OnModel(kind, value)
 		end
 	end
 	LiveWindow.Redraw()
+end
+
+-- Shows views of made-up drops (the repository's demo), the first at the
+-- top; false where the window does not exist.
+function LiveWindow.ShowViews(views)
+	if not frame then
+		return false
+	end
+	entries, known = {}, {}
+	for index = #views, 1, -1 do
+		add({ view = views[index] })
+	end
+	place()
+	frame:Show()
+	LiveWindow.Redraw()
+	return true
 end
 
 function LiveWindow.Hide()

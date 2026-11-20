@@ -687,7 +687,7 @@ function HistoryWindow.Open(stand)
 		frame.group, frame.player = nil, nil
 	end
 	frame.source = stand
-	frame:SetTitle(stand and stand.demo and L["Roll History (Demo)"] or L["Roll History"])
+	frame:SetTitle(stand and stand.title or L["Roll History"])
 	judged = {}
 	frame:Show()
 	HistoryWindow.Redraw()

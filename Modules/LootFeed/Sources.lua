@@ -177,7 +177,7 @@ local function known(value)
 	return value
 end
 
--- An item's entry from its link and the stack's size; debug loot makes its
+-- An item's entry from its link and the stack's size; demo loot makes its
 -- own items with it.
 function Sources.ItemEntry(link, count)
 	local icon, quality = Compat.GetItemLook(link)

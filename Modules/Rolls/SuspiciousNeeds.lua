@@ -25,7 +25,10 @@ Suspicious.ROW = 34
 -- the made-up history's (view.history), or takes it back.
 function Suspicious.SetExcused(view, player, excused)
 	if view.demo then
-		ns.Rolls.Demo.SetExcused(view, player.guid, excused)
+		-- The played demo's (in the repository's version only).
+		if ns.Rolls.Demo.SetExcused then
+			ns.Rolls.Demo.SetExcused(view, player.guid, excused)
+		end
 		return
 	end
 	local group = view.group or History.Open()

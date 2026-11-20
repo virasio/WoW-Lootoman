@@ -4,11 +4,11 @@ local Formats = require("tests.fixtures.globalstrings")
 local LINEN = "|cffffffff|Hitem:2589::|h[Linen Cloth]|h|r"
 local RAG = "|cff9d9d9d|Hitem:700::|h[Rag, Torn]|h|r"
 
-describe("loot feed's debug loot", function()
+describe("made-up loot in the feed, in the repository's version", function()
 	local ns, Test, module
 
 	local function run(text)
-		Test.RunSlashCommand("LOOTOMAN", "debug loot " .. text)
+		Test.RunSlashCommand("LOOTOMAN", "demo loot " .. text)
 	end
 
 	-- The printed lines without the chat prefix.
@@ -31,7 +31,7 @@ describe("loot feed's debug loot", function()
 	end
 
 	before_each(function()
-		ns = Loader.LoadAddon()
+		ns = Loader.LoadAddon({ debug = true })
 		Test = ns.Compat.Test
 		Test.SetGlobalStrings(Formats.enUS)
 		Test.SetItems({
@@ -48,7 +48,7 @@ describe("loot feed's debug loot", function()
 	it("without pieces says which it takes", function()
 		run("")
 		local text = table.concat(lines(), "\n")
-		assert.equals("/ltm debug loot takes pieces split by commas:", lines()[1])
+		assert.equals("/ltm demo loot takes pieces split by commas:", lines()[1])
 		for _, piece in ipairs({ "2589x5", "currency%[1220%]%+50", "exp%+2000", "rep%[\"Stormwind\"%]%+200", "gold%+0%.0015" }) do
 			assert.matches(piece, text)
 		end
@@ -74,10 +74,10 @@ describe("loot feed's debug loot", function()
 	it("names a piece it cannot read and goes on with the others", function()
 		run("dance, 2589x0, currency[9]+5, gold+0.00001, exp+2000")
 		assert.same({
-			"debug loot: cannot read “dance”: not a piece the command knows.",
-			"debug loot: cannot read “2589x0”: a count of at least 1.",
-			"debug loot: cannot read “currency[9]+5”: no currency 9.",
-			"debug loot: cannot read “gold+0.00001”: less than a copper.",
+			"demo loot: cannot read “dance”: not a piece the command knows.",
+			"demo loot: cannot read “2589x0”: a count of at least 1.",
+			"demo loot: cannot read “currency[9]+5”: no currency 9.",
+			"demo loot: cannot read “gold+0.00001”: less than a copper.",
 		}, lines())
 		assert.same({ "xp nil 2000" }, rows())
 	end)
@@ -89,16 +89,16 @@ describe("loot feed's debug loot", function()
 		Test.FireEvent("ITEM_DATA_LOAD_RESULT", 4000, true)
 		assert.same({ "item Silk Cloth 3" }, rows())
 		assert.is_false(Test.IsRegistered("ITEM_DATA_LOAD_RESULT"))
-		Test.Advance(ns.Feed.Debug.LOAD_TIME)
+		Test.Advance(ns.Feed.Demo.LOAD_TIME)
 		assert.same({}, lines())
 	end)
 
 	it("names an item that does not exist, and one that does not load in time", function()
 		run("4001, 4002")
 		Test.FireEvent("ITEM_DATA_LOAD_RESULT", 4001, false)
-		assert.same({ "debug loot: item 4001 does not exist." }, lines())
-		Test.Advance(ns.Feed.Debug.LOAD_TIME)
-		assert.same({ "debug loot: item 4001 does not exist.", "debug loot: item 4002 did not load in 5 seconds." }, lines())
+		assert.same({ "demo loot: item 4001 does not exist." }, lines())
+		Test.Advance(ns.Feed.Demo.LOAD_TIME)
+		assert.same({ "demo loot: item 4001 does not exist.", "demo loot: item 4002 did not load in 5 seconds." }, lines())
 		assert.same({}, rows())
 		assert.is_false(Test.IsRegistered("ITEM_DATA_LOAD_RESULT"))
 	end)
@@ -106,6 +106,6 @@ describe("loot feed's debug loot", function()
 	it("says so while the loot feed is off", function()
 		ns.Modules:SetEnabled("LootFeed", false)
 		run("2589")
-		assert.same({ "debug loot: the loot feed is off." }, lines())
+		assert.same({ "demo loot: the loot feed is off." }, lines())
 	end)
 end)

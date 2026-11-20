@@ -23,7 +23,7 @@ describe("ninja detection", function()
 	local ns, Test, Rolls, frames, list
 
 	local function start(saved)
-		ns = Loader.LoadAddon({ gameType = "camelot" })
+		ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Test = ns.Compat.Test
 		frames = {}
 		for index = 1, 4 do

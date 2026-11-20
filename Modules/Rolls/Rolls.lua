@@ -308,7 +308,10 @@ function Rolls:OnDisable()
 	Rolls.starting = false
 	waiting = false
 	ns.Rolls.Demo.EndPreview()
-	ns.Rolls.Demo.Stop()
+	-- The played demo, in the repository's version only.
+	if ns.Rolls.Demo.Stop then
+		ns.Rolls.Demo.Stop()
+	end
 	ns.Rolls.LiveWindow.Hide()
 	ns.Rolls.HistoryWindow.Hide()
 	for _, panel in pairs(panels) do

@@ -443,8 +443,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Not chosen: %d"] = "Не выбрали: %d",
 
 	-- Modules/Rolls/Demo.lua
-	["The demo starts out of combat."] = "Демо запускается вне боя.",
-	["The demo waits until the rolls in progress are over."] = "Демо подождёт, пока не закончатся текущие розыгрыши.",
 
 	-- Modules/Rolls/Marks.lua
 	["%s: not a %s's armor"] = "%s: не броня класса «%s»",
@@ -574,5 +572,4 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete This Group"] = "Удалить эту группу",
 	["Delete the rolls of “%s”? This cannot be undone."] = "Удалить розыгрыши группы «%s»? Это нельзя отменить.",
 	["Delete every roll kept in the history? This cannot be undone."] = "Удалить все розыгрыши из истории? Это нельзя отменить.",
-	["Roll History (Demo)"] = "История розыгрышей (демо)",
 })

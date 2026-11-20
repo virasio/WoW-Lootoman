@@ -1,7 +1,7 @@
 local Loader = require("tests.helpers.loader")
 local SettingsAPI = require("tests.mocks.SettingsAPI")
 
--- The made-up roll history (Modules/Rolls/DemoHistory.lua).
+-- The made-up roll history, in the repository's version (Dev/DemoRollHistory.lua).
 
 local function link(id, name, color)
 	return ("|cff%s|Hitem:%d::::::::40|h[%s]|h|r"):format(color or "0070dd", id, name)
@@ -19,7 +19,7 @@ describe("the made-up roll history", function()
 
 	before_each(function()
 		settings = SettingsAPI.Install()
-		ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
+		ns = Loader.LoadAddon({ gameType = "camelot", skip = {}, debug = true })
 		Test = ns.Compat.Test
 		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass" })
 		Test.SetItems(ITEMS)
@@ -28,7 +28,7 @@ describe("the made-up roll history", function()
 	end)
 
 	local function open(argument)
-		Test.RunSlashCommand("LOOTOMAN", "debug demohistory" .. (argument and (" " .. argument) or ""))
+		Test.RunSlashCommand("LOOTOMAN", "demo rollhistory" .. (argument and (" " .. argument) or ""))
 		-- The items it lacks are asked for, and it waits for them a few times.
 		for _ = 1, ns.Rolls.DemoHistory.TRIES do
 			Test.Advance(ns.Rolls.DemoHistory.WAIT)
