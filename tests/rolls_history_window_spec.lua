@@ -1,5 +1,6 @@
 local Loader = require("tests.helpers.loader")
 local SettingsAPI = require("tests.mocks.SettingsAPI")
+local UI = require("tests.mocks.UI")
 
 -- The history window, Roll History (Modules/Rolls/HistoryWindow.lua).
 
@@ -21,7 +22,8 @@ describe("the roll history window", function()
 		settings = SettingsAPI.Install()
 		ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
 		Test = ns.Compat.Test
-		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass" })
+		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass", ITEM_QUALITY2_DESC = "Uncommon", ITEM_QUALITY3_DESC = "Rare",
+			ITEM_QUALITY4_DESC = "Epic" })
 		Test.SetItems(ITEMS)
 		Test.SetUnits({
 			player = { name = "Tester", class = "WARRIOR", level = 30, guid = Test.state.playerGUID },
@@ -226,6 +228,43 @@ describe("the roll history window", function()
 		assert.matches("Брина", frame.header:GetText())
 		search(frame, "")
 		assert.same({ true, true }, { buttons[1]:IsShown(), buttons[2]:IsShown() })
+	end)
+
+	it("filters the drops by their lowest quality, kept in the profile", function()
+		fixture()
+		Window.Open()
+		local frame = Window.Frame()
+		frame.groupButtons[2].scripts.OnClick(frame.groupButtons[2], "LeftButton")
+		assert.equals(2, frame.dropCount)
+		local root = UI.OpenMenu(frame.quality)
+		assert.same({ "Uncommon", "Rare", "Epic" }, { root.entries[1].text, root.entries[2].text, root.entries[3].text })
+		assert.is_true(root.entries[1].isSelected())
+		root.entries[2].setSelected()
+		assert.equals(3, ns.Storage:Get("Rolls", "historyMinQuality"))
+		assert.same({ 1, "|cff0070ddRing|r" }, { frame.dropCount, frame.dropRows[1].item.name:GetText() })
+	end)
+
+	it("shows only the drops with marked needs, with the detection on: in a player's view, their own", function()
+		fixture()
+		Window.Open()
+		local frame = Window.Frame()
+		frame.groupButtons[2].scripts.OnClick(frame.groupButtons[2], "LeftButton")
+		-- Greyed while the detection is off.
+		assert.is_false(frame.markedOnly:IsEnabled())
+		ns.Storage:Set("Rolls", "ninja", true)
+		assert.is_true(frame.markedOnly:IsEnabled())
+		frame.markedOnly:SetChecked(true)
+		frame.markedOnly.scripts.OnClick(frame.markedOnly)
+		assert.is_true(ns.Storage:Get("Rolls", "historyMarkedOnly"))
+		-- The mage's need on mail is marked; the ring had none.
+		assert.same({ 1, "|cff1eff00Mail Helm|r" }, { frame.dropCount, frame.dropRows[1].item.name:GetText() })
+		Window.ShowPlayer("g-kael")
+		assert.equals(0, frame.dropCount)
+		Window.ShowPlayer("g-brina")
+		assert.equals(1, frame.dropCount)
+		-- The detection off: every drop again.
+		ns.Storage:Set("Rolls", "ninja", false)
+		assert.equals(2, frame.dropCount)
 	end)
 
 	it("closes as the loot rolls turn off", function()

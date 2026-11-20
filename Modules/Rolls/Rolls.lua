@@ -29,6 +29,9 @@ local Rolls = ns.Modules:Register({
 		summary = true,
 		-- The live window, where the game has no loot history window.
 		liveWindow = true,
+		-- The roll history's filters.
+		historyMinQuality = 2,
+		historyMarkedOnly = false,
 	},
 	-- On the switch's row: the roll history.
 	switchButton = {
@@ -73,6 +76,7 @@ local Rolls = ns.Modules:Register({
 		return {
 			{ kind = "choice", key = "strictness", choices = { { "lenient" }, { "normal" }, { "strict" } } },
 			{ kind = "choice", key = "minQuality", choices = { { 2 }, { 3 }, { 4 } } },
+			{ kind = "choice", key = "historyMinQuality", choices = { { 2 }, { 3 }, { 4 } } },
 		}
 	end,
 })

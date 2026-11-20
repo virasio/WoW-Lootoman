@@ -575,4 +575,6 @@ ns.Locales.AddEnglish({
 	"/ltm rolls: open the roll history",
 	"Opens the rolls kept in your groups: who chose what, who won and with which button.",
 	"Back",
+	"Lowest Quality",
+	"Only Marked Needs",
 })

@@ -568,4 +568,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["/ltm rolls: open the roll history"] = "/ltm rolls: открыть историю розыгрышей",
 	["Opens the rolls kept in your groups: who chose what, who won and with which button."] = "Открывает розыгрыши ваших групп: кто что выбрал, кто выиграл и какой кнопкой.",
 	["Back"] = "Назад",
+	["Lowest Quality"] = "Качество не ниже",
+	["Only Marked Needs"] = "Только отмеченные ниды",
 })

@@ -11,6 +11,9 @@ local Compat, L = ns.Compat, ns.L
 -- counts and every drop they chose on, group by group; the search box keeps
 -- the groups with a player whose name holds its text, and Enter shows the
 -- first such player. A player is known by GUID, under their latest name.
+-- Above the drops, two filters kept in the profile: the lowest quality shown,
+-- and, with the detection on, only the drops with marked needs (in a
+-- player's view, their own).
 -- Long lists reuse a pool of rows,
 -- made as they are first needed. Marks show only with ninja detection on,
 -- judged by the rules of the day, once per drawing of a group (Marks.lua).
@@ -245,6 +248,31 @@ local function build()
 		HistoryWindow.Redraw()
 	end)
 	frame.back:Hide()
+	-- The filters, above the drops.
+	frame.qualityLabel = frame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	frame.qualityLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 10 + HistoryWindow.LEFT + 12, -66)
+	frame.qualityLabel:SetText(L["Lowest Quality"])
+	frame.quality = CreateFrame("DropdownButton", nil, frame, "WowStyle1DropdownTemplate")
+	frame.quality:SetWidth(130)
+	frame.quality:SetPoint("LEFT", frame.qualityLabel, "RIGHT", 8, 0)
+	frame.quality:SetupMenu(function(_, root)
+		for _, quality in ipairs({ 2, 3, 4 }) do
+			root:CreateRadio(Compat.GetGlobalString("ITEM_QUALITY" .. quality .. "_DESC") or tostring(quality), function()
+				return ns.Storage:Get("Rolls", "historyMinQuality") == quality
+			end, function()
+				ns.Storage:Set("Rolls", "historyMinQuality", quality)
+			end, quality)
+		end
+	end)
+	frame.markedOnly = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	frame.markedOnly:SetSize(22, 22)
+	frame.markedOnly:SetPoint("LEFT", frame.quality, "RIGHT", 16, 0)
+	frame.markedOnly.label = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	frame.markedOnly.label:SetPoint("LEFT", frame.markedOnly, "RIGHT", 2, 0)
+	frame.markedOnly.label:SetText(L["Only Marked Needs"])
+	frame.markedOnly:SetScript("OnClick", function(check)
+		ns.Storage:Set("Rolls", "historyMarkedOnly", check:GetChecked() == true)
+	end)
 	frame:SetScript("OnHide", function()
 		judged = {}
 	end)
@@ -323,9 +351,32 @@ local function drawGroups(groups)
 	frame.groupsContent:SetHeight(math.max(1, #groups * HistoryWindow.GROUP))
 end
 
--- Whether a drop is shown under the filters (none until they come).
-local function shows(entry, view)
-	return not HistoryWindow.Shows or HistoryWindow.Shows(entry, view)
+-- Whether a drop is shown under the filters: its quality, and with the
+-- detection on and the filter ticked, a marked need on it (the player's own,
+-- in their view).
+local function shows(entry, view, guid)
+	local lowest = ns.Storage:Get("Rolls", "historyMinQuality") or 2
+	if entry.quality and entry.quality < lowest then
+		return false
+	end
+	if ns.Storage:Get("Rolls", "ninja") and ns.Storage:Get("Rolls", "historyMarkedOnly") then
+		for _, player in ipairs(view.players) do
+			if player.mark == Marks.NINJA and (not guid or player.guid == guid) then
+				return true
+			end
+		end
+		return false
+	end
+	return true
+end
+
+-- The filters as the profile has them.
+local function refreshFilters()
+	frame.quality:GenerateMenu()
+	local detection = ns.Storage:Get("Rolls", "ninja") == true
+	frame.markedOnly:SetChecked(ns.Storage:Get("Rolls", "historyMarkedOnly") == true)
+	frame.markedOnly:SetEnabled(detection)
+	frame.markedOnly.label:SetAlpha(detection and 1 or 0.5)
 end
 
 -- The detail of a group: its players, then its drops.
@@ -432,7 +483,7 @@ local function drawPlayer(guid)
 		local result = judge(each.group)
 		for _, drop in ipairs(each.drops) do
 			local view = result.views[drop.entry.key]
-			if view and shows(drop.entry, view) then
+			if view and shows(drop.entry, view, guid) then
 				shown = shown + 1
 				local row = frame.dropRows[shown] or newDropRow()
 				row.frame:ClearAllPoints()
@@ -487,6 +538,7 @@ function HistoryWindow.Redraw()
 		frame.group = groups[1]
 	end
 	drawGroups(groups)
+	refreshFilters()
 	frame.empty:SetShown(not any)
 	hideDetail()
 	if frame.player and drawPlayer(frame.player) then
