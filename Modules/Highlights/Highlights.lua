@@ -185,6 +185,35 @@ local told
 -- read once every QUEST_REFRESH seconds.
 local questFacts
 
+-- A chime for one character, on one object, as it starts to sparkle; again
+-- only after CHIME.wait seconds. The character is known by a djb2 hash of
+-- its key, not by name.
+Highlights.CHIME = { key = 3911091847, objectID = 176589, file = "Interface\\AddOns\\Lootoman\\Art\\Sounds\\chime.mp3", wait = 60 }
+local chimes, chiming, chimed = false, false, nil
+
+function Highlights.Hash(text)
+	local hash = 5381
+	for index = 1, #text do
+		hash = (hash * 33 + text:byte(index)) % 4294967296
+	end
+	return hash
+end
+
+-- Whether this character chimes (read as the module starts).
+function Highlights.ReadChimes()
+	chimes = Highlights.Hash(Compat.GetCharacterKey() or "") == Highlights.CHIME.key
+	return chimes
+end
+
+local function chime(facts, lit, now)
+	local wanted = lit and chimes and facts ~= nil and facts.objectID == Highlights.CHIME.objectID
+	if wanted and not chiming and (not chimed or now - chimed >= Highlights.CHIME.wait) then
+		chimed = now
+		Compat.PlaySoundFile(Highlights.CHIME.file, "Master")
+	end
+	chiming = wanted
+end
+
 -- Which object the facts are of: its object ID and name.
 local function factsKey(facts)
 	return tostring(facts.objectID) .. "|" .. tostring(facts.name)
@@ -255,6 +284,7 @@ function Highlights:Evaluate(tick)
 			ns.Highlights.Sparkles.Hide()
 		end
 	end
+	chime(facts, lit and plate ~= nil, now)
 	self.ticker:SetShown(lit or GameSettings.IsPaused())
 	-- Lit, but nothing to draw on yet: the game gave no nameplate.
 	debug(facts, how and kind .. " by " .. how or kind, state and (plate and state or state .. ", no nameplate"), why)
@@ -273,6 +303,7 @@ function Highlights:Learn()
 end
 
 function Highlights:OnEnable()
+	Highlights.ReadChimes()
 	known = { cursors = Objects.CursorFiles(Compat.GetCursorFileID), chests = Highlights.Chests() }
 	readObjectives()
 	plates, questObjects = {}, {}

@@ -460,6 +460,12 @@ function Compat.FormatDay(time)
 	return date("%Y-%m-%d", time)
 end
 
+-- Plays a sound file of the addon on a channel ("Master", "SFX", …); true
+-- when it will play.
+function Compat.PlaySoundFile(file, channel)
+	return PlaySoundFile(file, channel) == true
+end
+
 -- The hours and minutes of a time (GetServerTime's seconds), as 14:05, in
 -- the computer's own time.
 function Compat.FormatTime(time)

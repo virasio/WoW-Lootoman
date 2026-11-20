@@ -132,6 +132,7 @@ ns.Compat.NEEDS = {
 	LootSlot = { "LootSlot" },
 	ModifiedItemClick = { "IsModifiedClick", optional = { "ChatFrameUtil.InsertLink", "HandleModifiedItemClick" } },
 	PickupBagItem = { "C_Container.PickupContainerItem" },
+	PlaySoundFile = { "PlaySoundFile" },
 	Print = { "DEFAULT_CHAT_FRAME" },
 	RegisterEvent = { "CreateFrame" },
 	RegisterSlashCommand = { "SlashCmdList" },

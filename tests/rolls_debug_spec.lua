@@ -85,7 +85,9 @@ describe("the demos", function()
 	it("are listed by /ltm demo in the repository's version only, and in no help", function()
 		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Loader.Start(ns)
-		assert.same({ "Demos, in the repository's version only:", "/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
+		assert.same({ "Demos, in the repository's version only:",
+			"/ltm demo chime [objectID]: play the highlights' chime, or make this character chime on that object until /reload",
+			"/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
 			"/ltm demo lootrolls: the Loot Rolls window on made-up drops, where the client has no loot history window of its own",
 			"/ltm demo roll: play the loot rolls' demo, with no group",
 			"/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits" }, printed(ns, "demo"))
