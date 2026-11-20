@@ -460,6 +460,12 @@ function Compat.FormatDay(time)
 	return date("%Y-%m-%d", time)
 end
 
+-- The hours and minutes of a time (GetServerTime's seconds), as 14:05, in
+-- the computer's own time.
+function Compat.FormatTime(time)
+	return date("%H:%M", time)
+end
+
 -- Whether the client has a texture atlas of this name.
 function Compat.HasAtlas(name)
 	return C_Texture.GetAtlasInfo(name) ~= nil

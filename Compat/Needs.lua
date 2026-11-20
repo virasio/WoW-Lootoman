@@ -67,6 +67,7 @@ ns.Compat.NEEDS = {
 	GetCursorItemID = { "GetCursorInfo" },
 	GetDate = { "date" },
 	FormatDay = { "date" },
+	FormatTime = { "date" },
 	GetGameErrorName = { "GetGameMessageInfo" },
 	GetGatheringSkills = { "C_SkillInfo.GetNumSkillLines", optional = {
 		"C_SkillInfo.GetSkillLineInfoByID",

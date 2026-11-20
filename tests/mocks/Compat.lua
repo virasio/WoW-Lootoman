@@ -608,6 +608,10 @@ function Compat.FormatDay(time)
 	return os.date("!%Y-%m-%d", time)
 end
 
+function Compat.FormatTime(time)
+	return os.date("!%H:%M", time)
+end
+
 -- state.missingAtlases: the atlases the fake client lacks ({ [name] = true }).
 function Compat.HasAtlas(name)
 	return not state.missingAtlases[name]
