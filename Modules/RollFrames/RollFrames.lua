@@ -14,8 +14,8 @@ local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 -- and turning the module off give the game its place back.
 --
 -- In Edit Mode two look-alikes of the game's roll frame stand on its place,
--- and, while the loot rolls are on, their panels beside them; Edit Mode's
--- selection lies over all of them. The Edit button beside the checkbox opens
+-- and, while the loot rolls are on, their panels beside them, all of them
+-- under Edit Mode's selection. The Edit button beside the checkbox opens
 -- Edit Mode with this frame picked: a secure button runs the game's own
 -- /editmode, so the game opens Edit Mode itself.
 local RollFrames = ns.Modules:Register({
@@ -43,10 +43,11 @@ RollFrames.WIDTH, RollFrames.HEIGHT = 277, 200
 RollFrames.DEFAULT = { point = "BOTTOM", x = 0, y = 230 }
 -- The room the game leaves per roll frame.
 RollFrames.SLOT = 100
--- Above the look-alikes and the panels (DIALOG). Edit Mode's selection
--- template fixes its own strata at MEDIUM, so the selection is raised too, to
--- cover them as it covers the game's own frames.
-RollFrames.STRATA = "FULLSCREEN"
+-- In Edit Mode the look-alikes and the panels stand under the selection,
+-- whose template fixes it at MEDIUM, frame level 1000: on MEDIUM too, lower.
+-- Out of Edit Mode (the demo, real rolls) they are on DIALOG, as the game's
+-- roll frames are.
+RollFrames.PREVIEW_STRATA, RollFrames.PREVIEW_LEVEL = "MEDIUM", 100
 -- How far right of the frames the loot rolls' panels reach: their gap and width.
 RollFrames.PANELS = 4 + 190
 ns.RollFrames = RollFrames
@@ -105,10 +106,9 @@ end
 -- while the loot rolls are on.
 local function fitSelection()
 	local selection = ns.EditMode.Selection(RollFrames.frame)
-	if not (selection and selection.SetFrameStrata and selection.SetPoint) then
+	if not (selection and selection.SetPoint) then
 		return
 	end
-	selection:SetFrameStrata(RollFrames.STRATA)
 	selection:ClearAllPoints()
 	selection:SetPoint("TOPLEFT", RollFrames.frame, "TOPLEFT", 0, 0)
 	selection:SetPoint("BOTTOMRIGHT", RollFrames.frame, "BOTTOMRIGHT", panelsOn and RollFrames.PANELS or 0, 0)
@@ -126,6 +126,8 @@ local function preview(active)
 		for slot = 1, 2 do
 			local card = cards[slot] or ns.RollLookalike.New()
 			cards[slot] = card
+			card.frame:SetFrameStrata(RollFrames.PREVIEW_STRATA)
+			card.frame:SetFrameLevel(RollFrames.PREVIEW_LEVEL)
 			ns.RollLookalike.Fill(card, items[slot])
 			ns.RollLookalike.Place(card, slot)
 			card.frame:Show()
@@ -142,7 +144,7 @@ local function preview(active)
 			RollFrames.Restore()
 		end
 	end
-	Bus:Send("RollFramesPreview", active, frames)
+	Bus:Send("RollFramesPreview", active, frames, RollFrames.PREVIEW_STRATA, RollFrames.PREVIEW_LEVEL)
 end
 
 -- The look-alikes shown in Edit Mode, for tests.
@@ -154,7 +156,6 @@ function RollFrames:OnEnable()
 	RollFrames.starting = true
 	if not RollFrames.frame then
 		local frame = CreateFrame("Frame", nil, UIParent)
-		frame:SetFrameStrata(RollFrames.STRATA)
 		frame:SetSize(RollFrames.WIDTH, RollFrames.HEIGHT)
 		frame:SetPoint(RollFrames.DEFAULT.point, RollFrames.DEFAULT.x, RollFrames.DEFAULT.y)
 		frame:SetMovable(true)

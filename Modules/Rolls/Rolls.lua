@@ -200,9 +200,9 @@ function Rolls:OnEnable()
 	Rolls.starting = true
 	hookFrames()
 	-- In Edit Mode, the roll frames' look-alikes get panels of made-up choices.
-	self:On("RollFramesPreview", function(_, active, frames)
+	self:On("RollFramesPreview", function(_, active, frames, strata, level)
 		if active then
-			ns.Rolls.Demo.Preview(frames)
+			ns.Rolls.Demo.Preview(frames, strata, level)
 		else
 			ns.Rolls.Demo.EndPreview()
 		end

@@ -309,15 +309,19 @@ end
 
 -- Edit Mode shows the roll frames' look-alikes (the roll frames' module's)
 -- where the moved frames will stand; while the loot rolls are on, a panel of
--- made-up choices stands beside each, at its right, so Edit Mode's selection
--- covers them too.
+-- made-up choices stands beside each, at its right, on the look-alikes'
+-- strata and level, so Edit Mode's selection covers them too.
 local previews = {}
 
-function Demo.Preview(frames)
+function Demo.Preview(frames, strata, level)
 	local items = Demo.Items()
 	for slot, frame in ipairs(frames) do
 		local panel = previews[slot] or Panel.New()
 		previews[slot] = panel
+		if strata then
+			panel.frame:SetFrameStrata(strata)
+			panel.frame:SetFrameLevel(level or 1)
+		end
 		local group = slot == 1
 		local view = { rollID = "preview" .. slot, link = items[slot], bound = true, demo = true,
 			players = newPlayers(group and 5 or Demo.RAID, slot, group) }

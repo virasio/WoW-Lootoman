@@ -82,8 +82,6 @@ describe("moving the game's roll frames", function()
 		Test.LayOutGameRolls()
 		assert.same({ "CENTER", container, "BOTTOM", 0, 50 }, frames[1].points[1])
 		assert.equals("Loot Roll Frames", lib.frames[RollFrames.frame].name)
-		-- Above the look-alikes (DIALOG), so Edit Mode's selection covers them.
-		assert.equals("FULLSCREEN", RollFrames.frame:GetFrameStrata())
 	end)
 
 	it("stands the frames on its place once moved, after each of the game's layouts, 100 apart, the panels with them", function()
@@ -120,11 +118,13 @@ describe("moving the game's roll frames", function()
 		assert.is_true(RollFrames.frame:IsShown())
 		local card = RollFrames.Cards()[1]
 		assert.same({ true, "CENTER", RollFrames.frame }, { card.frame:IsShown(), card.frame.points[1][1], card.frame.points[1][2] })
-		-- The selection reaches over the panels at the frames' right, raised above
-		-- them: its template fixes it at MEDIUM, under the look-alikes' DIALOG.
+		-- The selection reaches over the panels at the frames' right. Its
+		-- template fixes it at MEDIUM, frame level 1000: the look-alikes and the
+		-- panels stand on MEDIUM too, lower, under it; the selection is the library's own.
 		local selection = lib.frameSelections[RollFrames.frame]
 		assert.same({ "BOTTOMRIGHT", RollFrames.frame, "BOTTOMRIGHT", 194, 0 }, selection.points[2])
-		assert.equals("FULLSCREEN", selection:GetFrameStrata())
+		assert.same({ "MEDIUM", 100 }, { card.frame:GetFrameStrata(), card.frame:GetFrameLevel() })
+		assert.equals("MEDIUM", selection:GetFrameStrata())
 		local panel = nil
 		for _, frame in ipairs(Loader.ui.frames) do
 			if frame.points[1] and frame.points[1][2] == card.frame and frame.points[1][3] == "RIGHT" then
@@ -132,6 +132,10 @@ describe("moving the game's roll frames", function()
 			end
 		end
 		assert.is_true(panel ~= nil and panel:IsShown())
+		assert.same({ "MEDIUM", 100 }, { panel:GetFrameStrata(), panel:GetFrameLevel() })
+		-- The demo's own look-alikes and panels stay on DIALOG, as the game's frames.
+		ns.Rolls.Demo.Start(true)
+		assert.equals("DIALOG", ns.Rolls.Demo.cards[1].frame:GetFrameStrata())
 		lib.Fire("exit")
 		assert.same({ false, false, false }, { RollFrames.frame:IsShown(), card.frame:IsShown(), panel:IsShown() })
 	end)
