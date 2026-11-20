@@ -54,7 +54,14 @@ describe("loot feed module", function()
 		assert.is_true(module:IsActive())
 		assert.is_nil(api.FindCategory("Loot feed"))
 		local page = ns.SettingsPanel.main
-		local switch, look = page.items[#page.items - 1], page.items[#page.items]
+		-- The feed's switch and its look, wherever they are among the modules.
+		local at
+		for index, item in ipairs(page.items) do
+			if item.text == "Show the Loot Feed" then
+				at = index
+			end
+		end
+		local switch, look = page.items[at], page.items[at + 1]
 		assert.same({ "checkbox", "Show the Loot Feed", "row", "Feed Look", 24 }, { switch.kind, switch.text, look.kind, look.text, look.indent })
 		assert.equals(ns.Feed.LookMenu.Build, page.look.menu)
 		assert.same({ "Default", 5, true, 3 }, { ns.Storage:Get("LootFeed", "look"), module:Get("maxRows"), module:Get("xp"), module:Get("warnGeneralAt") })
@@ -511,6 +518,8 @@ describe("loot feed module", function()
 
 	it("stops reading events and hides when turned off", function()
 		Test.SetMoney(150)
+		-- The loot rolls read the loot chat too.
+		ns.Modules:SetEnabled("Rolls", false)
 		ns.Modules:SetEnabled("LootFeed", false)
 		assert.is_false(Test.IsRegistered("CHAT_MSG_LOOT"))
 		-- Other modules may still listen to money; the feed does not.

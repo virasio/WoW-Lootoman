@@ -239,7 +239,7 @@ function Model.SetChatDrop(rollID, drop)
 end
 
 -- The module's listeners on the bus, while it is on: new rules mean new marks.
-function Model.Listen(module)
+function Model.WatchRules(module)
 	module:On("NeedRulesChanged", function()
 		for rollID in pairs(rolls) do
 			notify("roll", rollID)

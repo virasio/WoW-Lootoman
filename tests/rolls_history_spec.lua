@@ -8,8 +8,10 @@ local RING = "|cff0070dd|Hitem:200::::::::40|h[Ring]|h|r"
 describe("the roll history", function()
 	local ns, Test, History, Groups
 
-	local function start(saved)
+	local function start(saved, inGroup)
 		ns = Loader.LoadAddon({ gameType = "camelot" })
+		-- The module opens or closes the group as it starts.
+		ns.Compat.Test.state.group = inGroup == true
 		Loader.Start(ns, saved)
 		Test = ns.Compat.Test
 		History, Groups = ns.Rolls.History, ns.Rolls.Groups
@@ -59,12 +61,10 @@ describe("the roll history", function()
 		Groups.Joined(1, "Party-1")
 		History.Record(drop("1:1", HELM, { { guid = "g-brina", name = "Brina", class = "ROGUE", state = 0, roll = 50 } }))
 		local char = Test.state.saved.LootomanCharDB
-		start({ LootomanCharDB = char })
-		Test.SetGroup(true)
+		start({ LootomanCharDB = char }, true)
 		assert.is_table(Groups.Login())
 		assert.equals(1, #History.Open().drops)
-		start({ LootomanCharDB = char })
-		Test.SetGroup(false)
+		start({ LootomanCharDB = char }, false)
 		assert.is_nil(Groups.Login())
 		assert.is_number(saved().groups[1].ended)
 	end)

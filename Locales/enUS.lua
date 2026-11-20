@@ -439,4 +439,14 @@ ns.Locales.AddEnglish({
 	"Outline",
 	"Thick outline",
 	"Backdrop",
+
+	-- Modules/Rolls/Rolls.lua
+	"Loot rolls",
+	"Show Who Rolled What",
+	"Beside the game's loot roll frames: who chose what and rolled what, in class colours, as it happens.",
+
+	-- Modules/Rolls/Panel.lua
+	"Waiting for the rolls…",
+	"Need: %d",
+	"Not chosen: %d",
 })

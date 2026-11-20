@@ -432,4 +432,14 @@ ns.Locales.AddTranslation("ruRU", {
 	["Outline"] = "Обводка",
 	["Thick outline"] = "Толстая обводка",
 	["Backdrop"] = "Подложка",
+
+	-- Modules/Rolls/Rolls.lua
+	["Loot rolls"] = "Розыгрыш лута",
+	["Show Who Rolled What"] = "Показывать, кто что выбрал",
+	["Beside the game's loot roll frames: who chose what and rolled what, in class colours, as it happens."] = "Рядом с окнами розыгрыша лута: кто что выбрал и сколько выбросил, в цветах классов, по ходу розыгрыша.",
+
+	-- Modules/Rolls/Panel.lua
+	["Waiting for the rolls…"] = "Ждём бросков…",
+	["Need: %d"] = "Нид: %d",
+	["Not chosen: %d"] = "Не выбрали: %d",
 })

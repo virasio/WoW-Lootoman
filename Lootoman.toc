@@ -107,6 +107,8 @@ Modules\Rolls\Model.lua
 Modules\Rolls\Chat.lua
 Modules\Rolls\History.lua
 Modules\Rolls\Groups.lua
+Modules\Rolls\Panel.lua
+Modules\Rolls\Rolls.lua
 
 Settings\Panel.lua
 Settings\Profiles.lua
