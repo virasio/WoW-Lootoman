@@ -559,7 +559,7 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
-- [ ] **The demos.** `/ltm demo`. *Expected:* the four demos listed (`loot`, `lootrolls`, `roll`, `rollhistory`); neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll` out of a group: the loot rolls' demo plays (the checks under *The demo*).
+- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `loot`, `lootrolls`, `roll` and `rollhistory` among them; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll` out of a group: the loot rolls' demo plays (the checks under *The demo*).
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon
