@@ -136,10 +136,12 @@ function Compat.GetGameRollSlots()
 	return slots
 end
 
--- Whether the game has a loot history window of its own (retail's Loot
--- Rolls, GroupLootHistoryFrame), which opens after the player's choice.
-function Compat.HasGameLootHistory()
-	return _G["GroupLootHistoryFrame"] ~= nil
+-- Whether the game's own loot history window (Loot Rolls,
+-- GroupLootHistoryFrame) is on the screen: retail opens it after the
+-- player's choice; WoW Forever has the frame but never shows it.
+function Compat.IsGameLootHistoryShown()
+	local frame = _G["GroupLootHistoryFrame"]
+	return frame ~= nil and frame:IsShown() == true
 end
 
 -- The container the game stacks its roll frames from, where it stands now.

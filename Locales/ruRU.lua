@@ -554,7 +554,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Rolling…"] = "Идёт розыгрыш…",
 	["All passed"] = "Все отказались",
 	["Show the Loot Rolls Window After Your Choice"] = "Показывать окно розыгрышей после своего выбора",
-	["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it."] = "Когда вы сделали выбор в розыгрыше, окно покажет его вместе с другими розыгрышами группы по ходу дела и будет хранить все разыгранные предметы, пока вы его не закроете.",
+	["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."] = "Когда вы сделали выбор в розыгрыше, окно покажет его вместе с другими розыгрышами группы по ходу дела и будет хранить все разыгранные предметы, пока вы его не закроете; кроме клиентов, где игра открывает своё окно истории добычи.",
 	["Loot Rolls"] = "Розыгрыши добычи",
 	["Roll History"] = "История розыгрышей",
 	["Players"] = "Игроки",

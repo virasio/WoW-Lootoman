@@ -44,8 +44,7 @@ ns.BugReport.AddPart(function()
 	return {
 		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops; live window %s"):format(
 			Storage:Get("Rolls", "enabled") and "on" or "off", Storage:Get("Rolls", "ninja") and "on" or "off", tostring(Storage:Get("Rolls", "strictness")),
-			ns.NeedRules.ChangedCount(), groups, drops,
-			not ns.Rolls.LiveWindow.Available() and "the game's" or (Storage:Get("Rolls", "liveWindow") and "on" or "off")),
+			ns.NeedRules.ChangedCount(), groups, drops, Storage:Get("Rolls", "liveWindow") and "on" or "off"),
 	}
 end)
 

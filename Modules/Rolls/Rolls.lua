@@ -27,7 +27,7 @@ local Rolls = ns.Modules:Register({
 		minQuality = 2,
 		spareFriends = true,
 		summary = true,
-		-- The live window, where the game has no loot history window.
+		-- The live window, where the game does not open its own loot history window.
 		liveWindow = true,
 		-- The roll history's filters.
 		historyMinQuality = 2,
@@ -45,12 +45,9 @@ local Rolls = ns.Modules:Register({
 	-- beside it. The demo is a debug command's, not the player's.
 	mainSettings = {
 		{ kind = "custom", build = function(page, indent)
-			-- Only on a client without the game's loot history window.
-			if ns.Rolls.LiveWindow.Available() then
-				page:AddCheckbox("Rolls", "liveWindow", L["Show the Loot Rolls Window After Your Choice"],
-					L["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it."],
-					indent, "Rolls")
-			end
+			page:AddCheckbox("Rolls", "liveWindow", L["Show the Loot Rolls Window After Your Choice"],
+				L["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."],
+				indent, "Rolls")
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
 				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
 			local row = check:GetParent()

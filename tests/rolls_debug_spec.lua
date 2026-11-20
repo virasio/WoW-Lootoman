@@ -104,7 +104,7 @@ describe("the demos", function()
 		assert.is_nil(table.concat(printed(released, "demo"), "\n"):find("Demos", 1, true))
 	end)
 
-	it("show the Loot Rolls window on made-up drops with /ltm demo lootrolls, where it exists", function()
+	it("show the Loot Rolls window on made-up drops with /ltm demo lootrolls", function()
 		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		local Test = ns.Compat.Test
 		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass", LOOT_ROLLS = "Loot Rolls" })
@@ -122,20 +122,5 @@ describe("the demos", function()
 		assert.same({ "Rolling…", "All passed" }, { window.rows[1].item.status:GetText(), window.rows[4].item.status:GetText() })
 		assert.matches(ns.Rolls.Demo.Heroes()[1].name, window.rows[1].panel.lines[1].text:GetText(), 1, true)
 		assert.same({}, ns.Rolls.History.Groups())
-		-- Where the game has its own window: shown anyway, saying so; a real choice still does not open it.
-		local retail = Loader.LoadAddon({ gameType = "camelot", debug = true })
-		retail.Compat.Test.state.gameLootHistory = true
-		retail.Compat.Test.SetItems({ [5191] = { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 } })
-		Loader.Start(retail)
-		assert.matches("game's own loot history window", printed(retail, "demo lootrolls")[1], 1, true)
-		for _ = 1, retail.Rolls.DemoHistory.TRIES do
-			retail.Compat.Test.Advance(retail.Rolls.DemoHistory.WAIT)
-		end
-		local shown = retail.Rolls.LiveWindow.Frame()
-		assert.is_true(shown:IsShown())
-		shown:Hide()
-		retail.Compat.Test.StartRoll(7, { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 })
-		retail.Compat.Test.ChooseRoll(7, 0)
-		assert.is_false(shown:IsShown())
 	end)
 end)

@@ -1,11 +1,13 @@
 local _, ns = ...
 local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 
--- The live window, Loot Rolls, on a client without the game's own loot
--- history window (retail has one, which opens after the player's choice;
--- there this window never shows). Once the player has chosen on a roll, with
--- its option on, the window opens with that roll and the group's other rolls
--- still going, and takes in every drop that comes while it is open, newest
+-- The live window, Loot Rolls, where the game does not open a loot history
+-- window of its own: retail opens its Loot Rolls window after the player's
+-- choice, and then this one stays closed; WoW Forever has the game's frame
+-- but never shows it. Once the player has chosen on a roll, with its option
+-- on, the window waits a moment (WAIT) to see whether the game opens its own,
+-- and if not opens with that roll and the group's other rolls still going,
+-- and takes in every drop that comes while it is open, newest
 -- at the top, each a row with its item, its outcome and its panel
 -- (DropRow.lua). Closed, it forgets them, and the next choice opens it with
 -- that roll alone. A drop is drawn from the model while the game has it and
@@ -27,16 +29,13 @@ LiveWindow.WIDTH = DropRow.WIDTH + 2 * LiveWindow.PAD + 24
 -- As tall as four rows of a group of five.
 LiveWindow.HEIGHT = LiveWindow.TOP + 4 * (2 * Panel.PAD + Panel.GROUP * Panel.LINE + LiveWindow.GAP) + LiveWindow.PAD
 LiveWindow.FIRST_ROWS = 4
+-- How long it waits after the player's choice for the game's own window.
+LiveWindow.WAIT = 0.5
 
 local frame
 -- What the window shows since it opened, newest first: { rollID, key, group,
 -- last (the view drawn last) }; the drops known when it opened.
 local entries, known = {}, {}
-
--- Whether the window is wanted on this client.
-function LiveWindow.Available()
-	return not Compat.HasGameLootHistory()
-end
 
 local function newRow()
 	local row = DropRow.New(frame.content)
@@ -50,10 +49,9 @@ local function newRow()
 	return row
 end
 
--- Builds the window, hidden, with its first rows; force: also where the game
--- has its own (the repository's demo), where only the demo opens it.
-function LiveWindow.Build(force)
-	if frame or not (force or LiveWindow.Available()) then
+-- Builds the window, hidden, with its first rows.
+function LiveWindow.Build()
+	if frame then
 		return frame
 	end
 	frame = CreateFrame("Frame", LiveWindow.NAME, UIParent, "DefaultPanelFlatTemplate")
@@ -191,12 +189,9 @@ local function place()
 	end
 end
 
--- The player chose on a roll: the window opens with it, and with the other
--- rolls still going when it was closed.
-function LiveWindow.Chose(rollID)
-	if not frame or not LiveWindow.Available() or not Storage:Get("Rolls", "liveWindow") then
-		return
-	end
+-- Opens the window with a roll, and with the other rolls still going; open
+-- already, it takes the roll in.
+local function open(rollID)
 	if not frame:IsShown() then
 		entries, known = {}, {}
 		local mine = Model.Roll(rollID) and Model.Roll(rollID).drop
@@ -213,6 +208,23 @@ function LiveWindow.Chose(rollID)
 		add({ rollID = rollID })
 	end
 	LiveWindow.Redraw()
+end
+
+-- The player chose on a roll: open, the window takes it in at once; closed,
+-- it opens a moment later, unless the game has opened its own meanwhile.
+function LiveWindow.Chose(rollID)
+	if not frame or not Storage:Get("Rolls", "liveWindow") then
+		return
+	end
+	if frame:IsShown() then
+		open(rollID)
+		return
+	end
+	Compat.After(LiveWindow.WAIT, function()
+		if frame and ns.Rolls.Module.active and not Compat.IsGameLootHistoryShown() then
+			open(rollID)
+		end
+	end)
 end
 
 -- The model's news: a drop new since the window opened joins it; any

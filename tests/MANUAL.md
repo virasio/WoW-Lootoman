@@ -497,18 +497,18 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 ### The Loot Rolls window
 
-On WoW Forever, where the game has no loot history window of its own, in a dungeon with group loot.
+On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame`) but never shows it, in a dungeon with group loot; on retail the game opens its own after a choice, and Lootoman's stays closed.
 
-- [ ] **Whether the game has its own.** On each client: `/dump GroupLootHistoryFrame ~= nil`, then `/loot`. *Expected:* note both. On retail `true` and the game's *Loot Rolls* window; if WoW Forever says `true` too, Lootoman's window never shows there: say so.
-- [ ] **On the options page.** On WoW Forever, under *Show Who Rolled What*: *Show the Loot Rolls Window After Your Choice* (on), with its tooltip. *Expected:* on retail, no such checkbox.
-- [ ] **After your choice.** An item to roll on; choose need, greed or pass. *Expected:* the game's frame goes as always; Lootoman's *Loot Rolls* window opens to the right of the roll frames and their panels, the roll at its top, lit for a moment, with the other rolls still going under it. Each row: the item (its icon, its name in its quality colour, its tooltip on hover, Shift-click links it), under it *Rolling…*, then the winner in class colour with their button's icon and roll, or *All passed*; at its right the panel's lines as beside the game's frames, filling as the others choose.
+- [ ] **On the options page.** Under *Show Who Rolled What*: *Show the Loot Rolls Window After Your Choice* (on), with its tooltip, on both clients.
+- [ ] **On retail.** Choose on a roll. *Expected:* the game's *Loot Rolls* window opens as always, and Lootoman's does not.
+- [ ] **After your choice.** An item to roll on; choose need, greed or pass. *Expected:* the game's frame goes as always; half a second later Lootoman's *Loot Rolls* window opens to the right of the roll frames and their panels, the roll at its top, lit for a moment, with the other rolls still going under it. Each row: the item (its icon, its name in its quality colour, its tooltip on hover, Shift-click links it), under it *Rolling…*, then the winner in class colour with their button's icon and roll, or *All passed*; at its right the panel's lines as beside the game's frames, filling as the others choose.
 - [ ] **It keeps them.** Leave it open through the next pulls. *Expected:* every item rolled on joins it at the top, also those you had no frame for; past four rows it scrolls. Drag it by its title: it stays there for the session.
 - [ ] **Closed.** Close it (its X, or Escape), then choose on the next roll. *Expected:* it opens again with that roll only, and any other roll still going.
 - [ ] **Leaving.** With it open, leave the dungeon. *Expected:* its rows stay as they were (note any row that empties). After a `/reload` it is closed.
 - [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
 - [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
 - [ ] **Off.** Untick *Show the Loot Rolls Window After Your Choice*. *Expected:* no window at your choice.
-- [ ] **Its demo.** Out of a group, `/ltm demo lootrolls`. *Expected:* on WoW Forever the window on four made-up drops of five heroes: the newest still rolled on (two heroes yet to choose), two won, the oldest all passed; on retail a chat line saying the game has its own window there.
+- [ ] **Its demo.** Out of a group, `/ltm demo lootrolls`. *Expected:* on either client, the window on four made-up drops of five heroes: the newest still rolled on (two heroes yet to choose), two won, the oldest all passed.
 
 ### The roll history
 

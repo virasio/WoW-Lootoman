@@ -5,10 +5,8 @@ local Compat = ns.Compat
 -- /ltm demo lootrolls opens the Loot Rolls window on made-up drops of a run
 -- of five of the demo's heroes, for testing and pictures: the newest still
 -- rolled on, two won (by need, by greed) and one all passed, with the first
--- hero needing everything (marked, with the detection on). On a client with
--- the game's own loot history window, where Lootoman's never opens by itself,
--- the demo builds it anyway, saying so. Never saved. Development text is not
--- translated.
+-- hero needing everything (marked, with the detection on), on either client.
+-- Never saved. Development text is not translated.
 ns.Rolls = ns.Rolls or {}
 local DemoLootRolls = {}
 ns.Rolls.DemoLootRolls = DemoLootRolls
@@ -66,10 +64,6 @@ function DemoLootRolls.Open()
 	if not (rolls and rolls:IsActive()) then
 		ns.Print("demo lootrolls: the loot rolls are off")
 		return false
-	end
-	if not window.Available() then
-		ns.Print("demo lootrolls: this client has the game's own loot history window (GroupLootHistoryFrame), so Lootoman's never opens by itself here; shown for the demo anyway")
-		window.Build(true)
 	end
 	return DemoHistory.WithItems("lootrolls", function(items)
 		return window.ShowViews(DemoLootRolls.Views(items, Compat.GetServerTime()))
