@@ -40,6 +40,20 @@ describe("the ninja rules window", function()
 		assert.equals(9, #frame.classButtons)
 		assert.is_true(frame.classesTab:IsShown())
 		assert.is_false(frame.checksTab:IsShown())
+		-- Both tabs scroll; the Reset buttons stay outside the scrolled rules.
+		assert.equals("ScrollFrameTemplate", frame.classesContent.scroll.template)
+		assert.equals("ScrollFrameTemplate", frame.checksContent.scroll.template)
+		assert.equals(frame.classesContent, frame.rows[1].check:GetParent())
+		assert.equals(frame.classesTab, frame.resetClass:GetParent())
+		-- The weapons in two columns, their labels cut short at the column's width.
+		local weapons = {}
+		for _, each in ipairs(frame.rows) do
+			if each.part == "weapons" then
+				weapons[#weapons + 1] = each
+			end
+		end
+		assert.same({ 8, 218, 8 }, { weapons[1].check.points[1][4], weapons[2].check.points[1][4], weapons[3].check.points[1][4] })
+		assert.equals(178, weapons[1].check.label.width)
 	end)
 
 	it("ticks what counts as the class's own, its level beside an armor type, and greys what it cannot equip", function()

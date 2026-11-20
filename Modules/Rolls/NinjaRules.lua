@@ -18,7 +18,14 @@ ns.Rolls.NinjaRules = NinjaRules
 local Need = ns.Rules.Need
 
 NinjaRules.NAME = "LootomanNinjaRules"
-NinjaRules.WIDTH, NinjaRules.HEIGHT = 600, 470
+-- The inset inside is 620 by 452. Classes: the class list at the left (up
+-- to 13 classes of 22 pixels: 294), the rules in a scrolled area right of it
+-- (442 by 408: armor 8 rows, weapons 8 rows of two columns of 210, stats 2
+-- rows of two, about 520 high), the Reset buttons under it. Checks: nine
+-- checkboxes and two dropdowns, scrolled too (586 by 440).
+NinjaRules.WIDTH, NinjaRules.HEIGHT = 640, 520
+NinjaRules.ROW = 24
+NinjaRules.COLUMN = 210
 NinjaRules.CLASSES, NinjaRules.CHECKS = 1, 2
 
 local frame
@@ -44,14 +51,32 @@ local function colored(classFile)
 	return ns.Rolls.Panel.ClassName(id and Compat.GetClassName(id) or classFile, classFile)
 end
 
--- A checkbox with its label at its right.
-local function checkbox(parent, text, onClick)
+-- A checkbox with its label at its right, cut short at width rather than
+-- running into what stands beside it.
+local function checkbox(parent, text, onClick, width)
 	local check = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	check:SetSize(24, 24)
 	check.label = label(parent, text)
 	check.label:SetPoint("LEFT", check, "RIGHT", 2, 0)
+	if width then
+		check.label:SetWidth(width)
+		check.label:SetWordWrap(false)
+	end
 	check:SetScript("OnClick", onClick)
 	return check
+end
+
+-- A scrolled area in a tab, between the given insets: its content frame,
+-- whose height the caller sets once it is filled.
+local function scrolled(tab, left, top, right, bottom)
+	local scroll = CreateFrame("ScrollFrame", nil, tab, "ScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", tab, "TOPLEFT", left, -top)
+	scroll:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -right, bottom)
+	local content = CreateFrame("Frame", nil, scroll)
+	content:SetSize(NinjaRules.WIDTH - 20 - left - right - 12, 1)
+	scroll:SetScrollChild(content)
+	content.scroll = scroll
+	return content
 end
 
 local function setEnabled(check, enabled)
@@ -102,7 +127,7 @@ local function setRule(part, key, value)
 	refreshClass()
 end
 
-local function newRow(parent, part, key, text, withLevel)
+local function newRow(parent, part, key, text, withLevel, width)
 	local row = { part = part, key = key }
 	row.check = checkbox(parent, text, function(check)
 		---@type boolean|number
@@ -111,7 +136,7 @@ local function newRow(parent, part, key, text, withLevel)
 			value = levelOf(row.level:GetText()) or true
 		end
 		setRule(part, key, value)
-	end)
+	end, width)
 	if withLevel then
 		row.levelLabel = label(parent, L["up to level"], "GameFontHighlightSmall")
 		row.level = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
@@ -152,38 +177,46 @@ local function buildClasses(tab)
 		end)
 		frame.classButtons[index] = button
 	end
-	local x, y = 160, -8
+	local content = scrolled(tab, 150, 6, 28, 38)
+	frame.classesContent = content
+	local x, y = 8, -4
 	local function heading(text)
-		local line = label(tab, text, "GameFontNormal")
-		line:SetPoint("TOPLEFT", tab, "TOPLEFT", x, y)
+		local line = label(content, text, "GameFontNormal")
+		line:SetPoint("TOPLEFT", content, "TOPLEFT", x, y)
 		y = y - 22
 		return line
 	end
 	frame.armorHeading = heading(L["Armor"])
 	for _, key in ipairs(data().armor) do
 		local withLevel = Need.ARMOR_TYPES[key] == true
-		local row = newRow(tab, "armor", key, Compat.GetItemSubClassName(Need.ARMOR, key) or tostring(key), withLevel)
-		row.check:SetPoint("TOPLEFT", tab, "TOPLEFT", x, y)
+		local row = newRow(content, "armor", key, Compat.GetItemSubClassName(Need.ARMOR, key) or tostring(key), withLevel, 120)
+		row.check:SetPoint("TOPLEFT", content, "TOPLEFT", x, y)
 		if withLevel then
-			row.levelLabel:SetPoint("LEFT", row.check, "LEFT", 140, 0)
+			row.levelLabel:SetPoint("LEFT", row.check, "LEFT", 160, 0)
 			row.level:SetPoint("LEFT", row.levelLabel, "RIGHT", 8, 0)
 		end
-		y = y - 22
+		y = y - NinjaRules.ROW
 	end
-	y = y - 6
+	-- Two columns, each label cut at the column's width.
+	local function grid(part, keys, name)
+		for index, key in ipairs(keys) do
+			local row = newRow(content, part, key, name(key), false, NinjaRules.COLUMN - 32)
+			local column = (index - 1) % 2
+			row.check:SetPoint("TOPLEFT", content, "TOPLEFT", x + column * NinjaRules.COLUMN, y - math.floor((index - 1) / 2) * NinjaRules.ROW)
+		end
+		y = y - math.ceil(#keys / 2) * NinjaRules.ROW
+	end
+	y = y - 8
 	frame.weaponsHeading = heading(L["Weapons"])
-	local columns = 3
-	for index, key in ipairs(data().weapons) do
-		local row = newRow(tab, "weapons", key, Compat.GetItemSubClassName(Need.WEAPON, key) or tostring(key))
-		local column = (index - 1) % columns
-		row.check:SetPoint("TOPLEFT", tab, "TOPLEFT", x + column * 140, y - math.floor((index - 1) / columns) * 22)
-	end
-	y = y - math.ceil(#data().weapons / columns) * 22 - 6
+	grid("weapons", data().weapons, function(key)
+		return Compat.GetItemSubClassName(Need.WEAPON, key) or tostring(key)
+	end)
+	y = y - 8
 	frame.statsHeading = heading(L["Primary Stats"])
-	for index, stat in ipairs(data().stats) do
-		local row = newRow(tab, "stats", stat, Compat.GetGlobalString("ITEM_MOD_" .. stat .. "_SHORT") or stat)
-		row.check:SetPoint("TOPLEFT", tab, "TOPLEFT", x + (index - 1) * 105, y)
-	end
+	grid("stats", data().stats, function(stat)
+		return Compat.GetGlobalString("ITEM_MOD_" .. stat .. "_SHORT") or stat
+	end)
+	content:SetHeight(-y + 8)
 	frame.resetClass = CreateFrame("Button", nil, tab, "UIPanelButtonTemplate")
 	frame.resetClass:SetSize(130, 22)
 	frame.resetClass:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -146, 6)
@@ -232,10 +265,10 @@ local function refreshChecks()
 	end
 end
 
-local function dropdown(tab, key, choices, x, y, text)
-	local caption = label(tab, text, "GameFontNormal")
-	caption:SetPoint("TOPLEFT", tab, "TOPLEFT", x, y)
-	local menu = CreateFrame("DropdownButton", nil, tab, "WowStyle1DropdownTemplate")
+local function dropdown(parent, key, choices, x, y, text)
+	local caption = label(parent, text, "GameFontNormal")
+	caption:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
+	local menu = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
 	menu:SetWidth(170)
 	menu:SetPoint("TOPLEFT", caption, "BOTTOMLEFT", 0, -4)
 	menu:SetupMenu(function(_, root)
@@ -254,14 +287,18 @@ end
 
 local function buildChecks(tab)
 	frame.checks, frame.dropdowns = {}, {}
+	local content = scrolled(tab, 6, 6, 28, 6)
+	frame.checksContent = content
+	local y = -6
 	for index, entry in ipairs(NinjaRules.CHECK_KEYS) do
-		local check = checkbox(tab, entry[2], function(button)
+		local indent = (entry[1] == "ninja") and 0 or 20
+		local check = checkbox(content, entry[2], function(button)
 			Storage:Set("Rolls", button.key, button:GetChecked() == true)
 			refreshChecks()
-		end)
+		end, 520 - indent)
 		check.key = entry[1]
-		local indent = (entry[1] == "ninja") and 0 or 20
-		check:SetPoint("TOPLEFT", tab, "TOPLEFT", 12 + indent, -10 - (index - 1) * 26 - (index > 1 and 8 or 0))
+		check:SetPoint("TOPLEFT", content, "TOPLEFT", 8 + indent, y)
+		y = y - 26 - (index == 1 and 8 or 0)
 		check:SetScript("OnEnter", function(button)
 			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 			GameTooltip_SetTitle(GameTooltip, entry[2])
@@ -273,16 +310,19 @@ local function buildChecks(tab)
 		end)
 		frame.checks[index] = check
 	end
+	-- The strictness and the quality under the checkboxes, side by side.
 	local presets = {}
 	for _, name in ipairs(Need.PRESET_ORDER) do
 		presets[#presets + 1] = { name, ({ lenient = L["Lenient"], normal = L["Normal"], strict = L["Strict"] })[name] }
 	end
-	dropdown(tab, "strictness", presets, 380, -40, L["Strictness"])
+	y = y - 12
+	dropdown(content, "strictness", presets, 28, y, L["Strictness"])
 	local qualities = {}
 	for _, quality in ipairs({ 2, 3, 4 }) do
 		qualities[#qualities + 1] = { quality, Compat.GetGlobalString("ITEM_QUALITY" .. quality .. "_DESC") or tostring(quality) }
 	end
-	dropdown(tab, "minQuality", qualities, 380, -110, L["Lowest Quality Judged"])
+	dropdown(content, "minQuality", qualities, 260, y, L["Lowest Quality Judged"])
+	content:SetHeight(-y + 60)
 end
 
 function NinjaRules.ShowTab(id)

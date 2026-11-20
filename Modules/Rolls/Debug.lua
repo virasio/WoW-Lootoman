@@ -3,8 +3,9 @@ local Compat, Storage = ns.Compat, ns.Storage
 
 -- /ltm debug rolls: the open rolls and how each is bound to the loot history,
 -- the history's drops the model knows, and the open group's last drops, in
--- English as all debug output. The bug report says how the loot rolls are
--- set, and the self-test what the client has of the game's roll frames.
+-- English as all debug output; /ltm debug demoroll plays the demo. The bug
+-- report says how the loot rolls are set, and the self-test what the client
+-- has of the game's roll frames.
 local Model, History = ns.Rolls.Model, ns.Rolls.History
 
 local function nameOf(link)
@@ -36,6 +37,11 @@ ns.Slash.RegisterDebug("rolls", function()
 		ns.Print(("  %s %s at %s: %d players, winner %s"):format(tostring(entry.key), nameOf(entry.link), tostring(entry.place), #entry.rolls, winner))
 	end
 end, "/ltm debug rolls: the open rolls, their drops and the open group's last drops")
+
+-- /ltm debug demoroll: the demo, as Show Demo plays it.
+ns.Slash.RegisterDebug("demoroll", function()
+	ns.Rolls.Demo.Start()
+end, "/ltm debug demoroll: play the loot rolls' demo, with no group")
 
 -- In the bug report, under the options.
 ns.BugReport.AddPart(function()

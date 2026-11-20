@@ -455,7 +455,7 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 ### The demo
 
-- [ ] **Show Demo.** On the options page, then from the minimap menu's *Loot Rolls*. *Expected:* two look-alikes of the game's roll frame marked *Demo* where the game's frames stand, with items you wear: a group roll (you and four made-up players of your client's classes) and a raid roll of twenty; for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. The names are not ForeverLootRoll's or anyone's.
+- [ ] **Show Demo.** On the options page, then from the minimap menu's *Loot Rolls*, then with `/ltm debug demoroll`; out of a group. *Expected:* two look-alikes of the game's roll frame marked *Demo* where the game's frames stand, with items you wear: a group roll (you and four heroes of Azeroth) and a raid roll of twenty heroes, each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line.
 - [ ] **With the detection on.** *Detect Ninja Looters* on, *Show Demo* again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
 - [ ] **Not during a roll, not in a fight.** *Show Demo* while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
 
@@ -524,6 +524,7 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
+- [ ] **debug demoroll.** `/ltm debug demoroll` out of a group. *Expected:* the loot rolls' demo plays, as *Show Demo* plays it.
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon

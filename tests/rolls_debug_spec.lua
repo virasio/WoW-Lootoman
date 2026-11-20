@@ -48,6 +48,12 @@ describe("the loot rolls' debugging", function()
 		assert.equals("  1:2 Mail Helm at The Deadmines: 1 players, winner Brina", run()[4])
 	end)
 
+	it("plays the demo with /ltm debug demoroll, with no group", function()
+		Test.RunSlashCommand("LOOTOMAN", "debug demoroll")
+		assert.is_true(ns.Rolls.Demo.IsRunning())
+		assert.is_false(Test.state.group)
+	end)
+
 	it("says in the bug report how the loot rolls are set, in plain ASCII", function()
 		local text = ns.BugReport.Build()
 		assert.matches("\n  Loot rolls: on; detection off, strictness normal; classes with changed rules 0; history 0 groups, 0 drops; roll frames in the game's place\n", text)
