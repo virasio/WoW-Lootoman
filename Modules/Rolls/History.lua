@@ -181,9 +181,10 @@ function History.Choices(group, guid, untilKey)
 end
 
 -- The last group before the given one (or before the open one) in which the
--- player chose on something; nil when there is none.
-function History.LastShared(guid, current)
-	local groups = History.Groups()
+-- player chose on something; nil when there is none. groups: another list
+-- than the kept one (the made-up history's).
+function History.LastShared(guid, current, groups)
+	groups = groups or History.Groups()
 	local index = #groups
 	if current then
 		for position, group in ipairs(groups) do
@@ -271,10 +272,11 @@ end
 -- A player in every kept group, by GUID: their counts over all of them, under
 -- their latest name, and the groups they chose in, newest first, each with
 -- its drops they chose on: { player, groups = { { group, drops = { { entry,
--- choice } } } } }; nil when no group has them.
-function History.Across(guid)
+-- choice } } } } }; nil when no group has them. groups: another list than
+-- the kept one (the made-up history's).
+function History.Across(guid, groups)
 	local found, player = {}, nil
-	local groups = History.Groups()
+	groups = groups or History.Groups()
 	for index = #groups, 1, -1 do
 		local group = groups[index]
 		local drops = {}

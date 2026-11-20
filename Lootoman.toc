@@ -117,6 +117,7 @@ Modules\Rolls\LiveWindow.lua
 Modules\Rolls\HistoryWindow.lua
 Modules\Rolls\SuspiciousNeeds.lua
 Modules\Rolls\Demo.lua
+Modules\Rolls\DemoHistory.lua
 Modules\Rolls\Rolls.lua
 Modules\Rolls\NinjaRules.lua
 Modules\Rolls\Debug.lua

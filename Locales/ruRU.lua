@@ -574,4 +574,5 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete This Group"] = "Удалить эту группу",
 	["Delete the rolls of “%s”? This cannot be undone."] = "Удалить розыгрыши группы «%s»? Это нельзя отменить.",
 	["Delete every roll kept in the history? This cannot be undone."] = "Удалить все розыгрыши из истории? Это нельзя отменить.",
+	["Roll History (Demo)"] = "История розыгрышей (демо)",
 })

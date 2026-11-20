@@ -524,7 +524,7 @@ end
 -- A player over every kept group: their counts, then each group with the
 -- drops they chose on, each noting their choice and roll.
 local function drawPlayer(guid)
-	local found = History.Across(guid)
+	local found = source().Across(guid)
 	if not found then
 		frame.player = nil
 		return false
@@ -687,6 +687,7 @@ function HistoryWindow.Open(stand)
 		frame.group, frame.player = nil, nil
 	end
 	frame.source = stand
+	frame:SetTitle(stand and stand.demo and L["Roll History (Demo)"] or L["Roll History"])
 	judged = {}
 	frame:Show()
 	HistoryWindow.Redraw()

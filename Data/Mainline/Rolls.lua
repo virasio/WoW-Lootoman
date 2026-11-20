@@ -62,4 +62,8 @@ ns.Data.rolls = {
 	-- Forever's ring is not on retail), a sword of Onyxia's for the raid roll
 	-- (Vis'kag the Bloodletter).
 	demoItems = { group = 5616, raid = 17075 },
+	-- The made-up roll history's drops, besides those two: dungeon items of
+	-- the first dungeons (The Deadmines, Wailing Caverns, Shadowfang Keep),
+	-- which the client knows by these IDs. One the client cannot load is left out.
+	demoHistoryItems = { 5191, 1937, 5199, 5192, 6460, 6473, 6220, 6318, 6321, 5616 },
 }
