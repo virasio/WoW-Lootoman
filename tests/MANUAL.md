@@ -442,7 +442,7 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 ### The panel beside the game's roll frames
 
-- [ ] **On the options page.** *Show Who Rolled What* (on), under it *Detect Ninja Looters* (off) with *Ninja Rules* beside it, and *Show Demo*. *Expected:* hovering the checkbox lights only its row, the button takes its own click; with the module off, all three are greyed.
+- [ ] **On the options page.** *Show Who Rolled What* (on), under it *Detect Ninja Looters* (off) with *Ninja Rules* beside it, and no demo. *Expected:* hovering the checkbox lights only its row, the button takes its own click; with the module off, both are greyed.
 - [ ] **A roll in a group.** An item to roll on. *Expected:* beside the game's roll frame, at its right, a dark panel with a thin gold edge: *Waiting for the rolls…*, then a line per player in the game's order: the choice's icon (the dice, the coin, the cross; a dot while undecided), the name in class colour, the roll once there is one, the leader brighter, your own line faintly lit, the winner's checkmark at the end. The game's frame works as before: its buttons, the bind question, the timer. Hover a line: the name, the choice and the roll.
 - [ ] **Several items.** Two or more items at once, more than four if a boss gives them. *Expected:* a panel beside each frame, none touching the next; a fifth item waits for a free frame as in the game, and its panel comes with it.
 - [ ] **The screen's edge.** With the roll frames moved near the right edge (Edit Mode below). *Expected:* the panels stand at the frames' left.
@@ -455,9 +455,9 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 ### The demo
 
-- [ ] **Show Demo.** On the options page, then with `/ltm debug demoroll`; out of a group. *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own, and items you wear: a group roll (you and four heroes of Azeroth) and a raid roll of twenty heroes, each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. Put a real roll frame beside them, if you can: note what differs.
-- [ ] **With the detection on.** *Detect Ninja Looters* on, *Show Demo* again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
-- [ ] **Not during a roll, not in a fight.** *Show Demo* while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
+- [ ] **The demo.** `/ltm debug demoroll`, out of a group (it is on no menu and not on the options page). *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own, and items you wear: a group roll (you and four heroes of Azeroth) and a raid roll of twenty heroes, each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. Put a real roll frame beside them, if you can: note what differs.
+- [ ] **With the detection on.** *Detect Ninja Looters* on, `/ltm debug demoroll` again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
+- [ ] **Not during a roll, not in a fight.** `/ltm debug demoroll` while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
 
 ### Ninja detection
 
@@ -524,7 +524,7 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
-- [ ] **debug demoroll.** `/ltm debug demoroll` out of a group. *Expected:* the loot rolls' demo plays, as *Show Demo* plays it.
+- [ ] **debug demoroll.** `/ltm debug demoroll` out of a group. *Expected:* the loot rolls' demo plays (the checks under *The demo*).
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon

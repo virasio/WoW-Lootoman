@@ -29,7 +29,7 @@ local Rolls = ns.Modules:Register({
 		summary = true,
 	},
 	-- Under the switch: the detection's checkbox with the Ninja Rules button
-	-- beside it, then the demo.
+	-- beside it. The demo is a debug command's, not the player's.
 	mainSettings = {
 		{ kind = "custom", build = function(page, indent)
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
@@ -49,10 +49,6 @@ local Rolls = ns.Modules:Register({
 			end)
 			page.ninjaRules = button
 		end },
-		{ kind = "button", label = L["Show Demo"], tooltip = L["Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand."],
-			click = function()
-				ns.Rolls.Demo.Start()
-			end },
 	},
 	-- What profile texts may hold for the choices of the Ninja Rules window.
 	settings = function()

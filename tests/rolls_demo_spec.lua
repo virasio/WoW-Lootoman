@@ -126,14 +126,14 @@ describe("the loot rolls' demo", function()
 		assert.is_true((Demo.Start()))
 	end)
 
-	it("starts from the button on the options page and stops when the module is turned off", function()
+	it("stops when the module is turned off, and has no place on the options page", function()
 		Demo.Start()
 		ns.Modules:SetEnabled("Rolls", false)
 		assert.is_false(Demo.cards[1].frame:IsShown())
-		local labels = {}
+		local kinds = {}
 		for _, setting in ipairs(ns.Modules:Get("Rolls").mainSettings) do
-			labels[#labels + 1] = setting.label or setting.kind
+			kinds[#kinds + 1] = setting.label or setting.kind
 		end
-		assert.same({ "custom", "Show Demo" }, labels)
+		assert.same({ "custom" }, kinds)
 	end)
 end)

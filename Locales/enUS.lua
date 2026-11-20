@@ -444,8 +444,6 @@ ns.Locales.AddEnglish({
 	"Loot rolls",
 	"Show Who Rolled What",
 	"Beside the game's loot roll frames: who chose what and rolled what, in class colours, as it happens.",
-	"Show Demo",
-	"Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand.",
 
 	-- Modules/Rolls/Panel.lua
 	"Waiting for the rolls…",

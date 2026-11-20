@@ -9,8 +9,8 @@ local Compat, L = ns.Compat, ns.L
 -- choose and roll one by one, the leader changes, and there is a winner. A
 -- raid roll: twenty heroes. Each hero has the class his stories give him,
 -- among the classes the client has. It needs no group and no real roll:
--- everything in it is made up. Show Demo on the options page and /ltm debug
--- demoroll play it; Edit Mode shows its look-alikes still, where the moved
+-- everything in it is made up. /ltm debug demoroll plays it, for testing and
+-- pictures, not as a player's feature; Edit Mode shows its look-alikes still, where the moved
 -- frames will stand. The look-alikes' buttons only mark the player's choice on the
 -- look-alike: nothing goes to the game, and nothing into the history. The
 -- items are the character's worn gear, which the game has loaded; with

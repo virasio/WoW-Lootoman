@@ -38,7 +38,7 @@ ns.Slash.RegisterDebug("rolls", function()
 	end
 end, "/ltm debug rolls: the open rolls, their drops and the open group's last drops")
 
--- /ltm debug demoroll: the demo, as Show Demo plays it.
+-- /ltm debug demoroll: the demo, the only way to play it.
 ns.Slash.RegisterDebug("demoroll", function()
 	ns.Rolls.Demo.Start()
 end, "/ltm debug demoroll: play the loot rolls' demo, with no group")
