@@ -30,6 +30,14 @@ local Rolls = ns.Modules:Register({
 		-- The live window, where the game has no loot history window.
 		liveWindow = true,
 	},
+	-- On the switch's row: the roll history.
+	switchButton = {
+		label = L["Roll History"],
+		tooltip = L["Opens the rolls kept in your groups: who chose what, who won and with which button."],
+		onClick = function()
+			ns.Rolls.HistoryWindow.Open()
+		end,
+	},
 	-- Under the switch: the detection's checkbox with the Ninja Rules button
 	-- beside it. The demo is a debug command's, not the player's.
 	mainSettings = {
@@ -142,6 +150,7 @@ function Rolls.RedrawAll()
 		end
 	end
 	ns.Rolls.LiveWindow.Redraw()
+	ns.Rolls.HistoryWindow.Changed()
 end
 
 -- An item's stats are asked for: once an item comes in, the marks are
@@ -183,6 +192,7 @@ Model.Subscribe(function(kind, value)
 	elseif kind == "drop" then
 		if Groups.Current() then
 			History.Record(value)
+			ns.Rolls.HistoryWindow.Changed()
 		end
 	end
 	ns.Rolls.LiveWindow.OnModel(kind, value)
@@ -296,6 +306,7 @@ function Rolls:OnDisable()
 	ns.Rolls.Demo.EndPreview()
 	ns.Rolls.Demo.Stop()
 	ns.Rolls.LiveWindow.Hide()
+	ns.Rolls.HistoryWindow.Hide()
 	for _, panel in pairs(panels) do
 		Panel.Hide(panel)
 	end

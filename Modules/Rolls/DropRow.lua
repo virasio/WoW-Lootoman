@@ -18,7 +18,7 @@ local Panel, Marks = ns.Rolls.Panel, ns.Rolls.Marks
 DropRow.ITEM_WIDTH = 230
 DropRow.ICON = 32
 DropRow.WIDTH = DropRow.ITEM_WIDTH + Panel.GAP + Panel.WIDTH
-DropRow.MIN_HEIGHT = DropRow.ICON + 8
+DropRow.MIN_HEIGHT = DropRow.ICON + 16
 DropRow.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- How long a new row of the live window stays lit.
 DropRow.LIGHT = 2
@@ -83,10 +83,11 @@ function DropRow.EntryView(entry, group)
 	return view
 end
 
--- The marks on a view, judged in its group (the open one for a live drop).
-function DropRow.Marked(view, group)
+-- The marks on a view, judged in its group (the open one for a live drop),
+-- with the history it belongs to (a stand-in for the made-up one).
+function DropRow.Marked(view, group, history)
 	if view and Marks then
-		Marks.Add(view, group and { group = group } or nil)
+		Marks.Add(view, group and { group = group, history = history } or nil)
 	end
 	return view
 end
@@ -120,6 +121,12 @@ function DropRow.New(parent)
 	item.status:SetPoint("RIGHT", item, "RIGHT", -4, 0)
 	item.status:SetJustifyH("LEFT")
 	item.status:SetWordWrap(false)
+	-- A note under it, such as the drop's time and place in the history.
+	item.note = item:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+	item.note:SetPoint("TOPLEFT", item.status, "BOTTOMLEFT", 0, -3)
+	item.note:SetPoint("RIGHT", item, "RIGHT", -4, 0)
+	item.note:SetJustifyH("LEFT")
+	item.note:SetWordWrap(false)
 	item:SetScript("OnEnter", function(owner)
 		local link = row.view and row.view.link
 		if link then
@@ -142,8 +149,9 @@ function DropRow.New(parent)
 	return row
 end
 
--- Draws a view (marked already) on a row; returns the row's height.
-function DropRow.Draw(row, view)
+-- Draws a view (marked already) on a row, with a note under the item if
+-- given; returns the row's height.
+function DropRow.Draw(row, view, note)
 	row.view = view
 	local link = view and view.link
 	local icon = link and Compat.GetItemLook(link)
@@ -157,6 +165,7 @@ function DropRow.Draw(row, view)
 	row.item.icon:SetTexture(icon or DropRow.QUESTION)
 	row.item.name:SetText(nameOf(link))
 	row.item.status:SetText(DropRow.Status(view))
+	row.item.note:SetText(note or "")
 	Panel.Show(row.panel, row.item, view, "right")
 	local height = math.max(DropRow.MIN_HEIGHT, row.panel.frame:GetHeight() or 0)
 	row.item:SetHeight(height)

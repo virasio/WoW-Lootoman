@@ -57,7 +57,12 @@ describe("a drop's row", function()
 		assert.equals(row.frame, row.panel.frame.parent)
 		assert.same({ "LEFT", row.item, "RIGHT", 4, 0 }, row.panel.frame.points[1])
 		assert.equals(2, #shownTexts())
-		assert.same({ 2 * 6 + 2 * 15, 2 * 6 + 2 * 15, 2 * 6 + 2 * 15 }, { height, row.frame:GetHeight(), row.item:GetHeight() })
+		assert.same({ 48, 48, 48 }, { height, row.frame:GetHeight(), row.item:GetHeight() })
+		-- A taller panel makes a taller row.
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = MAIL, rolls = { player("Brina", "MAGE", 4), player("Tester", "WARRIOR", 3, 40),
+			player("Corvin", "ROGUE", 4), player("Dathra", "PRIEST", 4) } })
+		assert.equals(2 * 6 + 4 * 15, DropRow.Draw(row, Model.DropView("1:1"), "14:05, The Deadmines"))
+		assert.equals("14:05, The Deadmines", row.item.note:GetText())
 		-- Its tooltip, and Shift-click to link it.
 		row.item.scripts.OnEnter(row.item)
 		assert.equals(MAIL, Loader.ui.tooltip.link)

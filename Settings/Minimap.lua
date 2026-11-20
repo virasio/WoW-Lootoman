@@ -98,9 +98,12 @@ function Icon.ShowMenu(owner)
 				Bus:Send("OpenJunkWindow")
 			end)
 		end)
-		-- The loot rolls' rules for ninja detection.
+		-- The loot rolls' rules for ninja detection, and their history.
 		root:CreateButton(L["Ninja Rules"], function()
 			ns.Rolls.NinjaRules.OpenOrAsk()
+		end)
+		root:CreateButton(L["Roll History"], function()
+			ns.Rolls.HistoryWindow.OpenOrAsk()
 		end)
 		root:CreateButton(L["Bug Report"], function()
 			ns.BugReportWindow.Open()

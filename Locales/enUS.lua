@@ -565,4 +565,13 @@ ns.Locales.AddEnglish({
 	"Show the Loot Rolls Window After Your Choice",
 	"Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it.",
 	"Loot Rolls",
+	"Roll History",
+	"Players",
+	"Drops",
+	"Need: %d, greed: %d, pass: %d, won: %d",
+	"%d drops, %d players",
+	"No rolls kept yet. The rolls in your groups are kept here, by group, from joining to leaving.",
+	"The roll history opens out of combat.",
+	"/ltm rolls: open the roll history",
+	"Opens the rolls kept in your groups: who chose what, who won and with which button.",
 })

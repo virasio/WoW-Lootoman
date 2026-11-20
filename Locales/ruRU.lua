@@ -558,4 +558,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["Show the Loot Rolls Window After Your Choice"] = "Показывать окно розыгрышей после своего выбора",
 	["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it."] = "Когда вы сделали выбор в розыгрыше, окно покажет его вместе с другими розыгрышами группы по ходу дела и будет хранить все разыгранные предметы, пока вы его не закроете.",
 	["Loot Rolls"] = "Розыгрыши добычи",
+	["Roll History"] = "История розыгрышей",
+	["Players"] = "Игроки",
+	["Drops"] = "Добыча",
+	["Need: %d, greed: %d, pass: %d, won: %d"] = "Нид: %d, грид: %d, пас: %d, выиграно: %d",
+	["%d drops, %d players"] = "Добычи: %d, игроков: %d",
+	["No rolls kept yet. The rolls in your groups are kept here, by group, from joining to leaving."] = "Пока ничего нет. Здесь хранятся розыгрыши в ваших группах, по группам: от вступления до выхода.",
+	["The roll history opens out of combat."] = "История розыгрышей открывается вне боя.",
+	["/ltm rolls: open the roll history"] = "/ltm rolls: открыть историю розыгрышей",
+	["Opens the rolls kept in your groups: who chose what, who won and with which button."] = "Открывает розыгрыши ваших групп: кто что выбрал, кто выиграл и какой кнопкой.",
 })
