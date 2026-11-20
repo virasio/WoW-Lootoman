@@ -111,6 +111,7 @@ Modules\Rolls\Panel.lua
 Modules\Rolls\Marks.lua
 Modules\Rolls\SuspiciousNeeds.lua
 Modules\Rolls\Demo.lua
+Modules\Rolls\Mover.lua
 Modules\Rolls\Rolls.lua
 Modules\Rolls\NinjaRules.lua
 

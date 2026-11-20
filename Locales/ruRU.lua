@@ -505,4 +505,7 @@ ns.Locales.AddTranslation("ruRU", {
 	["Exception"] = "Исключение",
 	["Suspicious Needs"] = "Подозрительные ниды",
 	["The needs marked in the group you left. Tick those the group agreed to: they are excused and count no more."] = "Ниды с метками из группы, которую вы покинули. Отметьте те, о которых группа договорилась: метка снимется, и они больше не считаются.",
+
+	-- Modules/Rolls/Mover.lua
+	["Loot Roll Frames"] = "Окна розыгрыша лута",
 })

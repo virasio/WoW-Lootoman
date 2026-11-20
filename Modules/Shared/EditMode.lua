@@ -423,6 +423,24 @@ function EditMode.ResetPosition(frame)
 	return false
 end
 
+-- Whether the layout in use has a place saved for the frame other than its
+-- default: whether the player moved it there.
+function EditMode.HasPosition(frame)
+	for _, entry in ipairs(entries) do
+		if entry.frame == frame then
+			local layouts = layoutName and positions()[entry.key]
+			local position = layouts and layouts[layoutName]
+			if not position then
+				return false
+			end
+			local default = entry.default
+			return not (default and position.point == default.point and math.abs(position.x - default.x) < 0.5
+				and math.abs(position.y - default.y) < 0.5)
+		end
+	end
+	return false
+end
+
 -- The Edit Mode layout in use, or nil before LibEditMode has said.
 function EditMode.LayoutName()
 	return layoutName

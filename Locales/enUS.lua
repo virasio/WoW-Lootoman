@@ -512,4 +512,7 @@ ns.Locales.AddEnglish({
 	"Exception",
 	"Suspicious Needs",
 	"The needs marked in the group you left. Tick those the group agreed to: they are excused and count no more.",
+
+	-- Modules/Rolls/Mover.lua
+	"Loot Roll Frames",
 })

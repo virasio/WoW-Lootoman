@@ -100,8 +100,13 @@ function Compat.GetGameRollFrames()
 	return frames
 end
 
+-- The frames themselves, not copies.
 function Compat.GetGameRollSlots()
-	return copy(state.gameRollSlots)
+	local slots = {}
+	for index, slot in ipairs(state.gameRollSlots) do
+		slots[index] = { frame = slot.frame, slot = slot.slot }
+	end
+	return slots
 end
 
 function Compat.GetGameRollContainer()
