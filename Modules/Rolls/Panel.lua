@@ -168,18 +168,17 @@ local function clear(panel)
 	end
 end
 
--- The words for a choice, the game's own.
+-- The words for a choice, the game's own (its string's name on a client
+-- without it).
+local CHOICE_WORDS = { [STATE.NEED] = "NEED", [STATE.NEED_OFF_SPEC] = "NEED", [STATE.GREED] = "GREED", [STATE.TRANSMOG] = "TRANSMOGRIFICATION",
+	[STATE.PASS] = "PASS" }
+
 function Panel.ChoiceName(state)
-	if ns.Rules.Need.IsNeed(state) then
-		return Compat.GetGlobalString("NEED")
-	elseif state == STATE.GREED then
-		return Compat.GetGlobalString("GREED")
-	elseif state == STATE.TRANSMOG then
-		return Compat.GetGlobalString("TRANSMOGRIFICATION")
-	elseif state == STATE.PASS then
-		return Compat.GetGlobalString("PASS")
+	local word = CHOICE_WORDS[state]
+	if not word then
+		return nil
 	end
-	return nil
+	return Compat.GetGlobalString(word) or word
 end
 
 -- The tooltip of a player's line: his name, his choice and roll, and what

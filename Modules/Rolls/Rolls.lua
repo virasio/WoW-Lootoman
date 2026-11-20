@@ -151,6 +151,16 @@ function Rolls.WaitForItem()
 	end)
 end
 
+-- The right click on a marked name or square, and leaving a group: the
+-- exceptions (SuspiciousNeeds.lua).
+function Rolls.OnRightClick(owner, player, view)
+	ns.Rolls.SuspiciousNeeds.Menu(owner, player, view)
+end
+
+function Rolls.OnGroupLeft(group)
+	ns.Rolls.SuspiciousNeeds.GroupLeft(group)
+end
+
 -- The panel of a game roll frame (for tests and the demo's place).
 function Rolls.PanelOf(frame)
 	return panels[frame]

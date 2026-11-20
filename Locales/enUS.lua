@@ -504,4 +504,12 @@ ns.Locales.AddEnglish({
 	"Lowest Quality Judged",
 	"The ninja rules open out of combat.",
 	"/ltm ninja: open the ninja rules",
+
+	-- Modules/Rolls/SuspiciousNeeds.lua
+	"Exception: Agreed in the Chat",
+	"Undo the Exception",
+	"Excused",
+	"Exception",
+	"Suspicious Needs",
+	"The needs marked in the group you left. Tick those the group agreed to: they are excused and count no more.",
 })

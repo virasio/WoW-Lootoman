@@ -118,6 +118,9 @@ local function newCard()
 		choiceButton(card, STATE.NEED, "lootroll-toast-icon-need-up", -72),
 	}
 	card.panel = Panel.New()
+	card.panel.onRightClick = function(owner, player, view)
+		ns.Rolls.SuspiciousNeeds.Menu(owner, player, view)
+	end
 	return card
 end
 
@@ -251,6 +254,50 @@ local function play(card, moves, steps, mine)
 	end)
 end
 
+-- Excuses a need of the demo, or takes it back: only the demo hears it.
+function Demo.SetExcused(view, guid, excused)
+	for _, card in ipairs(cards) do
+		if card.view == view then
+			card.excused = card.excused or {}
+			card.excused[guid] = excused or nil
+			if card.context then
+				card.context.excused = card.excused
+			end
+			Demo.Draw(card)
+		end
+	end
+end
+
+-- The demo's marked needs, as the Suspicious Needs window lists them.
+function Demo.Rows()
+	local rows = {}
+	for _, card in ipairs(cards) do
+		local view = card.view
+		for _, player in ipairs(view and view.players or {}) do
+			if player.mark then
+				rows[#rows + 1] = {
+					name = player.name,
+					class = player.class,
+					link = view.link,
+					reasons = player.notes or { L["Excused"] },
+					excused = player.excused == true,
+					set = function(excused)
+						Demo.SetExcused(view, player.guid, excused)
+					end,
+				}
+			end
+		end
+	end
+	return rows
+end
+
+-- The made-up group leaves: its marked needs show as after a real group.
+function Demo.Leave()
+	if ns.Storage:Get("Rolls", "ninja") and ns.Storage:Get("Rolls", "summary") and #Demo.Rows() > 0 then
+		ns.Rolls.SuspiciousNeeds.Open(Demo.Rows)
+	end
+end
+
 -- No history in the demo: its marks come from its own made-up past.
 local NO_HISTORY = {
 	Open = function() return nil end,
@@ -352,6 +399,11 @@ function Demo.Start(static)
 		end
 	end
 	if not static then
+		Compat.After(Demo.LENGTH + Demo.STEP, function()
+			if generation == mine then
+				Demo.Leave()
+			end
+		end)
 		Compat.After(Demo.LENGTH + 2 * Demo.STEP, function()
 			if generation == mine then
 				Demo.Stop()

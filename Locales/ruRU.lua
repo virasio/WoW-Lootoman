@@ -497,4 +497,12 @@ ns.Locales.AddTranslation("ruRU", {
 	["Lowest Quality Judged"] = "Проверять от качества",
 	["The ninja rules open out of combat."] = "Правила ниндзя открываются вне боя.",
 	["/ltm ninja: open the ninja rules"] = "/ltm ninja: открыть правила ниндзя",
+
+	-- Modules/Rolls/SuspiciousNeeds.lua
+	["Exception: Agreed in the Chat"] = "Исключение: договорились в чате",
+	["Undo the Exception"] = "Отменить исключение",
+	["Excused"] = "Исключение",
+	["Exception"] = "Исключение",
+	["Suspicious Needs"] = "Подозрительные ниды",
+	["The needs marked in the group you left. Tick those the group agreed to: they are excused and count no more."] = "Ниды с метками из группы, которую вы покинули. Отметьте те, о которых группа договорилась: метка снимется, и они больше не считаются.",
 })
