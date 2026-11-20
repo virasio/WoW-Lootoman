@@ -62,7 +62,7 @@ local function newLine(panel, index)
 	local line = CreateFrame("Button", nil, panel.frame)
 	line:SetSize(Panel.WIDTH - 2 * Panel.PAD, Panel.LINE)
 	line:SetPoint("TOPLEFT", panel.frame, "TOPLEFT", Panel.PAD, -Panel.PAD - (index - 1) * Panel.LINE)
-	line:RegisterForClicks("RightButtonUp")
+	line:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	line.self = line:CreateTexture(nil, "BACKGROUND")
 	line.self:SetAllPoints(line)
 	line.self:SetColorTexture(1, 1, 1, 0.08)
@@ -89,6 +89,8 @@ local function newLine(panel, index)
 	line:SetScript("OnClick", function(owner, button)
 		if button == "RightButton" and panel.onRightClick and owner.player then
 			panel.onRightClick(owner, owner.player, panel.view)
+		elseif button == "LeftButton" and panel.onLeftClick and owner.player then
+			panel.onLeftClick(owner, owner.player, panel.view)
 		end
 	end)
 	line:Hide()
@@ -96,10 +98,14 @@ local function newLine(panel, index)
 end
 
 -- A panel, hidden; its own frame is the player's, created out of combat.
-function Panel.New()
+-- Beside the game's roll frames it stands on the screen, on DIALOG as they
+-- do; in a window's row (DropRow.lua) it is the row's child.
+function Panel.New(parent)
 	local panel = {}
-	local frame = CreateFrame("Frame", nil, UIParent)
-	frame:SetFrameStrata("DIALOG")
+	local frame = CreateFrame("Frame", nil, parent or UIParent)
+	if not parent then
+		frame:SetFrameStrata("DIALOG")
+	end
 	frame:SetSize(Panel.WIDTH, Panel.LINE + 2 * Panel.PAD)
 	frame:Hide()
 	frame.background = frame:CreateTexture(nil, "BACKGROUND")

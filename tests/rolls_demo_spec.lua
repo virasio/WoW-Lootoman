@@ -11,7 +11,7 @@ describe("the loot rolls' demo", function()
 	local ns, Test, Demo
 
 	before_each(function()
-		ns = Loader.LoadAddon({ gameType = "camelot" })
+		ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Test = ns.Compat.Test
 		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass" })
 		Test.SetItems({

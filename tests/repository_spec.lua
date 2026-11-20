@@ -14,8 +14,8 @@ local OUTSIDE = {
 -- tools installed into the checkout.
 local SKIP = { [".git"] = true, Libs = true, [".luals"] = true, [".lua"] = true, [".luarocks"] = true, [".release"] = true }
 
--- Images are not text: their bytes can look like anything.
-local IMAGES = { png = true, jpg = true, jpeg = true, tga = true, blp = true }
+-- Images and sounds are not text: their bytes can look like anything.
+local IMAGES = { png = true, jpg = true, jpeg = true, tga = true, blp = true, mp3 = true, ogg = true }
 
 local function files(dir, found)
 	found = found or {}

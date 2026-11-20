@@ -450,8 +450,6 @@ ns.Locales.AddEnglish({
 	"Not chosen: %d",
 
 	-- Modules/Rolls/Demo.lua
-	"The demo starts out of combat.",
-	"The demo waits until the rolls in progress are over.",
 
 	-- Modules/Rolls/Marks.lua
 	"%s: not a %s's armor",
@@ -560,4 +558,25 @@ ns.Locales.AddEnglish({
 	"Lets you place the game's loot roll frames where you want in Edit Mode, a place for each Edit Mode layout. Until you move them, the game places them as always.",
 	"In Edit Mode (the game menu, Edit Mode), drag “Loot Roll Frames”.",
 	"Opens Edit Mode with the loot roll frames picked.",
+	"Rolling…",
+	"All passed",
+	"Show the Loot Rolls Window After Your Choice",
+	"Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window.",
+	"Loot Rolls",
+	"Roll History",
+	"Players",
+	"Drops",
+	"Need: %d, greed: %d, pass: %d, won: %d",
+	"%d drops, %d players",
+	"No rolls kept yet. The rolls in your groups are kept here, by group, from joining to leaving.",
+	"The roll history opens out of combat.",
+	"/ltm rolls: open the roll history",
+	"Opens the rolls kept in your groups: who chose what, who won and with which button.",
+	"Back",
+	"Lowest Quality",
+	"Only Marked Needs",
+	"Clear the History",
+	"Delete This Group",
+	"Delete the rolls of “%s”? This cannot be undone.",
+	"Delete every roll kept in the history? This cannot be undone.",
 })

@@ -106,8 +106,8 @@ describe("minimap icon", function()
 		assert.equals(1, opened)
 		button.scripts.OnClick(button, "RightButton")
 		local entries = Loader.ui.contextMenu.entries
-		assert.same({ "Options", "Loot Feed Look", "Junk", "Ninja Rules", "Bug Report" },
-			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text, entries[5].text })
+		assert.same({ "Options", "Loot Feed Look", "Junk", "Ninja Rules", "Roll History", "Bug Report" },
+			{ entries[1].text, entries[2].text, entries[3].text, entries[4].text, entries[5].text, entries[6].text })
 		entries[1].callback()
 		assert.equals(2, opened)
 		entries[2].callback()
@@ -116,8 +116,11 @@ describe("minimap icon", function()
 		ns.Bus:On("OpenJunkWindow", "test", function() junk = junk + 1 end)
 		entries[3].callback()
 		assert.equals(1, junk)
-		entries[5].callback()
+		entries[6].callback()
 		assert.is_true(ns.BugReportWindow.Frame().shown)
+		-- The loot rolls' history.
+		entries[5].callback()
+		assert.is_true(ns.Rolls.HistoryWindow.Frame().shown)
 		-- The loot rolls' ninja rules, while the detection is on; the demo is no player's entry.
 		assert.same({}, entries[4].entries)
 		ns.Storage:Set("Rolls", "ninja", true)

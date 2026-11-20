@@ -27,11 +27,27 @@ local Rolls = ns.Modules:Register({
 		minQuality = 2,
 		spareFriends = true,
 		summary = true,
+		-- The live window, where the game does not open its own loot history window.
+		liveWindow = true,
+		-- The roll history's filters.
+		historyMinQuality = 2,
+		historyMarkedOnly = false,
+	},
+	-- On the switch's row: the roll history.
+	switchButton = {
+		label = L["Roll History"],
+		tooltip = L["Opens the rolls kept in your groups: who chose what, who won and with which button."],
+		onClick = function()
+			ns.Rolls.HistoryWindow.Open()
+		end,
 	},
 	-- Under the switch: the detection's checkbox with the Ninja Rules button
 	-- beside it. The demo is a debug command's, not the player's.
 	mainSettings = {
 		{ kind = "custom", build = function(page, indent)
+			page:AddCheckbox("Rolls", "liveWindow", L["Show the Loot Rolls Window After Your Choice"],
+				L["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."],
+				indent, "Rolls")
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
 				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
 			local row = check:GetParent()
@@ -57,6 +73,7 @@ local Rolls = ns.Modules:Register({
 		return {
 			{ kind = "choice", key = "strictness", choices = { { "lenient" }, { "normal" }, { "strict" } } },
 			{ kind = "choice", key = "minQuality", choices = { { 2 }, { 3 }, { 4 } } },
+			{ kind = "choice", key = "historyMinQuality", choices = { { 2 }, { 3 }, { 4 } } },
 		}
 	end,
 })
@@ -133,6 +150,8 @@ function Rolls.RedrawAll()
 			Rolls.Redraw(panel.rollID)
 		end
 	end
+	ns.Rolls.LiveWindow.Redraw()
+	ns.Rolls.HistoryWindow.Changed()
 end
 
 -- An item's stats are asked for: once an item comes in, the marks are
@@ -174,8 +193,10 @@ Model.Subscribe(function(kind, value)
 	elseif kind == "drop" then
 		if Groups.Current() then
 			History.Record(value)
+			ns.Rolls.HistoryWindow.Changed()
 		end
 	end
+	ns.Rolls.LiveWindow.OnModel(kind, value)
 end)
 
 local function hookFrames()
@@ -199,6 +220,7 @@ end
 function Rolls:OnEnable()
 	Rolls.starting = true
 	hookFrames()
+	ns.Rolls.LiveWindow.Build()
 	-- In Edit Mode, the roll frames' look-alikes get panels of made-up choices.
 	self:On("RollFramesPreview", function(_, active, frames, strata, level)
 		if active then
@@ -212,6 +234,7 @@ function Rolls:OnEnable()
 		Compat.OnRollChosen(function(rollID, rollType)
 			if Rolls.active then
 				Model.Chose(rollID, rollType)
+				ns.Rolls.LiveWindow.Chose(rollID)
 			end
 		end)
 	end
@@ -282,7 +305,12 @@ function Rolls:OnDisable()
 	Rolls.starting = false
 	waiting = false
 	ns.Rolls.Demo.EndPreview()
-	ns.Rolls.Demo.Stop()
+	-- The played demo, in the repository's version only.
+	if ns.Rolls.Demo.Stop then
+		ns.Rolls.Demo.Stop()
+	end
+	ns.Rolls.LiveWindow.Hide()
+	ns.Rolls.HistoryWindow.Hide()
 	for _, panel in pairs(panels) do
 		Panel.Hide(panel)
 	end

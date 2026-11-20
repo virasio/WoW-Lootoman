@@ -181,9 +181,10 @@ function History.Choices(group, guid, untilKey)
 end
 
 -- The last group before the given one (or before the open one) in which the
--- player chose on something; nil when there is none.
-function History.LastShared(guid, current)
-	local groups = History.Groups()
+-- player chose on something; nil when there is none. groups: another list
+-- than the kept one (the made-up history's).
+function History.LastShared(guid, current, groups)
+	groups = groups or History.Groups()
 	local index = #groups
 	if current then
 		for position, group in ipairs(groups) do
@@ -200,8 +201,8 @@ function History.LastShared(guid, current)
 	return nil
 end
 
--- Excuses a player's need on a drop of a group ("he asked in the chat"), or
--- takes it back. True when the choice was found.
+-- Excuses a player's need on a drop of any kept group ("they asked in the
+-- chat"), or takes it back. True when the choice was found.
 function History.SetExcused(group, key, guid, excused)
 	local entry = History.Find(group, key)
 	for _, player in ipairs(entry and entry.rolls or {}) do
@@ -211,6 +212,114 @@ function History.SetExcused(group, key, guid, excused)
 		end
 	end
 	return false
+end
+
+local STATE = ns.Rules.Need.STATE
+
+-- What one choice adds to a player's counts.
+local function count(into, state, won)
+	if state == STATE.NEED or state == STATE.NEED_OFF_SPEC then
+		into.need = into.need + 1
+	elseif state == STATE.GREED or state == STATE.TRANSMOG then
+		into.greed = into.greed + 1
+	elseif state == STATE.PASS then
+		into.pass = into.pass + 1
+	end
+	if won then
+		into.won = into.won + 1
+	end
+end
+
+local function newCounts(player)
+	return { guid = player.guid, name = player.name, class = player.class, need = 0, greed = 0, pass = 0, won = 0 }
+end
+
+-- A group's players in the order they first chose, each with their counts:
+-- { guid, name, class, need, greed (transmog too), pass, won }; a player
+-- known by GUID, under the name of their latest choice.
+function History.Players(group)
+	local players, byGUID = {}, {}
+	for _, entry in ipairs(group and group.drops or {}) do
+		for _, kept in ipairs(entry.rolls) do
+			local id = kept.guid or kept.name
+			if id then
+				local player = byGUID[id]
+				if not player then
+					player = newCounts(kept)
+					byGUID[id] = player
+					players[#players + 1] = player
+				end
+				player.name, player.class = kept.name or player.name, kept.class or player.class
+				count(player, kept.state, kept.guid ~= nil and entry.winner == kept.guid)
+			end
+		end
+	end
+	return players
+end
+
+-- A group's places, each once, in the order it was in them.
+function History.Places(group)
+	local places, seen = {}, {}
+	for _, entry in ipairs(group and group.drops or {}) do
+		if entry.place and not seen[entry.place] then
+			seen[entry.place] = true
+			places[#places + 1] = entry.place
+		end
+	end
+	return places
+end
+
+-- A player in every kept group, by GUID: their counts over all of them, under
+-- their latest name, and the groups they chose in, newest first, each with
+-- its drops they chose on: { player, groups = { { group, drops = { { entry,
+-- choice } } } } }; nil when no group has them. groups: another list than
+-- the kept one (the made-up history's).
+function History.Across(guid, groups)
+	local found, player = {}, nil
+	groups = groups or History.Groups()
+	for index = #groups, 1, -1 do
+		local group = groups[index]
+		local drops = {}
+		-- The newest group with them gives their latest name: its last drop's.
+		local newest = player == nil
+		for _, entry in ipairs(group.drops) do
+			for _, kept in ipairs(entry.rolls) do
+				if kept.guid == guid then
+					drops[#drops + 1] = { entry = entry, choice = kept }
+					player = player or newCounts(kept)
+					if newest then
+						player.name, player.class = kept.name or player.name, kept.class or player.class
+					end
+					count(player, kept.state, entry.winner == guid)
+				end
+			end
+		end
+		if #drops > 0 then
+			found[#found + 1] = { group = group, drops = drops }
+		end
+	end
+	if not player then
+		return nil
+	end
+	return { player = player, groups = found }
+end
+
+-- Deletes a kept group. The open group may go too: the next drop in a group
+-- starts a new one.
+function History.Delete(group)
+	local groups = History.Groups()
+	for index = #groups, 1, -1 do
+		if groups[index] == group then
+			table.remove(groups, index)
+			return true
+		end
+	end
+	return false
+end
+
+-- Deletes every kept group.
+function History.Clear()
+	History.Section().groups = {}
 end
 
 -- How many groups and drops are kept, for the bug report.

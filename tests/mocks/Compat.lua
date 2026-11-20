@@ -608,6 +608,17 @@ function Compat.FormatDay(time)
 	return os.date("!%Y-%m-%d", time)
 end
 
+-- state.sounds: the sound files played, with their channels.
+function Compat.PlaySoundFile(file, channel)
+	state.sounds = state.sounds or {}
+	state.sounds[#state.sounds + 1] = { file, channel }
+	return true
+end
+
+function Compat.FormatTime(time)
+	return os.date("!%H:%M", time)
+end
+
 -- state.missingAtlases: the atlases the fake client lacks ({ [name] = true }).
 function Compat.HasAtlas(name)
 	return not state.missingAtlases[name]
