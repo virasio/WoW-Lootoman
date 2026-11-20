@@ -570,4 +570,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Back"] = "Назад",
 	["Lowest Quality"] = "Качество не ниже",
 	["Only Marked Needs"] = "Только отмеченные ниды",
+	["Clear the History"] = "Очистить историю",
+	["Delete This Group"] = "Удалить эту группу",
+	["Delete the rolls of “%s”? This cannot be undone."] = "Удалить розыгрыши группы «%s»? Это нельзя отменить.",
+	["Delete every roll kept in the history? This cannot be undone."] = "Удалить все розыгрыши из истории? Это нельзя отменить.",
 })

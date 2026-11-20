@@ -577,4 +577,8 @@ ns.Locales.AddEnglish({
 	"Back",
 	"Lowest Quality",
 	"Only Marked Needs",
+	"Clear the History",
+	"Delete This Group",
+	"Delete the rolls of “%s”? This cannot be undone.",
+	"Delete every roll kept in the history? This cannot be undone.",
 })

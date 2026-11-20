@@ -351,6 +351,39 @@ describe("the roll history window", function()
 		assert.same({}, checks(frame.dropRows[1]))
 	end)
 
+	it("deletes a group from its right click's menu, after the question, which can be cancelled", function()
+		local first, second = fixture()
+		Window.Open()
+		local frame = Window.Frame()
+		local button = frame.groupButtons[2]
+		button.scripts.OnClick(button, "RightButton")
+		local entry = Loader.ui.contextMenu.entries[1]
+		assert.equals("Delete This Group", entry.text)
+		entry.callback()
+		local popup = settings.popups[#settings.popups]
+		assert.same({ "GENERIC_CONFIRMATION", "Delete the rolls of “%s”? This cannot be undone.", "2025-11-18  The Deadmines, Wailing Caverns", "Delete" },
+			{ popup.which, popup.data.text, popup.data.text_arg1, popup.data.acceptText })
+		-- Cancelled: nothing goes.
+		assert.equals(2, #History.Groups())
+		popup.data.callback()
+		assert.same({ second }, History.Groups())
+		assert.same({ second, false }, { frame.groupButtons[1].group, frame.groupButtons[2]:IsShown() })
+		assert.is_false(first == frame.group)
+	end)
+
+	it("clears the history after the question", function()
+		fixture()
+		Window.Open()
+		local frame = Window.Frame()
+		assert.is_true(frame.clear:IsEnabled())
+		frame.clear.scripts.OnClick(frame.clear)
+		local popup = settings.popups[#settings.popups]
+		assert.equals("Delete every roll kept in the history? This cannot be undone.", popup.data.text)
+		popup.data.callback()
+		assert.same({}, History.Groups())
+		assert.same({ true, false, 0 }, { frame.empty:IsShown(), frame.clear:IsEnabled(), frame.dropCount })
+	end)
+
 	it("closes as the loot rolls turn off", function()
 		Window.Open()
 		ns.Modules:SetEnabled("Rolls", false)

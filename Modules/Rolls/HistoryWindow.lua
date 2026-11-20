@@ -17,6 +17,8 @@ local Compat, L = ns.Compat, ns.L
 -- its line (in a raid's roll, the right click on its square, as on the
 -- panels; in a player's view, beside the drop): ticked, the need is excused
 -- and counts nowhere; unticked, it is marked again, in any kept group.
+-- A right click on a group deletes it, and Clear the History deletes them
+-- all, each after the game's confirmation, which says it cannot be undone.
 -- Long lists reuse a pool of rows,
 -- made as they are first needed. Marks show only with ninja detection on,
 -- judged by the rules of the day, once per drawing of a group (Marks.lua).
@@ -336,6 +338,14 @@ local function build()
 	frame.markedOnly:SetScript("OnClick", function(check)
 		ns.Storage:Set("Rolls", "historyMarkedOnly", check:GetChecked() == true)
 	end)
+	-- Deleting everything, under the groups.
+	frame.clear = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.clear:SetSize(HistoryWindow.LEFT, 22)
+	frame.clear:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 12)
+	frame.clear:SetText(L["Clear the History"])
+	frame.clear:SetScript("OnClick", function()
+		HistoryWindow.AskClear()
+	end)
 	frame:SetScript("OnHide", function()
 		judged = {}
 	end)
@@ -607,6 +617,7 @@ function HistoryWindow.Redraw()
 	end
 	drawGroups(groups)
 	refreshFilters()
+	frame.clear:SetEnabled(#source().Groups() > 0)
 	frame.empty:SetShown(not any)
 	hideDetail()
 	if frame.player and drawPlayer(frame.player) then
@@ -619,6 +630,37 @@ function HistoryWindow.Redraw()
 	else
 		frame.header:SetText("")
 	end
+end
+
+-- After a deletion: marks judged again everywhere.
+local function deleted()
+	Marks.Invalidate()
+	judged = {}
+	ns.Rolls.Module.RedrawAll()
+	HistoryWindow.Redraw()
+end
+
+-- A right click on a group: Delete This Group, after a question.
+function HistoryWindow.GroupMenu(owner, group)
+	if not group then
+		return
+	end
+	MenuUtil.CreateContextMenu(owner, function(_, root)
+		root:CreateButton(L["Delete This Group"], function()
+			ns.NameMenu.Confirm(L["Delete the rolls of “%s”? This cannot be undone."], titleOf(group), L["Delete"], function()
+				source().Delete(group)
+				deleted()
+			end)
+		end)
+	end)
+end
+
+-- Clear the History, after a question.
+function HistoryWindow.AskClear()
+	ns.NameMenu.Confirm(L["Delete every roll kept in the history? This cannot be undone."], nil, L["Delete"], function()
+		source().Clear()
+		deleted()
+	end)
 end
 
 -- Shows a group on the right.
