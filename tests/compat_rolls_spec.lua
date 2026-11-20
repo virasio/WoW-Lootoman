@@ -116,7 +116,7 @@ describe("Compat for the loot rolls", function()
 			end,
 			GetItemSubClassInfo = function(classID, subclassID) return classID == 4 and subclassID == 3 and "Mail" or nil end,
 		} })
-		assert.same({ itemID = 100, classID = 4, subclassID = 3, equipLoc = "INVTYPE_HEAD" }, Compat.GetItemKind("link"))
+		assert.same({ itemID = 100, classID = 4, subclassID = 3, equipLoc = "INVTYPE_HEAD", icon = 135000 }, Compat.GetItemKind("link"))
 		assert.is_nil(Compat.GetItemKind("unknown"))
 		assert.same({ ITEM_MOD_INTELLECT_SHORT = 12 }, Compat.GetItemStats("link"))
 		assert.is_nil(Compat.GetItemStats("other"))

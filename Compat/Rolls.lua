@@ -161,13 +161,13 @@ function Compat.OnRollChosen(fn)
 	return true
 end
 
--- What an item is (C_Item.GetItemInfoInstant): its class, subclass and slot.
+-- What an item is (C_Item.GetItemInfoInstant): its class, subclass, slot and icon.
 function Compat.GetItemKind(item)
-	local itemID, _, _, equipLoc, _, classID, subclassID = C_Item.GetItemInfoInstant(item)
+	local itemID, _, _, equipLoc, icon, classID, subclassID = C_Item.GetItemInfoInstant(item)
 	if not itemID then
 		return nil
 	end
-	return { itemID = itemID, classID = classID, subclassID = subclassID, equipLoc = equipLoc }
+	return { itemID = itemID, classID = classID, subclassID = subclassID, equipLoc = equipLoc, icon = icon }
 end
 
 -- The item's stats by their keys (ITEM_MOD_STRENGTH_SHORT = 12), or nil while

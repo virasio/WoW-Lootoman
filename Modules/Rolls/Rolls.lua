@@ -28,6 +28,13 @@ local Rolls = ns.Modules:Register({
 		spareFriends = true,
 		summary = true,
 	},
+	-- Under the switch: the demo.
+	mainSettings = {
+		{ kind = "button", label = L["Show Demo"], tooltip = L["Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand."],
+			click = function()
+				ns.Rolls.Demo.Start()
+			end },
+	},
 	-- What profile texts may hold for the choices of the Ninja Rules window.
 	settings = function()
 		return {
@@ -212,6 +219,7 @@ end
 
 function Rolls:OnDisable()
 	Rolls.starting = false
+	ns.Rolls.Demo.Stop()
 	for _, panel in pairs(panels) do
 		Panel.Hide(panel)
 	end

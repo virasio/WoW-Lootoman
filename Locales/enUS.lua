@@ -449,4 +449,11 @@ ns.Locales.AddEnglish({
 	"Waiting for the rolls…",
 	"Need: %d",
 	"Not chosen: %d",
+	"Show Demo",
+	"Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand.",
+
+	-- Modules/Rolls/Demo.lua
+	"Demo",
+	"The demo starts out of combat.",
+	"The demo waits until the rolls in progress are over.",
 })

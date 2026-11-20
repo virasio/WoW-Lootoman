@@ -442,4 +442,11 @@ ns.Locales.AddTranslation("ruRU", {
 	["Waiting for the rolls…"] = "Ждём бросков…",
 	["Need: %d"] = "Нид: %d",
 	["Not chosen: %d"] = "Не выбрали: %d",
+	["Show Demo"] = "Показать демо",
+	["Two rolls with made-up players play beside look-alikes of the game's roll frames, where the real ones stand."] = "Два розыгрыша с выдуманными игроками рядом с копиями окон розыгрыша игры, там, где стоят настоящие.",
+
+	-- Modules/Rolls/Demo.lua
+	["Demo"] = "Демо",
+	["The demo starts out of combat."] = "Демо запускается вне боя.",
+	["The demo waits until the rolls in progress are over."] = "Демо подождёт, пока не закончатся текущие розыгрыши.",
 })

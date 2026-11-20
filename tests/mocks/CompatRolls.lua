@@ -125,7 +125,7 @@ function Compat.GetItemKind(item)
 	if not info or not info.classID then
 		return nil
 	end
-	return { itemID = id, classID = info.classID, subclassID = info.subclassID, equipLoc = info.equipLoc or "" }
+	return { itemID = id, classID = info.classID, subclassID = info.subclassID, equipLoc = info.equipLoc or "", icon = info.icon }
 end
 
 -- An item with no stats yet (statsPending) answers nil, as the client does
