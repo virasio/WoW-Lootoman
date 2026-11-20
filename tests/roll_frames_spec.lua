@@ -191,14 +191,17 @@ describe("the Edit button beside the roll frames' checkbox", function()
 		local button = page.switchButtons.RollFrames
 		assert.same({ "SecureActionButtonTemplate, UIPanelButtonTemplate", "macro", "/editmode", "Edit" },
 			{ button.template, button:GetAttribute("type"), button:GetAttribute("macrotext"), button.text })
-		-- Right after the checkbox's label; enabled while moving is allowed, which it is by default.
+		-- Right after the checkbox's label: on the checkbox itself, since the
+		-- client refuses to anchor a protected button to a font string (the UI
+		-- mock refuses it too). Enabled while moving is allowed, which it is by default.
 		local check
 		for _, item in ipairs(page.items) do
 			if item.text == "Move the Loot Roll Frames in Edit Mode" then
 				check = item.region
 			end
 		end
-		assert.same({ "LEFT", check.label, "RIGHT", 12, 0 }, button.points[1])
+		assert.same({ "LEFT", check, "RIGHT", 4 + check.label:GetStringWidth() + 12, 0 }, button.points[1])
+		assert.equals(282, button.points[1][4])
 		page:Refresh()
 		assert.is_true(button:IsEnabled())
 		ns.Modules:SetEnabled("RollFrames", false)

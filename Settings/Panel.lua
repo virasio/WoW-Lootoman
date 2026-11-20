@@ -538,8 +538,11 @@ local function addSwitchButton(page, check, module)
 	local row = check:GetParent()
 	local button = CreateFrame("Button", nil, row, spec.macro and "SecureActionButtonTemplate, UIPanelButtonTemplate" or "UIPanelButtonTemplate")
 	button:SetSize(120, 22)
-	-- Right after the label, whatever its length.
-	button:SetPoint("LEFT", check.label, "RIGHT", 12, 0)
+	-- Right after the label, whatever its length. The client refuses to anchor
+	-- a protected frame to a font string, so it stands on the checkbox, as far
+	-- right as the label ends.
+	local labelEnd = Panel.LABEL_X - Panel.CHECKBOX_WIDTH + check.label:GetStringWidth()
+	button:SetPoint("LEFT", check, "RIGHT", labelEnd + 12, 0)
 	-- Above the checkbox's hit area, which spans the row.
 	button:SetFrameLevel(check:GetFrameLevel() + 2)
 	button:SetText(spec.label)

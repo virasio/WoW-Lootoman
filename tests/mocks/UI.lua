@@ -8,7 +8,8 @@
 -- A frame made from a secure template is protected: in combat (api.inCombat,
 -- which the loader ties to the fake client) showing, hiding, moving, sizing it
 -- or setting its attributes is refused and recorded in api.blocked, as the
--- client blocks it. api.SecureClick plays a click on such a button: its
+-- client blocks it; anchoring it to a texture or a font string fails at any
+-- time, as in the client. api.SecureClick plays a click on such a button: its
 -- wrapped secure snippet, its action (type "item" records api.used), then the
 -- hooks.
 
@@ -73,6 +74,10 @@ function methods:ClearAllPoints()
 	end
 end
 function methods:SetPoint(...)
+	local relative = select(2, ...)
+	if self.protected and type(relative) == "table" and relative.isRegion then
+		error("Action[SetPoint] failed because[Cannot anchor protected frames to regions]", 2)
+	end
 	if not blocked(self, "SetPoint") then
 		self.points[#self.points + 1] = { ... }
 	end
@@ -140,6 +145,8 @@ function methods:SetColorTexture(r, g, b, a) self.colorTexture, self.texture = {
 function methods:GetUnboundedStringWidth()
 	return select(2, (self.text or ""):gsub("|A[^|]*|a", "M"):gsub("[^\128-\191]", "")) * 7
 end
+-- A text without a width of its own is as wide as its letters.
+function methods:GetStringWidth() return self:GetUnboundedStringWidth() end
 -- A text wraps every 520 pixels, 14 pixels a line.
 function methods:GetStringHeight() return 14 * math.max(1, math.ceil(self:GetUnboundedStringWidth() / 520)) end
 function methods:SetGradient(orientation, from, to) self.gradient = { orientation, from, to } end
@@ -183,11 +190,15 @@ function methods:GenerateMenu()
 		UI.OpenMenu(self)
 	end
 end
-function methods:CreateTexture() return UI.NewFake(self) end
+function methods:CreateTexture()
+	local texture = UI.NewFake(self)
+	texture.isRegion = true
+	return texture
+end
 -- A font string's template is its font object until SetFontObject changes it.
 function methods:CreateFontString(_, layer, template)
 	local text = UI.NewFake(self)
-	text.layer, text.fontObject = layer, template
+	text.layer, text.fontObject, text.isRegion = layer, template, true
 	return text
 end
 
