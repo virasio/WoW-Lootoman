@@ -591,4 +591,13 @@ ns.Locales.AddEnglish({
 	"Hide the Game's Roll Frames",
 	"The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload.",
 	"The game's roll frames come back after a reload. Reload now?",
+	"Main spec: +%s (%s)",
+	"Main spec: %s (%s)",
+	"Not an upgrade (%s)",
+	"Upgrade: +%s (%s: %s)",
+	"Upgrade: +%s (%s)",
+	"Advice on whether to need comes from %s or %s; %s is recommended. In use: %s.",
+	"Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed.",
+	"Advice on whether to need comes from %s, now in use.",
+	"Advice on whether to need comes from %s, when installed.",
 })

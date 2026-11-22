@@ -53,6 +53,22 @@ local Rolls = ns.Modules:Register({
 			page:AddCheckbox("Rolls", "hideGameFrames", L["Hide the Game's Roll Frames"],
 				L["The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload."],
 				indent, "Rolls", nil, nil, L["You then roll in the Loot Rolls window."])
+			-- Where the advice on whether to need comes from, and which addon
+			-- is found, asked again each time the options open.
+			local advice = page:Area():CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+			advice:SetJustifyH("LEFT")
+			advice:SetText(ns.Rolls.NeedAdvice.Note())
+			page:Add("text", advice, 12, { indent = indent + ns.SettingsPanel.LABEL_X, wide = true,
+				measure = function()
+					return math.ceil(advice:GetStringHeight()) + 2
+				end })
+			page:OnOpen(function()
+				advice:SetText(ns.Rolls.NeedAdvice.Note())
+			end)
+			page:OnRefresh(function()
+				advice:SetFontObject(ns.Storage:Get("Rolls", "enabled") and "GameFontHighlightSmall" or "GameFontDisableSmall")
+			end)
+			page.needAdvice = advice
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
 				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
 			local row = check:GetParent()

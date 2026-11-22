@@ -584,4 +584,13 @@ ns.Locales.AddTranslation("ruRU", {
 	["Hide the Game's Roll Frames"] = "Скрывать окна розыгрыша игры",
 	["The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload."] = "Окна розыгрыша игры больше не показываются: каждый розыгрыш при начале попадает наверх окна «Розыгрыши добычи», с кнопками и таймером. Чтобы выключить, нужна перезагрузка интерфейса.",
 	["The game's roll frames come back after a reload. Reload now?"] = "Окна розыгрыша игры вернутся после перезагрузки интерфейса. Перезагрузить сейчас?",
+	["Main spec: +%s (%s)"] = "Основной спек: +%s (%s)",
+	["Main spec: %s (%s)"] = "Основной спек: %s (%s)",
+	["Not an upgrade (%s)"] = "Не улучшение (%s)",
+	["Upgrade: +%s (%s: %s)"] = "Улучшение: +%s (%s: %s)",
+	["Upgrade: +%s (%s)"] = "Улучшение: +%s (%s)",
+	["Advice on whether to need comes from %s or %s; %s is recommended. In use: %s."] = "Совет, стоит ли нидить, берётся из %s или %s; рекомендуется %s. Сейчас: %s.",
+	["Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed."] = "Совет, стоит ли нидить, берётся из %s или %s; рекомендуется %s. Ни один не установлен.",
+	["Advice on whether to need comes from %s, now in use."] = "Совет, стоит ли нидить, берётся из %s, он установлен.",
+	["Advice on whether to need comes from %s, when installed."] = "Совет, стоит ли нидить, берётся из %s, если он установлен.",
 })

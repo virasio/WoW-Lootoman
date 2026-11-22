@@ -20,6 +20,9 @@ local Compat, L = ns.Compat, ns.L
 -- the type as RollOnLoot takes it. Drawing such a row that fails shows a
 -- plain one, the icon, the name and the buttons, so the roll can still be
 -- rolled on; the error goes to the journal.
+--
+-- A narrow row also says whether to need the item, under how the roll
+-- stands, when an addon that knows the player's gear tells (NeedAdvice.lua).
 ns.Rolls = ns.Rolls or {}
 local DropRow = {}
 ns.Rolls.DropRow = DropRow
@@ -36,6 +39,8 @@ DropRow.BELOW_WIDTH = DropRow.INDENT + Panel.WIDTH
 DropRow.BELOW_ITEM = DropRow.ICON + 8
 DropRow.BUTTON = 24
 DropRow.TIMER = 6
+-- The line on whether to need, under the roll's state.
+DropRow.ADVICE = 12
 -- RollOnLoot's types, and the game's atlas names and words for each.
 DropRow.CHOICES = {
 	{ type = 1, atlas = "need", word = "NEED" },
@@ -235,6 +240,13 @@ function DropRow.New(parent, layout)
 	item.note:SetPoint("RIGHT", item, "RIGHT", -4, 0)
 	item.note:SetJustifyH("LEFT")
 	item.note:SetWordWrap(false)
+	-- Whether to need, in the narrow layout.
+	item.advice = item:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	item.advice:SetPoint("TOPLEFT", item.status, "BOTTOMLEFT", 0, -3)
+	item.advice:SetPoint("RIGHT", item, "RIGHT", -4, 0)
+	item.advice:SetJustifyH("LEFT")
+	item.advice:SetWordWrap(false)
+	item.advice:Hide()
 	item:SetScript("OnEnter", function(owner)
 		local link = row.view and row.view.link
 		if link then
@@ -268,6 +280,7 @@ function DropRow.DrawPlain(row, view)
 	row.item.name:SetText(nameOf(view and view.link))
 	row.item.status:SetText("")
 	row.item.note:SetText("")
+	row.item.advice:Hide()
 	if row.timer then
 		row.timer:Hide()
 	end
@@ -316,8 +329,16 @@ draw = function(row, view, note)
 	Panel.Show(row.panel, row.item, view, "right")
 	local height
 	if row.layout == "below" then
-		row.item:SetSize(DropRow.BELOW_WIDTH, DropRow.BELOW_ITEM)
-		local y = DropRow.BELOW_ITEM + 2
+		local top = DropRow.BELOW_ITEM
+		local advice, color = ns.Rolls.NeedAdvice.Line(link)
+		row.item.advice:SetShown(advice ~= nil)
+		if advice then
+			row.item.advice:SetText(advice)
+			row.item.advice:SetTextColor(unpack(ns.Rolls.NeedAdvice.COLORS[color]))
+			top = top + DropRow.ADVICE
+		end
+		row.item:SetSize(DropRow.BELOW_WIDTH, top)
+		local y = top + 2
 		local choosable = view and view.choosable == true
 		for _, button in ipairs(row.buttons) do
 			button:SetShown(false)
