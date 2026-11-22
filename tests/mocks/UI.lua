@@ -82,6 +82,18 @@ function methods:SetPoint(...)
 		self.points[#self.points + 1] = { ... }
 	end
 end
+-- An anchor as the client gives it back: point, relative frame, relative
+-- point, x, y (a SetPoint(point, x, y) is relative to the parent).
+function methods:GetPoint(index)
+	local anchor = self.points[index or 1]
+	if not anchor then
+		return nil
+	end
+	if type(anchor[2]) ~= "table" then
+		return anchor[1], self.parent, anchor[1], anchor[2] or 0, anchor[3] or 0
+	end
+	return anchor[1], anchor[2], anchor[3] or anchor[1], anchor[4] or 0, anchor[5] or 0
+end
 function methods:SetSize(width, height)
 	if not blocked(self, "SetSize") then
 		local changed = self.width ~= width or self.height ~= height

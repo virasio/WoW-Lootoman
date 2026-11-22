@@ -38,6 +38,38 @@ local frame
 -- last (the view drawn last) }; the drops known when it opened.
 local entries, known = {}, {}
 
+-- Where the window opens: where the player last put it, kept for the
+-- character across sessions (LootomanCharDB.sections.lootRolls: point,
+-- relativePoint, x, y), else at the screen's right, vertically centred.
+-- Always on the screen itself: the game's container of the roll frames,
+-- hidden while no roll is open, is laid out nowhere then, and a window placed
+-- on it would not show.
+LiveWindow.SECTION = "lootRolls"
+LiveWindow.DEFAULT = { point = "RIGHT", relativePoint = "RIGHT", x = -40, y = 0 }
+
+local function saved()
+	local kept = Storage:GetCharacterSection(LiveWindow.SECTION)
+	if type(kept.point) == "string" and type(kept.relativePoint) == "string" and type(kept.x) == "number" and type(kept.y) == "number" then
+		return kept
+	end
+	return LiveWindow.DEFAULT
+end
+
+local function place()
+	local where = saved()
+	frame:ClearAllPoints()
+	frame:SetPoint(where.point, UIParent, where.relativePoint, where.x, where.y)
+end
+
+-- Keeps where the player put the window.
+local function keep(window)
+	local point, _, relativePoint, x, y = window:GetPoint(1)
+	if point then
+		local kept = Storage:GetCharacterSection(LiveWindow.SECTION)
+		kept.point, kept.relativePoint, kept.x, kept.y = point, relativePoint, x, y
+	end
+end
+
 local function newRow()
 	local row = DropRow.New(frame.content, "below")
 	-- Exceptions on its lines, as on the panels beside the game's frames.
@@ -67,7 +99,7 @@ function LiveWindow.Build()
 	frame:SetScript("OnDragStart", frame.StartMoving)
 	frame:SetScript("OnDragStop", function(window)
 		window:StopMovingOrSizing()
-		window.placed = true
+		keep(window)
 	end)
 	frame:SetTitle(Compat.GetGlobalString("LOOT_ROLLS") or L["Loot Rolls"])
 	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")
@@ -177,20 +209,6 @@ local function add(entry, quiet)
 	table.insert(entries, 1, entry)
 end
 
--- Where the window first opens: on the screen, right of where the game
--- stacks its roll frames (half of their width) and their panels, near the
--- bottom. Not on the game's container of the roll frames: hidden, the game
--- lays it out nowhere, and a window placed on it would not show.
-LiveWindow.LEFT = 140 + Panel.GAP + Panel.WIDTH + 16
-LiveWindow.BOTTOM = 200
-
-local function place()
-	if frame.placed then
-		return
-	end
-	frame:ClearAllPoints()
-	frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM)
-end
 
 -- Opens the window with a roll, and with the other rolls still going; open
 -- already, it takes the roll in.
