@@ -71,6 +71,16 @@ local Rolls = ns.Modules:Register({
 				advice:SetFontObject(ns.Storage:Get("Rolls", "enabled") and "GameFontHighlightSmall" or "GameFontDisableSmall")
 			end)
 			page.needAdvice = advice
+			-- Where to get Forever Leveling BiS, on the client it is made for,
+			-- while it is not in use.
+			local levelingBiS = ns.Integrations.ForeverLevelingBiS
+			page.levelingBiSButton = page:AddButton(L["Copy the Forever Leveling BiS Address"], function()
+				ns.SettingsPanel.CopyText(levelingBiS.NAME, L["Copy the address (Ctrl+C, or Cmd+C on a Mac) and open it in your browser."],
+					levelingBiS.ADDRESS)
+			end, { indent = indent + ns.SettingsPanel.LABEL_X, tooltip = L["The game cannot open a browser: copy the address and open it in yours."],
+				visible = function()
+					return ns.Data.levelingBiS == true and not levelingBiS.Working()
+				end })
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
 				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
 			local row = check:GetParent()

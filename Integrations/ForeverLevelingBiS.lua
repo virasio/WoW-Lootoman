@@ -21,6 +21,8 @@ ns.Integrations.ForeverLevelingBiS = Integration
 Integration.ADDON = "ForeverLevelingBiS"
 Integration.NAME = "Forever Leveling BiS"
 Integration.VERSION = 2
+-- Where to get it, for the options' button while it is not installed.
+Integration.ADDRESS = "https://www.curseforge.com/wow/addons/forever-leveling-bis"
 
 local failure
 local listening = false

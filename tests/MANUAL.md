@@ -512,6 +512,37 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 - [ ] **Off.** Untick *Show the Loot Rolls Window After Your Choice*. *Expected:* no window at your choice.
 - [ ] **Its demo.** Out of a group, `/ltm demo lootrolls`. *Expected:* on either client, the window on four made-up drops of five heroes: the newest still rolled on (two heroes yet to choose), two won, the oldest all passed.
 
+### Rolling in the Loot Rolls window
+
+With *Hide the Game's Roll Frames* on, in a dungeon with group loot, on WoW Forever and on retail. Note before each round whether ForeverLootRoll or another addon that replaces the game's roll frames is on: turn it off for these checks.
+
+- [ ] **On the options page.** Under *Show the Loot Rolls Window After Your Choice*: *Hide the Game's Roll Frames* (off), with the note *You then roll in the Loot Rolls window.* and its tooltip. *Expected:* greyed with the loot rolls off.
+- [ ] **Turning it on.** Tick it. *Expected:* nothing else happens until a roll; no dialog. On a client where it cannot work, a chat line says the game's frames stay.
+- [ ] **A roll starts.** An item to roll on, with *Show the Loot Rolls Window After Your Choice* on and then off. *Expected:* no game roll frame; the *Loot Rolls* window opens at once (in its place), the roll on top, lit for a moment: the item, *Rolling…*, under it our buttons (need, greed, pass; transmog too on retail where the game offers it), 24 pixels each, the game's look, then a thin yellow timer the row's width, running down, then the panel's lines filling as the others choose.
+- [ ] **The buttons.** Hover each. *Expected:* the game's word for it; a greyed need or greed (an item your class may not need) gives the game's reason in its tooltip, and takes no click. Click greed. *Expected:* a moment later the row goes under a thin line at the bottom part, the same row without its buttons, its timer still running while the others choose; the panel shows your greed as on the game's frame. No second click possible.
+- [ ] **An item that binds.** Need on a bind-on-pickup item. *Expected:* the game's own question; *Cancel* leaves the row on top with its buttons, to choose again; *Okay* takes it under the line.
+- [ ] **Several rolls.** A boss with two or more items. *Expected:* each on top with its buttons, newest first; chosen ones go under the line, newest first there too. Move the pointer onto a button as a new roll comes in on top: the click right after the rows moved does nothing (half a second); the next one works.
+- [ ] **Untouched.** Let a roll's timer run out. *Expected:* the game passes for you; the row goes under the line.
+- [ ] **Closing while a roll waits.** With a roll still on top, the window's X. *Expected:* the game's dialog *Rolls are waiting for your choice; untouched, they end as a pass. Close the window?* with *Close* and *Cancel*: *Cancel* keeps it, *Close* closes it. Escape: the window comes back at once with the same dialog. With no roll waiting, both close it at once.
+- [ ] **Closed, a roll comes.** Close it (after *Close*), then the next roll. *Expected:* it opens with the new roll and every roll still waiting on top.
+- [ ] **In a fight.** A roll during a fight; choose with our buttons. *Expected:* it works; no errors, no blocked action.
+- [ ] **After a /reload.** `/reload` during a roll. *Expected:* the game's frame for that roll shows as well as our row; either works.
+- [ ] **On retail.** Choose with our buttons. *Expected:* note whether the game's own *Loot Rolls* window opens too.
+- [ ] **Turning it off.** Untick it. *Expected:* the game's dialog *The game's roll frames come back after a reload. Reload now?*; *Reload* reloads, and the game's frames are back. The same when turning off *Show Who Rolled What* with it on.
+- [ ] **Hidden interface.** Alt+Z with the window open, then again. *Expected:* the window comes back with its rows.
+- [ ] **Its demo.** With it on, `/ltm demo lootrolls`. *Expected:* the newest made-up drop on top with buttons and a timer running for a minute; a click takes the buttons away and nothing goes to the game.
+
+### Whether to need
+
+On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn installed; with neither, no line.
+
+- [ ] **On the options page.** Under *Hide the Game's Roll Frames*, a note. *Expected:* on WoW Forever *Advice on whether to need comes from Forever Leveling BiS or Pawn; Forever Leveling BiS is recommended.* and which is in use (*In use: …*, or *Neither is installed.*); on retail, Pawn only. Install or turn one off and `/reload`: the note follows.
+- [ ] **Forever Leveling BiS.** A roll on gear you can wear. *Expected:* under *Rolling…*, *Main spec: +12.3 (Forever Leveling BiS)* in green for an upgrade, the same with a minus in grey for one that is not; nothing for an item you wear, can not wear, or that is not gear. The number matches the one in its own tooltip line for the main spec. Its off spec lines show in the item's tooltip only.
+- [ ] **Pawn.** Without Forever Leveling BiS, with Pawn and a scale for your spec (and one for an off spec, if you like). *Expected:* *Upgrade: +15% (Pawn: <scale>)* in green, the best of the scales shown, or *Not an upgrade (Pawn)* in grey; the same numbers as Pawn's tooltip.
+- [ ] **Both.** *Expected:* only Forever Leveling BiS's line.
+- [ ] **Not loaded yet.** The first roll after a login on an item you have never seen. *Expected:* the line comes a moment later.
+- [ ] **Self-test.** `/ltm debug selftest`. *Expected:* *Forever Leveling BiS: working* or *not installed*, *Pawn: working* or *not installed*.
+
 ### The roll history
 
 - [ ] **Opening.** `/ltm rolls`, *Roll History* on the loot rolls' switch row of the options page (greyed while they are off), *Roll History* in the minimap menu after *Ninja Rules*. *Expected:* the *Roll History* window; Escape closes it; the first time in a fight it refuses with a chat line. With the loot rolls off, the command and the menu ask to turn on “Show Who Rolled What”.

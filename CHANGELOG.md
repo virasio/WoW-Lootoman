@@ -1,5 +1,12 @@
 # Lootoman changelog
 
+## 0.7
+
+Loot rolls: roll in the Loot Rolls window, with advice on whether to need.
+
+- **Hide the Game's Roll Frames** (off by default, under the loot rolls): each roll comes into the Loot Rolls window as it starts, on top, with need, greed, transmog where the game offers it, pass and a timer; once the game takes your choice, it goes under a line, the same row without its buttons. Closing the window while a roll waits asks first. Turning it off takes a reload.
+- **Whether to need:** with Forever Leveling BiS (WoW Forever) or Pawn installed, the Loot Rolls window says whether an item is an upgrade for you. The options recommend Forever Leveling BiS on WoW Forever.
+
 ## 0.6.6
 
 Selling junk does what you picked, and the Loot Rolls window takes less room.

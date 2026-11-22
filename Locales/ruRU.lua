@@ -595,4 +595,5 @@ ns.Locales.AddTranslation("ruRU", {
 	["Advice on whether to need comes from %s, when installed."] = "Совет, стоит ли нидить, берётся из %s, если он установлен.",
 	["Rolls are waiting for your choice; untouched, they end as a pass. Close the window?"] = "Розыгрыши ждут вашего выбора; если ничего не выбрать, они закончатся пасом. Закрыть окно?",
 	["Close"] = "Закрыть",
+	["Copy the Forever Leveling BiS Address"] = "Скопировать адрес Forever Leveling BiS",
 })

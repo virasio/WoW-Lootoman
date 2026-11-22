@@ -145,9 +145,22 @@ describe("whether to need", function()
 		assert.matches("In use: Forever Leveling BiS%.$", note:GetText())
 	end)
 
+	it("offers Forever Leveling BiS's address while it is not in use", function()
+		local page = ns.SettingsPanel.main
+		local button = page.levelingBiSButton
+		assert.is_true(button:IsShown())
+		button.scripts.OnClick(button)
+		local dialog = rawget(_G, ns.SettingsPanel.COPY_NAME)
+		assert.same({ true, "https://www.curseforge.com/wow/addons/forever-leveling-bis" }, { dialog:IsShown(), dialog.box:GetText() })
+		installLevelingBiS()
+		page:Layout()
+		assert.is_false(button:IsShown())
+	end)
+
 	it("names only Pawn on retail, where Forever Leveling BiS is not", function()
 		start({ skip = {} })
 		local note = ns.SettingsPanel.main.needAdvice
+		assert.is_false(ns.SettingsPanel.main.levelingBiSButton:IsShown())
 		assert.equals("Advice on whether to need comes from Pawn, when installed.", note:GetText())
 		installPawn()
 		ns.SettingsPanel.main.frame.OnRefresh()
