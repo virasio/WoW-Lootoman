@@ -7,7 +7,9 @@ local Compat, L = ns.Compat, ns.L
 -- (Model.lua, with the chat as a fallback, Chat.lua). Every drop seen in a
 -- group goes into the history by group (History.lua, Groups.lua). The game's
 -- roll frames keep working as they do: the module only hooks their showing
--- and hiding, and the player's choice.
+-- and hiding, and the player's choice; unless the player keeps them away
+-- (Hide the Game's Roll Frames), and then rolls in the Loot Rolls window
+-- (LiveWindow.lua).
 local Rolls = ns.Modules:Register({
 	name = "Rolls",
 	title = L["Loot rolls"],
@@ -309,6 +311,7 @@ function Rolls:OnEnable()
 	keepFramesAway()
 	self:OnEvent("START_LOOT_ROLL", function(_, rollID, rollTime)
 		Model.AddRoll(rollID, rollTime)
+		ns.Rolls.LiveWindow.Started(rollID)
 		Compat.After(Chat.WAIT, function()
 			if Rolls.active then
 				Chat.Use(rollID)
@@ -350,6 +353,7 @@ function Rolls:OnEnable()
 	-- Rolls open before a /reload: the game shows their frames again.
 	for _, rollID in ipairs(Compat.GetActiveRolls()) do
 		Model.AddRoll(rollID)
+		ns.Rolls.LiveWindow.Started(rollID)
 	end
 	for frame in pairs(panels) do
 		if frame:IsShown() then

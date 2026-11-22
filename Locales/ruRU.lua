@@ -593,4 +593,6 @@ ns.Locales.AddTranslation("ruRU", {
 	["Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed."] = "Совет, стоит ли нидить, берётся из %s или %s; рекомендуется %s. Ни один не установлен.",
 	["Advice on whether to need comes from %s, now in use."] = "Совет, стоит ли нидить, берётся из %s, он установлен.",
 	["Advice on whether to need comes from %s, when installed."] = "Совет, стоит ли нидить, берётся из %s, если он установлен.",
+	["Rolls are waiting for your choice; untouched, they end as a pass. Close the window?"] = "Розыгрыши ждут вашего выбора; если ничего не выбрать, они закончатся пасом. Закрыть окно?",
+	["Close"] = "Закрыть",
 })

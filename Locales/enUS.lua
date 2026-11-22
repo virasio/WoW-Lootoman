@@ -600,4 +600,6 @@ ns.Locales.AddEnglish({
 	"Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed.",
 	"Advice on whether to need comes from %s, now in use.",
 	"Advice on whether to need comes from %s, when installed.",
+	"Rolls are waiting for your choice; untouched, they end as a pass. Close the window?",
+	"Close",
 })
