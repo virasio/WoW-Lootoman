@@ -135,4 +135,15 @@ describe("the loot rolls' model", function()
 		drop(2, HELM)
 		assert.same({ { "roll", 7 }, { "roll", 7 }, { "drop", "1:2" } }, heard)
 	end)
+
+	it("knows a roll's length from its start, and the share of it left", function()
+		Test.state.rollTimes = { [7] = 30000 }
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		-- START_LOOT_ROLL's length (the fake client's 60 seconds).
+		assert.equals(60000, ns.Rolls.Model.Roll(7).total)
+		Test.state.rollTimes[7] = 15000
+		assert.equals(0.25, ns.Rolls.Model.TimeShare(7))
+		Test.state.rollTimes[7] = nil
+		assert.is_nil(ns.Rolls.Model.TimeShare(7))
+	end)
 end)

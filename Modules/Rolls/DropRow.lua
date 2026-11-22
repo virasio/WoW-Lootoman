@@ -9,6 +9,17 @@ local Compat, L = ns.Compat, ns.L
 -- roll frames drawn for that drop (Panel.lua), with its lines, marks and
 -- clicks. A row is a child of its window's list, so it scrolls with it, and
 -- is as tall as its panel.
+--
+-- In the narrow layout a roll can be rolled on in the row itself, while the
+-- game's roll frames are kept away: a view marked choosable gets our buttons
+-- under the item (need, greed, transmog where the roll offers it, pass; need
+-- and greed greyed where the roll does not allow them, with the game's
+-- reason in their tooltips), and a view with a timer (the share of the roll's
+-- time left) a thin bar under them; a chosen roll keeps the timer while it
+-- goes on, without the buttons. The buttons call row.onChoose(view, type),
+-- the type as RollOnLoot takes it. Drawing such a row that fails shows a
+-- plain one, the icon, the name and the buttons, so the roll can still be
+-- rolled on; the error goes to the journal.
 ns.Rolls = ns.Rolls or {}
 local DropRow = {}
 ns.Rolls.DropRow = DropRow
@@ -23,6 +34,15 @@ DropRow.MIN_HEIGHT = DropRow.ICON + 16
 DropRow.INDENT = 10
 DropRow.BELOW_WIDTH = DropRow.INDENT + Panel.WIDTH
 DropRow.BELOW_ITEM = DropRow.ICON + 8
+DropRow.BUTTON = 24
+DropRow.TIMER = 6
+-- RollOnLoot's types, and the game's atlas names and words for each.
+DropRow.CHOICES = {
+	{ type = 1, atlas = "need", word = "NEED" },
+	{ type = 2, atlas = "greed", word = "GREED" },
+	{ type = 4, atlas = "transmog", word = "TRANSMOGRIFICATION" },
+	{ type = 0, atlas = "pass", word = "PASS" },
+}
 DropRow.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- How long a new row of the live window stays lit.
 DropRow.LIGHT = 2
@@ -96,6 +116,89 @@ function DropRow.Marked(view, group, history)
 	return view
 end
 
+local function buttonTooltip(button)
+	GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+	GameTooltip_SetTitle(GameTooltip, Compat.GetGlobalString(button.choice.word) or button.choice.word)
+	if button.reason then
+		GameTooltip_AddNormalLine(GameTooltip, button.reason)
+	end
+	GameTooltip:Show()
+end
+
+-- The buttons and the timer of a narrow row, hidden.
+local function addChoosing(row)
+	row.buttons = {}
+	for index, choice in ipairs(DropRow.CHOICES) do
+		local button = CreateFrame("Button", nil, row.frame)
+		button:SetSize(DropRow.BUTTON, DropRow.BUTTON)
+		button:SetNormalAtlas("lootroll-toast-icon-" .. choice.atlas .. "-up")
+		button:SetPushedAtlas("lootroll-toast-icon-" .. choice.atlas .. "-down")
+		button:SetHighlightAtlas("lootroll-toast-icon-" .. choice.atlas .. "-highlight", "ADD")
+		button:SetMotionScriptsWhileDisabled(true)
+		button.choice = choice
+		button:SetScript("OnClick", function(owner)
+			if row.view and row.onChoose and not row.guarded then
+				row.onChoose(row.view, owner.choice.type)
+			end
+		end)
+		button:SetScript("OnEnter", buttonTooltip)
+		button:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		button:Hide()
+		row.buttons[index] = button
+	end
+	row.timer = CreateFrame("StatusBar", nil, row.frame)
+	row.timer:SetSize(DropRow.BELOW_WIDTH - DropRow.INDENT, DropRow.TIMER)
+	row.timer:SetMinMaxValues(0, 1)
+	row.timer:SetStatusBarTexture(ns.RollLookalike.TIMER)
+	row.timer:SetStatusBarColor(1, 0.82, 0)
+	row.timer.background = row.timer:CreateTexture(nil, "BACKGROUND")
+	row.timer.background:SetAllPoints(row.timer)
+	row.timer.background:SetColorTexture(0, 0, 0, 0.6)
+	row.timer:Hide()
+end
+
+-- The game's reason a choice is not allowed, from its strings.
+local function reasonText(reason)
+	if not reason or reason == 0 then
+		return nil
+	end
+	return Compat.GetGlobalString("LOOT_ROLL_INELIGIBLE_REASON" .. reason)
+end
+
+-- Lays the buttons out under the item, from y down; the next y.
+local function placeButtons(row, view, y)
+	local item = view.item or {}
+	local x = DropRow.INDENT
+	for _, button in ipairs(row.buttons) do
+		local choice = button.choice
+		local shown = choice.type ~= 4 or item.canTransmog == true
+		button:SetShown(shown)
+		if shown then
+			local allowed, reason = true, nil
+			if choice.type == 1 then
+				allowed, reason = item.canNeed ~= false, reasonText(item.reasonNeed)
+			elseif choice.type == 2 then
+				allowed, reason = item.canGreed ~= false, reasonText(item.reasonGreed)
+			end
+			button:SetEnabled(allowed)
+			button.reason = not allowed and reason or nil
+			button:ClearAllPoints()
+			button:SetPoint("TOPLEFT", row.frame, "TOPLEFT", x, -y)
+			x = x + DropRow.BUTTON + 4
+		end
+	end
+	return y + DropRow.BUTTON + 2
+end
+
+-- Shows a timer's share of the roll's time left.
+function DropRow.SetTimer(row, share)
+	if row.timer and row.timer:IsShown() and share then
+		row.timer:SetValue(math.max(0, math.min(1, share)))
+	end
+end
+
 -- A row, hidden, in a window's list: the panel at the item's right, or,
 -- layout "below", under it (a window half as wide).
 function DropRow.New(parent, layout)
@@ -151,12 +254,51 @@ function DropRow.New(parent, layout)
 	end)
 	row.item = item
 	row.panel = Panel.New(frame)
+	if row.layout == "below" then
+		addChoosing(row)
+	end
 	return row
 end
 
+-- A plain row to roll on, when drawing the full one failed: the icon, the
+-- name and the buttons.
+function DropRow.DrawPlain(row, view)
+	Panel.Hide(row.panel)
+	row.item.icon:SetTexture(DropRow.QUESTION)
+	row.item.name:SetText(nameOf(view and view.link))
+	row.item.status:SetText("")
+	row.item.note:SetText("")
+	if row.timer then
+		row.timer:Hide()
+	end
+	local height = DropRow.BELOW_ITEM + 2
+	if row.buttons and view then
+		height = placeButtons(row, view, height)
+	end
+	row.frame:SetHeight(height)
+	row.frame:Show()
+	return height
+end
+
+local draw
+
 -- Draws a view (marked already) on a row, with a note under the item if
--- given; returns the row's height.
+-- given; returns the row's height. A row to roll on that fails to draw is
+-- drawn plain.
 function DropRow.Draw(row, view, note)
+	if view and view.choosable then
+		local ok, height = xpcall(function()
+			return draw(row, view, note)
+		end, Compat.ReportError)
+		if ok then
+			return height
+		end
+		return DropRow.DrawPlain(row, view)
+	end
+	return draw(row, view, note)
+end
+
+draw = function(row, view, note)
 	row.view = view
 	local link = view and view.link
 	local icon = link and Compat.GetItemLook(link)
@@ -175,9 +317,24 @@ function DropRow.Draw(row, view, note)
 	local height
 	if row.layout == "below" then
 		row.item:SetSize(DropRow.BELOW_WIDTH, DropRow.BELOW_ITEM)
+		local y = DropRow.BELOW_ITEM + 2
+		local choosable = view and view.choosable == true
+		for _, button in ipairs(row.buttons) do
+			button:SetShown(false)
+		end
+		if choosable then
+			y = placeButtons(row, view, y)
+		end
+		row.timer:SetShown(view ~= nil and view.timer ~= nil)
+		if view and view.timer then
+			row.timer:ClearAllPoints()
+			row.timer:SetPoint("TOPLEFT", row.frame, "TOPLEFT", DropRow.INDENT, -y)
+			DropRow.SetTimer(row, view.timer)
+			y = y + DropRow.TIMER + 2
+		end
 		row.panel.frame:ClearAllPoints()
-		row.panel.frame:SetPoint("TOPLEFT", row.item, "BOTTOMLEFT", DropRow.INDENT, -2)
-		height = DropRow.BELOW_ITEM + 2 + (row.panel.frame:GetHeight() or 0)
+		row.panel.frame:SetPoint("TOPLEFT", row.frame, "TOPLEFT", DropRow.INDENT, -y)
+		height = y + (row.panel.frame:GetHeight() or 0)
 	else
 		height = math.max(DropRow.MIN_HEIGHT, row.panel.frame:GetHeight() or 0)
 		row.item:SetHeight(height)

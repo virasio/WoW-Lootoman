@@ -126,8 +126,10 @@ local function changedRolls(list)
 	end
 end
 
--- A roll the game opened, or nil when it is gone already.
-function Model.AddRoll(rollID)
+-- A roll the game opened, or nil when it is gone already; rollTime: its
+-- length in milliseconds (START_LOOT_ROLL's), else what it has left when
+-- first seen (a roll open before a /reload).
+function Model.AddRoll(rollID, rollTime)
 	if rolls[rollID] then
 		return rolls[rollID]
 	end
@@ -136,7 +138,8 @@ function Model.AddRoll(rollID)
 		return nil
 	end
 	order = order + 1
-	rolls[rollID] = { rollID = rollID, link = item.link, item = item, order = order, started = Compat.GetTime() }
+	rolls[rollID] = { rollID = rollID, link = item.link, item = item, order = order, started = Compat.GetTime(),
+		total = rollTime or Compat.GetRollTimeLeft(rollID) }
 	bind()
 	notify("roll", rollID)
 	return rolls[rollID]
@@ -240,6 +243,16 @@ end
 
 function Model.Roll(rollID)
 	return rolls[rollID]
+end
+
+-- The share of a roll's time it has left (1 to 0), or nil.
+function Model.TimeShare(rollID)
+	local roll = rolls[rollID]
+	local left = roll and roll.total and roll.total > 0 and Compat.GetRollTimeLeft(rollID)
+	if not left then
+		return nil
+	end
+	return math.max(0, math.min(1, left / roll.total))
 end
 
 function Model.Rolls()

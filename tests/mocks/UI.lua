@@ -176,6 +176,10 @@ function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
+-- A status bar's range and value.
+function methods:SetMinMaxValues(low, high) self.range = { low, high } end
+function methods:SetValue(value) self.value = value end
+function methods:GetValue() return self.value end
 -- A panel template's title (DefaultPanelFlatTemplate's SetTitle).
 function methods:SetTitle(text) self.title = text end
 -- A button's textures: an atlas or a file.

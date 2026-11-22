@@ -291,8 +291,8 @@ function Rolls:OnEnable()
 		end
 	end)
 	keepFramesAway()
-	self:OnEvent("START_LOOT_ROLL", function(_, rollID)
-		Model.AddRoll(rollID)
+	self:OnEvent("START_LOOT_ROLL", function(_, rollID, rollTime)
+		Model.AddRoll(rollID, rollTime)
 		Compat.After(Chat.WAIT, function()
 			if Rolls.active then
 				Chat.Use(rollID)
