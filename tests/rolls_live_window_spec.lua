@@ -76,6 +76,8 @@ describe("the live window", function()
 		-- On the screen, right of the roll frames and their panels: not on the
 		-- game's container, which the game lays out nowhere while it is hidden.
 		assert.same({ "BOTTOMLEFT", Loader.ui.UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM }, window.points[1])
+		-- Half as wide as before: each row's panel under its item.
+		assert.same({ 248, "below" }, { window:GetWidth(), window.rows[1].layout })
 		-- Each row's panel is its own, with the drop's choices.
 		assert.equals(window.rows[2].frame, window.rows[2].panel.frame.parent)
 		assert.matches("Brina", window.rows[2].panel.lines[1].text:GetText())

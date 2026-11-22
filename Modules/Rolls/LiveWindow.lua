@@ -25,9 +25,10 @@ LiveWindow.NAME = "LootomanLootRolls"
 LiveWindow.PAD = 12
 LiveWindow.TOP = 32
 LiveWindow.GAP = 4
-LiveWindow.WIDTH = DropRow.WIDTH + 2 * LiveWindow.PAD + 24
--- As tall as four rows of a group of five.
-LiveWindow.HEIGHT = LiveWindow.TOP + 4 * (2 * Panel.PAD + Panel.GROUP * Panel.LINE + LiveWindow.GAP) + LiveWindow.PAD
+-- Rows with the choices under each item: half as wide as the history's.
+LiveWindow.WIDTH = DropRow.BELOW_WIDTH + 2 * LiveWindow.PAD + 24
+-- As tall as three rows of a group of five.
+LiveWindow.HEIGHT = LiveWindow.TOP + 3 * (DropRow.BELOW_ITEM + 2 + 2 * Panel.PAD + Panel.GROUP * Panel.LINE + LiveWindow.GAP) + LiveWindow.PAD
 LiveWindow.FIRST_ROWS = 4
 -- How long it waits after the player's choice for the game's own window.
 LiveWindow.WAIT = 0.5
@@ -38,7 +39,7 @@ local frame
 local entries, known = {}, {}
 
 local function newRow()
-	local row = DropRow.New(frame.content)
+	local row = DropRow.New(frame.content, "below")
 	-- Exceptions on its lines, as on the panels beside the game's frames.
 	row.panel.onRightClick = function(...)
 		if ns.Rolls.Module.OnRightClick then
@@ -79,7 +80,7 @@ function LiveWindow.Build()
 	frame.scroll:SetPoint("TOPLEFT", LiveWindow.PAD, -LiveWindow.TOP)
 	frame.scroll:SetPoint("BOTTOMRIGHT", -LiveWindow.PAD - 24, LiveWindow.PAD)
 	frame.content = CreateFrame("Frame", nil, frame.scroll)
-	frame.content:SetSize(DropRow.WIDTH, 1)
+	frame.content:SetSize(DropRow.BELOW_WIDTH, 1)
 	frame.scroll:SetScrollChild(frame.content)
 	frame.rows = {}
 	for _ = 1, LiveWindow.FIRST_ROWS do
