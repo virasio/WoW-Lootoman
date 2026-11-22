@@ -346,6 +346,8 @@ function LiveWindow.Redraw()
 			if not entry.view then
 				view.choosable = (index <= top) or nil
 				view.timer = choosing and timeShare(entry) or nil
+			elseif type(view.timeShare) == "function" then
+				view.timer = view.timeShare()
 			end
 			anyTimer = anyTimer or view.timer ~= nil
 			shown = shown + 1
