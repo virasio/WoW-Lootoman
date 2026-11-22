@@ -220,10 +220,11 @@ function Sections.StillForSale(item, thisSale)
 end
 
 -- The junk the sell-junk button and a merchant's opening sell: junk the
--- merchant buys, outside the bags left out of junk selling.
-function Sections.SaleList()
+-- merchant buys, outside the bags left out of junk selling, and what a sale
+-- cut short left a moment ago (thisSale: its decisions).
+function Sections.SaleList(thisSale)
 	local list = {}
-	for _, entry in ipairs(Sections.Build("sell").junk.entries) do
+	for _, entry in ipairs(Sections.Build("sell", thisSale).junk.entries) do
 		if not entry.kept then
 			list[#list + 1] = entry
 		end

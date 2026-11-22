@@ -74,7 +74,12 @@ Junk.Window.Register("sell", {
 	kind = "sell",
 	onRefresh = updateFooter,
 	build = build,
+	-- What a sale cut short left a moment ago is this sale's again.
 	enter = function()
+		local carried = Junk.SellQueue.Carried()
+		for itemID in pairs(carried and carried.junk or {}) do
+			grid.thisSale.junk[itemID], grid.thisSale.keep[itemID] = true, nil
+		end
 		grid.sellButton:Show()
 	end,
 	leave = function()

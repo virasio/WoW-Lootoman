@@ -144,6 +144,7 @@ ns.Compat.NEEDS = {
 	SetErrorListener = {},
 	SetSaved = {},
 	SetSoftInteractCursor = { "SetUnitCursorTexture", optional = { "issecretvalue" } },
+	ShowErrorMessage = { optional = { "UIErrorsFrame" } },
 	UnregisterEvent = {},
 	UseBagItem = { "C_Container.UseContainerItem" },
 	-- The loot rolls (Compat/Rolls.lua).

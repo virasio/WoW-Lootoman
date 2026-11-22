@@ -124,6 +124,34 @@ describe("sell window", function()
 		assert.equals("Drag it to Junk to mark it as junk.", lines[1])
 	end)
 
+	it("lists what a sale cut short left in To Sell, back at a merchant within a minute, an item that is not junk too", function()
+		-- Item 3 (not junk) for this sale, with the grays.
+		grid().thisSale.junk[3] = true
+		grid():Refresh()
+		grid().sellButton.scripts.OnClick(grid().sellButton)
+		local last = Test.state.bagActions[#Test.state.bagActions]
+		Test.FinishSale(last[2], last[3])
+		Test.SetInteracting("Merchant", false)
+		Test.Advance(1)
+		-- Back within the minute: items 2 and 3 are to sell again.
+		Test.Advance(Junk.SellQueue.CARRY / 2)
+		Test.SetInteracting("Merchant", true)
+		SellWindow.Open()
+		local listed = {}
+		for _, button in ipairs(grid().sections.junk.buttons) do
+			if button:IsShown() and button.entry then
+				listed[#listed + 1] = button.entry.item.itemID
+			end
+		end
+		table.sort(listed)
+		-- Item 4 is junk in a bag kept from junk selling, listed darker as before.
+		assert.same({ 2, 3, 4 }, listed)
+		-- The sell button sells them too.
+		grid():Close()
+		Junk.SellButton.Click(true)
+		assert.same({ "0:1", "0:2" }, used())
+	end)
+
 	it("does nothing with an item dropped outside it", function()
 		local junk = grid().sections.junk.buttons[1]
 		junk.scripts.OnDragStart(junk)
