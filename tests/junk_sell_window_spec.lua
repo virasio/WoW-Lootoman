@@ -113,6 +113,17 @@ describe("sell window", function()
 		assert.equals("done", Junk.SellQueue.State())
 	end)
 
+	it("calls the junk To Sell, and says so in what sends an item there; throwing away, it is Junk again", function()
+		local junk = grid().sections.junk
+		assert.same({ "To Sell", "Drag an item here to sell it." }, { junk.title:GetText(), junk.hint:GetText() })
+		local lines = grid():Hints(grid().sections.rest.buttons[1].entry)
+		assert.equals("Drag it to To Sell to sell it.", lines[1])
+		grid():SetKind("toss")
+		assert.same({ "Junk", "Drag an item here to mark it as junk." }, { junk.title:GetText(), junk.hint:GetText() })
+		lines = grid():Hints(grid().sections.rest.buttons[1].entry)
+		assert.equals("Drag it to Junk to mark it as junk.", lines[1])
+	end)
+
 	it("does nothing with an item dropped outside it", function()
 		local junk = grid().sections.junk.buttons[1]
 		junk.scripts.OnDragStart(junk)

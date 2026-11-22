@@ -579,4 +579,8 @@ ns.Locales.AddEnglish({
 	"Delete This Group",
 	"Delete the rolls of “%s”? This cannot be undone.",
 	"Delete every roll kept in the history? This cannot be undone.",
+	"To Sell",
+	"Drag an item here to sell it.",
+	"Drag it to To Sell to sell it.",
+	"Left-click: to sell. Right-click: not junk.",
 })

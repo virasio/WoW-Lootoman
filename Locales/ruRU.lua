@@ -572,4 +572,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Delete This Group"] = "Удалить эту группу",
 	["Delete the rolls of “%s”? This cannot be undone."] = "Удалить розыгрыши группы «%s»? Это нельзя отменить.",
 	["Delete every roll kept in the history? This cannot be undone."] = "Удалить все розыгрыши из истории? Это нельзя отменить.",
+	["To Sell"] = "На продажу",
+	["Drag an item here to sell it."] = "Перетащите сюда предмет, чтобы продать его.",
+	["Drag it to To Sell to sell it."] = "Перетащите в «На продажу», чтобы продать.",
+	["Left-click: to sell. Right-click: not junk."] = "Левый клик: на продажу. Правый клик: не хлам.",
 })
