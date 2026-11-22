@@ -93,6 +93,26 @@ describe("sell window", function()
 		assert.same({}, used())
 	end)
 
+	it("sells an item moved to the junk for this sale, and not one moved out of it for this sale", function()
+		local rest = grid().sections.rest.buttons[1]
+		rest.scripts.OnDragStart(rest)
+		grid().sections.junk.frame.mouseOver = true
+		rest.scripts.OnDragStop(rest)
+		grid().sections.junk.frame.mouseOver = false
+		-- The gray item 2 kept for this sale.
+		grid().thisSale.keep[2] = true
+		grid():Refresh()
+		grid().sellButton.scripts.OnClick(grid().sellButton)
+		assert.is_false(grid().frame:IsShown())
+		for _ = 1, 2 do
+			local last = Test.state.bagActions[#Test.state.bagActions]
+			Test.FinishSale(last[2], last[3])
+			Test.Advance(Junk.SellQueue.PACE * 3)
+		end
+		assert.same({ "0:1", "0:3" }, used())
+		assert.equals("done", Junk.SellQueue.State())
+	end)
+
 	it("does nothing with an item dropped outside it", function()
 		local junk = grid().sections.junk.buttons[1]
 		junk.scripts.OnDragStart(junk)

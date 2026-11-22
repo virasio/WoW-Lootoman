@@ -46,7 +46,8 @@ local function build(window)
 	grid.sellButton:SetText(L["Sell Junk"])
 	-- The sale goes on without the window, which is done once the junk is picked.
 	grid.sellButton:SetScript("OnClick", function()
-		Junk.SellQueue.Start(saleOf(grid.built))
+		-- With the window's decisions for this sale, which go as it closes.
+		Junk.SellQueue.Start(saleOf(grid.built), grid.thisSale)
 		grid:Close()
 	end)
 	grid.sellButton:Hide()

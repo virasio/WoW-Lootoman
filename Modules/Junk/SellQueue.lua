@@ -39,6 +39,9 @@ local REASONS = {
 }
 
 local state, reason = "idle", nil
+-- The sale's own decisions (moves for this sale only), kept from the window,
+-- which closes as the sale starts.
+local decisions
 -- fn(state, reason) after every change of state.
 local watchers = {}
 local queue, current, sale, last
@@ -143,7 +146,7 @@ step = function(myRun)
 			finish("stopped", "changed")
 			return
 		end
-	until not entry or Junk.Sections.StillForSale(entry.item)
+	until not entry or Junk.Sections.StillForSale(entry.item, decisions)
 	if not entry then
 		run = run + 1
 		finish("done")
@@ -158,9 +161,25 @@ step = function(myRun)
 	end)
 end
 
--- Sells the entries (Sections entries: item and price), in order. False when a
+-- A copy of a sale's decisions, so the window's own can go.
+local function copy(thisSale)
+	if not thisSale then
+		return nil
+	end
+	local kept = { junk = {}, keep = {} }
+	for key, value in pairs(thisSale.junk or {}) do
+		kept.junk[key] = value
+	end
+	for key, value in pairs(thisSale.keep or {}) do
+		kept.keep[key] = value
+	end
+	return kept
+end
+
+-- Sells the entries (Sections entries: item and price), in order, by the
+-- sale's own decisions too (thisSale, from the junk window). False when a
 -- sale is going on, or no merchant is open.
-function SellQueue.Start(entries)
+function SellQueue.Start(entries, thisSale)
 	if state == "selling" or state == "waiting" or not Compat.IsInteracting("Merchant") then
 		return false
 	end
@@ -172,6 +191,7 @@ function SellQueue.Start(entries)
 		return false
 	end
 	run = run + 1
+	decisions = copy(thisSale)
 	sale = { count = 0, money = 0, items = {} }
 	state, reason = "selling", nil
 	for _, watch in ipairs(watchers) do
