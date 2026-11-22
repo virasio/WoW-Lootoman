@@ -73,9 +73,11 @@ describe("the live window", function()
 		assert.same({ "|cff1eff00Mail Helm|r", "|cff1eff00Ring|r" }, items())
 		-- Only the roll that brought it is lit, for a moment.
 		assert.same({ true, false }, { window.rows[1].light:IsShown(), window.rows[2].light:IsShown() })
-		-- On the screen, right of the roll frames and their panels: not on the
-		-- game's container, which the game lays out nowhere while it is hidden.
-		assert.same({ "BOTTOMLEFT", Loader.ui.UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM }, window.points[1])
+		-- At first on the screen's left, vertically centred: not on the game's
+		-- container, which the game lays out nowhere while it is hidden.
+		assert.same({ "LEFT", Loader.ui.UIParent, "LEFT", 40, 0 }, window.points[1])
+		-- Half as wide as before: each row's panel under its item.
+		assert.same({ 248, "below" }, { window:GetWidth(), window.rows[1].layout })
 		-- Each row's panel is its own, with the drop's choices.
 		assert.equals(window.rows[2].frame, window.rows[2].panel.frame.parent)
 		assert.matches("Brina", window.rows[2].panel.lines[1].text:GetText())
@@ -132,6 +134,24 @@ describe("the live window", function()
 		line.scripts.OnClick(line, "RightButton")
 		Loader.ui.contextMenu.entries[1].callback()
 		assert.is_truthy(window.rows[1].panel.lines[1].text:GetText():find("ReadyCheck-Ready", 1, true))
+	end)
+
+	it("keeps where the player put it, for the character, across sessions", function()
+		local window = LiveWindow.Frame()
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(7, 0)
+		-- Dragged somewhere else.
+		window:ClearAllPoints()
+		window:SetPoint("TOPLEFT", Loader.ui.UIParent, "TOPLEFT", 500, -300)
+		window.scripts.OnDragStop(window)
+		local char = Test.state.saved.LootomanCharDB
+		assert.same({ point = "TOPLEFT", relativePoint = "TOPLEFT", x = 500, y = -300 }, char.sections.lootRolls)
+		-- The next session opens it there.
+		start({ LootomanCharDB = char })
+		window = LiveWindow.Frame()
+		Test.StartRoll(8, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(8, 0)
+		assert.same({ "TOPLEFT", Loader.ui.UIParent, "TOPLEFT", 500, -300 }, window.points[#window.points])
 	end)
 
 	it("stays closed with its option off", function()

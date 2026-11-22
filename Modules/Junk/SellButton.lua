@@ -37,12 +37,14 @@ local function update()
 	end
 	button:SetShown(active and blizzard():IsShown())
 	if active and blizzard():IsVisible() then
-		button.icon:SetDesaturated(#Junk.Sections.SaleList() == 0)
+		button.icon:SetDesaturated(#Junk.Sections.SaleList(Junk.SellQueue.Carried()) == 0)
 	end
 end
 
+-- The junk, with what a sale cut short left a moment ago.
 local function sell()
-	return Junk.SellQueue.Start(Junk.Sections.SaleList())
+	local carried = Junk.SellQueue.Carried()
+	return Junk.SellQueue.Start(Junk.Sections.SaleList(carried), carried)
 end
 
 -- Whether a plain click opens the junk window, by the selling choice: it
@@ -63,7 +65,7 @@ function SellButton.Click(shift)
 end
 
 local function showTooltip(self)
-	local sale = Junk.Sections.SaleList()
+	local sale = Junk.Sections.SaleList(Junk.SellQueue.Carried())
 	local value = 0
 	for _, entry in ipairs(sale) do
 		value = value + entry.price

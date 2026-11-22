@@ -93,6 +93,65 @@ describe("sell window", function()
 		assert.same({}, used())
 	end)
 
+	it("sells an item moved to the junk for this sale, and not one moved out of it for this sale", function()
+		local rest = grid().sections.rest.buttons[1]
+		rest.scripts.OnDragStart(rest)
+		grid().sections.junk.frame.mouseOver = true
+		rest.scripts.OnDragStop(rest)
+		grid().sections.junk.frame.mouseOver = false
+		-- The gray item 2 kept for this sale.
+		grid().thisSale.keep[2] = true
+		grid():Refresh()
+		grid().sellButton.scripts.OnClick(grid().sellButton)
+		assert.is_false(grid().frame:IsShown())
+		for _ = 1, 2 do
+			local last = Test.state.bagActions[#Test.state.bagActions]
+			Test.FinishSale(last[2], last[3])
+			Test.Advance(Junk.SellQueue.PACE * 3)
+		end
+		assert.same({ "0:1", "0:3" }, used())
+		assert.equals("done", Junk.SellQueue.State())
+	end)
+
+	it("calls the junk To Sell, and says so in what sends an item there; throwing away, it is Junk again", function()
+		local junk = grid().sections.junk
+		assert.same({ "To Sell", "Drag an item here to sell it." }, { junk.title:GetText(), junk.hint:GetText() })
+		local lines = grid():Hints(grid().sections.rest.buttons[1].entry)
+		assert.equals("Drag it to To Sell to sell it.", lines[1])
+		grid():SetKind("toss")
+		assert.same({ "Junk", "Drag an item here to mark it as junk." }, { junk.title:GetText(), junk.hint:GetText() })
+		lines = grid():Hints(grid().sections.rest.buttons[1].entry)
+		assert.equals("Drag it to Junk to mark it as junk.", lines[1])
+	end)
+
+	it("lists what a sale cut short left in To Sell, back at a merchant within a minute, an item that is not junk too", function()
+		-- Item 3 (not junk) for this sale, with the grays.
+		grid().thisSale.junk[3] = true
+		grid():Refresh()
+		grid().sellButton.scripts.OnClick(grid().sellButton)
+		local last = Test.state.bagActions[#Test.state.bagActions]
+		Test.FinishSale(last[2], last[3])
+		Test.SetInteracting("Merchant", false)
+		Test.Advance(1)
+		-- Back within the minute: items 2 and 3 are to sell again.
+		Test.Advance(Junk.SellQueue.CARRY / 2)
+		Test.SetInteracting("Merchant", true)
+		SellWindow.Open()
+		local listed = {}
+		for _, button in ipairs(grid().sections.junk.buttons) do
+			if button:IsShown() and button.entry then
+				listed[#listed + 1] = button.entry.item.itemID
+			end
+		end
+		table.sort(listed)
+		-- Item 4 is junk in a bag kept from junk selling, listed darker as before.
+		assert.same({ 2, 3, 4 }, listed)
+		-- The sell button sells them too.
+		grid():Close()
+		Junk.SellButton.Click(true)
+		assert.same({ "0:1", "0:2" }, used())
+	end)
+
 	it("does nothing with an item dropped outside it", function()
 		local junk = grid().sections.junk.buttons[1]
 		junk.scripts.OnDragStart(junk)

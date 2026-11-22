@@ -46,7 +46,8 @@ local function build(window)
 	grid.sellButton:SetText(L["Sell Junk"])
 	-- The sale goes on without the window, which is done once the junk is picked.
 	grid.sellButton:SetScript("OnClick", function()
-		Junk.SellQueue.Start(saleOf(grid.built))
+		-- With the window's decisions for this sale, which go as it closes.
+		Junk.SellQueue.Start(saleOf(grid.built), grid.thisSale)
 		grid:Close()
 	end)
 	grid.sellButton:Hide()
@@ -73,7 +74,12 @@ Junk.Window.Register("sell", {
 	kind = "sell",
 	onRefresh = updateFooter,
 	build = build,
+	-- What a sale cut short left a moment ago is this sale's again.
 	enter = function()
+		local carried = Junk.SellQueue.Carried()
+		for itemID in pairs(carried and carried.junk or {}) do
+			grid.thisSale.junk[itemID], grid.thisSale.keep[itemID] = true, nil
+		end
 		grid.sellButton:Show()
 	end,
 	leave = function()

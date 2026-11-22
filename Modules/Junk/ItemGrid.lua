@@ -22,7 +22,8 @@ local JunkRule = ns.Rules.Junk
 -- is the owner's: throwing away, it deletes it.
 --
 -- The window's mode says what a move means: "sell" (selling), for this sale
--- only, and for good (a mark) with Shift held; "keep" (throwing away), always
+-- only, and for good (a mark) with Shift held; selling, the junk section is
+-- To Sell, and what sends an item there says so; "keep" (throwing away), always
 -- for good. This sale's decisions are the window's own and go when it closes
 -- or changes its kind. The owner may hide the sections to show something
 -- else in their place (the junk window's lists).
@@ -63,6 +64,14 @@ local EMPTY = {
 	junk = L["Drag an item here to mark it as junk."],
 	suggested = L["Nothing to suggest."],
 	rest = L["Drag an item here to keep it."],
+}
+-- Selling, the junk section is what is sold.
+local SELLING = {
+	title = L["To Sell"],
+	empty = L["Drag an item here to sell it."],
+	toJunk = L["To Sell"],
+	drag = L["Drag it to To Sell to sell it."],
+	click = L["Left-click: to sell. Right-click: not junk."],
 }
 ItemGrid.RULE_TITLES = {
 	questDone = L["Quest Done"],
@@ -189,12 +198,17 @@ end
 function GridMixin:Hints(entry)
 	local lines = {}
 	local section = ItemGrid.SectionOf(entry)
+	local selling = self.options.kind == "sell"
 	if section == "suggested" then
-		lines[#lines + 1] = L["Left-click: to junk. Right-click: not junk."]
+		lines[#lines + 1] = selling and SELLING.click or L["Left-click: to junk. Right-click: not junk."]
 	elseif section == "junk" and entry.hint then
 		lines[#lines + 1] = L["Left-click: not junk."]
 	end
-	lines[#lines + 1] = section == "junk" and L["Drag it to Not Junk to keep it."] or L["Drag it to Junk to mark it as junk."]
+	if section == "junk" then
+		lines[#lines + 1] = L["Drag it to Not Junk to keep it."]
+	else
+		lines[#lines + 1] = selling and SELLING.drag or L["Drag it to Junk to mark it as junk."]
+	end
 	if self.options.mode == "sell" then
 		lines[#lines + 1] = L["For this sale only; hold Shift for good."]
 	end
@@ -407,6 +421,7 @@ local function fill(grid, section, built)
 			header.title:SetTextColor(group.highlight and 1 or 1, group.highlight and 0.5 or 0.82, 0)
 			header.total:SetText(group.total and group.total > 0 and GetMoneyString(group.total, true) or "")
 			header.button:SetShown(group.toJunk == true)
+			header.button:SetText(grid.options.kind == "sell" and SELLING.toJunk or L["To Junk"])
 			header.button.entries = group.entries
 			header:Show()
 			y = y - ItemGrid.SUBHEADER
@@ -450,10 +465,18 @@ end
 -- Switches what the grid lists and what a move means, on the same frame:
 -- kind "toss" or "sell", mode "keep" or "sell" (by default the kind's). This
 -- sale's decisions go with the old kind.
+-- The junk section's title and empty hint for the kind.
+local function nameJunk(grid)
+	local junk, selling = grid.sections.junk, grid.options.kind == "sell"
+	junk.title:SetText(selling and SELLING.title or TITLES.junk)
+	junk.hint:SetText(selling and SELLING.empty or EMPTY.junk)
+end
+
 function GridMixin:SetKind(kind, mode)
 	self.options.kind, self.options.mode = kind, mode or (kind == "sell" and "sell" or "keep")
 	self.sections.junk.showKept = kind == "sell"
 	self.thisSale = { junk = {}, keep = {} }
+	nameJunk(self)
 end
 
 -- Shows or hides the sections; hidden, a refresh only tells the owner.
@@ -559,6 +582,7 @@ function ItemGrid.Create(options)
 		y = y - sectionHeight(ItemGrid.ROWS[key]) - 8
 	end
 	grid.sections.junk.showKept = options.kind == "sell"
+	nameJunk(grid)
 
 	-- The dragged item's icon at the mouse.
 	local ghost = CreateFrame("Frame", nil, UIParent)

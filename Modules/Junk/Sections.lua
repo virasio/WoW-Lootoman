@@ -209,20 +209,22 @@ function Sections.Build(kind, thisSale)
 end
 
 -- Whether a listed item may still be sold as junk, asked again right before
--- its sale: still junk (the player may have moved it out of the junk, or
--- switched profiles), its bag not left out of junk selling, and nothing that
--- protects it now. Read from the client, not from the list.
-function Sections.StillForSale(item)
+-- its sale: still junk, by the sale's own decisions too (thisSale: what the
+-- player moved for this sale only; the player may have moved it out of the
+-- junk, or switched profiles), its bag not left out of junk selling, and
+-- nothing that protects it now. Read from the client, not from the list.
+function Sections.StillForSale(item, thisSale)
 	local facts = Compat.GetBagItemFacts(item.bag, item.slot)
-	return JunkRule.Decide(item).junk and not Compat.IsBagKeptFromJunkSale(item.bag)
+	return JunkRule.Decide(item, thisSale).junk and not Compat.IsBagKeptFromJunkSale(item.bag)
 		and not facts.equipmentSet and not facts.refundable
 end
 
 -- The junk the sell-junk button and a merchant's opening sell: junk the
--- merchant buys, outside the bags left out of junk selling.
-function Sections.SaleList()
+-- merchant buys, outside the bags left out of junk selling, and what a sale
+-- cut short left a moment ago (thisSale: its decisions).
+function Sections.SaleList(thisSale)
 	local list = {}
-	for _, entry in ipairs(Sections.Build("sell").junk.entries) do
+	for _, entry in ipairs(Sections.Build("sell", thisSale).junk.entries) do
 		if not entry.kept then
 			list[#list + 1] = entry
 		end
