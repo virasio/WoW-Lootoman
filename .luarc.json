@@ -77,6 +77,7 @@
     "TooltipUtil",
     "UISpecialFrames",
     "GameEvent",
+    "ReloadUI",
     "WOW_PROJECT_ID"
   ]
 }

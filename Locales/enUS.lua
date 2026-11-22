@@ -585,4 +585,10 @@ ns.Locales.AddEnglish({
 	"Left-click: to sell. Right-click: not junk.",
 	"Not everything was sold: %d left. Back at a merchant within a minute, they are in To Sell.",
 	"OK",
+	"You then roll in the Loot Rolls window.",
+	"This client shows its roll frames in a way Lootoman cannot hold back, so they stay.",
+	"Reload",
+	"Hide the Game's Roll Frames",
+	"The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload.",
+	"The game's roll frames come back after a reload. Reload now?",
 })

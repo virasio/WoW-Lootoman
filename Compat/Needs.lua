@@ -136,6 +136,7 @@ ns.Compat.NEEDS = {
 	Print = { "DEFAULT_CHAT_FRAME" },
 	RegisterEvent = { "CreateFrame" },
 	RegisterSlashCommand = { "SlashCmdList" },
+	ReloadUI = { "ReloadUI" },
 	ReportError = { "geterrorhandler", optional = { "debugstack" } },
 	RequestItem = { "C_Item.RequestLoadItemDataByID" },
 	SetAutoLoot = { "C_CVar.GetCVarInfo", "C_CVar.SetCVar", "InCombatLockdown" },

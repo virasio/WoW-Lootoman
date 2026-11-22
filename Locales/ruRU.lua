@@ -578,4 +578,10 @@ ns.Locales.AddTranslation("ruRU", {
 	["Left-click: to sell. Right-click: not junk."] = "Левый клик: на продажу. Правый клик: не хлам.",
 	["Not everything was sold: %d left. Back at a merchant within a minute, they are in To Sell."] = "Продано не всё: осталось %d. Если вернуться к торговцу в течение минуты, они будут в «На продажу».",
 	["OK"] = "ОК",
+	["You then roll in the Loot Rolls window."] = "Розыгрыш тогда идёт в окне «Розыгрыши добычи».",
+	["This client shows its roll frames in a way Lootoman cannot hold back, so they stay."] = "Этот клиент показывает свои окна розыгрыша так, что Lootoman не может их убрать, поэтому они остаются.",
+	["Reload"] = "Перезагрузить",
+	["Hide the Game's Roll Frames"] = "Скрывать окна розыгрыша игры",
+	["The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload."] = "Окна розыгрыша игры больше не показываются: каждый розыгрыш при начале попадает наверх окна «Розыгрыши добычи», с кнопками и таймером. Чтобы выключить, нужна перезагрузка интерфейса.",
+	["The game's roll frames come back after a reload. Reload now?"] = "Окна розыгрыша игры вернутся после перезагрузки интерфейса. Перезагрузить сейчас?",
 })

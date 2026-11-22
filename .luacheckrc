@@ -64,6 +64,7 @@ files["Compat/"] = {
 		"GetLootSlotType",
 		"GetMoney",
 		"GetNormalizedRealmName",
+		"ReloadUI",
 		"PlaySoundFile",
 		"GetFileIDFromPath",
 		"GetLootSourceInfo",

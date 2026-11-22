@@ -608,6 +608,11 @@ function Compat.FormatDay(time)
 	return os.date("!%Y-%m-%d", time)
 end
 
+-- state.reloaded: how many times the interface was reloaded.
+function Compat.ReloadUI()
+	state.reloaded = (state.reloaded or 0) + 1
+end
+
 -- state.sounds: the sound files played, with their channels.
 function Compat.PlaySoundFile(file, channel)
 	state.sounds = state.sounds or {}

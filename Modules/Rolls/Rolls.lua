@@ -29,6 +29,8 @@ local Rolls = ns.Modules:Register({
 		summary = true,
 		-- The live window, where the game does not open its own loot history window.
 		liveWindow = true,
+		-- The game's roll frames kept away: the rolls in the Loot Rolls window.
+		hideGameFrames = false,
 		-- The roll history's filters.
 		historyMinQuality = 2,
 		historyMarkedOnly = false,
@@ -48,6 +50,9 @@ local Rolls = ns.Modules:Register({
 			page:AddCheckbox("Rolls", "liveWindow", L["Show the Loot Rolls Window After Your Choice"],
 				L["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."],
 				indent, "Rolls")
+			page:AddCheckbox("Rolls", "hideGameFrames", L["Hide the Game's Roll Frames"],
+				L["The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload."],
+				indent, "Rolls", nil, nil, L["You then roll in the Loot Rolls window."])
 			local check = page:AddCheckbox("Rolls", "ninja", L["Detect Ninja Looters"],
 				L["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."], indent, "Rolls")
 			local row = check:GetParent()
@@ -154,6 +159,35 @@ function Rolls.RedrawAll()
 	ns.Rolls.HistoryWindow.Changed()
 end
 
+-- The game's roll frames kept away while *Hide the Game's Roll Frames* is on:
+-- each roll comes into the Loot Rolls window instead. Done once a session,
+-- as the option turns on or the module starts with it on; a client that
+-- routes its roll frames otherwise keeps them, with a line saying so. Only a
+-- reload brings them back, which a dialog offers when the option or the
+-- loot rolls are turned off.
+local framesAway = false
+
+function Rolls.GameFramesAway()
+	return framesAway
+end
+
+local function keepFramesAway()
+	if framesAway or not ns.Storage:Get("Rolls", "hideGameFrames") then
+		return
+	end
+	if Compat.KeepGameRollFramesAway() then
+		framesAway = true
+	else
+		ns.Print(L["This client shows its roll frames in a way Lootoman cannot hold back, so they stay."])
+	end
+end
+
+local function askReload()
+	ns.NameMenu.Confirm(L["The game's roll frames come back after a reload. Reload now?"], nil, L["Reload"], function()
+		Compat.ReloadUI()
+	end)
+end
+
 -- An item's stats are asked for: once an item comes in, the marks are
 -- judged again; the module listens only while it waits.
 local waiting = false
@@ -243,12 +277,20 @@ function Rolls:OnEnable()
 		ns.Rolls.Marks.Invalidate()
 		Rolls.RedrawAll()
 	end)
-	self:On("SettingChanged", function(_, module)
+	self:On("SettingChanged", function(_, module, key, value)
 		if module == Rolls.name then
+			if key == "hideGameFrames" then
+				if value then
+					keepFramesAway()
+				elseif framesAway then
+					askReload()
+				end
+			end
 			ns.Rolls.Marks.Invalidate()
 			Rolls.RedrawAll()
 		end
 	end)
+	keepFramesAway()
 	self:OnEvent("START_LOOT_ROLL", function(_, rollID)
 		Model.AddRoll(rollID)
 		Compat.After(Chat.WAIT, function()
@@ -303,6 +345,10 @@ end
 
 function Rolls:OnDisable()
 	Rolls.starting = false
+	-- With the game's frames kept away, the rolls would have nowhere to go.
+	if framesAway then
+		askReload()
+	end
 	waiting = false
 	ns.Rolls.Demo.EndPreview()
 	-- The played demo, in the repository's version only.
