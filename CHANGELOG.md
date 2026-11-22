@@ -7,7 +7,7 @@ Selling junk does what you picked, and the Loot Rolls window takes less room.
 - **Items you moved into the junk for one sale are sold** too, not only the ones marked as junk for good.
 - At a merchant, the junk group is called **To Sell**.
 - **A sale cut short says so:** if the merchant's window closes before the last stack is sold, a dialog (and a red chat line) tells you how many were left. Back at a merchant within a minute, they are in *To Sell* again, also an item that is not junk and was picked for that sale.
-- **The Loot Rolls window** is half as wide, with everyone's choices under each item, opens at the right of the screen and **stays where you put it**, also in your next session.
+- **The Loot Rolls window** is half as wide, with everyone's choices under each item, opens at the left of the screen and **stays where you put it**, also in your next session.
 
 ## 0.6.5
 

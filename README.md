@@ -80,7 +80,7 @@ Lootoman is a World of Warcraft addon about loot: fast autoloot, a loot feed you
 
 ![The Suspicious Needs window on leaving a group: each marked need with its reasons and an Exception checkbox](screenshots/suspicious-needs.png)
 
-- **The Loot Rolls window**, where the game does not open a loot history window of its own (WoW Forever; retail opens the game's): once you have chosen on a roll, it opens (at the screen's right the first time, then where you put it, kept for the character) with that roll and the group's other rolls still going, and every item rolled on while it is open joins it at the top, each with its item, who won it with which button and roll (or *All passed*), and the panel's lines under it. Closed, it opens again at your next choice. *Show the Loot Rolls Window After Your Choice*, under the loot rolls' switch, turns it off.
+- **The Loot Rolls window**, where the game does not open a loot history window of its own (WoW Forever; retail opens the game's): once you have chosen on a roll, it opens (at the screen's left the first time, then where you put it, kept for the character) with that roll and the group's other rolls still going, and every item rolled on while it is open joins it at the top, each with its item, who won it with which button and roll (or *All passed*), and the panel's lines under it. Closed, it opens again at your next choice. *Show the Loot Rolls Window After Your Choice*, under the loot rolls' switch, turns it off.
 
 ![The Loot Rolls window: a roll still going, two won and one all passed, each with everyone's choices beside it](screenshots/loot-rolls-window.png)
 

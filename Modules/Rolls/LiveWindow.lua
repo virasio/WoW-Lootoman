@@ -40,12 +40,13 @@ local entries, known = {}, {}
 
 -- Where the window opens: where the player last put it, kept for the
 -- character across sessions (LootomanCharDB.sections.lootRolls: point,
--- relativePoint, x, y), else at the screen's right, vertically centred.
+-- relativePoint, x, y), else at the screen's left, vertically centred, about
+-- as far from the edge as the game's action bars and bags stand.
 -- Always on the screen itself: the game's container of the roll frames,
 -- hidden while no roll is open, is laid out nowhere then, and a window placed
 -- on it would not show.
 LiveWindow.SECTION = "lootRolls"
-LiveWindow.DEFAULT = { point = "RIGHT", relativePoint = "RIGHT", x = -40, y = 0 }
+LiveWindow.DEFAULT = { point = "LEFT", relativePoint = "LEFT", x = 40, y = 0 }
 
 local function saved()
 	local kept = Storage:GetCharacterSection(LiveWindow.SECTION)

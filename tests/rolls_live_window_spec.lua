@@ -73,9 +73,9 @@ describe("the live window", function()
 		assert.same({ "|cff1eff00Mail Helm|r", "|cff1eff00Ring|r" }, items())
 		-- Only the roll that brought it is lit, for a moment.
 		assert.same({ true, false }, { window.rows[1].light:IsShown(), window.rows[2].light:IsShown() })
-		-- At first on the screen's right, vertically centred: not on the game's
+		-- At first on the screen's left, vertically centred: not on the game's
 		-- container, which the game lays out nowhere while it is hidden.
-		assert.same({ "RIGHT", Loader.ui.UIParent, "RIGHT", -40, 0 }, window.points[1])
+		assert.same({ "LEFT", Loader.ui.UIParent, "LEFT", 40, 0 }, window.points[1])
 		-- Half as wide as before: each row's panel under its item.
 		assert.same({ 248, "below" }, { window:GetWidth(), window.rows[1].layout })
 		-- Each row's panel is its own, with the drop's choices.
