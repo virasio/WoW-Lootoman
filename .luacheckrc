@@ -135,6 +135,14 @@ files["Integrations/QuestieDB.lua"] = {
 	read_globals = { "LibQuestieDB" },
 }
 
+files["Integrations/ForeverLevelingBiS.lua"] = {
+	read_globals = { "ForeverLevelingBiS_API" },
+}
+
+files["Integrations/Pawn.lua"] = {
+	read_globals = { "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsInitialized", "PawnIsItemAnUpgrade" },
+}
+
 files["Modules/"] = {
 	read_globals = {
 		"CANCEL",

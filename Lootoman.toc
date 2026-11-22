@@ -68,6 +68,8 @@ Providers\Prices.lua
 
 Integrations\Auctionator.lua
 Integrations\QuestieDB.lua
+Integrations\ForeverLevelingBiS.lua
+Integrations\Pawn.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua

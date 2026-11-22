@@ -77,6 +77,11 @@
     "TooltipUtil",
     "UISpecialFrames",
     "GameEvent",
+    "ForeverLevelingBiS_API",
+    "PawnCanItemHaveStats",
+    "PawnGetItemData",
+    "PawnIsInitialized",
+    "PawnIsItemAnUpgrade",
     "ReloadUI",
     "WOW_PROJECT_ID"
   ]
