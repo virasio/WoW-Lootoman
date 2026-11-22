@@ -28,6 +28,24 @@ describe("Compat for the loot rolls", function()
 		Compat = loadCompat()
 	end)
 
+	it("rolls through the game's RollOnLoot, reads a roll's time left, and keeps the game's roll frames away where it can", function()
+		local rolled, dropped = {}, {}
+		stub({
+			RollOnLoot = function(rollID, rollType) rolled[#rolled + 1] = { rollID, rollType } end,
+			GetLootRollTimeLeft = function(rollID) return rollID == 7 and 45000 or "secret" end,
+			GameEvent = { UnregisterInternalEvent = function(event) dropped[#dropped + 1] = event end },
+		})
+		Compat.RollOnLoot(7, 2)
+		assert.same({ { 7, 2 } }, rolled)
+		assert.same({ 45000, nil }, { Compat.GetRollTimeLeft(7), Compat.GetRollTimeLeft(8) })
+		assert.is_true(Compat.KeepGameRollFramesAway())
+		assert.same({ "START_LOOT_ROLL" }, dropped)
+		-- A client without the game's internal routing.
+		rawset(_G, "GameEvent", nil)
+		assert.is_false(Compat.KeepGameRollFramesAway())
+		stub({ RollOnLoot = nil, GetLootRollTimeLeft = nil })
+	end)
+
 	it("reads a roll's item, and nothing for a roll that is gone or kept secret", function()
 		stub({
 			GetLootRollItemInfo = function(rollID)

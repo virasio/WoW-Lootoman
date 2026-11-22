@@ -119,6 +119,8 @@ files["Compat/"] = {
 		"IsInRaid",
 		"RAID_CLASS_COLORS",
 		"RollOnLoot",
+		"GameEvent",
+		"GetLootRollTimeLeft",
 		"UnitClass",
 	},
 }

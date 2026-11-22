@@ -76,6 +76,7 @@
     "UnitIsInInteractRange",
     "TooltipUtil",
     "UISpecialFrames",
+    "GameEvent",
     "WOW_PROJECT_ID"
   ]
 }

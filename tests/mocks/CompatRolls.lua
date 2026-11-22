@@ -124,6 +124,31 @@ function Compat.AfterGameRollLayout(fn)
 	return true
 end
 
+-- state.rolledOn: the choices made through Compat.RollOnLoot, as { rollID, type };
+-- the hooks of OnRollChosen hear them, as the game's hook does.
+function Compat.RollOnLoot(rollID, rollType)
+	state.rolledOn = state.rolledOn or {}
+	state.rolledOn[#state.rolledOn + 1] = { rollID, rollType }
+	for _, hook in ipairs(state.rollChosenHooks) do
+		hook(rollID, rollType)
+	end
+end
+
+-- state.gameEvent: false on a fake client without the game's internal event
+-- routing; state.gameFramesAway counts the times it was asked.
+function Compat.KeepGameRollFramesAway()
+	if state.gameEvent == false then
+		return false
+	end
+	state.gameFramesAway = (state.gameFramesAway or 0) + 1
+	return true
+end
+
+-- state.rollTimes: milliseconds left by roll ID.
+function Compat.GetRollTimeLeft(rollID)
+	return state.rollTimes and state.rollTimes[rollID] or nil
+end
+
 function Compat.OnRollChosen(fn)
 	state.rollChosenHooks[#state.rollChosenHooks + 1] = fn
 	return true
