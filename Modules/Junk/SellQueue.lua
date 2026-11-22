@@ -21,11 +21,20 @@ local Compat, Inventory, L, SelfTest = ns.Compat, ns.Inventory, ns.L, ns.SelfTes
 --
 -- Each sale ends with a chat line. A merchant can buy back only the last
 -- BUYBACK stacks sold to it, so past that in one visit the chat line says so.
+--
+-- A sale cut short with stacks left says so in red in the chat and in a
+-- dialog with OK (SaleNotice.lua), and keeps what was left for CARRY seconds: at a
+-- merchant within that time those items are this sale's (Carried), so the
+-- junk window lists them to sell and the sell button sells them, also an item
+-- that is not junk and was picked for that sale only. A sale that ends with
+-- nothing left, or the time passing, forgets them. Kept in memory only.
 local Junk = ns.Modules:Get("Junk")
 local SellQueue = {}
 Junk.SellQueue = SellQueue
 
 SellQueue.PACE = 0.2
+-- How long what a cut-short sale left is kept, in seconds.
+SellQueue.CARRY = 60
 SellQueue.TIMEOUT = 5
 -- BUYBACK_ITEMS_PER_PAGE in Blizzard's MerchantFrame.lua.
 SellQueue.BUYBACK = 12
@@ -39,6 +48,11 @@ local REASONS = {
 }
 
 local state, reason = "idle", nil
+-- The sale's own decisions (moves for this sale only), kept from the window,
+-- which closes as the sale starts.
+local decisions
+-- What a sale cut short left: { at, items = { [itemID] = true }, count }.
+local left
 -- fn(state, reason) after every change of state.
 local watchers = {}
 local queue, current, sale, last
@@ -48,7 +62,30 @@ local visit, warned = 0, false
 -- Each run of timers belongs to one sale; a stopped sale's timers do nothing.
 local run = 0
 
+-- The stacks a stopped sale did not sell: the one being sold, if the server
+-- did not take it, and those still waiting, that are still in their slots.
+local function remaining()
+	local items, count = {}, 0
+	local function add(entry)
+		if entry and Inventory.StillThere(entry.item) then
+			items[entry.item.itemID] = true
+			count = count + 1
+		end
+	end
+	add(current)
+	for _, entry in ipairs(queue or {}) do
+		add(entry)
+	end
+	return items, count
+end
+
 local function finish(newState, why)
+	if newState == "stopped" then
+		local items, count = remaining()
+		left = count > 0 and { at = Compat.GetTime(), items = items, count = count } or nil
+	elseif newState == "done" then
+		left = nil
+	end
 	state, reason = newState, why
 	last = { count = sale.count, money = sale.money, items = sale.items, reason = why }
 	queue, current = nil, nil
@@ -62,6 +99,13 @@ local function finish(newState, why)
 	end
 	if newState == "stopped" then
 		ns.Print(L["Selling stopped: %s."]:format(REASONS[why] or why))
+		if left then
+			local warning = L["Not everything was sold: %d left. Back at a merchant within a minute, they are in To Sell."]:format(left.count)
+			ns.Print("|cffff2020" .. warning .. "|r")
+			if Junk.SaleNotice then
+				Junk.SaleNotice.Show(warning)
+			end
+		end
 	end
 	for _, watch in ipairs(watchers) do
 		xpcall(function()
@@ -143,7 +187,7 @@ step = function(myRun)
 			finish("stopped", "changed")
 			return
 		end
-	until not entry or Junk.Sections.StillForSale(entry.item)
+	until not entry or Junk.Sections.StillForSale(entry.item, decisions)
 	if not entry then
 		run = run + 1
 		finish("done")
@@ -158,9 +202,25 @@ step = function(myRun)
 	end)
 end
 
--- Sells the entries (Sections entries: item and price), in order. False when a
+-- A copy of a sale's decisions, so the window's own can go.
+local function copy(thisSale)
+	if not thisSale then
+		return nil
+	end
+	local kept = { junk = {}, keep = {} }
+	for key, value in pairs(thisSale.junk or {}) do
+		kept.junk[key] = value
+	end
+	for key, value in pairs(thisSale.keep or {}) do
+		kept.keep[key] = value
+	end
+	return kept
+end
+
+-- Sells the entries (Sections entries: item and price), in order, by the
+-- sale's own decisions too (thisSale, from the junk window). False when a
 -- sale is going on, or no merchant is open.
-function SellQueue.Start(entries)
+function SellQueue.Start(entries, thisSale)
 	if state == "selling" or state == "waiting" or not Compat.IsInteracting("Merchant") then
 		return false
 	end
@@ -172,6 +232,7 @@ function SellQueue.Start(entries)
 		return false
 	end
 	run = run + 1
+	decisions = copy(thisSale)
 	sale = { count = 0, money = 0, items = {} }
 	state, reason = "selling", nil
 	for _, watch in ipairs(watchers) do
@@ -195,6 +256,22 @@ end
 -- The last sale: { count, money, items, reason }, or nil.
 function SellQueue.LastResult()
 	return last
+end
+
+-- What a sale cut short left, as this sale's decisions ({ junk, keep }),
+-- while CARRY seconds have not passed; nil else.
+function SellQueue.Carried()
+	if left and Compat.GetTime() - left.at > SellQueue.CARRY then
+		left = nil
+	end
+	if not left then
+		return nil
+	end
+	local carried = { junk = {}, keep = {} }
+	for itemID in pairs(left.items) do
+		carried.junk[itemID] = true
+	end
+	return carried
 end
 
 SelfTest.AddReport(function()

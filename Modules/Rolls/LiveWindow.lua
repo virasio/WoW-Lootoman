@@ -25,9 +25,10 @@ LiveWindow.NAME = "LootomanLootRolls"
 LiveWindow.PAD = 12
 LiveWindow.TOP = 32
 LiveWindow.GAP = 4
-LiveWindow.WIDTH = DropRow.WIDTH + 2 * LiveWindow.PAD + 24
--- As tall as four rows of a group of five.
-LiveWindow.HEIGHT = LiveWindow.TOP + 4 * (2 * Panel.PAD + Panel.GROUP * Panel.LINE + LiveWindow.GAP) + LiveWindow.PAD
+-- Rows with the choices under each item: half as wide as the history's.
+LiveWindow.WIDTH = DropRow.BELOW_WIDTH + 2 * LiveWindow.PAD + 24
+-- As tall as three rows of a group of five.
+LiveWindow.HEIGHT = LiveWindow.TOP + 3 * (DropRow.BELOW_ITEM + 2 + 2 * Panel.PAD + Panel.GROUP * Panel.LINE + LiveWindow.GAP) + LiveWindow.PAD
 LiveWindow.FIRST_ROWS = 4
 -- How long it waits after the player's choice for the game's own window.
 LiveWindow.WAIT = 0.5
@@ -37,8 +38,41 @@ local frame
 -- last (the view drawn last) }; the drops known when it opened.
 local entries, known = {}, {}
 
+-- Where the window opens: where the player last put it, kept for the
+-- character across sessions (LootomanCharDB.sections.lootRolls: point,
+-- relativePoint, x, y), else at the screen's left, vertically centred, about
+-- as far from the edge as the game's action bars and bags stand.
+-- Always on the screen itself: the game's container of the roll frames,
+-- hidden while no roll is open, is laid out nowhere then, and a window placed
+-- on it would not show.
+LiveWindow.SECTION = "lootRolls"
+LiveWindow.DEFAULT = { point = "LEFT", relativePoint = "LEFT", x = 40, y = 0 }
+
+local function saved()
+	local kept = Storage:GetCharacterSection(LiveWindow.SECTION)
+	if type(kept.point) == "string" and type(kept.relativePoint) == "string" and type(kept.x) == "number" and type(kept.y) == "number" then
+		return kept
+	end
+	return LiveWindow.DEFAULT
+end
+
+local function place()
+	local where = saved()
+	frame:ClearAllPoints()
+	frame:SetPoint(where.point, UIParent, where.relativePoint, where.x, where.y)
+end
+
+-- Keeps where the player put the window.
+local function keep(window)
+	local point, _, relativePoint, x, y = window:GetPoint(1)
+	if point then
+		local kept = Storage:GetCharacterSection(LiveWindow.SECTION)
+		kept.point, kept.relativePoint, kept.x, kept.y = point, relativePoint, x, y
+	end
+end
+
 local function newRow()
-	local row = DropRow.New(frame.content)
+	local row = DropRow.New(frame.content, "below")
 	-- Exceptions on its lines, as on the panels beside the game's frames.
 	row.panel.onRightClick = function(...)
 		if ns.Rolls.Module.OnRightClick then
@@ -66,7 +100,7 @@ function LiveWindow.Build()
 	frame:SetScript("OnDragStart", frame.StartMoving)
 	frame:SetScript("OnDragStop", function(window)
 		window:StopMovingOrSizing()
-		window.placed = true
+		keep(window)
 	end)
 	frame:SetTitle(Compat.GetGlobalString("LOOT_ROLLS") or L["Loot Rolls"])
 	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButtonNoScripts")
@@ -79,7 +113,7 @@ function LiveWindow.Build()
 	frame.scroll:SetPoint("TOPLEFT", LiveWindow.PAD, -LiveWindow.TOP)
 	frame.scroll:SetPoint("BOTTOMRIGHT", -LiveWindow.PAD - 24, LiveWindow.PAD)
 	frame.content = CreateFrame("Frame", nil, frame.scroll)
-	frame.content:SetSize(DropRow.WIDTH, 1)
+	frame.content:SetSize(DropRow.BELOW_WIDTH, 1)
 	frame.scroll:SetScrollChild(frame.content)
 	frame.rows = {}
 	for _ = 1, LiveWindow.FIRST_ROWS do
@@ -176,20 +210,6 @@ local function add(entry, quiet)
 	table.insert(entries, 1, entry)
 end
 
--- Where the window first opens: on the screen, right of where the game
--- stacks its roll frames (half of their width) and their panels, near the
--- bottom. Not on the game's container of the roll frames: hidden, the game
--- lays it out nowhere, and a window placed on it would not show.
-LiveWindow.LEFT = 140 + Panel.GAP + Panel.WIDTH + 16
-LiveWindow.BOTTOM = 200
-
-local function place()
-	if frame.placed then
-		return
-	end
-	frame:ClearAllPoints()
-	frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", LiveWindow.LEFT, LiveWindow.BOTTOM)
-end
 
 -- Opens the window with a roll, and with the other rolls still going; open
 -- already, it takes the roll in.

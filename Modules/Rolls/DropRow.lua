@@ -19,6 +19,10 @@ DropRow.ITEM_WIDTH = 230
 DropRow.ICON = 32
 DropRow.WIDTH = DropRow.ITEM_WIDTH + Panel.GAP + Panel.WIDTH
 DropRow.MIN_HEIGHT = DropRow.ICON + 16
+-- The narrow row ("below"): the panel under the item, indented a little.
+DropRow.INDENT = 10
+DropRow.BELOW_WIDTH = DropRow.INDENT + Panel.WIDTH
+DropRow.BELOW_ITEM = DropRow.ICON + 8
 DropRow.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- How long a new row of the live window stays lit.
 DropRow.LIGHT = 2
@@ -92,11 +96,12 @@ function DropRow.Marked(view, group, history)
 	return view
 end
 
--- A row, hidden, in a window's list.
-function DropRow.New(parent)
-	local row = {}
+-- A row, hidden, in a window's list: the panel at the item's right, or,
+-- layout "below", under it (a window half as wide).
+function DropRow.New(parent, layout)
+	local row = { layout = layout or "right" }
 	local frame = CreateFrame("Frame", nil, parent)
-	frame:SetSize(DropRow.WIDTH, DropRow.MIN_HEIGHT)
+	frame:SetSize(row.layout == "below" and DropRow.BELOW_WIDTH or DropRow.WIDTH, DropRow.MIN_HEIGHT)
 	frame:Hide()
 	row.frame = frame
 	-- A light over the row for a moment, when it is new.
@@ -167,8 +172,16 @@ function DropRow.Draw(row, view, note)
 	row.item.status:SetText(DropRow.Status(view))
 	row.item.note:SetText(note or "")
 	Panel.Show(row.panel, row.item, view, "right")
-	local height = math.max(DropRow.MIN_HEIGHT, row.panel.frame:GetHeight() or 0)
-	row.item:SetHeight(height)
+	local height
+	if row.layout == "below" then
+		row.item:SetSize(DropRow.BELOW_WIDTH, DropRow.BELOW_ITEM)
+		row.panel.frame:ClearAllPoints()
+		row.panel.frame:SetPoint("TOPLEFT", row.item, "BOTTOMLEFT", DropRow.INDENT, -2)
+		height = DropRow.BELOW_ITEM + 2 + (row.panel.frame:GetHeight() or 0)
+	else
+		height = math.max(DropRow.MIN_HEIGHT, row.panel.frame:GetHeight() or 0)
+		row.item:SetHeight(height)
+	end
 	row.frame:SetHeight(height)
 	row.frame:Show()
 	return height
