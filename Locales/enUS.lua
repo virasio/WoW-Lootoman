@@ -584,4 +584,5 @@ ns.Locales.AddEnglish({
 	"Drag it to To Sell to sell it.",
 	"Left-click: to sell. Right-click: not junk.",
 	"Not everything was sold: %d left. Back at a merchant within a minute, they are in To Sell.",
+	"OK",
 })

@@ -22,8 +22,8 @@ local Compat, Inventory, L, SelfTest = ns.Compat, ns.Inventory, ns.L, ns.SelfTes
 -- Each sale ends with a chat line. A merchant can buy back only the last
 -- BUYBACK stacks sold to it, so past that in one visit the chat line says so.
 --
--- A sale cut short with stacks left says so in red, in the chat and in the
--- game's message area, and keeps what was left for CARRY seconds: at a
+-- A sale cut short with stacks left says so in red in the chat and in a
+-- dialog with OK (SaleNotice.lua), and keeps what was left for CARRY seconds: at a
 -- merchant within that time those items are this sale's (Carried), so the
 -- junk window lists them to sell and the sell button sells them, also an item
 -- that is not junk and was picked for that sale only. A sale that ends with
@@ -102,7 +102,9 @@ local function finish(newState, why)
 		if left then
 			local warning = L["Not everything was sold: %d left. Back at a merchant within a minute, they are in To Sell."]:format(left.count)
 			ns.Print("|cffff2020" .. warning .. "|r")
-			Compat.ShowErrorMessage(warning)
+			if Junk.SaleNotice then
+				Junk.SaleNotice.Show(warning)
+			end
 		end
 	end
 	for _, watch in ipairs(watchers) do

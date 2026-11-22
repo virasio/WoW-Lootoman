@@ -76,7 +76,6 @@
     "UnitIsInInteractRange",
     "TooltipUtil",
     "UISpecialFrames",
-    "UIErrorsFrame",
     "WOW_PROJECT_ID"
   ]
 }

@@ -211,19 +211,6 @@ function Compat.IsInteracting(kind)
 	return C_PlayerInteractionManager.IsInteractingWithNpcOfType(interaction) == true
 end
 
--- A line in red in the game's message area, as the game shows its own errors
--- (Blizzard's UIErrorsFrame, which addons may write to).
-function Compat.ShowErrorMessage(text)
-	if not UIErrorsFrame then
-		return
-	end
-	if UIErrorsFrame.AddExternalErrorMessage then
-		UIErrorsFrame:AddExternalErrorMessage(text)
-	else
-		UIErrorsFrame:AddMessage(text, 1, 0.1, 0.1)
-	end
-end
-
 -- The name of a game error from UI_ERROR_MESSAGE, such as "ERR_INV_FULL", the
 -- same in every language (Blizzard's UIErrorsFrame reads it this way).
 function Compat.GetGameErrorName(errorType)

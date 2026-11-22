@@ -608,12 +608,6 @@ function Compat.FormatDay(time)
 	return os.date("!%Y-%m-%d", time)
 end
 
--- state.errorMessages: the lines shown in the game's message area.
-function Compat.ShowErrorMessage(text)
-	state.errorMessages = state.errorMessages or {}
-	state.errorMessages[#state.errorMessages + 1] = text
-end
-
 -- state.sounds: the sound files played, with their channels.
 function Compat.PlaySoundFile(file, channel)
 	state.sounds = state.sounds or {}

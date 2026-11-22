@@ -59,7 +59,6 @@ files["Compat/"] = {
 		"GetBuildInfo",
 		"GetCursorInfo",
 		"GetGameMessageInfo",
-		"UIErrorsFrame",
 		"GetLootSlotInfo",
 		"GetLootSlotLink",
 		"GetLootSlotType",
