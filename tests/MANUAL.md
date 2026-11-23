@@ -447,6 +447,7 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 
 - [ ] **The block.** *Expected:* *Track Loot Rolls* (on) with its note «Every roll in your group goes into the roll history.» and *Roll History* at the right end of its row; under it, indented:
   - *Show the Loot Rolls Window* (on), its note «It opens once you have chosen; closing it clears its list.»;
+  - further in, *Background Opacity* (100 %) and *Show the Border* (on), greyed while the window's option is off;
   - further in, *Hide the Game's Roll Frames* (off), its note «You then roll in the Loot Rolls window.»;
   - with no addon to give the advice on whether to need, a white frame (*Whether to need* below);
   - *Show Who Rolled What* (on), its note on the panel beside the game's roll frame;
@@ -529,6 +530,7 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 - [ ] **Leaving.** With it open, leave the dungeon. *Expected:* its rows stay as they were (note any row that empties). After a `/reload` it is closed.
 - [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
 - [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
+- [ ] **Its look.** With the window open (`/ltm demo roll dung`, choose): move *Background Opacity* down to 0 % and back, untick and tick *Show the Border*. *Expected:* each change at once; without the border, no frame and no title bar, the background reaching to the window's edges, the title and the X still there, the window still dragged by its top; at 0 %, only the rows, readable over the world; kept after a `/reload`.
 - [ ] **Off.** Untick *Show the Loot Rolls Window*. *Expected:* no window at your choice.
 
 ### Rolling in the Loot Rolls window

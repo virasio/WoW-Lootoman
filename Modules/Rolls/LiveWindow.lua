@@ -14,6 +14,8 @@ local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 -- from the open group's history after that, so the rows stay as they were
 -- when the game clears its loot history. Built as the module starts, with
 -- its first rows; it opens in a fight too (its frames are not protected).
+-- Its options give its background's opacity, and its border or none
+-- (ApplyLook).
 --
 -- With the game's roll frames kept away (Hide the Game's Roll Frames), the
 -- window is where the player rolls: it opens as a roll starts, whatever its
@@ -149,6 +151,29 @@ local function newRow()
 	return row
 end
 
+-- Where the template puts the background: under the title bar, inside the border.
+LiveWindow.BG_INSET = { left = 6, top = 20, right = 2, bottom = 2 }
+
+-- The window's look, as its options say: its background's opacity, and its
+-- border, the game's frame with the title bar; without it, the background
+-- reaches to the window's edges, under the title and the close button.
+function LiveWindow.ApplyLook()
+	if not frame then
+		return
+	end
+	local bordered = Storage:Get("Rolls", "windowBorder") ~= false
+	frame.NineSlice:SetShown(bordered)
+	local inset = LiveWindow.BG_INSET
+	frame.Bg:ClearAllPoints()
+	if bordered then
+		frame.Bg:SetPoint("TOPLEFT", inset.left, -inset.top)
+		frame.Bg:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
+	else
+		frame.Bg:SetAllPoints(frame)
+	end
+	frame.Bg:SetAlpha(math.max(0, math.min(100, tonumber(Storage:Get("Rolls", "windowOpacity")) or 100)) / 100)
+end
+
 -- Builds the window, hidden, with its first rows.
 function LiveWindow.Build()
 	if frame then
@@ -191,6 +216,7 @@ function LiveWindow.Build()
 	for _ = 1, LiveWindow.FIRST_ROWS do
 		newRow()
 	end
+	LiveWindow.ApplyLook()
 	-- Closed, it forgets what it showed. Closed by Escape while a roll
 	-- waits, it comes back and asks; hidden with the whole interface, it
 	-- keeps everything.

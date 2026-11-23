@@ -33,8 +33,11 @@ local Rolls = ns.Modules:Register({
 		minQuality = 2,
 		spareFriends = true,
 		summary = true,
-		-- The live window, where the game does not open its own loot history window.
+		-- The live window, where the game does not open its own loot history
+		-- window; its background's opacity (per cent) and its border.
 		liveWindow = true,
+		windowOpacity = 100,
+		windowBorder = true,
 		-- The game's roll frames kept away, while the live window is on: the
 		-- rolls in the Loot Rolls window.
 		hideGameFrames = false,
@@ -51,8 +54,8 @@ local Rolls = ns.Modules:Register({
 			ns.Rolls.HistoryWindow.Open()
 		end,
 	},
-	-- Under the switch: the Loot Rolls window, and under it hiding the game's
-	-- frames; while no addon gives advice on whether to need, where to get
+	-- Under the switch: the Loot Rolls window, and under it its background's
+	-- opacity, its border and hiding the game's frames; while no addon gives advice on whether to need, where to get
 	-- one (Forever Leveling BiS on its client, else Pawn); the panels beside the game's frames (not while they are hidden:
 	-- the window shows the same); moving those frames (a module of its own);
 	-- the detection's checkbox with the Ninja Rules button beside it. The
@@ -61,6 +64,16 @@ local Rolls = ns.Modules:Register({
 		{ kind = "checkbox", key = "liveWindow", label = L["Show the Loot Rolls Window"],
 			tooltip = L["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."],
 			note = L["It opens once you have chosen; closing it clears its list."] },
+		{ kind = "slider", key = "windowOpacity", label = L["Background Opacity"], level = 2, min = 0, max = 100, step = 10, format = L["%d %%"],
+			tooltip = L["How much the window's background hides what is behind it; at 0 %, only its rows show."],
+			enabledWhen = function()
+				return ns.Storage:Get("Rolls", "liveWindow") == true
+			end },
+		{ kind = "checkbox", key = "windowBorder", label = L["Show the Border"], level = 2,
+			tooltip = L["The window's frame with its title bar; without it, the background reaches to the window's edges."],
+			enabledWhen = function()
+				return ns.Storage:Get("Rolls", "liveWindow") == true
+			end },
 		{ kind = "checkbox", key = "hideGameFrames", label = L["Hide the Game's Roll Frames"], level = 2,
 			tooltip = L["The game's loot roll frames no longer show: each roll comes into the Loot Rolls window as it starts, at the top, with the buttons and a timer. Turning this off needs a reload."],
 			note = L["You then roll in the Loot Rolls window."],
@@ -363,6 +376,8 @@ function Rolls:OnEnable()
 				end
 			elseif key == "panels" then
 				refreshPanels()
+			elseif key == "windowOpacity" or key == "windowBorder" then
+				ns.Rolls.LiveWindow.ApplyLook()
 			end
 			ns.Rolls.Marks.Invalidate()
 			Rolls.RedrawAll()

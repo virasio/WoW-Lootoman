@@ -327,6 +327,13 @@ function UI.Install()
 		elseif template == "UIPanelCloseButtonNoScripts" then
 			-- Above a panel's border and title bar (frame levels 500 and 510).
 			frame.level = 510
+		elseif template == "DefaultPanelFlatTemplate" then
+			-- DefaultPanelBaseTemplate's border; DefaultPanelFlatTemplate's
+			-- background, where the template puts it.
+			frame.NineSlice = UI.NewFake(frame)
+			frame.Bg = UI.NewFake(frame)
+			frame.Bg:SetPoint("TOPLEFT", 6, -20)
+			frame.Bg:SetPoint("BOTTOMRIGHT", -2, 2)
 		elseif template == "ColorSwatchTemplate" then
 			-- ColorSwatchMixin.
 			function frame:SetColorRGB(r, g, b) self.color = { r, g, b } end

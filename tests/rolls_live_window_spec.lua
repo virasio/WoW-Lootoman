@@ -218,20 +218,52 @@ describe("the live window", function()
 	end)
 end)
 
-describe("the live window's option", function()
+describe("the live window's options", function()
+	local ns
+
 	local function page()
 		local SettingsAPI = require("tests.mocks.SettingsAPI")
 		SettingsAPI.Install()
-		local ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
+		ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
 		Loader.Start(ns)
-		local labels = {}
-		for _, item in ipairs(ns.SettingsPanel.main.items) do
-			labels[item.text or ""] = true
+		local found = {}
+		for index, item in ipairs(ns.SettingsPanel.main.items) do
+			if item.text then
+				found[item.text] = { index = index, item = item }
+			end
 		end
-		return labels
+		return found
 	end
 
-	it("is on the options page, under the loot rolls' switch", function()
-		assert.is_true(page()["Show the Loot Rolls Window"])
+	it("are on the options page, under the loot rolls' switch: the window, its background's opacity and its border under it", function()
+		local found = page()
+		local window = found["Show the Loot Rolls Window"]
+		local opacity, border = found["Background Opacity"], found["Show the Border"]
+		assert.same({ window.index + 1, window.index + 2, "slider", 48, "checkbox", 48 },
+			{ opacity.index, border.index, opacity.item.kind, opacity.item.indent, border.item.kind, border.item.indent })
+		assert.equals(found["Hide the Game's Roll Frames"].index, border.index + 1)
+		-- Greyed while the window is off.
+		ns.Storage:Set("Rolls", "liveWindow", false)
+		assert.same({ "GameFontDisable", false }, { opacity.item.region.label.fontObject, border.item.region.enabled })
+	end)
+
+	it("give the window its look at once: the border, and the background's opacity", function()
+		page()
+		local frame = ns.Rolls.LiveWindow.Frame()
+		assert.same({ true, 1, { "TOPLEFT", 6, -20 } }, { frame.NineSlice:IsShown(), frame.Bg:GetAlpha(), frame.Bg.points[1] })
+		ns.Storage:Set("Rolls", "windowOpacity", 40)
+		assert.equals(0.4, frame.Bg:GetAlpha())
+		ns.Storage:Set("Rolls", "windowBorder", false)
+		assert.same({ false, frame, 0.4 }, { frame.NineSlice:IsShown(), frame.Bg.allPoints, frame.Bg:GetAlpha() })
+		ns.Storage:Set("Rolls", "windowBorder", true)
+		assert.same({ true, { "BOTTOMRIGHT", -2, 2 } }, { frame.NineSlice:IsShown(), frame.Bg.points[2] })
+		-- At the next login too.
+		ns.Storage:Set("Rolls", "windowOpacity", 0)
+		ns.Storage:Set("Rolls", "windowBorder", false)
+		local saved = ns.Compat.Test.state.saved.LootomanDB
+		ns = Loader.LoadAddon({ gameType = "camelot" })
+		Loader.Start(ns, { LootomanDB = saved })
+		frame = ns.Rolls.LiveWindow.Frame()
+		assert.same({ 0, false }, { frame.Bg:GetAlpha(), frame.NineSlice:IsShown() })
 	end)
 end)
