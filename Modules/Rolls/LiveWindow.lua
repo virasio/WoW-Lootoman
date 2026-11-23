@@ -74,8 +74,14 @@ local function waits(rollID)
 	return rollID ~= nil and Model.Roll(rollID) ~= nil
 end
 
--- Whether any roll waits for the player, with the game's frames kept away.
+-- Whether any roll waits for the player, with the game's frames kept away
+-- (or a made-up one of the demo's, in the window).
 function LiveWindow.Waiting()
+	for _, entry in ipairs(entries) do
+		if entry.view and entry.view.choosable then
+			return true
+		end
+	end
 	if not rolling() then
 		return false
 	end
@@ -497,20 +503,41 @@ function LiveWindow.OnModel(kind, value)
 	LiveWindow.Redraw()
 end
 
--- Shows views of made-up drops (the repository's demo), the first at the
--- top; false where the window does not exist.
-function LiveWindow.ShowViews(views)
+-- Takes in a made-up drop's view (the repository's demo), as a roll's drop
+-- comes: closed, the window opens with it and forgets what it showed; open,
+-- the view goes on top, unless it is there already. quiet: not lit. False
+-- where the window does not exist.
+function LiveWindow.AddView(view, quiet)
 	if not frame then
 		return false
 	end
-	entries, known = {}, {}
-	for index = #views, 1, -1 do
-		add({ view = views[index] }, index > 1)
+	if not frame:IsShown() then
+		entries, known = {}, {}
+		place()
+		frame:Show()
 	end
-	place()
-	frame:Show()
+	local there = false
+	for _, entry in ipairs(entries) do
+		there = there or entry.view == view
+	end
+	if not there then
+		add({ view = view }, quiet)
+	end
 	LiveWindow.Redraw()
 	return true
+end
+
+-- Whether the window shows a made-up drop's view now.
+function LiveWindow.Shows(view)
+	if not frame or not frame:IsShown() then
+		return false
+	end
+	for _, entry in ipairs(entries) do
+		if entry.view == view then
+			return true
+		end
+	end
+	return false
 end
 
 -- Closes the window; while a roll waits for the player's choice, after

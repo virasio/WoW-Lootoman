@@ -184,7 +184,7 @@ describe("a made-up row to choose on", function()
 		local chosen, share = {}, 0.8
 		local view = { link = HELM, bound = false, players = {}, item = { canNeed = true, canGreed = true }, choosable = true,
 			timer = share, timeShare = function() return share end, onChoose = function(rollType) chosen[#chosen + 1] = rollType end }
-		assert.is_true(ns.Rolls.LiveWindow.ShowViews({ view }))
+		assert.is_true(ns.Rolls.LiveWindow.AddView(view))
 		local window = ns.Rolls.LiveWindow.Frame()
 		ns.Compat.Test.Advance(ns.Rolls.LiveWindow.GUARD)
 		local button = window.rows[1].buttons[4]

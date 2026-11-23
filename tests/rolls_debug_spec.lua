@@ -48,8 +48,8 @@ describe("the loot rolls' debugging", function()
 		assert.equals("  1:2 Mail Helm at The Deadmines: 1 players, winner Brina", run()[4])
 	end)
 
-	it("plays the demo with /ltm demo roll, with no group", function()
-		Test.RunSlashCommand("LOOTOMAN", "demo roll")
+	it("plays the demo with /ltm demo roll dung, with no group", function()
+		Test.RunSlashCommand("LOOTOMAN", "demo roll dung")
 		assert.is_true(ns.Rolls.Demo.IsRunning())
 		assert.is_false(Test.state.group)
 	end)
@@ -87,7 +87,7 @@ describe("the demos", function()
 		Loader.Start(ns)
 		assert.same({ "Demos, in the repository's version only:",
 			"/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
-			"/ltm demo roll: play the loot rolls' demo, with no group",
+			"/ltm demo roll dung|raid [IDs]: a boss's loot rolled on by a made-up group, you as Player (alone: more)",
 			"/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits" }, printed(ns, "demo"))
 		for _, command in ipairs({ "help", "debug help" }) do
 			assert.is_nil(table.concat(printed(ns, command), "\n"):find("demo", 1, true))

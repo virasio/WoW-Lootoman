@@ -66,4 +66,8 @@ ns.Data.rolls = {
 	-- the first dungeons (The Deadmines, Wailing Caverns, Shadowfang Keep),
 	-- which the client knows by these IDs. One the client cannot load is left out.
 	demoHistoryItems = { 5191, 1937, 5199, 5192, 6460, 6473, 6220, 6318, 6321, 5616 },
+	-- The raid demo's five, of Onyxia's: Vis'kag the Bloodletter, Deathbringer,
+	-- Ring of Binding, Netherwind Crown (a mage's) and Helm of Wrath (a
+	-- warrior's).
+	demoRaidItems = { 17075, 17068, 18813, 16914, 16963 },
 }
