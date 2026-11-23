@@ -26,6 +26,7 @@ local Compat, L, Storage = ns.Compat, ns.L, ns.Storage
 -- player (CANCEL_LOOT_ROLL): the choice is final only then, so a need on an
 -- item that binds stays on top while the game asks to confirm it, and comes
 -- back to be chosen again if the player cancels. A row that has just moved
+-- (another roll in its place, or pushed by more than its item's height)
 -- takes no click for a moment (GUARD), so a click meant for the row that
 -- stood there does not land on another roll. Closing the window while a roll
 -- waits asks first: untouched, the roll ends as a pass; Escape closes it at
@@ -51,6 +52,10 @@ LiveWindow.WAIT = 0.5
 -- How long a moved row takes no click; how often the timers move; the room
 -- of the line between the rolls to choose on and the rest.
 LiveWindow.GUARD = 0.5
+-- How far a row must move for a pointer on its buttons to reach another
+-- row's: its item's height at least. A row the one above pushed a line or
+-- two (its panel filling) keeps taking clicks.
+LiveWindow.MOVE = DropRow.BELOW_ITEM
 LiveWindow.TICK = 0.1
 LiveWindow.LINE = 9
 
@@ -385,7 +390,7 @@ function LiveWindow.Redraw()
 			anyTimer = anyTimer or view.timer ~= nil
 			shown = shown + 1
 			local row = frame.rows[shown] or newRow()
-			if row.entry ~= entry or row.y ~= y then
+			if row.entry ~= entry or math.abs((row.y or y) - y) >= LiveWindow.MOVE then
 				guard(row)
 			end
 			row.entry, row.y = entry, y

@@ -172,7 +172,10 @@ local function reasonText(reason)
 	return Compat.GetGlobalString("LOOT_ROLL_INELIGIBLE_REASON" .. reason)
 end
 
--- Lays the buttons out under the item, from y down; the next y.
+-- Lays the buttons out under the item, from y down; the next y. A button
+-- that stays is neither hidden nor placed again: either drops a press under
+-- way, and the click with it, when the row is drawn again between the
+-- player's press and release (as the others choose, as the timers run).
 local function placeButtons(row, view, y)
 	local item = view.item or {}
 	local x = DropRow.INDENT
@@ -189,8 +192,11 @@ local function placeButtons(row, view, y)
 			end
 			button:SetEnabled(allowed)
 			button.reason = not allowed and reason or nil
-			button:ClearAllPoints()
-			button:SetPoint("TOPLEFT", row.frame, "TOPLEFT", x, -y)
+			if button.x ~= x or button.y ~= y then
+				button.x, button.y = x, y
+				button:ClearAllPoints()
+				button:SetPoint("TOPLEFT", row.frame, "TOPLEFT", x, -y)
+			end
 			x = x + DropRow.BUTTON + 4
 		end
 	end
@@ -339,12 +345,12 @@ draw = function(row, view, note)
 		end
 		row.item:SetSize(DropRow.BELOW_WIDTH, top)
 		local y = top + 2
-		local choosable = view and view.choosable == true
-		for _, button in ipairs(row.buttons) do
-			button:SetShown(false)
-		end
-		if choosable then
+		if view and view.choosable == true then
 			y = placeButtons(row, view, y)
+		else
+			for _, button in ipairs(row.buttons) do
+				button:Hide()
+			end
 		end
 		row.timer:SetShown(view ~= nil and view.timer ~= nil)
 		if view and view.timer then

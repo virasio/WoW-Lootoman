@@ -121,6 +121,50 @@ describe("rolling in the Loot Rolls window", function()
 		assert.same({ 8, 2 }, Test.state.rolledOn[#Test.state.rolledOn])
 	end)
 
+	it("takes a click on a row the one above pushed down a line, but not on one pushed past its item's height", function()
+		roll(7, HELM, "Mail Helm")
+		roll(8, BOOTS, "Boots")
+		Test.Advance(LiveWindow.GUARD)
+		local y = window.rows[2].y
+		-- The top row's panel fills: two lines instead of the waiting one.
+		Test.SetLootDrop({ encounterID = 1, listID = 2, link = BOOTS, rolls = {
+			{ name = "Brina", guid = "g-brina", class = "MAGE", state = 4 }, { name = "Tester", guid = Test.state.playerGUID, class = "WARRIOR", state = 4 } } })
+		assert.equals(y + ns.Rolls.Panel.LINE, window.rows[2].y)
+		click(2, 2)
+		assert.same({ 7, 2 }, Test.state.rolledOn[#Test.state.rolledOn])
+		-- Five lines: pushed more than its item's height.
+		local players = {}
+		for index = 1, 5 do
+			players[index] = { name = "P" .. index, guid = "g-p" .. index, class = "MAGE", state = 4 }
+		end
+		roll(9, RING, "Ring")
+		Test.Advance(LiveWindow.GUARD)
+		Test.SetLootDrop({ encounterID = 1, listID = 3, link = RING, rolls = players })
+		local before = #Test.state.rolledOn
+		click(2, 1)
+		assert.equals(before, #Test.state.rolledOn)
+	end)
+
+	it("keeps a row's buttons shown and in place as it is drawn again, so a press under way is not dropped", function()
+		roll(7, HELM, "Mail Helm")
+		local button = window.rows[1].buttons[2]
+		local hidden, moved = 0, 0
+		local setShown, clear = button.SetShown, button.ClearAllPoints
+		button.SetShown = function(self, shown)
+			if not shown then
+				hidden = hidden + 1
+			end
+			setShown(self, shown)
+		end
+		button.ClearAllPoints = function(self)
+			moved = moved + 1
+			clear(self)
+		end
+		ns.Rolls.Module.RedrawAll()
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = HELM, rolls = { { name = "Brina", guid = "g-brina", class = "MAGE", state = 4 } } })
+		assert.same({ 0, 0, true }, { hidden, moved, button:IsShown() })
+	end)
+
 	it("asks before closing while a roll waits, comes back to ask after Escape, and closes at once without one", function()
 		roll(7, HELM, "Mail Helm")
 		window.close.scripts.OnClick(window.close)
