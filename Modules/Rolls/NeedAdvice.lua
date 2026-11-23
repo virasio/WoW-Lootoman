@@ -106,20 +106,13 @@ function NeedAdvice.Line(link)
 	return nil
 end
 
--- The note on the options page: where the advice comes from, the one
--- recommended where the client has it, and which is found.
-function NeedAdvice.Note()
-	local flb, pawn = ns.Integrations.ForeverLevelingBiS, ns.Integrations.Pawn
-	if ns.Data.levelingBiS then
-		local found = flb.Working() and flb.NAME or pawn.Working() and pawn.NAME
-		if found then
-			return L["Advice on whether to need comes from %s or %s; %s is recommended. In use: %s."]:format(flb.NAME, pawn.NAME, flb.NAME,
-				found)
-		end
-		return L["Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed."]:format(flb.NAME, pawn.NAME,
-			flb.NAME)
-	elseif pawn.Working() then
-		return L["Advice on whether to need comes from %s, now in use."]:format(pawn.NAME)
-	end
-	return L["Advice on whether to need comes from %s, when installed."]:format(pawn.NAME)
+-- The addon the options page suggests while no addon gives the advice:
+-- Forever Leveling BiS on the client it is made for, else Pawn.
+function NeedAdvice.Suggested()
+	return ns.Data.levelingBiS and ns.Integrations.ForeverLevelingBiS or ns.Integrations.Pawn
+end
+
+-- Whether no addon gives the advice now: the options page then suggests one.
+function NeedAdvice.Missing()
+	return not ns.Integrations.ForeverLevelingBiS.Working() and not ns.Integrations.Pawn.Working()
 end

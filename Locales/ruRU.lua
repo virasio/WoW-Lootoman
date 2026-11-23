@@ -434,8 +434,12 @@ ns.Locales.AddTranslation("ruRU", {
 
 	-- Modules/Rolls/Rolls.lua
 	["Loot rolls"] = "Розыгрыш лута",
+	["Track Loot Rolls"] = "Следить за розыгрышами",
+	["Follows the loot rolls in your groups and keeps them in the roll history; everything under it works only while it is on."] = "Следит за розыгрышами лута в ваших группах и хранит их в истории; всё, что ниже, работает, только пока это включено.",
+	["Every roll in your group goes into the roll history."] = "Каждый розыгрыш в группе записывается в историю.",
 	["Show Who Rolled What"] = "Показывать, кто что выбрал",
-	["Beside the game's loot roll frames: who chose what and rolled what, in class colours, as it happens."] = "Рядом с окнами розыгрыша лута: кто что выбрал и сколько выбросил, в цветах классов, по ходу розыгрыша.",
+	["Who chose what and rolled what, in class colours, as it happens. While the game's roll frames are hidden, the Loot Rolls window shows it instead."] = "Кто что выбрал и сколько выбросил, в цветах классов, по ходу розыгрыша. Пока окна розыгрыша игры скрыты, это показывает окно «Розыгрыши добычи».",
+	["A panel beside the game's roll frame: who chose what and what they rolled."] = "Табличка рядом с окном розыгрыша игры: кто что выбрал и сколько выбросил.",
 
 	-- Modules/Rolls/Panel.lua
 	["Waiting for the rolls…"] = "Ждём бросков…",
@@ -468,7 +472,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Reset Class"] = "Сбросить класс",
 	["Reset All"] = "Сбросить всё",
 	["Detect Ninja Looters"] = "Определять ниндзя-лутеров",
-	["Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips."] = "Отмечает ниды, похожие на ниндзя-лутинг, на плашках рядом с окнами розыгрыша; причины видны в подсказке.",
+	["Marks needs that look like ninja looting beside the game's roll frames and in the Loot Rolls window, with the reasons in their tooltips."] = "Отмечает ниды, похожие на ниндзя-лутинг, рядом с окнами розыгрыша игры и в окне «Розыгрыши добычи»; причины видны в подсказке.",
+	["Edit Rules"] = "Настроить правила",
 	["Armor Types"] = "Типы брони",
 	["A need on an armor type the needer's class does not count as its own, or past the level it counts to."] = "Нид на тип брони, который не считается своим для класса, или после уровня, до которого считается.",
 	["Weapon Types"] = "Типы оружия",
@@ -553,7 +558,8 @@ ns.Locales.AddTranslation("ruRU", {
 	["Opens Edit Mode with the loot roll frames picked."] = "Открывает режим редактирования с выбранными окнами розыгрыша лута.",
 	["Rolling…"] = "Идёт розыгрыш…",
 	["All passed"] = "Все отказались",
-	["Show the Loot Rolls Window After Your Choice"] = "Показывать окно розыгрышей после своего выбора",
+	["Show the Loot Rolls Window"] = "Показывать окно «Розыгрыши добычи»",
+	["It opens once you have chosen; closing it clears its list."] = "Открывается после вашего выбора; когда вы его закрываете, список очищается.",
 	["Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window."] = "Когда вы сделали выбор в розыгрыше, окно покажет его вместе с другими розыгрышами группы по ходу дела и будет хранить все разыгранные предметы, пока вы его не закроете; кроме клиентов, где игра открывает своё окно истории добычи.",
 	["Loot Rolls"] = "Розыгрыши добычи",
 	["Roll History"] = "История розыгрышей",
@@ -589,11 +595,9 @@ ns.Locales.AddTranslation("ruRU", {
 	["Not an upgrade (%s)"] = "Не улучшение (%s)",
 	["Upgrade: +%s (%s: %s)"] = "Улучшение: +%s (%s: %s)",
 	["Upgrade: +%s (%s)"] = "Улучшение: +%s (%s)",
-	["Advice on whether to need comes from %s or %s; %s is recommended. In use: %s."] = "Совет, стоит ли нидить, берётся из %s или %s; рекомендуется %s. Сейчас: %s.",
-	["Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed."] = "Совет, стоит ли нидить, берётся из %s или %s; рекомендуется %s. Ни один не установлен.",
-	["Advice on whether to need comes from %s, now in use."] = "Совет, стоит ли нидить, берётся из %s, он установлен.",
-	["Advice on whether to need comes from %s, when installed."] = "Совет, стоит ли нидить, берётся из %s, если он установлен.",
+	["Advice on whether to need comes with %s, which is not installed."] = "Совет, стоит ли нидить, даёт %s; он не установлен.",
 	["Rolls are waiting for your choice; untouched, they end as a pass. Close the window?"] = "Розыгрыши ждут вашего выбора; если ничего не выбрать, они закончатся пасом. Закрыть окно?",
 	["Close"] = "Закрыть",
 	["Copy the Forever Leveling BiS Address"] = "Скопировать адрес Forever Leveling BiS",
+	["Copy the Pawn Address"] = "Скопировать адрес Pawn",
 })

@@ -133,37 +133,49 @@ describe("whether to need", function()
 		assert.is_false(wide.item.advice:IsShown())
 	end)
 
-	it("recommends Forever Leveling BiS on the options page, and says which is in use as the options open", function()
-		local note = ns.SettingsPanel.main.needAdvice
-		assert.equals("Advice on whether to need comes from Forever Leveling BiS or Pawn; Forever Leveling BiS is recommended. Neither is installed.",
-			note:GetText())
-		installPawn()
-		ns.SettingsPanel.main.frame.OnRefresh()
-		assert.matches("In use: Pawn%.$", note:GetText())
-		installLevelingBiS()
-		ns.SettingsPanel.main.frame.OnRefresh()
-		assert.matches("In use: Forever Leveling BiS%.$", note:GetText())
-	end)
+	local SUGGESTION = "Advice on whether to need comes with Forever Leveling BiS, which is not installed."
 
-	it("offers Forever Leveling BiS's address while it is not in use", function()
-		local page = ns.SettingsPanel.main
-		local button = page.levelingBiSButton
-		assert.is_true(button:IsShown())
-		button.scripts.OnClick(button)
+	local function suggestion()
+		for _, entry in ipairs(ns.SettingsPanel.main.items) do
+			if entry.text == SUGGESTION then
+				return entry
+			end
+		end
+	end
+
+	it("suggests Forever Leveling BiS on the options page in a frame, with its address, while neither addon is there", function()
+		local entry = suggestion()
+		local box = entry.region
+		assert.same({ "suggestion", true, "Copy the Forever Leveling BiS Address" }, { entry.kind, box:IsShown(), box.button.text })
+		box.button.scripts.OnClick(box.button)
 		local dialog = rawget(_G, ns.SettingsPanel.COPY_NAME)
 		assert.same({ true, "https://www.curseforge.com/wow/addons/forever-leveling-bis" }, { dialog:IsShown(), dialog.box:GetText() })
 		installLevelingBiS()
-		page:Layout()
-		assert.is_false(button:IsShown())
+		ns.SettingsPanel.main:Layout()
+		assert.is_false(box:IsShown())
 	end)
 
-	it("names only Pawn on retail, where Forever Leveling BiS is not", function()
-		start({ skip = {} })
-		local note = ns.SettingsPanel.main.needAdvice
-		assert.is_false(ns.SettingsPanel.main.levelingBiSButton:IsShown())
-		assert.equals("Advice on whether to need comes from Pawn, when installed.", note:GetText())
+	it("suggests nothing while Pawn gives the advice", function()
 		installPawn()
-		ns.SettingsPanel.main.frame.OnRefresh()
-		assert.equals("Advice on whether to need comes from Pawn, now in use.", note:GetText())
+		ns.SettingsPanel.main:Layout()
+		assert.is_false(suggestion().region:IsShown())
+	end)
+
+	it("suggests Pawn on retail, where Forever Leveling BiS is not, until it is there", function()
+		start({ skip = {} })
+		local entry
+		for _, item in ipairs(ns.SettingsPanel.main.items) do
+			if item.kind == "suggestion" then
+				entry = item
+			end
+		end
+		local box = entry.region
+		assert.same({ "Advice on whether to need comes with Pawn, which is not installed.", true, "Copy the Pawn Address" },
+			{ entry.text, box:IsShown(), box.button.text })
+		box.button.scripts.OnClick(box.button)
+		assert.equals("https://www.curseforge.com/wow/addons/pawn", rawget(_G, ns.SettingsPanel.COPY_NAME).box:GetText())
+		installPawn()
+		ns.SettingsPanel.main:Layout()
+		assert.is_false(box:IsShown())
 	end)
 end)

@@ -25,10 +25,11 @@ local Compat, L, Storage, Text = ns.Compat, ns.L, ns.Storage, ns.Text
 --
 -- The windows go by the options, as for real rolls. With the game's roll
 -- frames shown, look-alikes of them stand where they would (up to FRAMES at
--- once; the others wait for a free one), each with its panel; a choice on
--- one takes it away, and the Loot Rolls window opens a moment later with
--- that roll and the others still going (with its option on), or takes it in
--- when open. With Hide the Game's Roll Frames on, the window opens at once
+-- once; the others wait for a free one), each with its panel (with Show Who
+-- Rolled What on); a choice on one takes it away, and the Loot Rolls window
+-- opens a moment later with that roll and the others still going (with its
+-- option on), or takes it in when open. With Hide the Game's Roll Frames on
+-- (and the window's option with it), the window opens at once
 -- with the rolls on top, our buttons and their timers; a choice moves a roll
 -- under the line. A right click on a marked need excuses it, in the demo
 -- only; no Suspicious Needs window at the end (/ltm demo exceptions shows
@@ -275,7 +276,12 @@ local function draw(roll)
 	Marks.Add(view, roll.context)
 	if roll.card then
 		roll.card.frame.timer:SetValue(math.max(0, Demo.LENGTH - (Compat.GetTime() - roll.started)))
-		Panel.Show(roll.card.panel, roll.card.frame, view)
+		-- Its panel as a real roll's: while Show Who Rolled What is on.
+		if Storage:Get("Rolls", "panels") then
+			Panel.Show(roll.card.panel, roll.card.frame, view)
+		else
+			Panel.Hide(roll.card.panel)
+		end
 	end
 end
 
@@ -541,7 +547,7 @@ function Demo.Start(kind, ids, tries)
 		ns.Print("demo roll: none of its items came; try again.")
 		return false
 	end
-	local hidden = Storage:Get("Rolls", "hideGameFrames") == true
+	local hidden = ns.Rolls.Module.HidesGameFrames()
 	for index = #rolls, 1, -1 do
 		rolls[index] = nil
 	end

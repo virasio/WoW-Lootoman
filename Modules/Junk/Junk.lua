@@ -14,12 +14,6 @@ local Junk = ns.Modules:Register({
 	title = L["Junk"],
 	switchLabel = L["Enable Junk Management"],
 	description = L["Throw junk away by the loot window or the bags and sell it at merchants, with suggestions of what else can go. Turned off, the game's own sell-junk button is back."],
-	-- Only while QuestieDB is not working, decided as the options page is built.
-	switchNote = function()
-		if not ns.Integrations.QuestieDB.Working() then
-			return L["Suggestions about quests are better with QuestieDB, which knows every quest an item is for."]
-		end
-	end,
 	defaults = {
 		enabled = true,
 		-- The junk window's button on the loot window: "never", "always" or "full".
@@ -40,10 +34,11 @@ local Junk = ns.Modules:Register({
 		suggestKnown = true,
 		suggestOutgrown = true,
 	},
-	-- Under the switch QuestieDB's address (with the note), the junk list, how
-	-- the windows open, then the suggestions.
+	-- Under the switch, while QuestieDB is not working, a suggestion with its
+	-- address; the junk list, how the windows open, then the suggestions.
 	mainSettings = {
-		{ kind = "button", label = L["Copy the QuestieDB Address"],
+		{ kind = "suggestion", text = L["Suggestions about quests are better with QuestieDB, which knows every quest an item is for."],
+			button = L["Copy the QuestieDB Address"],
 			tooltip = L["The game cannot open a browser: copy the address and open it in yours."],
 			visible = function()
 				return not ns.Integrations.QuestieDB.Working()

@@ -225,7 +225,6 @@ describe("the loot rolls' demo", function()
 
 	it("with the game's frames hidden, opens the window at once with the rolls on top to choose on, and asks before closing", function()
 		ns.Storage:Set("Rolls", "hideGameFrames", true)
-		ns.Storage:Set("Rolls", "liveWindow", false)
 		run("raid")
 		assert.same({ true, 5 }, { window:IsShown(), window.count })
 		assert.is_false(Demo.cards[1] ~= nil and Demo.cards[1].frame:IsShown())

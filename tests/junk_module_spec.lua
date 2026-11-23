@@ -63,9 +63,10 @@ describe("Junk module", function()
 		for _, entry in ipairs(ns.SettingsPanel.main.items) do
 			texts[#texts + 1] = tostring(entry.text)
 		end
-		assert.is_true(table.concat(texts, "|"):find("Enable Junk Management|Copy the QuestieDB Address|Edit the Junk List|Loot Window Button|Style|Bag Window Button|At Merchants|Suggestions|Quest Done|Leftovers from Quests", 1, true) ~= nil)
-		-- Fast autoloot's last item is the box of the game's Auto Loot settings.
-		assert.is_true(table.concat(texts, "|"):find("Confirm Bind%-on%-Pickup Items when Alone||Enable Junk Management") ~= nil)
+		assert.is_true(table.concat(texts, "|"):find("Enable Junk Management|Suggestions about quests are better with QuestieDB, which knows every quest an item is for.|Edit the Junk List|Loot Window Button|Style|Bag Window Button|At Merchants|Suggestions|Quest Done|Leftovers from Quests", 1, true) ~= nil)
+		-- Fast autoloot's last item is the box of the game's Auto Loot settings;
+		-- a divider between the two.
+		assert.is_true(table.concat(texts, "|"):find("Confirm Bind%-on%-Pickup Items when Alone||nil|Enable Junk Management") ~= nil)
 		local junk = ns.Modules:Get("Junk")
 		assert.same({ "full", "large", "window", true }, { junk:Get("tossButton"), junk:Get("tossStyle"), junk:Get("selling"), junk:IsActive() })
 		-- Turned off, everything under it is greyed out.
@@ -82,7 +83,7 @@ describe("Junk module", function()
 		assert.same({ false, false }, { item("Edit the Junk List").enabled, ns.Modules:Get("Junk"):IsActive() })
 	end)
 
-	describe("the QuestieDB note", function()
+	describe("the QuestieDB suggestion", function()
 		local function page(withQuestieDB)
 			SettingsAPI.Install()
 			ns = Loader.LoadAddon({ skip = {} })
@@ -104,12 +105,15 @@ describe("Junk module", function()
 			rawset(_G, "LibQuestieDB", nil)
 		end)
 
-		it("says under the switch that quests are better with QuestieDB, and copies its address", function()
+		local SUGGESTION = "Suggestions about quests are better with QuestieDB, which knows every quest an item is for."
+
+		it("says in a frame under the switch that quests are better with QuestieDB, and copies its address", function()
 			local items = page(false)
-			assert.matches("better with QuestieDB", items["Enable Junk Management"].region.note.text)
-			local copy = items["Copy the QuestieDB Address"]
-			assert.is_true(copy.visible())
-			copy.region.scripts.OnClick(copy.region)
+			assert.is_nil(items["Enable Junk Management"].region.note)
+			local box = items[SUGGESTION]
+			assert.same({ "suggestion", true, "Copy the QuestieDB Address" }, { box.kind, box.visible(), box.region.button.text })
+			local copy = box.region.button
+			copy.scripts.OnClick(copy)
 			local dialog = rawget(_G, ns.SettingsPanel.COPY_NAME)
 			assert.same({ true, "https://www.curseforge.com/wow/addons/questiedb" }, { dialog:IsShown(), dialog.box:GetText() })
 			-- Typing changes nothing.
@@ -120,8 +124,7 @@ describe("Junk module", function()
 
 		it("is not there while QuestieDB works", function()
 			local items = page(true)
-			assert.is_nil(items["Enable Junk Management"].region.note)
-			assert.is_false(items["Copy the QuestieDB Address"].visible())
+			assert.is_false(items[SUGGESTION].visible())
 		end)
 	end)
 end)

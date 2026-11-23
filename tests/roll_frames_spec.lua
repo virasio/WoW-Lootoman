@@ -141,8 +141,18 @@ describe("moving the game's roll frames", function()
 		assert.same({ false, false, false }, { RollFrames.frame:IsShown(), card.frame:IsShown(), panel:IsShown() })
 	end)
 
-	it("shows no panels in Edit Mode while the loot rolls are off, the selection over the look-alikes only", function()
+	it("works only while the loot rolls are tracked", function()
 		ns.Modules:SetEnabled("Rolls", false)
+		assert.same({ false, true }, { RollFrames:IsActive(), ns.Storage:Get("RollFrames", "enabled") })
+		lib.Fire("enter")
+		assert.is_nil(RollFrames.Cards()[1])
+		lib.Fire("exit")
+		ns.Modules:SetEnabled("Rolls", true)
+		assert.is_true(RollFrames:IsActive())
+	end)
+
+	it("shows no panels in Edit Mode while Show Who Rolled What is off, the selection over the look-alikes only", function()
+		ns.Storage:Set("Rolls", "panels", false)
 		lib.Fire("enter")
 		local card = RollFrames.Cards()[1]
 		assert.is_true(card.frame:IsShown())
@@ -208,16 +218,28 @@ describe("the Edit button beside the roll frames' checkbox", function()
 		ns.Modules:SetEnabled("RollFrames", false)
 		page:Refresh()
 		assert.is_false(button:IsEnabled())
-		-- The note under the checkbox says where Edit Mode is; the block stands above the loot rolls'.
-		local at, rolls
+		-- The note under the checkbox says where Edit Mode is; the checkbox
+		-- stands in the loot rolls' block, after the panels' option, greyed
+		-- while the game's frames are hidden and while the loot rolls are off.
+		local at, panels, ninja
 		for index, item in ipairs(page.items) do
 			if item.text == "Move the Loot Roll Frames in Edit Mode" then
 				at = index
 			elseif item.text == "Show Who Rolled What" then
-				rolls = index
+				panels = index
+			elseif item.text == "Detect Ninja Looters" then
+				ninja = index
 			end
 		end
-		assert.is_true(at < rolls)
+		assert.same({ panels + 1, ninja - 1, 24 }, { at, at, page.items[at].indent })
 		assert.matches("Edit Mode", page.items[at].region.note:GetText())
+		ns.Modules:SetEnabled("RollFrames", true)
+		ns.Storage:Set("Rolls", "hideGameFrames", true)
+		page:Refresh()
+		assert.same({ false, false }, { check.enabled, button:IsEnabled() })
+		ns.Storage:Set("Rolls", "hideGameFrames", false)
+		ns.Modules:SetEnabled("Rolls", false)
+		page:Refresh()
+		assert.same({ false, false }, { check.enabled, button:IsEnabled() })
 	end)
 end)

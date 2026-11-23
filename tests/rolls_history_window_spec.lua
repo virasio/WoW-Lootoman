@@ -91,7 +91,7 @@ describe("the roll history window", function()
 		Test.RunSlashCommand("LOOTOMAN", "rolls")
 		assert.is_nil(Window.Frame())
 		local popup = settings.popups[#settings.popups]
-		assert.same({ "GENERIC_CONFIRMATION", "Show Who Rolled What" }, { popup.which, popup.data.text_arg1 })
+		assert.same({ "GENERIC_CONFIRMATION", "Track Loot Rolls" }, { popup.which, popup.data.text_arg1 })
 	end)
 
 	it("opens the first time only out of combat", function()

@@ -441,8 +441,12 @@ ns.Locales.AddEnglish({
 
 	-- Modules/Rolls/Rolls.lua
 	"Loot rolls",
+	"Track Loot Rolls",
+	"Follows the loot rolls in your groups and keeps them in the roll history; everything under it works only while it is on.",
+	"Every roll in your group goes into the roll history.",
 	"Show Who Rolled What",
-	"Beside the game's loot roll frames: who chose what and rolled what, in class colours, as it happens.",
+	"Who chose what and rolled what, in class colours, as it happens. While the game's roll frames are hidden, the Loot Rolls window shows it instead.",
+	"A panel beside the game's roll frame: who chose what and what they rolled.",
 
 	-- Modules/Rolls/Panel.lua
 	"Waiting for the rolls…",
@@ -475,7 +479,8 @@ ns.Locales.AddEnglish({
 	"Reset Class",
 	"Reset All",
 	"Detect Ninja Looters",
-	"Marks needs that look like ninja looting on the panels beside the game's roll frames, with the reasons in their tooltips.",
+	"Marks needs that look like ninja looting beside the game's roll frames and in the Loot Rolls window, with the reasons in their tooltips.",
+	"Edit Rules",
 	"Armor Types",
 	"A need on an armor type the needer's class does not count as its own, or past the level it counts to.",
 	"Weapon Types",
@@ -560,7 +565,8 @@ ns.Locales.AddEnglish({
 	"Opens Edit Mode with the loot roll frames picked.",
 	"Rolling…",
 	"All passed",
-	"Show the Loot Rolls Window After Your Choice",
+	"Show the Loot Rolls Window",
+	"It opens once you have chosen; closing it clears its list.",
 	"Once you have chosen on a roll, a window shows it with the group's other rolls as they go, and keeps every item rolled on until you close it; not where the game opens its own loot history window.",
 	"Loot Rolls",
 	"Roll History",
@@ -596,11 +602,9 @@ ns.Locales.AddEnglish({
 	"Not an upgrade (%s)",
 	"Upgrade: +%s (%s: %s)",
 	"Upgrade: +%s (%s)",
-	"Advice on whether to need comes from %s or %s; %s is recommended. In use: %s.",
-	"Advice on whether to need comes from %s or %s; %s is recommended. Neither is installed.",
-	"Advice on whether to need comes from %s, now in use.",
-	"Advice on whether to need comes from %s, when installed.",
+	"Advice on whether to need comes with %s, which is not installed.",
 	"Rolls are waiting for your choice; untouched, they end as a pass. Close the window?",
 	"Close",
 	"Copy the Forever Leveling BiS Address",
+	"Copy the Pawn Address",
 })

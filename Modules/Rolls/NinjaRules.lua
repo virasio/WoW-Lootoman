@@ -416,7 +416,7 @@ end
 function NinjaRules.OpenOrAsk()
 	local rolls = ns.Modules:Get("Rolls")
 	if not (rolls and rolls:IsActive()) then
-		ns.TurnOn.Ask(L["Show Who Rolled What"])
+		ns.TurnOn.Ask(L["Track Loot Rolls"])
 	elseif not Storage:Get("Rolls", "ninja") then
 		ns.TurnOn.Ask(L["Detect Ninja Looters"])
 	else

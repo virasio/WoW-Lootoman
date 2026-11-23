@@ -19,6 +19,9 @@ ns.Integrations.Pawn = Integration
 
 Integration.ADDON = "Pawn"
 Integration.NAME = "Pawn"
+-- Where to get it, for the options page on a client without Forever
+-- Leveling BiS, while Pawn is not there.
+Integration.ADDRESS = "https://www.curseforge.com/wow/addons/pawn"
 
 local failure
 

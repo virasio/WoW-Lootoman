@@ -58,6 +58,41 @@ describe("hiding the game's roll frames", function()
 		assert.equals(count + 1, #settings.popups)
 	end)
 
+	it("works only with the Loot Rolls window on: greyed without it, and its turning off offers the reload", function()
+		local check
+		for _, item in ipairs(ns.SettingsPanel.main.items) do
+			if item.text == "Hide the Game's Roll Frames" then
+				check = item
+			end
+		end
+		-- Under the window's option, further in.
+		assert.equals(48, check.indent)
+		ns.Storage:Set("Rolls", "liveWindow", false)
+		ns.Storage:Set("Rolls", "hideGameFrames", true)
+		assert.same({ false, false, false }, { check.region.enabled, ns.Rolls.Module.GameFramesAway(), ns.Rolls.Module.HidesGameFrames() })
+		assert.is_nil(Test.state.gameFramesAway)
+		-- The window on again: the frames go.
+		ns.Storage:Set("Rolls", "liveWindow", true)
+		assert.same({ true, 1 }, { check.region.enabled, Test.state.gameFramesAway })
+		ns.Storage:Set("Rolls", "liveWindow", false)
+		assert.equals("The game's roll frames come back after a reload. Reload now?", settings.popups[#settings.popups].data.text)
+	end)
+
+	it("greys Show Who Rolled What and hides the panels beside the game's frames while they are away", function()
+		local panels
+		for _, item in ipairs(ns.SettingsPanel.main.items) do
+			if item.text == "Show Who Rolled What" then
+				panels = item.region
+			end
+		end
+		assert.is_true(panels.enabled)
+		ns.Storage:Set("Rolls", "hideGameFrames", true)
+		assert.is_false(panels.enabled)
+		-- Still greyed after turning it off, until the reload brings the frames back.
+		ns.Storage:Set("Rolls", "hideGameFrames", false)
+		assert.is_false(panels.enabled)
+	end)
+
 	it("asks for nothing when the frames never went", function()
 		ns.Storage:Set("Rolls", "hideGameFrames", false)
 		ns.Modules:SetEnabled("Rolls", false)

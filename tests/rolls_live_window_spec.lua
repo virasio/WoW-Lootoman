@@ -232,6 +232,6 @@ describe("the live window's option", function()
 	end
 
 	it("is on the options page, under the loot rolls' switch", function()
-		assert.is_true(page()["Show the Loot Rolls Window After Your Choice"])
+		assert.is_true(page()["Show the Loot Rolls Window"])
 	end)
 end)
