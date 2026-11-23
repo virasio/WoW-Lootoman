@@ -82,7 +82,8 @@ describe("Pawn", function()
 	-- Pawn 2.14.8's functions, as far as the advice uses them.
 	local function install(options)
 		options = options or {}
-		rawset(_G, "PawnIsInitialized", options.initialized ~= false)
+		-- Ready once its interface has loaded; the flag behind it is Pawn's own local.
+		rawset(_G, "PawnIsReady", function() return options.initialized ~= false end)
 		rawset(_G, "PawnCanItemHaveStats", function(link) return link ~= "potion" end)
 		rawset(_G, "PawnGetItemData", function(link)
 			if options.fails then
@@ -99,7 +100,7 @@ describe("Pawn", function()
 	end
 
 	local function uninstall()
-		for _, name in ipairs({ "PawnIsInitialized", "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsItemAnUpgrade" }) do
+		for _, name in ipairs({ "PawnIsReady", "PawnIsInitialized", "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsItemAnUpgrade" }) do
 			rawset(_G, name, nil)
 		end
 	end
@@ -124,6 +125,15 @@ describe("Pawn", function()
 		assert.equals("noApi", Pawn.State())
 		install({ initialized = false })
 		assert.same({ "noApi", nil }, { Pawn.State(), Pawn.Upgrade(LINK) })
+		-- Pawn's own flag is a local of its file: a global of that name says nothing.
+		rawset(_G, "PawnIsInitialized", true)
+		assert.equals("noApi", Pawn.State())
+	end)
+
+	it("works with Pawn as it is, its readiness only behind PawnIsReady", function()
+		install()
+		assert.is_nil(rawget(_G, "PawnIsInitialized"))
+		assert.same({ "working", 0.15 }, { Pawn.State(), (Pawn.Upgrade(LINK)) })
 	end)
 
 	it("gives the best upgrade and its scale, false for one that is not, and waits for an item loading", function()

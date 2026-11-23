@@ -557,12 +557,12 @@ With *Hide the Game's Roll Frames* on (it works only with *Show the Loot Rolls W
 
 On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn installed; with neither, no line.
 
-- [ ] **On the options page.** With neither addon. *Expected:* under *Hide the Game's Roll Frames*, a white frame: on WoW Forever «Advice on whether to need comes with Forever Leveling BiS, which is not installed.» and *Copy the Forever Leveling BiS Address*, Pawn not named; on retail the same with Pawn and *Copy the Pawn Address*. The button opens the small window with the address to copy. With either addon on (and `/reload`), no frame.
+- [ ] **On the options page.** With neither addon. *Expected:* under *Hide the Game's Roll Frames*, a white frame: on WoW Forever «Advice on whether to need comes with Forever Leveling BiS, which is not installed.» and *Copy the Forever Leveling BiS Address*, Pawn not named; on retail the same with Pawn and *Copy the Pawn Address*. The button opens the small window with the address to copy. With either addon installed (and `/reload`), no frame, whether or not it answers.
 - [ ] **Forever Leveling BiS.** A roll on gear you can wear. *Expected:* under *Rolling…*, *Main spec: +12.3 (Forever Leveling BiS)* in green for an upgrade, the same with a minus in grey for one that is not; nothing for an item you wear, can not wear, or that is not gear. The number matches the one in its own tooltip line for the main spec. Its off spec lines show in the item's tooltip only.
 - [ ] **Pawn.** Without Forever Leveling BiS, with Pawn and a scale for your spec (and one for an off spec, if you like). *Expected:* *Upgrade: +15% (Pawn: <scale>)* in green, the best of the scales shown, or *Not an upgrade (Pawn)* in grey; the same numbers as Pawn's tooltip.
 - [ ] **Both.** *Expected:* only Forever Leveling BiS's line.
 - [ ] **Not loaded yet.** The first roll after a login on an item you have never seen. *Expected:* the line comes a moment later.
-- [ ] **Self-test.** `/ltm debug selftest`. *Expected:* *Forever Leveling BiS: working* or *not installed*, *Pawn: working* or *not installed*.
+- [ ] **Self-test.** `/ltm debug selftest`. *Expected:* *Forever Leveling BiS: working* or *not installed*, *Pawn: working* or *not installed*; with Pawn installed, *working*, never *loaded, but without its API or not ready*.
 
 ### The roll history
 

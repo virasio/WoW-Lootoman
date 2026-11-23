@@ -17,7 +17,7 @@ local ITEMS = {
 	[200] = { name = "Ring", link = RING, quality = 3, icon = 1003, classID = 4, subclassID = 0, equipLoc = "INVTYPE_FINGER", stats = {} },
 }
 
-local PAWN = { "PawnIsInitialized", "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsItemAnUpgrade" }
+local PAWN = { "PawnIsReady", "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsItemAnUpgrade" }
 
 local function uninstall()
 	rawset(_G, "ForeverLevelingBiS_API", nil)
@@ -47,7 +47,7 @@ describe("whether to need", function()
 
 	-- Pawn: the helm an upgrade for its Protection scale, the boots not one.
 	local function installPawn()
-		rawset(_G, "PawnIsInitialized", true)
+		rawset(_G, "PawnIsReady", function() return true end)
 		rawset(_G, "PawnCanItemHaveStats", function() return true end)
 		rawset(_G, "PawnGetItemData", function(itemLink) return { Link = not loading and itemLink or nil } end)
 		rawset(_G, "PawnIsItemAnUpgrade", function(item)
@@ -155,10 +155,13 @@ describe("whether to need", function()
 		assert.is_false(box:IsShown())
 	end)
 
-	it("suggests nothing while Pawn gives the advice", function()
+	it("suggests nothing while Pawn is installed, also before it is ready", function()
 		installPawn()
 		ns.SettingsPanel.main:Layout()
 		assert.is_false(suggestion().region:IsShown())
+		rawset(_G, "PawnIsReady", function() return false end)
+		ns.SettingsPanel.main:Layout()
+		assert.same({ "noApi", false }, { ns.Integrations.Pawn.State(), suggestion().region:IsShown() })
 	end)
 
 	it("suggests Pawn on retail, where Forever Leveling BiS is not, until it is there", function()

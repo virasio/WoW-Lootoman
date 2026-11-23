@@ -7,10 +7,11 @@ local Compat, SelfTest = ns.Compat, ns.SelfTest
 -- its stats load), and PawnIsItemAnUpgrade(item) gives nothing for an item
 -- that is not an upgrade, else the upgrades for the player's scales, best
 -- first: { { LocalizedScaleName, PercentUpgrade (0.15 for 15%) }, … }.
--- PawnIsInitialized is true once Pawn can answer. The loot rolls' advice on
--- whether to need uses it.
+-- PawnIsReady(), of Pawn's own API, says whether it can answer yet (not while
+-- the game's interface still loads); the flag behind it is Pawn's own local,
+-- not a global. The loot rolls' advice on whether to need uses it.
 --
--- Used only while Pawn is loaded, initialized and its functions are there. A
+-- Used only while Pawn is loaded, ready and its functions are there. A
 -- call that raises an error turns the integration off until the next login;
 -- the self-test shows the error.
 ns.Integrations = ns.Integrations or {}
@@ -26,7 +27,11 @@ Integration.ADDRESS = "https://www.curseforge.com/wow/addons/pawn"
 local failure
 
 local function api()
-	return PawnIsInitialized == true and type(PawnCanItemHaveStats) == "function" and type(PawnGetItemData) == "function"
+	if type(PawnIsReady) ~= "function" then
+		return false
+	end
+	local ok, ready = pcall(PawnIsReady)
+	return ok and ready == true and type(PawnCanItemHaveStats) == "function" and type(PawnGetItemData) == "function"
 		and type(PawnIsItemAnUpgrade) == "function"
 end
 

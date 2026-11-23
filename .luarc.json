@@ -80,8 +80,8 @@
     "ForeverLevelingBiS_API",
     "PawnCanItemHaveStats",
     "PawnGetItemData",
-    "PawnIsInitialized",
     "PawnIsItemAnUpgrade",
+    "PawnIsReady",
     "ReloadUI",
     "WOW_PROJECT_ID"
   ]

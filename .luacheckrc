@@ -140,7 +140,7 @@ files["Integrations/ForeverLevelingBiS.lua"] = {
 }
 
 files["Integrations/Pawn.lua"] = {
-	read_globals = { "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsInitialized", "PawnIsItemAnUpgrade" },
+	read_globals = { "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnIsReady" },
 }
 
 files["Modules/"] = {

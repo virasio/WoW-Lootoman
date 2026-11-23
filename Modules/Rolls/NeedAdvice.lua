@@ -112,7 +112,9 @@ function NeedAdvice.Suggested()
 	return ns.Data.levelingBiS and ns.Integrations.ForeverLevelingBiS or ns.Integrations.Pawn
 end
 
--- Whether no addon gives the advice now: the options page then suggests one.
+-- Whether neither addon is installed: the options page then suggests one.
+-- One that is there but does not answer (not ready yet, too old) is not
+-- suggested again.
 function NeedAdvice.Missing()
-	return not ns.Integrations.ForeverLevelingBiS.Working() and not ns.Integrations.Pawn.Working()
+	return ns.Integrations.ForeverLevelingBiS.State() == "missing" and ns.Integrations.Pawn.State() == "missing"
 end
