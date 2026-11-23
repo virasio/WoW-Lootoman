@@ -48,7 +48,7 @@ describe("made-up loot in the feed, in the repository's version", function()
 	it("without pieces says which it takes", function()
 		run("")
 		local text = table.concat(lines(), "\n")
-		assert.equals("/ltm demo loot takes pieces split by commas:", lines()[1])
+		assert.equals("/ltm demo loot takes pieces split by spaces:", lines()[1])
 		for _, piece in ipairs({ "2589x5", "currency%[1220%]%+50", "exp%+2000", "rep%[\"Stormwind\"%]%+200", "gold%+0%.0015" }) do
 			assert.matches(piece, text)
 		end
@@ -56,7 +56,7 @@ describe("made-up loot in the feed, in the repository's version", function()
 	end)
 
 	it("puts each piece into the feed as real loot: items, counts, links, currency, experience, reputation, money", function()
-		run("2589, 2589x4, " .. LINEN .. " x2, currency[1220]+50, exp+2000, rep[\"Stormwind\"]+200, REP['Ironforge']-25, gold+0.0015")
+		run("2589  2589x4 " .. LINEN .. " x2 currency[1220]+50 exp+2000 rep[\"Stormwind\"]+200 REP['Ironforge']-25 gold+0.0015")
 		-- The three Linen Cloth merge into one row, as looted items do.
 		assert.same({ "item Linen Cloth 7", "currency Order Resources 50", "xp nil 2000", "reputation Stormwind 200",
 			"reputation Ironforge -25", "money nil 15" }, rows())
@@ -64,15 +64,21 @@ describe("made-up loot in the feed, in the repository's version", function()
 		assert.same({}, lines())
 	end)
 
-	it("keeps a link whose name holds a comma whole, and junk goes into its row", function()
-		run(RAG .. "x3, 2589")
+	it("keeps a link whose name holds a space whole, and junk goes into its row", function()
+		run(RAG .. "x3 2589")
 		local junk = module.model.rows[2]
 		assert.same({ "Junk", 3, 700 }, { junk.name, junk.amount, junk.parts and junk.parts[1].key })
 		assert.equals("item Linen Cloth 1", rows()[2])
 	end)
 
+	it("keeps a faction's name with spaces whole, and takes a count after a space", function()
+		run("rep[\"Steamwheedle Cartel\"]+75 2589 x3")
+		assert.same({ "reputation Steamwheedle Cartel 75", "item Linen Cloth 3" }, rows())
+		assert.same({}, lines())
+	end)
+
 	it("names a piece it cannot read and goes on with the others", function()
-		run("dance, 2589x0, currency[9]+5, gold+0.00001, exp+2000")
+		run("dance 2589x0 currency[9]+5 gold+0.00001 exp+2000")
 		assert.same({
 			"demo loot: cannot read “dance”: not a piece the command knows.",
 			"demo loot: cannot read “2589x0”: a count of at least 1.",
@@ -83,7 +89,7 @@ describe("made-up loot in the feed, in the repository's version", function()
 	end)
 
 	it("asks for an item the client has not loaded, and shows it when it comes", function()
-		run("4000x2, 4000")
+		run("4000x2 4000")
 		assert.same({ { 4000 }, {} }, { Test.state.requested, module.model.rows })
 		Test.state.items[4000] = { name = "Silk Cloth", link = "|cffffffff|Hitem:4000::|h[Silk Cloth]|h|r", icon = 5, quality = 1 }
 		Test.FireEvent("ITEM_DATA_LOAD_RESULT", 4000, true)
@@ -94,7 +100,7 @@ describe("made-up loot in the feed, in the repository's version", function()
 	end)
 
 	it("names an item that does not exist, and one that does not load in time", function()
-		run("4001, 4002")
+		run("4001 4002")
 		Test.FireEvent("ITEM_DATA_LOAD_RESULT", 4001, false)
 		assert.same({ "demo loot: item 4001 does not exist." }, lines())
 		Test.Advance(ns.Feed.Demo.LOAD_TIME)

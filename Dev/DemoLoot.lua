@@ -4,8 +4,8 @@ local Feed = ns.Feed
 
 -- Exists only when the addon runs from the repository (Dev/Demo.lua):
 --
---   /ltm demo loot 2589x5, |cff…|Hitem:…|h[Name]|h|r, currency[1220]+50,
---       exp+2000, rep["Stormwind"]+200, gold+0.0015
+--   /ltm demo loot 2589x5 |cff…|Hitem:…|h[Name]|h|r currency[1220]+50
+--       exp+2000 rep["Stormwind"]+200 gold+0.0015
 --
 -- puts made-up gains into the feed through its own handler, so merging, the
 -- junk row, the minimum quality and the delay between rows behave as for
@@ -19,7 +19,7 @@ Feed.Demo = Demo
 Demo.LOAD_TIME = 5
 
 local SYNTAX = {
-	"/ltm demo loot takes pieces split by commas:",
+	"/ltm demo loot takes pieces split by spaces:",
 	"  2589 or an item's link: one of the item; 2589x5: five",
 	"  currency[1220]+50: a currency",
 	"  exp+2000: experience",
@@ -27,21 +27,25 @@ local SYNTAX = {
 	"  gold+0.0015: money in gold, here 15 copper",
 }
 
--- The pieces of a line, split by commas; links, whose names may hold commas,
--- are taken out first and put back.
+-- The pieces of a line, split by spaces. Links and what stands in square
+-- brackets (a faction's name), which may hold spaces, are taken out first and
+-- put back; a count alone ("x2") goes with the piece before it.
 function Demo.Pieces(text)
-	local links = {}
-	local function hold(link)
-		links[#links + 1] = link
-		return "\1" .. #links .. "\1"
+	local held = {}
+	local function hold(part)
+		held[#held + 1] = part
+		return "\1" .. #held .. "\1"
 	end
-	text = text:gsub("|c[^|]*|H.-|h%[.-%]|h|r", hold):gsub("|H.-|h%[.-%]|h", hold)
+	text = text:gsub("|c[^|]*|H.-|h%[.-%]|h|r", hold):gsub("|H.-|h%[.-%]|h", hold):gsub("%b[]", hold)
 	local pieces = {}
-	for piece in (text .. ","):gmatch("%s*(.-)%s*,") do
-		if piece ~= "" then
-			pieces[#pieces + 1] = (piece:gsub("\1(%d+)\1", function(index)
-				return links[tonumber(index)]
-			end))
+	for piece in text:gmatch("%S+") do
+		piece = piece:gsub("\1(%d+)\1", function(index)
+			return held[tonumber(index)]
+		end)
+		if #pieces > 0 and Text.FoldCase(piece):match("^x%d+$") then
+			pieces[#pieces] = pieces[#pieces] .. " " .. piece
+		else
+			pieces[#pieces + 1] = piece
 		end
 	end
 	return pieces

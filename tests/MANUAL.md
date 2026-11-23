@@ -583,11 +583,11 @@ On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn
 ## Debug commands
 
 - [ ] **demo loot.** `/ltm demo loot` alone. *Expected:* the pieces it takes, in English. Then each set below; *Expected:* the rows come as for real loot (merged, the junk row, the minimum quality, the delay between rows), and a piece it cannot read is named in the chat:
-  - every kind of row: `/ltm demo loot 2589x5, 2592, exp+12345, rep["Stormwind"]+250, rep["Stormwind"]-25, gold+1.2345`, and on retail `/ltm demo loot currency[3008]+50` (a currency the character has);
-  - junk in one row: `/ltm demo loot 4865x3, 2589` (a gray pelt, a cloth), and a Shift-clicked link of a gray item from the bags with `x2`;
-  - the delay between rows: `/ltm demo loot 2589, 2592, 4306, 4338, 14047, 2770, 2771, 2772`;
+  - every kind of row: `/ltm demo loot 2589x5 2592 exp+12345 rep["Stormwind"]+250 rep["Stormwind"]-25 gold+1.2345`, a faction with a space in its name (`/ltm demo loot rep["Steamwheedle Cartel"]+50`), and on retail `/ltm demo loot currency[3008]+50` (a currency the character has);
+  - junk in one row: `/ltm demo loot 4865x3 2589` (a gray pelt, a cloth), and a Shift-clicked link of a gray item from the bags with `x2`;
+  - the delay between rows: `/ltm demo loot 2589 2592 4306 4338 14047 2770 2771 2772`;
   - an item the client has not seen this session (on retail, an ID from the current expansion): it comes a moment later; `/ltm demo loot 999999` names it as not existing;
-  - a bad piece: `/ltm demo loot dance, 2589x0, gold+0.00001`;
+  - a bad piece: `/ltm demo loot dance 2589x0 gold+0.00001`;
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
