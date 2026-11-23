@@ -210,9 +210,10 @@ function LiveWindow.Build()
 	return frame
 end
 
--- The key of the drop an entry shows now: its roll's drop while the roll is open.
+-- The key of the drop an entry shows now: its roll's drop, also after the
+-- game ended the roll for the player (as soon as he chose).
 local function keyOf(entry)
-	local roll = entry.rollID and Model.Roll(entry.rollID)
+	local roll = entry.rollID and Model.Record(entry.rollID)
 	if roll and roll.drop then
 		entry.key = roll.drop
 	end
@@ -227,7 +228,7 @@ local function viewOf(entry)
 	end
 	local view
 	local key = keyOf(entry)
-	local roll = entry.rollID and Model.Roll(entry.rollID)
+	local roll = entry.rollID and Model.Record(entry.rollID)
 	-- A roll whose drop went with the loot history is drawn from the history.
 	if roll and (roll.drop or not key) then
 		view = ns.Rolls.Module.View(entry.rollID)
@@ -390,7 +391,7 @@ end
 -- Keeps an entry's roll's start and length, for its timer once the roll is
 -- the player's no more.
 local function timed(entry)
-	local roll = entry.rollID and Model.Roll(entry.rollID)
+	local roll = entry.rollID and Model.Record(entry.rollID)
 	if roll and not entry.total then
 		entry.started, entry.total = roll.started, roll.total
 	end
@@ -410,7 +411,7 @@ end
 -- the game's frames kept away, every roll still waiting for the player
 -- too); open already, it takes the roll in.
 local function open(rollID)
-	local roll = Model.Roll(rollID)
+	local roll = Model.Record(rollID)
 	if not frame:IsShown() then
 		entries, known = {}, {}
 		local taken = {}

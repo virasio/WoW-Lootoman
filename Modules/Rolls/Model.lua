@@ -8,6 +8,12 @@ local Compat = ns.Compat
 -- of one item are rolled on at once and the player's own choice shows the
 -- other drop is his, the two swap. The panels beside the game's roll frames
 -- read a roll's view from here; the history hears every drop.
+--
+-- A roll the game ended for the player (CANCEL_LOOT_ROLL: as soon as he has
+-- chosen, or when its time ran out) is no longer his to roll on, but is kept
+-- a while (ENDED) with its drop, and still bound to one that comes later: the
+-- Loot Rolls window opens a moment after the choice, often when the game has
+-- ended the roll already, and has to know its item and its drop.
 ns.Rolls = ns.Rolls or {}
 local Model = {}
 ns.Rolls.Model = Model
@@ -16,7 +22,14 @@ local STATE = ns.Rules.Need.STATE
 -- RollOnLoot's types as the loot history's states.
 local CHOSEN = { [0] = STATE.PASS, [1] = STATE.NEED, [2] = STATE.GREED, [4] = STATE.TRANSMOG }
 
+-- How long a roll the game ended stays known, and how long from its start
+-- it may still get its drop, in seconds.
+Model.ENDED = 600
+Model.BIND_WAIT = 120
+
 local rolls, drops, order = {}, {}, 0
+-- The rolls the game ended for the player, by roll ID.
+local ended = {}
 local subscribers = {}
 
 -- fn(kind, value) on every change: "roll" with a roll ID (its view changed),
@@ -55,25 +68,42 @@ local function sameItem(roll, drop)
 end
 
 local function boundTo(key)
-	for rollID, roll in pairs(rolls) do
-		if roll.drop == key then
-			return rollID
+	for _, list in ipairs({ rolls, ended }) do
+		for rollID, roll in pairs(list) do
+			if roll.drop == key then
+				return rollID
+			end
 		end
 	end
 	return nil
 end
 
+local function byOrder(a, b)
+	return a.order < b.order
+end
+
 -- Binds each roll without a drop, the oldest first, to the first open drop of
--- its item that no roll has yet.
+-- its item that no roll has yet; then each roll the game ended without one,
+-- for a while after it started: the player's open rolls come first.
 local function bind()
-	local waiting = {}
+	local waiting, late = {}, {}
+	local now = Compat.GetTime()
 	for _, roll in pairs(rolls) do
 		-- A drop made from the chat gives way to the loot history's.
 		if not roll.drop or roll.drop:match("^chat:") then
 			waiting[#waiting + 1] = roll
 		end
 	end
-	table.sort(waiting, function(a, b) return a.order < b.order end)
+	for _, roll in pairs(ended) do
+		if (not roll.drop or roll.drop:match("^chat:")) and not roll.cleared and now - roll.started < Model.BIND_WAIT then
+			late[#late + 1] = roll
+		end
+	end
+	table.sort(waiting, byOrder)
+	table.sort(late, byOrder)
+	for _, roll in ipairs(late) do
+		waiting[#waiting + 1] = roll
+	end
 	local changed = {}
 	for _, roll in ipairs(waiting) do
 		local best
@@ -138,6 +168,7 @@ function Model.AddRoll(rollID, rollTime)
 		return nil
 	end
 	order = order + 1
+	ended[rollID] = nil
 	rolls[rollID] = { rollID = rollID, link = item.link, item = item, order = order, started = Compat.GetTime(),
 		total = rollTime or Compat.GetRollTimeLeft(rollID) }
 	bind()
@@ -145,16 +176,27 @@ function Model.AddRoll(rollID, rollTime)
 	return rolls[rollID]
 end
 
+-- The game ended a roll for the player: kept a while as ended, the oldest
+-- forgotten.
 function Model.RemoveRoll(rollID)
-	if rolls[rollID] then
+	local roll = rolls[rollID]
+	if roll then
 		rolls[rollID] = nil
+		local now = Compat.GetTime()
+		roll.ended = now
+		ended[rollID] = roll
+		for otherID, other in pairs(ended) do
+			if now - other.ended > Model.ENDED then
+				ended[otherID] = nil
+			end
+		end
 		notify("roll", rollID)
 	end
 end
 
--- Every roll gone (CANCEL_ALL_LOOT_ROLLS, the module turned off).
+-- Every roll gone (the module turned off).
 function Model.Clear()
-	rolls, drops = {}, {}
+	rolls, drops, ended = {}, {}, {}
 	notify("clear")
 end
 
@@ -223,13 +265,17 @@ function Model.ClearDrops()
 		roll.drop = nil
 		notify("roll", rollID)
 	end
+	-- The ended ones' drops are gone for good: never bound again.
+	for _, roll in pairs(ended) do
+		roll.drop, roll.cleared = nil, true
+	end
 end
 
 -- A drop that is not in the loot history, made from the chat for a roll the
 -- history never showed (Chat.lua). It takes the roll's place until a real
 -- drop comes.
 function Model.SetChatDrop(rollID, drop)
-	local roll = rolls[rollID]
+	local roll = Model.Record(rollID)
 	if not roll or (roll.drop and not roll.drop:match("^chat:")) then
 		return
 	end
@@ -241,8 +287,14 @@ function Model.SetChatDrop(rollID, drop)
 	notify("drop", drops[key])
 end
 
+-- A roll still the player's to roll on, or nil.
 function Model.Roll(rollID)
 	return rolls[rollID]
+end
+
+-- A roll the player has or had: still his, or ended a short while ago.
+function Model.Record(rollID)
+	return rolls[rollID] or ended[rollID]
 end
 
 -- The share of a roll's time it has left (1 to 0), or nil.
@@ -285,13 +337,13 @@ end
 
 -- The drop a roll is bound to, or nil.
 function Model.DropOf(rollID)
-	local roll = rolls[rollID]
+	local roll = Model.Record(rollID)
 	return roll and roll.drop and drops[roll.drop] or nil
 end
 
 -- Whether a roll is waiting for a drop longer than seconds (the chat's cue).
 function Model.Unbound(rollID, seconds)
-	local roll = rolls[rollID]
+	local roll = Model.Record(rollID)
 	return roll ~= nil and roll.drop == nil and Compat.GetTime() - roll.started >= seconds
 end
 
@@ -315,7 +367,7 @@ local function fill(view, drop)
 end
 
 function Model.View(rollID)
-	local roll = rolls[rollID]
+	local roll = Model.Record(rollID)
 	if not roll then
 		return nil
 	end
