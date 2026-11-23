@@ -12,4 +12,7 @@ ns.Data = {
 	-- appearance sets and no heirlooms, so the loot feed does not offer to
 	-- keep them (Rules/Usable.lua).
 	noCollections = { set = true, heirloom = true },
+	-- Forever Leveling BiS, made for this client, advises on whether to need
+	-- first (Modules/Rolls/NeedAdvice.lua), and the options recommend it.
+	levelingBiS = true,
 }

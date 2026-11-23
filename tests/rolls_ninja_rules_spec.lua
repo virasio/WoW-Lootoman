@@ -151,7 +151,7 @@ describe("the ninja rules window", function()
 		assert.same({ "GENERIC_CONFIRMATION", "Detect Ninja Looters", "Options" }, { popup.which, popup.data.text_arg1, popup.data.acceptText })
 		ns.Modules:SetEnabled("Rolls", false)
 		Test.RunSlashCommand("LOOTOMAN", "ninja")
-		assert.equals("Show Who Rolled What", settings.popups[#settings.popups].data.text_arg1)
+		assert.equals("Track Loot Rolls", settings.popups[#settings.popups].data.text_arg1)
 	end)
 
 	it("opens from the options page's button, closes with Escape, and opens the first time only out of combat", function()

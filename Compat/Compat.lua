@@ -460,6 +460,11 @@ function Compat.FormatDay(time)
 	return date("%Y-%m-%d", time)
 end
 
+-- Reloads the interface, at the player's click (a dialog's button).
+function Compat.ReloadUI()
+	ReloadUI()
+end
+
 -- Plays a sound file of the addon on a channel ("Master", "SFX", …); true
 -- when it will play.
 function Compat.PlaySoundFile(file, channel)

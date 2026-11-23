@@ -2,7 +2,8 @@ local _, ns = ...
 local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 
 -- Moving the game's roll frames in Edit Mode, a module of its own, on by
--- default: a frame of its own in Edit Mode, Loot Roll Frames,
+-- default, working while the loot rolls are tracked (Track Loot Rolls), in
+-- whose block its checkbox stands: a frame of its own in Edit Mode, Loot Roll Frames,
 -- with a place per Edit Mode layout. While it has never been moved, the game
 -- places its roll frames as always. Once moved, after each of the game's
 -- layouts of them (GroupLootContainer_Update) the four frames stand on its
@@ -14,7 +15,7 @@ local Bus, Compat, L = ns.Bus, ns.Compat, ns.L
 -- and turning the module off give the game its place back.
 --
 -- In Edit Mode two look-alikes of the game's roll frame stand on its place,
--- and, while the loot rolls are on, their panels beside them, all of them
+-- and, while Show Who Rolled What is on, their panels beside them, all of them
 -- under Edit Mode's selection. The Edit button beside the checkbox opens
 -- Edit Mode with this frame picked: a secure button runs the game's own
 -- /editmode, so the game opens Edit Mode itself.
@@ -24,6 +25,7 @@ local RollFrames = ns.Modules:Register({
 	switchLabel = L["Move the Loot Roll Frames in Edit Mode"],
 	description = L["Lets you place the game's loot roll frames where you want in Edit Mode, a place for each Edit Mode layout. Until you move them, the game places them as always."],
 	switchNote = L["In Edit Mode (the game menu, Edit Mode), drag “Loot Roll Frames”."],
+	requires = "Rolls",
 	defaults = { enabled = true },
 	switchButton = {
 		label = L["Edit"],
@@ -103,7 +105,7 @@ function RollFrames.Restore()
 end
 
 -- Edit Mode's selection over the frame, and over the panels at its right
--- while the loot rolls are on.
+-- while they show.
 local function fitSelection()
 	local selection = ns.EditMode.Selection(RollFrames.frame)
 	if not (selection and selection.SetPoint) then
@@ -176,12 +178,23 @@ function RollFrames:OnEnable()
 			end
 		end)
 	end
-	-- Whether the loot rolls' panels are on, for the selection's width.
-	local rolls = ns.Modules:Get("Rolls")
-	panelsOn = rolls ~= nil and rolls:IsActive()
-	self:On("ModuleToggled", function(_, name, active)
+	-- Whether the loot rolls' panels show, for the selection's width: the
+	-- loot rolls on, with Show Who Rolled What, the game's frames not hidden.
+	local function updatePanels()
+		local rolls = ns.Modules:Get("Rolls")
+		panelsOn = rolls ~= nil and rolls:IsActive() and ns.Storage:Get("Rolls", "panels") == true
+			and not (rolls.GameFramesAway and rolls.GameFramesAway())
+	end
+	updatePanels()
+	self:On("ModuleToggled", function(_, name)
 		if name == "Rolls" then
-			panelsOn = active
+			updatePanels()
+			fitSelection()
+		end
+	end)
+	self:On("SettingChanged", function(_, module)
+		if module == "Rolls" then
+			updatePanels()
 			fitSelection()
 		end
 	end)

@@ -64,6 +64,7 @@ files["Compat/"] = {
 		"GetLootSlotType",
 		"GetMoney",
 		"GetNormalizedRealmName",
+		"ReloadUI",
 		"PlaySoundFile",
 		"GetFileIDFromPath",
 		"GetLootSourceInfo",
@@ -119,6 +120,8 @@ files["Compat/"] = {
 		"IsInRaid",
 		"RAID_CLASS_COLORS",
 		"RollOnLoot",
+		"GameEvent",
+		"GetLootRollTimeLeft",
 		"UnitClass",
 	},
 }
@@ -130,6 +133,14 @@ files["Integrations/Auctionator.lua"] = {
 
 files["Integrations/QuestieDB.lua"] = {
 	read_globals = { "LibQuestieDB" },
+}
+
+files["Integrations/ForeverLevelingBiS.lua"] = {
+	read_globals = { "ForeverLevelingBiS_API" },
+}
+
+files["Integrations/Pawn.lua"] = {
+	read_globals = { "PawnCanItemHaveStats", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnIsReady" },
 }
 
 files["Modules/"] = {

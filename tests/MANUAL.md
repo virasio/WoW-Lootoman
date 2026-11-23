@@ -44,11 +44,12 @@ The PTR and WoW Forever load the same addon folder through their own `Interface/
 ## Options and profiles
 
 - [ ] **Main page.** Options → AddOns → Lootoman.
-  - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then:
+  - *Expected:* *Profile* with its dropdown on the same line (no *Reset* beside it), a divider, then the blocks, the same divider between each two:
     - *Enable Fast Autoloot*, a small white hint under it («When enabled, the loot window stays hidden…»), lined up with the switch's label, then its bind-on-pickup option (greyed out while autoloot is off);
-    - *Enable Junk Management*, with *Edit the Junk List* right under it (and the QuestieDB note and button without QuestieDB), then *Loot Window Button*, *Style* under it (greyed out while the button is *Never*), *Bag Window Button*, *At Merchants* and the *Suggestions*, all greyed out while junk is off;
+    - *Enable Junk Management*, with *Edit the Junk List* right under it (without QuestieDB, a frame with the QuestieDB suggestion and its button above it), then *Loot Window Button*, *Style* under it (greyed out while the button is *Never*), *Bag Window Button*, *At Merchants* and the *Suggestions*, all greyed out while junk is off;
     - *Show the Loot Feed*, with *Feed Look* under it and *Edit* beside it (both greyed out while the feed is off);
-    - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only What You Can Gather*.
+    - on WoW Forever, *Highlight Lootable Objects* with *Quest Objects*, *Herbs*, *Chests*, *Ore* and *Only What You Can Gather*;
+    - *Track Loot Rolls*, with what is under it (the loot rolls' checks below).
   - Every title on the page is capitalized as the game's own are (short words such as *when*, *at*, *the* lowercase); the dropdowns' choices, the tooltips and the Russian texts stay as they were.
   - Every dropdown but the profile's looks like the ones in Edit Mode dialogs, all of one size and lined up with the profile's; the profile's keeps the options panel's own style.
   - There are no subpages under Lootoman.
@@ -389,8 +390,8 @@ The same groups in all three junk windows.
 ### Options
 
 - [ ] **Order.** *Expected:* under *Enable Junk Management*: *Edit the Junk List*, *Loot Window Button* with *Style*, *Bag Window Button*, *At Merchants*, then a heading *Suggestions* with the five rules two to a row: *Quest Done*, *Leftovers from Quests*, *Your Class Can't Use It*, *Already Known*, *Outgrown*; each rule's tooltip says what it finds.
-- [ ] **Without QuestieDB.** *Expected:* a note under the switch, «Suggestions about quests are better with QuestieDB…», and *Copy the QuestieDB Address* right under it; the button opens a small window with the address selected, to copy with Ctrl+C (Cmd+C on a Mac); typing changes nothing; Escape and *Close* close it.
-- [ ] **With QuestieDB.** *Expected:* neither the note nor the button.
+- [ ] **Without QuestieDB.** *Expected:* under the switch, a frame like the game's Auto Loot box (in white, not red): «Suggestions about quests are better with QuestieDB…», and *Copy the QuestieDB Address* under the text, inside the frame; the button opens a small window with the address selected, to copy with Ctrl+C (Cmd+C on a Mac); typing changes nothing; Escape and *Close* close it.
+- [ ] **With QuestieDB.** *Expected:* no frame.
 
 ### The switch
 
@@ -442,9 +443,22 @@ On WoW Forever, with the default settings unless the check says otherwise.
 
 On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); the demo needs none. Before the first check, `/ltm debug selftest` and the report in *Bug Report*. *Expected:* a `Loot rolls:` line with 4 of the game's roll frames found and their container found (note any other count).
 
+### On the options page
+
+- [ ] **The block.** *Expected:* *Track Loot Rolls* (on) with its note «Every roll in your group goes into the roll history.» and *Roll History* at the right end of its row; under it, indented:
+  - *Show the Loot Rolls Window* (on), its note «It opens once you have chosen; closing it clears its list.»;
+  - further in, *Background Opacity* (100 %) and *Show the Border* (on), greyed while the window's option is off;
+  - further in, *Hide the Game's Roll Frames* (off), its note «You then roll in the Loot Rolls window.»;
+  - with no addon to give the advice on whether to need, a white frame (*Whether to need* below);
+  - *Show Who Rolled What* (on), its note on the panel beside the game's roll frame;
+  - *Move the Loot Roll Frames in Edit Mode* (on), *Edit* right after its label, its note on where Edit Mode is;
+  - *Detect Ninja Looters* (off), *Edit Rules* right after its label.
+  - No demo. Hovering a checkbox lights only its row, a button takes its own click. In English and in Russian, no label runs into its button.
+- [ ] **What greys what.** *Expected:* untick *Show the Loot Rolls Window*: *Hide the Game's Roll Frames* greys (keeping its tick). Tick *Hide the Game's Roll Frames* (with the window's option on): *Show Who Rolled What* and *Move the Loot Roll Frames in Edit Mode* grey, with *Edit*. *Edit Rules* is greyed until *Detect Ninja Looters* is ticked.
+- [ ] **Off.** Untick *Track Loot Rolls*. *Expected:* everything under it greyed, *Roll History* too; no panels, no window, nothing goes into the history while it is off; nothing of the roll frames in Edit Mode, and the game's roll frames where the game puts them, even if they were moved. Tick it again: all back, the moved frames on their place at the next roll.
+
 ### The panel beside the game's roll frames
 
-- [ ] **On the options page.** *Show Who Rolled What* (on), under it *Detect Ninja Looters* (off) with *Ninja Rules* beside it, and no demo. *Expected:* hovering the checkbox lights only its row, the button takes its own click; *Ninja Rules* is greyed until *Detect Ninja Looters* is ticked; with the module off, both are greyed.
 - [ ] **A roll in a group.** An item to roll on. *Expected:* beside the game's roll frame, at its right, a dark panel with a thin gold edge: *Waiting for the rolls…*, then a line per player in the game's order: the choice's icon (the dice, the coin, the cross; a dot while undecided), the name in class colour, the roll once there is one, the leader brighter, your own line faintly lit, the winner's checkmark at the end. The game's frame works as before: its buttons, the bind question, the timer. Hover a line: the name, the choice and the roll.
 - [ ] **Several items.** Two or more items at once, more than four if a boss gives them. *Expected:* a panel beside each frame, none touching the next; a fifth item waits for a free frame as in the game, and its panel comes with it.
 - [ ] **The screen's edge.** With the roll frames moved near the right edge (Edit Mode below). *Expected:* the panels stand at the frames' left.
@@ -453,13 +467,19 @@ On WoW Forever and on retail. Rolls need a group with group loot (a dungeon); th
 - [ ] **A raid.** Or a group of more than five where possible. *Expected:* short lines: the leading roll and name, *Need: N*, greed and pass as the game's icons with counts (transmog too on retail), *Not chosen: N*; each line's tooltip names its players; never taller than the room the game leaves per frame.
 - [ ] **The loot history's own.** After a roll, the game's loot history (its button, or the loot history window). *Expected:* the panel's choices and rolls match it.
 - [ ] **Trash.** Roll on an item from trash, not a boss. *Expected:* the panel fills too; if it stays on *Waiting for the rolls…* for more than two seconds, then fills from the chat's lines, note it (the loot history did not have the drop).
-- [ ] **Off.** Untick *Show Who Rolled What*. *Expected:* no panels, at once; the game's frames as before.
+- [ ] **Off.** Untick *Show Who Rolled What*. *Expected:* no panels, at once; the game's frames as before; the *Loot Rolls* window and the history still work. Tick it with a roll open: its panel comes back at once.
 
 ### The demo
 
-- [ ] **The demo.** `/ltm demo roll`, out of a group (it is on no menu and not on the options page). *Expected:* two look-alikes of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer), with no label of their own: a group roll of five heroes of Azeroth, the first in your own place with its line lit, on a purple ring (Band of the Better Half on WoW Forever; a blue dagger, Gutwrencher, on retail), and a raid roll of twenty heroes on Onyxia's sword (Vis'kag the Bloodletter), each in the class of his stories (Thrall a shaman, Jaina a mage; on WoW Forever only the nine classic classes); for about fifteen seconds they choose and roll one by one, the leader changes, a winner gets the checkmark; then they go. The look-alikes' buttons mark only your own line. No real character's name anywhere (it is for the store's pictures). The first time in a session the items may take a moment; if the game does not give them, worn gear stands in. Put a real roll frame beside them, if you can: note what differs.
-- [ ] **With the detection on.** *Detect Ninja Looters* on, `/ltm demo roll` again. *Expected:* in the group roll, the first made-up player needs and gets the skull mark with reasons in the tooltip (a warrior past 40 on mail when the item is mail); the fourth carries *Last time: …*; the raid roll has squares; at the end the *Suspicious Needs* window lists the marked needs.
-- [ ] **Not during a roll, not in a fight.** `/ltm demo roll` while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
+- [ ] **A dungeon's roll.** Out of a group, *Hide the Game's Roll Frames* off: `/ltm demo roll dung` (it is on no menu and not on the options page). *Expected:* a look-alike of the game's roll frame where the game's frames stand, looking as the game's own (the loot toast's border, the item's icon in its quality border, the name in its quality colour, need, greed and pass, the yellow timer running for a minute), on a purple ring (Band of the Better Half on WoW Forever; a blue dagger, Gutwrencher, on retail), with its panel: Varian, Tyrande, Jaina, Shaw and Player, your own line, lit, in your class colour. Within about twelve seconds the four choose and roll one by one, the leader changes. No real character's name anywhere (it is for the store's pictures). The first time in a session the item may take a moment.
+- [ ] **Your choice.** Choose on it. *Expected:* the look-alike goes at once; half a second later the *Loot Rolls* window opens with the item on top, lit, its panel filling as the others choose, then the winner. With *Show the Loot Rolls Window* off: no window. With *Show Who Rolled What* off: the look-alike without its panel. Nothing goes to the game: `/ltm rolls` shows nothing of it.
+- [ ] **You choose last.** `/ltm demo roll dung`, wait until the four have chosen, then choose. *Expected:* the roll ends at once, and the window opens with the item and its winner, never empty. With the window open already: the next run's item joins its top at once.
+- [ ] **Untouched.** Let the timer run out. *Expected:* the look-alike goes; you pass; no window.
+- [ ] **A raid's roll.** `/ltm demo roll raid`. *Expected:* four look-alikes stacked upwards (Vis'kag the Bloodletter, Deathbringer, Ring of Binding, Netherwind Crown); the fifth, Helm of Wrath, comes when you choose on one. Their panels in short lines: twenty-six passes and more counted, the Test players named only in the line's tooltip.
+- [ ] **Items of your own.** `/ltm demo roll dung 5191,6460` (IDs split by commas, no spaces). *Expected:* those two items. An ID the game does not have is named in the chat and left out; `/ltm demo roll` alone gives the command's lines.
+- [ ] **With the game's frames hidden.** *Hide the Game's Roll Frames* on, `/ltm demo roll raid`. *Expected:* no look-alikes; the *Loot Rolls* window opens at once with the five items on top, newest first, our buttons and timers; a choice moves a row under the line, its timer going on; closing while one waits asks first; untouched, they end as a pass.
+- [ ] **With the detection on.** *Detect Ninja Looters* on, `/ltm demo roll dung`, then choose. *Expected:* the warrior or the rogue who needs the ring (it has intellect) gets the skull mark, the reasons in the tooltip; when the item fits all four, one who needs it carries *Last time: …*. Right-click the mark in the *Loot Rolls* window: *Exception: Agreed in the Chat* turns it into the tick, in the demo only. In the raid: the squares, one more marked for needing nearly everything. No *Suspicious Needs* window at the end.
+- [ ] **Not during a roll, not in a fight.** `/ltm demo roll dung` while a real roll is open, then in a fight. *Expected:* a chat line each time, no demo.
 
 ### Ninja detection
 
@@ -476,7 +496,7 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 ### The Ninja Rules window
 
-- [ ] **Opening.** With *Detect Ninja Looters* ticked: `/ltm ninja`, the options page's *Ninja Rules*, the minimap menu's *Ninja Rules*. *Expected:* *Ninja Rules* with two tabs, *Classes* first, on your own class; Escape closes it; the first time in a fight it refuses with a chat line. With the detection off: `/ltm ninja` and the menu's entry show the game's dialog «To use this, turn on “Detect Ninja Looters” in the addon's options.» with *Options* (opens the options) and *Cancel*; with the loot rolls off, the same with “Show Who Rolled What”.
+- [ ] **Opening.** With *Detect Ninja Looters* ticked: `/ltm ninja`, *Edit Rules* on the options page, the minimap menu's *Ninja Rules*. *Expected:* *Ninja Rules* with two tabs, *Classes* first, on your own class; Escape closes it; the first time in a fight it refuses with a chat line. With the detection off: `/ltm ninja` and the menu's entry show the game's dialog «To use this, turn on “Detect Ninja Looters” in the addon's options.» with *Options* (opens the options) and *Cancel*; with the loot rolls off, the same with “Track Loot Rolls”.
 - [ ] **Classes.** *Expected:* the client's classes in their colours (nine on WoW Forever); for each, *Armor* with the game's names of the types and *up to level* boxes beside cloth, leather, mail and plate; *Weapons* in three columns; *Primary Stats* (Spirit only on WoW Forever); what the class cannot equip greyed. Tick a type, untick another, type a level and press Enter, empty a box, type 99. *Expected:* each kept at once (the demo's marks follow); 99 refused; an empty box means any level; *Reset Class* and *Reset All* bring the defaults back.
 - [ ] **The defaults.** On WoW Forever, look at each class. *Expected:* as they were agreed (paladin cloth, druid cloth and leather, warrior and paladin mail and leather up to 40, hunter and shaman leather up to 40). Note any that look wrong.
 - [ ] **Checks.** *Expected:* no *Detect Ninja Looters* here (it is on the options page); each check, *Strictness* (*Normal*), *Lowest Quality Judged* (the game's *Uncommon*), the friends' and the summary's checkboxes; the others greyed while the detection is off. Each applies at once to open panels; kept per profile.
@@ -488,7 +508,7 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 ### Moving the game's roll frames
 
-- [ ] **On the options page.** Above *Show Who Rolled What*, *Move the Loot Roll Frames in Edit Mode* (on) with *Edit* right after its label, not over it, and a note under it on where Edit Mode is. *Expected:* *Edit* greyed while the checkbox is off. Off: nothing of ours in Edit Mode, and the game's roll frames where the game puts them. The same for *Ninja Rules* after *Detect Ninja Looters*, in English and in Russian.
+- [ ] **On the options page.** In the loot rolls' block, under *Show Who Rolled What*: *Move the Loot Roll Frames in Edit Mode* (on) with *Edit* right after its label, not over it, and a note under it on where Edit Mode is. *Expected:* *Edit* greyed while the checkbox is off. Off: nothing of ours in Edit Mode, and the game's roll frames where the game puts them.
 - [ ] **Edit.** Tick the checkbox, press *Edit*. *Expected:* Edit Mode opens (note whether the options window closes or stays over it) with *Loot Roll Frames* picked. On WoW Forever note whether `/editmode` works at all: if not, the note's way (the game menu, Edit Mode) still does. No errors, no blocked action, nothing in the taint log about Edit Mode or the action bars.
 - [ ] **In Edit Mode.** *Expected:* *Loot Roll Frames* to pick and drag, with two look-alikes on it (the demo's items, or worn gear for one the game has not loaded) and, while *Show Who Rolled What* is on, their panels at their right; Edit Mode's blue and yellow selection over all of them, covering them, picked or not. Untick *Show Who Rolled What*: no panels, the selection over the look-alikes only. Drag it, close Edit Mode; at the next roll, the game's frames stand there, stacked upwards as the game stacks them, the panels beside them.
 - [ ] **Layouts.** Another Edit Mode layout. *Expected:* the game's place there until moved in that layout too.
@@ -501,20 +521,52 @@ With *Detect Ninja Looters* on, in a group with group loot. Where the group cann
 
 On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame`) but never shows it, in a dungeon with group loot; on retail the game opens its own after a choice, and Lootoman's stays closed.
 
-- [ ] **On the options page.** Under *Show Who Rolled What*: *Show the Loot Rolls Window After Your Choice* (on), with its tooltip, on both clients.
+- [ ] **On the options page.** Right under *Track Loot Rolls*: *Show the Loot Rolls Window* (on), with its note and tooltip, on both clients.
 - [ ] **On retail.** Choose on a roll. *Expected:* the game's *Loot Rolls* window opens as always, and Lootoman's does not.
 - [ ] **After your choice.** An item to roll on; choose need, greed or pass. *Expected:* the game's frame goes as always; half a second later Lootoman's *Loot Rolls* window opens at the screen's left, vertically centred, about 40 pixels from the edge (the first time; a place you dragged it to before wins), narrow (about 250 pixels wide), the roll at its top, lit for a moment, with the other rolls still going under it. Each row: the item (its icon, its name in its quality colour, its tooltip on hover, Shift-click links it), under it *Rolling…*, then the winner in class colour with their button's icon and roll, or *All passed*; under it, a little indented, the panel's lines as beside the game's frames, filling as the others choose.
+- [ ] **You chose last.** Wait until everyone else has chosen, then choose. *Expected:* the window opens with that item and its winner, never empty; every item rolled on after it joins it.
 - [ ] **It keeps them.** Leave it open through the next pulls. *Expected:* every item rolled on joins it at the top, also those you had no frame for; past three rows of five it scrolls. Drag it by its title: it stays there, also after a `/reload` and in the next session, for this character; another character has its own place.
 - [ ] **Closed.** Close it (its X, or Escape), then choose on the next roll. *Expected:* it opens again with that roll only, and any other roll still going.
 - [ ] **Leaving.** With it open, leave the dungeon. *Expected:* its rows stay as they were (note any row that empties). After a `/reload` it is closed.
 - [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
 - [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
-- [ ] **Off.** Untick *Show the Loot Rolls Window After Your Choice*. *Expected:* no window at your choice.
-- [ ] **Its demo.** Out of a group, `/ltm demo lootrolls`. *Expected:* on either client, the window on four made-up drops of five heroes: the newest still rolled on (two heroes yet to choose), two won, the oldest all passed.
+- [ ] **Its height.** Drag the corner at the window's bottom right, down, then up as far as it goes. *Expected:* the cursor of the game's resize corners; the window grows and shrinks in height only, never lower than a whole row (an item to choose on, with its buttons, timer and panel) and the next item's line, never past the screen; the rows scroll within it; the corner covers neither the scroll bar nor a row's buttons. After a `/reload` and in the next session it opens as high as you left it.
+- [ ] **Its look.** With the window open (`/ltm demo roll dung`, choose): move *Background Opacity* down to 0 % and back, untick and tick *Show the Border*. *Expected:* each change at once; without the border, no frame and no title bar, the background reaching to the window's edges, the title and the X still there, the window still dragged by its top; at 0 %, only the rows, readable over the world; kept after a `/reload`.
+- [ ] **Off.** Untick *Show the Loot Rolls Window*. *Expected:* no window at your choice.
+
+### Rolling in the Loot Rolls window
+
+With *Hide the Game's Roll Frames* on (it works only with *Show the Loot Rolls Window* on), in a dungeon with group loot, on WoW Forever and on retail. Note before each round whether ForeverLootRoll or another addon that replaces the game's roll frames is on: turn it off for these checks.
+
+- [ ] **On the options page.** Under *Show the Loot Rolls Window*, further in: *Hide the Game's Roll Frames* (off), with the note *You then roll in the Loot Rolls window.* and its tooltip. *Expected:* greyed while the window's option is off, and with the loot rolls off.
+- [ ] **Turning it on.** Tick it. *Expected:* nothing else happens until a roll; no dialog. On a client where it cannot work, a chat line says the game's frames stay.
+- [ ] **A roll starts.** An item to roll on. *Expected:* no game roll frame; the *Loot Rolls* window opens at once (in its place), the roll on top, lit for a moment: the item, *Rolling…*, under it our buttons (need, greed, pass; transmog too on retail where the game offers it), 24 pixels each, the game's look, then a thin yellow timer the row's width, running down, then the panel's lines filling as the others choose.
+- [ ] **The buttons.** Hover each. *Expected:* the game's word for it; a greyed need or greed (an item your class may not need) gives the game's reason in its tooltip, and takes no click. Click greed. *Expected:* a moment later the row goes under a thin line at the bottom part, the same row without its buttons, its timer still running while the others choose; the panel shows your greed as on the game's frame. No second click possible.
+- [ ] **An item that binds.** Need on a bind-on-pickup item. *Expected:* the game's own question; *Cancel* leaves the row on top with its buttons, to choose again; *Okay* takes it under the line.
+- [ ] **Several rolls.** A boss with two or more items. *Expected:* each on top with its buttons, newest first; chosen ones go under the line, newest first there too. Move the pointer onto a button as a new roll comes in on top: the click right after the rows moved does nothing (half a second); the next one works.
+- [ ] **Untouched.** Let a roll's timer run out. *Expected:* the game passes for you; the row goes under the line.
+- [ ] **Closing while a roll waits.** With a roll still on top, the window's X. *Expected:* the game's dialog *Rolls are waiting for your choice; untouched, they end as a pass. Close the window?* with *Close* and *Cancel*: *Cancel* keeps it, *Close* closes it. Escape: the window comes back at once with the same dialog. With no roll waiting, both close it at once.
+- [ ] **Closed, a roll comes.** Close it (after *Close*), then the next roll. *Expected:* it opens with the new roll and every roll still waiting on top.
+- [ ] **In a fight.** A roll during a fight; choose with our buttons. *Expected:* it works; no errors, no blocked action.
+- [ ] **After a /reload.** `/reload` during a roll. *Expected:* the game's frame for that roll shows as well as our row; either works.
+- [ ] **On retail.** Choose with our buttons. *Expected:* note whether the game's own *Loot Rolls* window opens too.
+- [ ] **Turning it off.** Untick it. *Expected:* the game's dialog *The game's roll frames come back after a reload. Reload now?*; *Reload* reloads, and the game's frames are back. The same when turning off *Show the Loot Rolls Window* or *Track Loot Rolls* with it on; *Hide the Game's Roll Frames* keeps its tick, greyed, and ticking the window's option again hides the game's frames again.
+- [ ] **Hidden interface.** Alt+Z with the window open, then again. *Expected:* the window comes back with its rows.
+
+### Whether to need
+
+On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn installed; with neither, no line.
+
+- [ ] **On the options page.** With neither addon. *Expected:* under *Hide the Game's Roll Frames*, a white frame: on WoW Forever «Advice on whether to need comes with Forever Leveling BiS, which is not installed.» and *Copy the Forever Leveling BiS Address*, Pawn not named; on retail the same with Pawn and *Copy the Pawn Address*. The button opens the small window with the address to copy. With either addon installed (and `/reload`), no frame, whether or not it answers.
+- [ ] **Forever Leveling BiS.** A roll on gear you can wear. *Expected:* under *Rolling…*, *Main spec: +12.3 (Forever Leveling BiS)* in green for an upgrade, the same with a minus in grey for one that is not; nothing for an item you wear, can not wear, or that is not gear. The number matches the one in its own tooltip line for the main spec. Its off spec lines show in the item's tooltip only.
+- [ ] **Pawn.** Without Forever Leveling BiS, with Pawn and a scale for your spec (and one for an off spec, if you like). *Expected:* *Upgrade: +15% (Pawn: <scale>)* in green, the best of the scales shown, or *Not an upgrade (Pawn)* in grey; the same numbers as Pawn's tooltip.
+- [ ] **Both.** *Expected:* only Forever Leveling BiS's line.
+- [ ] **Not loaded yet.** The first roll after a login on an item you have never seen. *Expected:* the line comes a moment later.
+- [ ] **Self-test.** `/ltm debug selftest`. *Expected:* *Forever Leveling BiS: working* or *not installed*, *Pawn: working* or *not installed*; with Pawn installed, *working*, never *loaded, but without its API or not ready*.
 
 ### The roll history
 
-- [ ] **Opening.** `/ltm rolls`, *Roll History* on the loot rolls' switch row of the options page (greyed while they are off), *Roll History* in the minimap menu after *Ninja Rules*. *Expected:* the *Roll History* window; Escape closes it; the first time in a fight it refuses with a chat line. With the loot rolls off, the command and the menu ask to turn on “Show Who Rolled What”.
+- [ ] **Opening.** `/ltm rolls`, *Roll History* at the right end of *Track Loot Rolls*'s row on the options page (greyed while it is off), *Roll History* in the minimap menu after *Ninja Rules*. *Expected:* the *Roll History* window; Escape closes it; the first time in a fight it refuses with a chat line. With the loot rolls off, the command and the menu ask to turn on “Track Loot Rolls”.
 - [ ] **Empty.** On a character with no rolls kept. *Expected:* a line saying so; *Clear the History* greyed.
 - [ ] **The groups.** After two dungeon runs. *Expected:* on the left, newest first, each with its day, its places, how many drops and players, and a skull where needs were marked (detection on); the newest shown on the right.
 - [ ] **A group.** *Expected:* its players in class colours with *Need, greed, pass, won* and, with marks, the skull and how many; then its drops in time order, each with its time and place under the item, the winner with their button and roll, and the choices beside it as on the panels.
@@ -527,7 +579,8 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 
 ### The made-up history
 
-- [ ] **The demo.** `/ltm demo rollhistory`. *Expected:* *Roll History (Demo)* on three made-up groups of heroes of Azeroth: two dungeon runs and a raid of twenty, with dungeon items (the first time some may take a moment; one the client lacks is left out). With the detection on: the first hero marked for needing everything in the first run, *Last time* on his first need in the second, an exception ticked in the first. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
+- [ ] **The demo.** `/ltm demo rollhistory`. *Expected:* *Roll History (Demo)* on three made-up groups, the roll demo's: two runs of Varian, Tyrande, Jaina, Shaw and Player on dungeon items, and a raid of forty on Onyxia's items, where the Test players pass on everything (the first time some items may take a moment; one the client lacks is left out). Player's lines are lit as your own. With the detection on: Shaw marked for needing everything in the first run, one of those needs excused, *Last time* on his need in the second; three heroes of the raid marked. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
+- [ ] **The Suspicious Needs window's demo.** *Detect Ninja Looters* on: `/ltm demo exceptions dung`, then `/ltm demo exceptions raid`. *Expected:* the *Suspicious Needs* window, as after leaving a group: Shaw's needs of the first run, one ticked already; then the raid's three who needed everything, each need with its reasons. Ticking one touches only the made-up group. With the detection off: a chat line, no window.
 - [ ] **Full.** `/ltm demo rollhistory full`. *Expected:* 30 groups, 400 drops; opening, scrolling and choosing groups stay quick (note any stutter).
 
 ### The history and debugging
@@ -553,15 +606,15 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 ## Debug commands
 
 - [ ] **demo loot.** `/ltm demo loot` alone. *Expected:* the pieces it takes, in English. Then each set below; *Expected:* the rows come as for real loot (merged, the junk row, the minimum quality, the delay between rows), and a piece it cannot read is named in the chat:
-  - every kind of row: `/ltm demo loot 2589x5, 2592, exp+12345, rep["Stormwind"]+250, rep["Stormwind"]-25, gold+1.2345`, and on retail `/ltm demo loot currency[3008]+50` (a currency the character has);
-  - junk in one row: `/ltm demo loot 4865x3, 2589` (a gray pelt, a cloth), and a Shift-clicked link of a gray item from the bags with `x2`;
-  - the delay between rows: `/ltm demo loot 2589, 2592, 4306, 4338, 14047, 2770, 2771, 2772`;
+  - every kind of row: `/ltm demo loot 2589x5 2592 exp+12345 rep["Stormwind"]+250 rep["Stormwind"]-25 gold+1.2345`, a faction with a space in its name (`/ltm demo loot rep["Steamwheedle Cartel"]+50`), and on retail `/ltm demo loot currency[3008]+50` (a currency the character has);
+  - junk in one row: `/ltm demo loot 4865x3 2589` (a gray pelt, a cloth), and a Shift-clicked link of a gray item from the bags with `x2`;
+  - the delay between rows: `/ltm demo loot 2589 2592 4306 4338 14047 2770 2771 2772`;
   - an item the client has not seen this session (on retail, an ID from the current expansion): it comes a moment later; `/ltm demo loot 999999` names it as not existing;
-  - a bad piece: `/ltm demo loot dance, 2589x0, gold+0.00001`;
+  - a bad piece: `/ltm demo loot dance 2589x0 gold+0.00001`;
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
-- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `loot`, `lootrolls`, `roll` and `rollhistory` among them; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll` out of a group: the loot rolls' demo plays (the checks under *The demo*).
+- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `exceptions`, `loot`, `roll` and `rollhistory`; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll dung` out of a group: the loot rolls' demo plays (the checks under *The demo*).
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon

@@ -53,12 +53,15 @@ describe("settings panel", function()
 		assert.same({ page.frame, "Lootoman" }, { main.frame, page.title.text })
 	end)
 
-	it("lists every module's switch after the profile and a divider, with what belongs to it indented under it", function()
+	it("lists every module's switch after the profile and a divider, with what belongs to it indented under it, a divider between modules", function()
 		assert.same({
 			"row:Profile", "divider",
 			"checkbox:Enable loot feed",
+			"divider",
 			"checkbox:Bags", "  checkbox:Sort bags",
 		}, items())
+		-- The dividers between modules are in the scrolling part.
+		assert.equals("body", page.items[4].area)
 		-- The label after the checkbox, and a click on it counts.
 		local switch = item("Enable loot feed")
 		assert.same({ "LEFT", switch, "RIGHT", 4, 0 }, switch.label.points[1])
@@ -87,7 +90,7 @@ describe("settings panel", function()
 			if entry.text == "Profile" then
 				profile = entry
 			elseif entry.kind == "divider" then
-				divider = entry
+				divider = divider or entry
 			end
 		end
 		assert.same({ "head", page.frame, "head", page.frame }, { profile.area, profile.frame.parent, divider.area, divider.frame.parent })
@@ -151,7 +154,7 @@ describe("settings panel, a module with a broken main setting", function()
 			mainSettings = { { kind = "gauge", key = "rows", label = "Rows" } } })
 		ns.Modules:Register({ name = "Feed", defaults = { enabled = true } })
 		Loader.Start(ns)
-		assert.matches("Broken.rows: the main page takes headings, checkboxes, choices, sliders, colours, buttons and custom blocks", ns.Compat.Test.state.errors[1])
+		assert.matches("Broken.rows: the main page takes headings, checkboxes, choices, sliders, colours, buttons, suggestions, modules and custom blocks", ns.Compat.Test.state.errors[1])
 		local last = ns.SettingsPanel.main.items[#ns.SettingsPanel.main.items]
 		assert.equals("Feed", last.text)
 	end)
@@ -211,7 +214,7 @@ describe("settings panel main page controls", function()
 			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
 		end
 		assert.same({ "row:Profile:0", "divider:nil:0", "title:Junk:0", "choice:Button:24", "choice:Style:48", "choice:Selling:24", "button:Junk list:24",
-			"slider:Size:24", "color:Tint:48", "box:Watch out:24", "checkbox:Show the feed:0", "checkbox:Glow:24", "heading:Looks:24" }, list)
+			"slider:Size:24", "color:Tint:48", "box:Watch out:24", "divider:nil:0", "checkbox:Show the feed:0", "checkbox:Glow:24", "heading:Looks:24" }, list)
 	end)
 
 	it("show a checkbox's note under its label in the small white font, as tall as its lines, the row with it", function()
@@ -363,5 +366,88 @@ describe("settings panel main page controls", function()
 		local control = _G.CreateFrame("Frame", nil, row)
 		page:AddRow("Profile", control)
 		assert.same({ "Profile", { "LEFT", row, "LEFT", 240, 0 } }, { row.label.text, control.points[1] })
+	end)
+end)
+
+describe("settings panel, a block inside another and suggestions", function()
+	local ns, page, missing, opened, copied
+
+	local function itemOf(text)
+		for _, entry in ipairs(page.items) do
+			if entry.text == text then
+				return entry
+			end
+		end
+		error("no item " .. text)
+	end
+
+	before_each(function()
+		SettingsAPI.Install()
+		ns = Loader.LoadAddon({ skip = { "Modules/" } })
+		missing, opened, copied = true, false, false
+		-- Registered first, yet shown in the block of the one it requires.
+		ns.Modules:Register({ name = "Mover", switchLabel = "Move them", requires = "Watch", defaults = { enabled = true } })
+		ns.Modules:Register({
+			name = "Watch",
+			switchLabel = "Watch them",
+			switchButton = { label = "History", align = "right", onClick = function() opened = true end },
+			defaults = { enabled = true, hidden = false },
+			mainSettings = {
+				{ kind = "checkbox", key = "hidden", label = "Hide them" },
+				{ kind = "suggestion", text = function() return "Better with Helper." end, button = "Copy Its Address",
+					visible = function() return missing end, click = function() copied = true end },
+				{ kind = "module", name = "Mover", enabledWhen = function() return not ns.Storage:Get("Watch", "hidden") end },
+			},
+		})
+		Loader.Start(ns)
+		page = ns.SettingsPanel.main
+	end)
+
+	it("show a module that requires another in that one's block, its switch indented like a setting", function()
+		local list = {}
+		for index, entry in ipairs(page.items) do
+			list[index] = entry.kind .. ":" .. tostring(entry.text) .. ":" .. entry.indent
+		end
+		assert.same({ "row:Profile:0", "divider:nil:0", "checkbox:Watch them:0", "checkbox:Hide them:24", "suggestion:Better with Helper.:24",
+			"checkbox:Move them:24" }, list)
+	end)
+
+	it("turn a module off with the one it requires, and grey its switch then and while its block's condition says so", function()
+		local mover = itemOf("Move them").region
+		assert.is_true(ns.Modules:Get("Mover"):IsActive())
+		assert.is_true(mover.enabled)
+		ns.Storage:Set("Watch", "hidden", true)
+		assert.same({ false, true }, { mover.enabled, ns.Modules:Get("Mover"):IsActive() })
+		ns.Storage:Set("Watch", "hidden", false)
+		ns.Modules:SetEnabled("Watch", false)
+		assert.same({ false, false, true }, { mover.enabled, ns.Modules:Get("Mover"):IsActive(), ns.Storage:Get("Mover", "enabled") })
+		ns.Modules:SetEnabled("Watch", true)
+		assert.same({ true, true }, { mover.enabled, ns.Modules:Get("Mover"):IsActive() })
+	end)
+
+	it("put a switch's button at the right end of its row when asked, greyed with the module", function()
+		local button = page.switchButtons.Watch
+		local row = itemOf("Watch them").frame
+		assert.same({ "RIGHT", row, "TOPRIGHT", -5, -29 / 2 }, button.points[1])
+		button.scripts.OnClick(button)
+		assert.is_true(opened)
+		ns.Modules:SetEnabled("Watch", false)
+		assert.is_false(button:IsEnabled())
+	end)
+
+	it("show a suggestion in a frame, a white text over its button, while it is wanted", function()
+		local entry = itemOf("Better with Helper.")
+		local box = entry.region
+		assert.same({ "InsetFrameTemplate", "GameFontHighlight", true }, { box.template, box.header.fontObject, box:IsShown() })
+		assert.same({ "Copy Its Address", { "TOPLEFT", box, "TOPLEFT", 10, -(8 + 14 + 8) } }, { box.button.text, box.button.points[1] })
+		assert.equals(8 + 14 + 8 + 22 + 10, entry.height)
+		box.button.scripts.OnClick(box.button)
+		assert.is_true(copied)
+		-- Greyed with its module.
+		ns.Modules:SetEnabled("Watch", false)
+		assert.same({ "GameFontDisable", false }, { box.header.fontObject, box.button:IsEnabled() })
+		missing = false
+		page:Layout()
+		assert.is_false(box:IsShown())
 	end)
 end)

@@ -132,13 +132,71 @@ describe("a drop's row", function()
 		local narrow = DropRow.New(UI.NewFake(Loader.ui.UIParent), "below")
 		Test.SetLootDrop({ encounterID = 1, listID = 1, link = MAIL, rolls = { player("Brina", "MAGE", 4), player("Tester", "WARRIOR", 3, 40) } })
 		local height = DropRow.Draw(narrow, Model.DropView("1:1"))
-		assert.same({ "TOPLEFT", narrow.item, "BOTTOMLEFT", DropRow.INDENT, -2 }, narrow.panel.frame.points[#narrow.panel.frame.points])
+		assert.same({ "TOPLEFT", narrow.frame, "TOPLEFT", DropRow.INDENT, -(DropRow.BELOW_ITEM + 2) }, narrow.panel.frame.points[#narrow.panel.frame.points])
 		assert.same({ DropRow.BELOW_WIDTH, DropRow.BELOW_ITEM }, { narrow.item:GetWidth(), narrow.item:GetHeight() })
 		assert.equals(DropRow.BELOW_ITEM + 2 + 2 * 6 + 2 * 15, height)
 		assert.equals(200, narrow.frame:GetWidth())
 		-- The wide row keeps its panel at the item's right.
 		DropRow.Draw(row, Model.DropView("1:1"))
 		assert.same({ "LEFT", row.item, "RIGHT", 4, 0 }, row.panel.frame.points[1])
+	end)
+
+	-- A roll to choose on: its view as the window gives it.
+	local function choosable(item, timer)
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = MAIL, rolls = { player("Brina", "MAGE", 4) } })
+		local view = Model.DropView("1:1")
+		view.rollID, view.item, view.choosable, view.timer = 7, item, true, timer
+		return view
+	end
+
+	local function shownButtons(narrow)
+		local list = {}
+		for _, button in ipairs(narrow.buttons) do
+			if button:IsShown() then
+				list[#list + 1] = { button.choice.atlas, button:IsEnabled() }
+			end
+		end
+		return list
+	end
+
+	it("gives a roll to choose on our buttons under the item and a timer, the panel under them", function()
+		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass", LOOT_ROLL_INELIGIBLE_REASON2 = "Your class may not roll need on this item." })
+		local narrow = DropRow.New(UI.NewFake(Loader.ui.UIParent), "below")
+		local chosen = {}
+		narrow.onChoose = function(view, rollType) chosen[#chosen + 1] = { view.rollID, rollType } end
+		local height = DropRow.Draw(narrow, choosable({ canNeed = false, canGreed = true, canTransmog = false, reasonNeed = 2 }, 0.5))
+		-- Need greyed with the game's reason; no transmog on this roll.
+		assert.same({ { "need", false }, { "greed", true }, { "pass", true } }, shownButtons(narrow))
+		narrow.buttons[1].scripts.OnEnter(narrow.buttons[1])
+		assert.same({ "Need", "Your class may not roll need on this item." }, Loader.ui.tooltip.lines)
+		assert.same({ true, 0.5 }, { narrow.timer:IsShown(), narrow.timer:GetValue() })
+		local y = DropRow.BELOW_ITEM + 2 + DropRow.BUTTON + 2 + DropRow.TIMER + 2
+		assert.same({ "TOPLEFT", narrow.frame, "TOPLEFT", DropRow.INDENT, -y }, narrow.panel.frame.points[#narrow.panel.frame.points])
+		assert.equals(y + 2 * 6 + 15, height)
+		-- Each button rolls with RollOnLoot's type.
+		narrow.buttons[2].scripts.OnClick(narrow.buttons[2])
+		narrow.buttons[4].scripts.OnClick(narrow.buttons[4])
+		assert.same({ { 7, 2 }, { 7, 0 } }, chosen)
+		-- Transmog where the roll offers it.
+		DropRow.Draw(narrow, choosable({ canNeed = true, canGreed = true, canTransmog = true }, 0.2))
+		assert.same({ { "need", true }, { "greed", true }, { "transmog", true }, { "pass", true } }, shownButtons(narrow))
+		-- Chosen: the same row without the buttons, the timer still running.
+		local view = choosable({ canNeed = true, canGreed = true }, 0.1)
+		view.choosable = nil
+		DropRow.Draw(narrow, view)
+		assert.same({ {}, true }, { shownButtons(narrow), narrow.timer:IsShown() })
+		DropRow.SetTimer(narrow, 0.05)
+		assert.equals(0.05, narrow.timer:GetValue())
+	end)
+
+	it("draws a plain row with the buttons when the full one fails, and reports the error", function()
+		local narrow = DropRow.New(UI.NewFake(Loader.ui.UIParent), "below")
+		local view = choosable({ canNeed = true, canGreed = true }, 0.5)
+		view.players = "broken"
+		DropRow.Draw(narrow, view)
+		assert.same({ { "need", true }, { "greed", true }, { "pass", true } }, shownButtons(narrow))
+		assert.same({ false, false }, { narrow.panel.frame:IsShown(), narrow.timer:IsShown() })
+		assert.is_true(#Test.state.errors > 0)
 	end)
 
 	it("lights a new row for a moment", function()

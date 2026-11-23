@@ -15,6 +15,8 @@ local Bus, Compat, Storage = ns.Bus, ns.Compat, ns.Storage
 --       switchLabel = <localized "Enable …">,     -- the switch on the options' main page
 --       defaults = { enabled = true, rows = 5 },
 --       mainSettings = { { kind = "checkbox", key = …, label = …, tooltip = … } },  -- under the switch
+--       requires = "Rolls",                         -- works only while that module is on too,
+--                                                   -- and stands in its block on the options page
 --       settings = function() return { { kind = "slider", key = "rows", min = 1, max = 20, step = 1, … } } end,
 --                                                   -- what profile texts may hold (Validate)
 --       OnEnable = function(self) self:OnEvent("CHAT_MSG_LOOT", ...) end,
@@ -157,9 +159,14 @@ local MAX_PASSES = 10
 
 local ready, applying, again = false, false, false
 
+-- Whether a module should be on: its switch, and that of the module it requires.
+function Modules:Wanted(module)
+	return Storage:Get(module.name, "enabled") == true and (module.requires == nil or Storage:Get(module.requires, "enabled") == true)
+end
+
 local function reconcile()
 	for _, module in ipairs(Modules.list) do
-		local wanted = Storage:Get(module.name, "enabled")
+		local wanted = Modules:Wanted(module)
 		if wanted ~= module.active then
 			setActive(module, wanted)
 		end

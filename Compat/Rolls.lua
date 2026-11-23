@@ -38,6 +38,33 @@ function Compat.GetRollItem(rollID)
 	}
 end
 
+-- The player's choice on a roll, as the game's own buttons make it
+-- (RollOnLoot: 0 pass, 1 need, 2 greed, 4 transmog). The game's bind
+-- question that may follow stays the game's.
+function Compat.RollOnLoot(rollID, rollType)
+	RollOnLoot(rollID, rollType)
+end
+
+-- Keeps the game's roll frames away: the game routes START_LOOT_ROLL to its
+-- roll frames through one internal handler of its own (GameEvent), and this
+-- drops that one handler, as ForeverLootRoll does; nothing else of the
+-- game's is touched. Putting it back from an addon would run the game's
+-- roll frames from tainted code, so only a /reload brings them back. True
+-- when it did; false on a client without that routing.
+function Compat.KeepGameRollFramesAway()
+	if type(GameEvent) ~= "table" or type(GameEvent.UnregisterInternalEvent) ~= "function" then
+		return false
+	end
+	GameEvent.UnregisterInternalEvent("START_LOOT_ROLL")
+	return true
+end
+
+-- How long a roll has left, in milliseconds (GetLootRollTimeLeft), or nil.
+function Compat.GetRollTimeLeft(rollID)
+	local left = open(GetLootRollTimeLeft(rollID))
+	return type(left) == "number" and left or nil
+end
+
 -- The rolls open now, as the game reads them at login (after a /reload).
 function Compat.GetActiveRolls()
 	local ids = {}

@@ -221,21 +221,24 @@ describe("ninja detection", function()
 		assert.is_false(panel.lines[5]:IsShown())
 	end)
 
-	it("marks the demo's made-up ninjas", function()
-		Test.state.worn = { [1] = MAIL, [11] = RING }
-		ns.Rolls.Demo.Start(true)
-		local group, raid = ns.Rolls.Demo.cards[1], ns.Rolls.Demo.cards[2]
+	it("marks the made-up ninjas on the panels beside Edit Mode's look-alikes", function()
+		local Demo = ns.Rolls.Demo
+		-- As Edit Mode draws them: the group's item, then the raid's.
+		local group = { view = { link = MAIL, bound = true, demo = true, players = Demo.NewPlayers(5, 1, true) } }
+		group.context = Demo.Context(group, true, RING)
 		group.view.players[2].state = 0
 		group.view.players[5].state = 0
-		ns.Rolls.Demo.Draw(group)
+		ns.Rolls.Marks.Add(group.view, group.context)
 		assert.same({ "WARRIOR", 45 }, { group.view.players[2].class, group.view.players[2].level })
 		assert.is_string(group.view.players[2].mark)
 		local notes = group.view.players[5].notes
 		assert.matches("^Last time", notes[#notes])
+		local raid = { view = { link = RING, bound = true, demo = true, players = Demo.NewPlayers(Demo.RAID, 2, false) } }
+		raid.context = Demo.Context(raid, false, MAIL)
 		for _, each in ipairs(raid.view.players) do
 			each.state = 0
 		end
-		ns.Rolls.Demo.Draw(raid)
+		ns.Rolls.Marks.Add(raid.view, raid.context)
 		assert.is_true(#raid.view.ninjas >= 3)
 	end)
 end)

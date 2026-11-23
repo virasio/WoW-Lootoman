@@ -1,5 +1,16 @@
 # Lootoman changelog
 
+## 0.7
+
+Loot rolls: roll in the Loot Rolls window, with advice on whether to need, and their options rearranged.
+
+- **Hide the Game's Roll Frames** (off by default, under *Show the Loot Rolls Window*, and only together with it): each roll comes into the Loot Rolls window as it starts, on top, with need, greed, transmog where the game offers it, pass and a timer; once the game takes your choice, it goes under a line, the same row without its buttons. Closing the window while a roll waits asks first. Turning it off takes a reload.
+- **Whether to need:** with Forever Leveling BiS (WoW Forever) or Pawn installed, the Loot Rolls window says whether an item is an upgrade for you. With neither, the options suggest one, with its address to copy: Forever Leveling BiS on WoW Forever, Pawn on retail.
+- **The Loot Rolls window** has options for its background's opacity and for its border, and you can change its height from its bottom right corner; it keeps the height with its place.
+- **The loot rolls' options, rearranged:** *Track Loot Rolls* turns the whole part on and off, the roll history with it, and has *Roll History* at the end of its row. *Show Who Rolled What* is now only the panels beside the game's roll frames, and moving those frames in Edit Mode sits in the same block. If you had turned *Show Who Rolled What* off, the loot rolls stay off.
+- The options page has a divider between its blocks, and the suggestion to install QuestieDB stands in a frame.
+- **Fixed:** the Loot Rolls window often opened empty when you were the last to choose; it now opens with that item, and every item rolled on after it joins it.
+
 ## 0.6.6
 
 Selling junk does what you picked, and the Loot Rolls window takes less room.
