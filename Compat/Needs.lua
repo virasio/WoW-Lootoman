@@ -136,6 +136,7 @@ ns.Compat.NEEDS = {
 	Print = { "DEFAULT_CHAT_FRAME" },
 	RegisterEvent = { "CreateFrame" },
 	RegisterSlashCommand = { "SlashCmdList" },
+	ReloadUI = { "ReloadUI" },
 	ReportError = { "geterrorhandler", optional = { "debugstack" } },
 	RequestItem = { "C_Item.RequestLoadItemDataByID" },
 	SetAutoLoot = { "C_CVar.GetCVarInfo", "C_CVar.SetCVar", "InCombatLockdown" },
@@ -165,6 +166,7 @@ ns.Compat.NEEDS = {
 	GetPlayerClass = { "UnitClass" },
 	GetPlayerGUID = { "UnitGUID" },
 	GetRollItem = { "GetLootRollItemInfo", "GetLootRollItemLink", optional = { "issecretvalue" } },
+	GetRollTimeLeft = { "GetLootRollTimeLeft", optional = { "issecretvalue" } },
 	GetServerTime = { "GetServerTime" },
 	GetUnitClass = { "UnitClass", optional = { "issecretvalue" } },
 	GetUnitGUID = { "UnitGUID", optional = { "issecretvalue" } },
@@ -174,5 +176,7 @@ ns.Compat.NEEDS = {
 	IsGameLootHistoryShown = { optional = { "GroupLootHistoryFrame" } },
 	IsGuildMember = { optional = { "IsGuildMember" } },
 	IsInRaid = { "IsInRaid" },
+	KeepGameRollFramesAway = { optional = { "GameEvent.UnregisterInternalEvent" } },
 	OnRollChosen = { "hooksecurefunc", "RollOnLoot" },
+	RollOnLoot = { "RollOnLoot" },
 }

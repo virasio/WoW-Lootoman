@@ -42,9 +42,10 @@ end, "/ltm debug rolls: the open rolls, their drops and the open group's last dr
 ns.BugReport.AddPart(function()
 	local groups, drops = History.Size()
 	return {
-		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops; live window %s"):format(
+		("Loot rolls: %s; detection %s, strictness %s; classes with changed rules %d; history %d groups, %d drops; live window %s; panels %s; game's frames %s"):format(
 			Storage:Get("Rolls", "enabled") and "on" or "off", Storage:Get("Rolls", "ninja") and "on" or "off", tostring(Storage:Get("Rolls", "strictness")),
-			ns.NeedRules.ChangedCount(), groups, drops, Storage:Get("Rolls", "liveWindow") and "on" or "off"),
+			ns.NeedRules.ChangedCount(), groups, drops, Storage:Get("Rolls", "liveWindow") and "on" or "off", Storage:Get("Rolls", "panels") and "on" or "off",
+			ns.Rolls.Module.GameFramesAway() and "away" or ns.Rolls.Module.HidesGameFrames() and "to hide" or "shown"),
 	}
 end)
 

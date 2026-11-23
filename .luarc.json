@@ -76,6 +76,13 @@
     "UnitIsInInteractRange",
     "TooltipUtil",
     "UISpecialFrames",
+    "GameEvent",
+    "ForeverLevelingBiS_API",
+    "PawnCanItemHaveStats",
+    "PawnGetItemData",
+    "PawnIsItemAnUpgrade",
+    "PawnIsReady",
+    "ReloadUI",
     "WOW_PROJECT_ID"
   ]
 }

@@ -48,15 +48,15 @@ describe("the loot rolls' debugging", function()
 		assert.equals("  1:2 Mail Helm at The Deadmines: 1 players, winner Brina", run()[4])
 	end)
 
-	it("plays the demo with /ltm demo roll, with no group", function()
-		Test.RunSlashCommand("LOOTOMAN", "demo roll")
+	it("plays the demo with /ltm demo roll dung, with no group", function()
+		Test.RunSlashCommand("LOOTOMAN", "demo roll dung")
 		assert.is_true(ns.Rolls.Demo.IsRunning())
 		assert.is_false(Test.state.group)
 	end)
 
 	it("says in the bug report how the loot rolls are set, in plain ASCII", function()
 		local text = ns.BugReport.Build()
-		assert.matches("\n  Loot rolls: on; detection off, strictness normal; classes with changed rules 0; history 0 groups, 0 drops; live window on\n", text)
+		assert.matches("\n  Loot rolls: on; detection off, strictness normal; classes with changed rules 0; history 0 groups, 0 drops; live window on; panels on; game's frames shown\n", text)
 		assert.matches("\n  Loot roll frames: movable; in the game's place\n", text)
 		assert.is_nil(text:find("[\128-\255]"))
 	end)
@@ -86,10 +86,9 @@ describe("the demos", function()
 		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Loader.Start(ns)
 		assert.same({ "Demos, in the repository's version only:",
-			"/ltm demo chime [object IDs | copper]: play the highlights' chime, or make this character chime on those objects (copper veins) until /reload",
+			"/ltm demo exceptions dung|raid: the Suspicious Needs window on a made-up group's marked needs, as after leaving it",
 			"/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
-			"/ltm demo lootrolls: the Loot Rolls window on made-up drops",
-			"/ltm demo roll: play the loot rolls' demo, with no group",
+			"/ltm demo roll dung|raid [IDs]: a boss's loot rolled on by a made-up group, you as Player (alone: more)",
 			"/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits" }, printed(ns, "demo"))
 		for _, command in ipairs({ "help", "debug help" }) do
 			assert.is_nil(table.concat(printed(ns, command), "\n"):find("demo", 1, true))
@@ -102,27 +101,6 @@ describe("the demos", function()
 		assert.is_nil(released.Rolls.DemoHistory)
 		assert.is_nil(released.Feed.Demo)
 		assert.is_nil(table.concat(printed(released, "demo"), "\n"):find("Demos", 1, true))
-	end)
-
-	it("show the Loot Rolls window on made-up drops with /ltm demo lootrolls", function()
-		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
-		local Test = ns.Compat.Test
-		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass", LOOT_ROLLS = "Loot Rolls" })
-		Test.SetItems({
-			[5191] = { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 },
-			[6460] = { name = "Cobrahn's Grasp", link = "|cff0070dd|Hitem:6460::::::::40|h[Cobrahn's Grasp]|h|r", quality = 3 },
-		})
-		Loader.Start(ns)
-		Test.RunSlashCommand("LOOTOMAN", "demo lootrolls")
-		for _ = 1, ns.Rolls.DemoHistory.TRIES do
-			Test.Advance(ns.Rolls.DemoHistory.WAIT)
-		end
-		local window = ns.Rolls.LiveWindow.Frame()
-		assert.same({ true, 4 }, { window:IsShown(), window.count })
-		assert.same({ "Rolling…", "All passed" }, { window.rows[1].item.status:GetText(), window.rows[4].item.status:GetText() })
-		assert.same({ true, false }, { window.rows[1].light:IsShown(), window.rows[4].light:IsShown() })
-		assert.matches(ns.Rolls.Demo.Heroes()[1].name, window.rows[1].panel.lines[1].text:GetText(), 1, true)
-		assert.same({}, ns.Rolls.History.Groups())
 	end)
 
 	it("say so in the chat and keep the error in the journal when one fails", function()

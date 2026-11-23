@@ -183,11 +183,16 @@ local function lastTime(player, history, current, preset, factsOf)
 	return found
 end
 
+-- Whether a need on the item breaks none of a class's rules, as the checks
+-- now say (for the demos).
+function Marks.Fits(facts, class, level)
+	return #Need.Judge(facts, { class = class, level = level }, ns.NeedRules.Get(class), checks()) == 0
+end
+
 -- A class whose rules a need on the item breaks (for the demo), or nil.
 function Marks.BreakingClass(facts, level)
 	for _, class in ipairs(ns.Data.rolls.classes) do
-		local reasons = Need.Judge(facts, { class = class[1], level = level }, ns.NeedRules.Get(class[1]), checks())
-		if #reasons > 0 then
+		if not Marks.Fits(facts, class[1], level) then
 			return class[1]
 		end
 	end

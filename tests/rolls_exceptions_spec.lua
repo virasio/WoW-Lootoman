@@ -128,19 +128,4 @@ describe("exceptions", function()
 			assert.not_equals("PLAYER_REGEN_ENABLED", event)
 		end
 	end)
-
-	it("shows the demo's marked needs when its made-up group leaves, its exceptions only the demo's", function()
-		Test.state.worn = { [1] = MAIL }
-		ns.Rolls.Demo.Start()
-		-- The demo waits a moment for its own items first, then takes worn gear.
-		Test.Advance(ns.Rolls.Demo.WAIT * ns.Rolls.Demo.TRIES + ns.Rolls.Demo.LENGTH + ns.Rolls.Demo.STEP)
-		local window = ns.Rolls.SuspiciousNeeds.Frame()
-		assert.is_true(window.shown)
-		assert.is_true(window.count >= 1)
-		local before = #ns.Rolls.History.Open().drops
-		window.rows[1].exception:SetChecked(true)
-		window.rows[1].exception.scripts.OnClick(window.rows[1].exception)
-		assert.is_true(window.rows[1].exception:GetChecked())
-		assert.equals(before, #ns.Rolls.History.Open().drops)
-	end)
 end)

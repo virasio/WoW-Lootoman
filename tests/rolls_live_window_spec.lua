@@ -107,6 +107,35 @@ describe("the live window", function()
 		assert.same({ "|cff1eff00Boots|r" }, items())
 	end)
 
+	it("opens with the roll you chose, also when you chose last and the game ended it at once", function()
+		local window = LiveWindow.Frame()
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = HELM, rolls = { player("Brina", "MAGE", 3, 40), player("Tester", "WARRIOR", 4) } })
+		Test.ChooseRoll(7, 2)
+		-- The game ends the roll for you at once, and, as you were last, for everyone.
+		Test.CancelRoll(7)
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = HELM, rolls = { player("Brina", "MAGE", 3, 40), player("Tester", "WARRIOR", 3, 61) },
+			winner = player("Tester", "WARRIOR", 3, 61) })
+		Test.Advance(LiveWindow.WAIT)
+		assert.same({ true, { "|cff1eff00Mail Helm|r" } }, { window:IsShown(), items() })
+		assert.matches("Tester", window.rows[1].item.status:GetText())
+		-- Every drop after it joins it.
+		Test.SetLootDrop({ encounterID = 1, listID = 2, link = RING, rolls = { player("Brina", "MAGE", 4) } })
+		assert.same({ "|cff1eff00Ring|r", "|cff1eff00Mail Helm|r" }, items())
+	end)
+
+	it("opens with the roll you chose when the game ended it before its drop came, and fills as the drop comes", function()
+		local window = LiveWindow.Frame()
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		Test.ChooseRoll(7, 0)
+		Test.CancelRoll(7)
+		Test.Advance(LiveWindow.WAIT)
+		assert.same({ true, { "|cff1eff00Mail Helm|r" } }, { window:IsShown(), items() })
+		Test.SetLootDrop({ encounterID = 1, listID = 1, link = HELM, rolls = { player("Brina", "MAGE", 4), player("Tester", "WARRIOR", 5) } })
+		assert.same({ "|cff1eff00Mail Helm|r" }, items())
+		assert.matches("Brina", window.rows[1].panel.lines[1].text:GetText())
+	end)
+
 	it("keeps its rows as they were after the game clears its loot history", function()
 		local window = LiveWindow.Frame()
 		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
@@ -145,13 +174,53 @@ describe("the live window", function()
 		window:SetPoint("TOPLEFT", Loader.ui.UIParent, "TOPLEFT", 500, -300)
 		window.scripts.OnDragStop(window)
 		local char = Test.state.saved.LootomanCharDB
-		assert.same({ point = "TOPLEFT", relativePoint = "TOPLEFT", x = 500, y = -300 }, char.sections.lootRolls)
+		assert.same({ point = "TOPLEFT", relativePoint = "TOPLEFT", x = 500, y = -300, height = LiveWindow.HEIGHT }, char.sections.lootRolls)
 		-- The next session opens it there.
 		start({ LootomanCharDB = char })
 		window = LiveWindow.Frame()
 		Test.StartRoll(8, { name = "Mail Helm", link = HELM, quality = 2 })
 		choose(8, 0)
 		assert.same({ "TOPLEFT", Loader.ui.UIParent, "TOPLEFT", 500, -300 }, window.points[#window.points])
+	end)
+
+	it("takes its height from its corner, never under a whole row and the next item, and keeps it", function()
+		local window = LiveWindow.Frame()
+		assert.same({ LiveWindow.WIDTH, LiveWindow.MIN_HEIGHT, LiveWindow.WIDTH }, { unpack(window.resizeBounds, 1, 3) })
+		assert.is_true(window.resizable)
+		-- A row to choose on at its tallest, and the next item's line.
+		local Panel, DropRow = ns.Rolls.Panel, ns.Rolls.DropRow
+		assert.equals(LiveWindow.TOP + DropRow.BELOW_ITEM + DropRow.ADVICE + DropRow.BUTTON + DropRow.TIMER + Panel.MAX_HEIGHT + 3 * 2
+			+ LiveWindow.GAP + DropRow.BELOW_ITEM + LiveWindow.PAD, LiveWindow.MIN_HEIGHT)
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(7, 0)
+		assert.equals(LiveWindow.HEIGHT, window:GetHeight())
+		-- From its bottom right corner, from where the mouse is.
+		window.grip.scripts.OnMouseDown(window.grip)
+		assert.same({ "BOTTOMRIGHT", true }, { window.sizing, window.sizingFromMouse })
+		window:SetHeight(320)
+		window.grip.scripts.OnMouseUp(window.grip)
+		assert.is_nil(window.sizing)
+		local char = Test.state.saved.LootomanCharDB
+		assert.equals(320, char.sections.lootRolls.height)
+		-- The next session opens it so high; a height kept under the least, or
+		-- above the screen, comes back within them.
+		start({ LootomanCharDB = char })
+		window = LiveWindow.Frame()
+		Test.StartRoll(8, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(8, 0)
+		assert.equals(320, window:GetHeight())
+		char.sections.lootRolls.height = 10
+		start({ LootomanCharDB = char })
+		Test.StartRoll(9, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(9, 0)
+		assert.equals(LiveWindow.MIN_HEIGHT, LiveWindow.Frame():GetHeight())
+		Loader.ui.UIParent.height = 700
+		char.sections.lootRolls.height = 5000
+		start({ LootomanCharDB = char })
+		Loader.ui.UIParent.height = 700
+		Test.StartRoll(10, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(10, 0)
+		assert.equals(700, LiveWindow.Frame():GetHeight())
 	end)
 
 	it("stays closed with its option off", function()
@@ -189,20 +258,52 @@ describe("the live window", function()
 	end)
 end)
 
-describe("the live window's option", function()
+describe("the live window's options", function()
+	local ns
+
 	local function page()
 		local SettingsAPI = require("tests.mocks.SettingsAPI")
 		SettingsAPI.Install()
-		local ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
+		ns = Loader.LoadAddon({ gameType = "camelot", skip = {} })
 		Loader.Start(ns)
-		local labels = {}
-		for _, item in ipairs(ns.SettingsPanel.main.items) do
-			labels[item.text or ""] = true
+		local found = {}
+		for index, item in ipairs(ns.SettingsPanel.main.items) do
+			if item.text then
+				found[item.text] = { index = index, item = item }
+			end
 		end
-		return labels
+		return found
 	end
 
-	it("is on the options page, under the loot rolls' switch", function()
-		assert.is_true(page()["Show the Loot Rolls Window After Your Choice"])
+	it("are on the options page, under the loot rolls' switch: the window, its background's opacity and its border under it", function()
+		local found = page()
+		local window = found["Show the Loot Rolls Window"]
+		local opacity, border = found["Background Opacity"], found["Show the Border"]
+		assert.same({ window.index + 1, window.index + 2, "slider", 48, "checkbox", 48 },
+			{ opacity.index, border.index, opacity.item.kind, opacity.item.indent, border.item.kind, border.item.indent })
+		assert.equals(found["Hide the Game's Roll Frames"].index, border.index + 1)
+		-- Greyed while the window is off.
+		ns.Storage:Set("Rolls", "liveWindow", false)
+		assert.same({ "GameFontDisable", false }, { opacity.item.region.label.fontObject, border.item.region.enabled })
+	end)
+
+	it("give the window its look at once: the border, and the background's opacity", function()
+		page()
+		local frame = ns.Rolls.LiveWindow.Frame()
+		assert.same({ true, 1, { "TOPLEFT", 6, -20 } }, { frame.NineSlice:IsShown(), frame.Bg:GetAlpha(), frame.Bg.points[1] })
+		ns.Storage:Set("Rolls", "windowOpacity", 40)
+		assert.equals(0.4, frame.Bg:GetAlpha())
+		ns.Storage:Set("Rolls", "windowBorder", false)
+		assert.same({ false, frame, 0.4 }, { frame.NineSlice:IsShown(), frame.Bg.allPoints, frame.Bg:GetAlpha() })
+		ns.Storage:Set("Rolls", "windowBorder", true)
+		assert.same({ true, { "BOTTOMRIGHT", -2, 2 } }, { frame.NineSlice:IsShown(), frame.Bg.points[2] })
+		-- At the next login too.
+		ns.Storage:Set("Rolls", "windowOpacity", 0)
+		ns.Storage:Set("Rolls", "windowBorder", false)
+		local saved = ns.Compat.Test.state.saved.LootomanDB
+		ns = Loader.LoadAddon({ gameType = "camelot" })
+		Loader.Start(ns, { LootomanDB = saved })
+		frame = ns.Rolls.LiveWindow.Frame()
+		assert.same({ 0, false }, { frame.Bg:GetAlpha(), frame.NineSlice:IsShown() })
 	end)
 end)

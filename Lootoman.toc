@@ -68,6 +68,8 @@ Providers\Prices.lua
 
 Integrations\Auctionator.lua
 Integrations\QuestieDB.lua
+Integrations\ForeverLevelingBiS.lua
+Integrations\Pawn.lua
 
 Modules\Shared\EditMode.lua
 Modules\Shared\NameMenu.lua
@@ -113,6 +115,7 @@ Modules\Rolls\History.lua
 Modules\Rolls\Groups.lua
 Modules\Rolls\Panel.lua
 Modules\Rolls\Marks.lua
+Modules\Rolls\NeedAdvice.lua
 Modules\Rolls\DropRow.lua
 Modules\Rolls\LiveWindow.lua
 Modules\Rolls\HistoryWindow.lua
@@ -136,7 +139,6 @@ Dev\Demo.lua
 Dev\DemoLoot.lua
 Dev\DemoRoll.lua
 Dev\DemoRollHistory.lua
-Dev\DemoLootRolls.lua
-Dev\DemoChime.lua
+Dev\DemoExceptions.lua
 Dev\LootDump.lua
 #@end-debug@

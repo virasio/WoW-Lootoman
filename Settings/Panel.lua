@@ -7,11 +7,12 @@ local Bus, Compat, Modules, Storage, Text = ns.Bus, ns.Compat, ns.Modules, ns.St
 --
 -- The page is the addon's own frame (a canvas page), laid out the way a
 -- player reads it: the title, what other Settings files put on top with
--- Panel.AddToMain (the profile), a divider, then every module's block: its
--- switch, a checkbox with its label after it, or its title for a module
--- without one. Under it, indented: the module's main settings
--- (module.mainSettings), which can be changed only while the module is on,
--- and notes: short texts that say more about the switch or setting above.
+-- Panel.AddToMain (the profile), a divider, then every module's block, a
+-- divider between them: its switch, a checkbox with its label after it, or
+-- its title for a module without one. Under it, indented: the module's main
+-- settings (module.mainSettings), which can be changed only while the module
+-- is on, and notes: short texts that say more about the switch or setting
+-- above. A module that requires another stands in that one's block.
 -- The page reads Storage again when it is shown and whenever a value or the
 -- profile changes.
 local Panel = {
@@ -524,13 +525,49 @@ function MainPage:AddBox(header, height, options)
 	return self:Add("box", box, height, { indent = options.indent, text = header, wide = true, visible = options.visible, gap = 8 })
 end
 
--- A button on a module's switch row, at the control column (switchButton =
--- { label, tooltip, onClick } or, for a secure macro, { label, tooltip,
--- macro, preClick }), enabled while the module is on. A macro button is
--- the game's secure action button: on the player's click the game runs the
--- macro itself (a slash command of its own, untainted). It can only be made
--- and changed out of combat: made in a fight, the page goes without it.
-local function addSwitchButton(page, check, module)
+-- A suggestion in a frame (AddBox): a white text, and under it a button that
+-- acts on it, such as copying an addon's address. options: indent, visible,
+-- requires (greyed with that module), tooltip (the button's). Returns the
+-- box; its text is box.header, its button box.button.
+function MainPage:AddSuggestion(text, buttonLabel, onClick, options)
+	options = options or {}
+	local box = self:AddBox(text, 0, { indent = options.indent, visible = options.visible, headerFont = "GameFontHighlight" })
+	local item = self.items[#self.items]
+	item.kind = "suggestion"
+	local button = CreateFrame("Button", nil, box, "UIPanelButtonTemplate")
+	button:SetText(buttonLabel)
+	button:SetSize(math.max(120, (button.GetTextWidth and button:GetTextWidth() or 0) + 24), 22)
+	button:SetScript("OnClick", onClick)
+	addTooltip(button, buttonLabel, options.tooltip)
+	box.button = button
+	-- The button under the text, however many lines it takes.
+	item.measure = function()
+		local top = 8 + math.ceil(box.header:GetStringHeight()) + 8
+		button:ClearAllPoints()
+		button:SetPoint("TOPLEFT", box, "TOPLEFT", 10, -top)
+		return top + 22 + 10
+	end
+	if options.requires then
+		self:OnRefresh(function()
+			local isEnabled = enabled(options.requires)
+			setTextEnabled(box.header, isEnabled, "GameFontHighlight")
+			button:SetEnabled(isEnabled)
+		end)
+	end
+	self:Layout()
+	return box
+end
+
+-- A button on a module's switch row (switchButton = { label, tooltip,
+-- onClick } or, for a secure macro, { label, tooltip, macro, preClick }):
+-- right after the label, or at the row's right edge with align = "right";
+-- enabled while the module is on, and while its block's conditions hold
+-- (requires, enabledWhen: those of a module placed in another's block). A
+-- macro button is the game's secure action button: on the player's click the
+-- game runs the macro itself (a slash command of its own, untainted). It can
+-- only be made and changed out of combat: made in a fight, the page goes
+-- without it.
+local function addSwitchButton(page, check, module, requires, enabledWhen)
 	local spec = module.switchButton
 	if spec.macro and Compat.InCombat() then
 		return
@@ -538,11 +575,16 @@ local function addSwitchButton(page, check, module)
 	local row = check:GetParent()
 	local button = CreateFrame("Button", nil, row, spec.macro and "SecureActionButtonTemplate, UIPanelButtonTemplate" or "UIPanelButtonTemplate")
 	button:SetSize(120, 22)
-	-- Right after the label, whatever its length. The client refuses to anchor
-	-- a protected frame to a font string, so it stands on the checkbox, as far
-	-- right as the label ends.
-	local labelEnd = Panel.LABEL_X - Panel.CHECKBOX_WIDTH + check.label:GetStringWidth()
-	button:SetPoint("LEFT", check, "RIGHT", labelEnd + 12, 0)
+	if spec.align == "right" then
+		-- On the checkbox's line, at the right edge of the row, which spans the page.
+		button:SetPoint("RIGHT", row, "TOPRIGHT", -5, -Panel.CHECKBOX_HEIGHT / 2)
+	else
+		-- Right after the label, whatever its length. The client refuses to
+		-- anchor a protected frame to a font string, so it stands on the
+		-- checkbox, as far right as the label ends.
+		local labelEnd = Panel.LABEL_X - Panel.CHECKBOX_WIDTH + check.label:GetStringWidth()
+		button:SetPoint("LEFT", check, "RIGHT", labelEnd + 12, 0)
+	end
 	-- Above the checkbox's hit area, which spans the row.
 	button:SetFrameLevel(check:GetFrameLevel() + 2)
 	button:SetText(spec.label)
@@ -559,7 +601,7 @@ local function addSwitchButton(page, check, module)
 	addTooltip(button, spec.label, spec.tooltip)
 	page:OnRefresh(function()
 		if not Compat.InCombat() then
-			button:SetEnabled(Storage:Get(module.name, "enabled") == true)
+			button:SetEnabled(Storage:Get(module.name, "enabled") == true and enabled(requires, enabledWhen))
 		end
 	end)
 	page.switchButtons = page.switchButtons or {}
@@ -567,57 +609,77 @@ local function addSwitchButton(page, check, module)
 end
 
 -- A module's block on the main page: its switch (with switchNote, a text
--- under it, or a function that gives it or nil as the page is built), or its title for a module that has none (switchLabel = false);
--- then what goes under it, indented: the module's main settings, which can be
--- changed only while it is on. A main setting is a heading (label) over a
--- group of them, a checkbox (with note), checkboxes in columns (items,
--- columns), a choice (a dropdown), a slider (min, max, step, format), a
--- colour, a button (shown only while visible() says so, when given), or a
--- custom builder(page, indent, module), each with an optional enabledWhen()
--- and gap, the room above it.
-local function addModule(page, module)
+-- under it, or a function that gives it or nil as the page is built), or its
+-- title for a module that has none (switchLabel = false); then what goes
+-- under it, indented: the module's main settings, which can be changed only
+-- while it is on. A main setting is a heading (label) over a group of them,
+-- a checkbox (with note), checkboxes in columns (items, columns), a choice
+-- (a dropdown), a slider (min, max, step, format), a colour, a button (shown
+-- only while visible() says so, when given), a suggestion (text, button,
+-- click, visible, tooltip: a framed text with a button), another module's
+-- block (name: a module that requires this one, its switch indented like a
+-- setting), or a custom builder(page, indent, module), each with an optional
+-- enabledWhen() and gap, the room above it. A block inside another one starts
+-- at indent, can be changed only while that module (parent) is on and its
+-- enabledWhen() says so.
+local function addModule(page, module, indent, parent, parentWhen)
+	indent = indent or 0
 	local requires
 	if module.switchLabel == false then
 		local title = page:Area():CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 		title:SetText(module.title)
-		page:Add("title", title, 20, { text = module.title, gap = 10 })
+		page:Add("title", title, 20, { text = module.title, gap = 10, indent = indent })
 	else
 		local note = module.switchNote
 		if type(note) == "function" then
 			note = note()
 		end
-		local switch = page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, 0, nil, nil, nil, note)
+		local switch = page:AddCheckbox(module.name, "enabled", module.switchLabel or module.title, module.description, indent, parent, parentWhen,
+			nil, note)
 		requires = module.name
 		if module.switchButton then
-			addSwitchButton(page, switch, module)
+			addSwitchButton(page, switch, module, parent, parentWhen)
 		end
 	end
 	for _, setting in ipairs(module.mainSettings or {}) do
-		local indent = Panel.INDENT * (setting.level or 1)
+		local settingIndent = indent + Panel.INDENT * (setting.level or 1)
 		if setting.kind == "heading" then
-			page:AddHeading(setting.label, { indent = indent, gap = setting.gap, requires = requires })
+			page:AddHeading(setting.label, { indent = settingIndent, gap = setting.gap, requires = requires })
 		elseif setting.kind == "checkbox" then
-			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, indent, requires, setting.enabledWhen, setting.gap,
+			page:AddCheckbox(module.name, setting.key, setting.label, setting.tooltip, settingIndent, requires, setting.enabledWhen, setting.gap,
 				setting.note)
 		elseif setting.kind == "checkboxes" then
-			page:AddCheckboxes(module.name, setting.items, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
+			page:AddCheckboxes(module.name, setting.items, { indent = settingIndent, requires = requires, enabledWhen = setting.enabledWhen,
 				columns = setting.columns })
 		elseif setting.kind == "choice" then
-			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = indent, gap = setting.gap,
+			page:AddChoice(module.name, setting.key, setting.label, setting.choices, { indent = settingIndent, gap = setting.gap,
 				requires = requires, enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
 		elseif setting.kind == "slider" then
-			page:AddSlider(module.name, setting.key, setting.label, setting, { indent = indent, gap = setting.gap, requires = requires,
+			page:AddSlider(module.name, setting.key, setting.label, setting, { indent = settingIndent, gap = setting.gap, requires = requires,
 				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
 		elseif setting.kind == "color" then
-			page:AddColor(module.name, setting.key, setting.label, { indent = indent, gap = setting.gap, requires = requires,
+			page:AddColor(module.name, setting.key, setting.label, { indent = settingIndent, gap = setting.gap, requires = requires,
 				enabledWhen = setting.enabledWhen, tooltip = setting.tooltip })
 		elseif setting.kind == "button" then
-			page:AddButton(setting.label, setting.click, { indent = indent, requires = requires, enabledWhen = setting.enabledWhen,
+			page:AddButton(setting.label, setting.click, { indent = settingIndent, requires = requires, enabledWhen = setting.enabledWhen,
 				tooltip = setting.tooltip, visible = setting.visible, gap = setting.gap })
+		elseif setting.kind == "suggestion" then
+			local text = setting.text
+			if type(text) == "function" then
+				text = text()
+			end
+			page:AddSuggestion(text, setting.button, setting.click, { indent = settingIndent, requires = requires, visible = setting.visible,
+				tooltip = setting.tooltip })
+		elseif setting.kind == "module" then
+			local inner = Modules:Get(setting.name)
+			if inner then
+				addModule(page, inner, settingIndent, module.name, setting.enabledWhen)
+			end
 		elseif setting.kind == "custom" then
-			setting.build(page, indent, module)
+			setting.build(page, settingIndent, module)
 		else
-			error(("%s.%s: the main page takes headings, checkboxes, choices, sliders, colours, buttons and custom blocks"):format(module.name, tostring(setting.key)))
+			error(("%s.%s: the main page takes headings, checkboxes, choices, sliders, colours, buttons, suggestions, modules and custom blocks"):format(
+				module.name, tostring(setting.key)))
 		end
 	end
 end
@@ -637,10 +699,19 @@ local function build()
 	end
 	page:AddDivider()
 	page.area = "body"
+	-- A block for each module, a divider between them; a module that requires
+	-- another stands in that one's block.
+	local first = true
 	for _, module in ipairs(Modules:List()) do
-		xpcall(function()
-			addModule(page, module)
-		end, Compat.ReportError)
+		if not module.requires then
+			if not first then
+				page:AddDivider()
+			end
+			first = false
+			xpcall(function()
+				addModule(page, module)
+			end, Compat.ReportError)
+		end
 	end
 
 	Settings.RegisterAddOnCategory(category)

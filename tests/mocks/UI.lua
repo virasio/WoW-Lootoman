@@ -176,6 +176,10 @@ function methods:GetFrameLevel() return self.level or 0 end
 function methods:SetChecked(checked) self.checked = checked end
 function methods:GetChecked() return self.checked end
 function methods:SetEnabled(enabled) self.enabled = enabled end
+-- A status bar's range and value.
+function methods:SetMinMaxValues(low, high) self.range = { low, high } end
+function methods:SetValue(value) self.value = value end
+function methods:GetValue() return self.value end
 -- A panel template's title (DefaultPanelFlatTemplate's SetTitle).
 function methods:SetTitle(text) self.title = text end
 -- A button's textures: an atlas or a file.
@@ -323,6 +327,13 @@ function UI.Install()
 		elseif template == "UIPanelCloseButtonNoScripts" then
 			-- Above a panel's border and title bar (frame levels 500 and 510).
 			frame.level = 510
+		elseif template == "DefaultPanelFlatTemplate" then
+			-- DefaultPanelBaseTemplate's border; DefaultPanelFlatTemplate's
+			-- background, where the template puts it.
+			frame.NineSlice = UI.NewFake(frame)
+			frame.Bg = UI.NewFake(frame)
+			frame.Bg:SetPoint("TOPLEFT", 6, -20)
+			frame.Bg:SetPoint("BOTTOMRIGHT", -2, 2)
 		elseif template == "ColorSwatchTemplate" then
 			-- ColorSwatchMixin.
 			function frame:SetColorRGB(r, g, b) self.color = { r, g, b } end
