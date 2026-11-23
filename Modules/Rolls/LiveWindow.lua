@@ -46,6 +46,12 @@ LiveWindow.GAP = 4
 LiveWindow.WIDTH = DropRow.BELOW_WIDTH + 2 * LiveWindow.PAD + 24
 -- As tall as three rows of a group of five.
 LiveWindow.HEIGHT = LiveWindow.TOP + 3 * (DropRow.BELOW_ITEM + 2 + 2 * Panel.PAD + Panel.GROUP * Panel.LINE + LiveWindow.GAP) + LiveWindow.PAD
+-- Its height is the player's, from its bottom right corner: never less than
+-- a whole row at its tallest (to choose on, with the advice line, the
+-- buttons, the timer and the tallest panel) and the next item, never more
+-- than the screen. Its width stays.
+LiveWindow.MIN_HEIGHT = LiveWindow.TOP + DropRow.BELOW_ITEM + DropRow.ADVICE + 2 + DropRow.BUTTON + 2 + DropRow.TIMER + 2 + Panel.MAX_HEIGHT
+	+ LiveWindow.GAP + DropRow.BELOW_ITEM + LiveWindow.PAD
 LiveWindow.FIRST_ROWS = 4
 -- How long it waits after the player's choice for the game's own window.
 LiveWindow.WAIT = 0.5
@@ -102,8 +108,9 @@ end
 
 -- Where the window opens: where the player last put it, kept for the
 -- character across sessions (LootomanCharDB.sections.lootRolls: point,
--- relativePoint, x, y), else at the screen's left, vertically centred, about
--- as far from the edge as the game's action bars and bags stand.
+-- relativePoint, x, y, and the height the player gave it), else at the
+-- screen's left, vertically centred, about as far from the edge as the
+-- game's action bars and bags stand.
 -- Always on the screen itself: the game's container of the roll frames,
 -- hidden while no roll is open, is laid out nowhere then, and a window placed
 -- on it would not show.
@@ -118,18 +125,30 @@ local function saved()
 	return LiveWindow.DEFAULT
 end
 
+-- The highest the window may be: the screen as it is now (the UI scale or
+-- the resolution may have changed since it was kept), and never less than
+-- the height it starts with.
+local function highest()
+	return math.max(LiveWindow.HEIGHT, UIParent:GetHeight() or 0)
+end
+
 local function place()
 	local where = saved()
 	frame:ClearAllPoints()
 	frame:SetPoint(where.point, UIParent, where.relativePoint, where.x, where.y)
+	local height = Storage:GetCharacterSection(LiveWindow.SECTION).height
+	local top = highest()
+	frame:SetResizeBounds(LiveWindow.WIDTH, LiveWindow.MIN_HEIGHT, LiveWindow.WIDTH, top)
+	frame:SetHeight(type(height) == "number" and math.max(LiveWindow.MIN_HEIGHT, math.min(top, height)) or LiveWindow.HEIGHT)
 end
 
--- Keeps where the player put the window.
+-- Keeps where the player put the window, and its height.
 local function keep(window)
 	local point, _, relativePoint, x, y = window:GetPoint(1)
 	if point then
 		local kept = Storage:GetCharacterSection(LiveWindow.SECTION)
 		kept.point, kept.relativePoint, kept.x, kept.y = point, relativePoint, x, y
+		kept.height = window:GetHeight()
 	end
 end
 
@@ -205,6 +224,23 @@ function LiveWindow.Build()
 		LiveWindow.Close()
 	end)
 	frame.close = close
+	-- Its height from its bottom right corner, as the look window's size;
+	-- sized from where the mouse is, as the game's own resize buttons do.
+	frame:SetResizable(true)
+	frame:SetResizeBounds(LiveWindow.WIDTH, LiveWindow.MIN_HEIGHT, LiveWindow.WIDTH, highest())
+	frame.grip = CreateFrame("Button", nil, frame)
+	frame.grip:SetSize(16, 16)
+	frame.grip:SetPoint("BOTTOMRIGHT", -4, 4)
+	frame.grip:SetNormalTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up]])
+	frame.grip:SetHighlightTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight]])
+	frame.grip:SetPushedTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down]])
+	frame.grip:SetScript("OnMouseDown", function()
+		frame:StartSizing("BOTTOMRIGHT", true)
+	end)
+	frame.grip:SetScript("OnMouseUp", function()
+		frame:StopMovingOrSizing()
+		keep(frame)
+	end)
 	table.insert(UISpecialFrames, LiveWindow.NAME)
 	frame.scroll = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
 	frame.scroll:SetPoint("TOPLEFT", LiveWindow.PAD, -LiveWindow.TOP)

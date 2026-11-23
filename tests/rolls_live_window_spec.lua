@@ -174,13 +174,53 @@ describe("the live window", function()
 		window:SetPoint("TOPLEFT", Loader.ui.UIParent, "TOPLEFT", 500, -300)
 		window.scripts.OnDragStop(window)
 		local char = Test.state.saved.LootomanCharDB
-		assert.same({ point = "TOPLEFT", relativePoint = "TOPLEFT", x = 500, y = -300 }, char.sections.lootRolls)
+		assert.same({ point = "TOPLEFT", relativePoint = "TOPLEFT", x = 500, y = -300, height = LiveWindow.HEIGHT }, char.sections.lootRolls)
 		-- The next session opens it there.
 		start({ LootomanCharDB = char })
 		window = LiveWindow.Frame()
 		Test.StartRoll(8, { name = "Mail Helm", link = HELM, quality = 2 })
 		choose(8, 0)
 		assert.same({ "TOPLEFT", Loader.ui.UIParent, "TOPLEFT", 500, -300 }, window.points[#window.points])
+	end)
+
+	it("takes its height from its corner, never under a whole row and the next item, and keeps it", function()
+		local window = LiveWindow.Frame()
+		assert.same({ LiveWindow.WIDTH, LiveWindow.MIN_HEIGHT, LiveWindow.WIDTH }, { unpack(window.resizeBounds, 1, 3) })
+		assert.is_true(window.resizable)
+		-- A row to choose on at its tallest, and the next item's line.
+		local Panel, DropRow = ns.Rolls.Panel, ns.Rolls.DropRow
+		assert.equals(LiveWindow.TOP + DropRow.BELOW_ITEM + DropRow.ADVICE + DropRow.BUTTON + DropRow.TIMER + Panel.MAX_HEIGHT + 3 * 2
+			+ LiveWindow.GAP + DropRow.BELOW_ITEM + LiveWindow.PAD, LiveWindow.MIN_HEIGHT)
+		Test.StartRoll(7, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(7, 0)
+		assert.equals(LiveWindow.HEIGHT, window:GetHeight())
+		-- From its bottom right corner, from where the mouse is.
+		window.grip.scripts.OnMouseDown(window.grip)
+		assert.same({ "BOTTOMRIGHT", true }, { window.sizing, window.sizingFromMouse })
+		window:SetHeight(320)
+		window.grip.scripts.OnMouseUp(window.grip)
+		assert.is_nil(window.sizing)
+		local char = Test.state.saved.LootomanCharDB
+		assert.equals(320, char.sections.lootRolls.height)
+		-- The next session opens it so high; a height kept under the least, or
+		-- above the screen, comes back within them.
+		start({ LootomanCharDB = char })
+		window = LiveWindow.Frame()
+		Test.StartRoll(8, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(8, 0)
+		assert.equals(320, window:GetHeight())
+		char.sections.lootRolls.height = 10
+		start({ LootomanCharDB = char })
+		Test.StartRoll(9, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(9, 0)
+		assert.equals(LiveWindow.MIN_HEIGHT, LiveWindow.Frame():GetHeight())
+		Loader.ui.UIParent.height = 700
+		char.sections.lootRolls.height = 5000
+		start({ LootomanCharDB = char })
+		Loader.ui.UIParent.height = 700
+		Test.StartRoll(10, { name = "Mail Helm", link = HELM, quality = 2 })
+		choose(10, 0)
+		assert.equals(700, LiveWindow.Frame():GetHeight())
 	end)
 
 	it("stays closed with its option off", function()

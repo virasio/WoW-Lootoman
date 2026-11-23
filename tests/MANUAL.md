@@ -530,6 +530,7 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 - [ ] **Leaving.** With it open, leave the dungeon. *Expected:* its rows stay as they were (note any row that empties). After a `/reload` it is closed.
 - [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
 - [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
+- [ ] **Its height.** Drag the corner at the window's bottom right, down, then up as far as it goes. *Expected:* the cursor of the game's resize corners; the window grows and shrinks in height only, never lower than a whole row (an item to choose on, with its buttons, timer and panel) and the next item's line, never past the screen; the rows scroll within it; the corner covers neither the scroll bar nor a row's buttons. After a `/reload` and in the next session it opens as high as you left it.
 - [ ] **Its look.** With the window open (`/ltm demo roll dung`, choose): move *Background Opacity* down to 0 % and back, untick and tick *Show the Border*. *Expected:* each change at once; without the border, no frame and no title bar, the background reaching to the window's edges, the title and the X still there, the window still dragged by its top; at 0 %, only the rows, readable over the world; kept after a `/reload`.
 - [ ] **Off.** Untick *Show the Loot Rolls Window*. *Expected:* no window at your choice.
 
