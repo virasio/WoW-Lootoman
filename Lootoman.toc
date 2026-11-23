@@ -139,5 +139,6 @@ Dev\Demo.lua
 Dev\DemoLoot.lua
 Dev\DemoRoll.lua
 Dev\DemoRollHistory.lua
+Dev\DemoExceptions.lua
 Dev\LootDump.lua
 #@end-debug@

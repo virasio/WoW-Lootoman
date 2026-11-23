@@ -31,7 +31,8 @@ local Compat, L, Storage, Text = ns.Compat, ns.L, ns.Storage, ns.Text
 -- when open. With Hide the Game's Roll Frames on, the window opens at once
 -- with the rolls on top, our buttons and their timers; a choice moves a roll
 -- under the line. A right click on a marked need excuses it, in the demo
--- only; no Suspicious Needs window at the end. Nothing goes to the game,
+-- only; no Suspicious Needs window at the end (/ltm demo exceptions shows
+-- one, Dev/DemoExceptions.lua). Nothing goes to the game,
 -- nothing into the history. An item the game does not give in a moment is
 -- left out, and worn gear stands in when none comes. No demo while a real
 -- roll is open, or in a fight (its frames are made out of combat).

@@ -86,6 +86,7 @@ describe("the demos", function()
 		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Loader.Start(ns)
 		assert.same({ "Demos, in the repository's version only:",
+			"/ltm demo exceptions dung|raid: the Suspicious Needs window on a made-up group's marked needs, as after leaving it",
 			"/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
 			"/ltm demo roll dung|raid [IDs]: a boss's loot rolled on by a made-up group, you as Player (alone: more)",
 			"/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits" }, printed(ns, "demo"))

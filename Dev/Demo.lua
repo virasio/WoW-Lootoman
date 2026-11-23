@@ -4,8 +4,9 @@ local Text = ns.Text
 -- Exists only when the addon runs from the repository: the packager removes
 -- the #@debug@ block from the TOC. /ltm demo <name> shows something made up,
 -- for testing and for pictures: /ltm demo loot (loot in the feed), /ltm demo
--- roll (the loot rolls' demo) and /ltm demo rollhistory (the roll history on
--- a made-up history); /ltm demo alone lists them. Neither /ltm help nor
+-- roll (the loot rolls' demo), /ltm demo rollhistory (the roll history on a
+-- made-up history) and /ltm demo exceptions (the Suspicious Needs window on
+-- it); /ltm demo alone lists them. Neither /ltm help nor
 -- /ltm debug help names them. Development text is not translated.
 
 local demos = {}

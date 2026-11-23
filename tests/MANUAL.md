@@ -563,7 +563,8 @@ On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn
 
 ### The made-up history
 
-- [ ] **The demo.** `/ltm demo rollhistory`. *Expected:* *Roll History (Demo)* on three made-up groups of heroes of Azeroth: two dungeon runs and a raid of twenty, with dungeon items (the first time some may take a moment; one the client lacks is left out). With the detection on: the first hero marked for needing everything in the first run, *Last time* on his first need in the second, an exception ticked in the first. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
+- [ ] **The demo.** `/ltm demo rollhistory`. *Expected:* *Roll History (Demo)* on three made-up groups, the roll demo's: two runs of Varian, Tyrande, Jaina, Shaw and Player on dungeon items, and a raid of forty on Onyxia's items, where the Test players pass on everything (the first time some items may take a moment; one the client lacks is left out). Player's lines are lit as your own. With the detection on: Shaw marked for needing everything in the first run, one of those needs excused, *Last time* on his need in the second; three heroes of the raid marked. Exceptions and *Clear the History* there touch only it; `/ltm rolls` afterwards shows your own history. No real character's name (it is for pictures).
+- [ ] **The Suspicious Needs window's demo.** *Detect Ninja Looters* on: `/ltm demo exceptions dung`, then `/ltm demo exceptions raid`. *Expected:* the *Suspicious Needs* window, as after leaving a group: Shaw's needs of the first run, one ticked already; then the raid's three who needed everything, each need with its reasons. Ticking one touches only the made-up group. With the detection off: a chat line, no window.
 - [ ] **Full.** `/ltm demo rollhistory full`. *Expected:* 30 groups, 400 drops; opening, scrolling and choosing groups stay quick (note any stutter).
 
 ### The history and debugging
@@ -597,7 +598,7 @@ On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
-- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `loot`, `roll` and `rollhistory`; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll dung` out of a group: the loot rolls' demo plays (the checks under *The demo*).
+- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `exceptions`, `loot`, `roll` and `rollhistory`; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll dung` out of a group: the loot rolls' demo plays (the checks under *The demo*).
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon
