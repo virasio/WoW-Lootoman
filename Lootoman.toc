@@ -139,7 +139,5 @@ Dev\Demo.lua
 Dev\DemoLoot.lua
 Dev\DemoRoll.lua
 Dev\DemoRollHistory.lua
-Dev\DemoLootRolls.lua
-Dev\DemoChime.lua
 Dev\LootDump.lua
 #@end-debug@

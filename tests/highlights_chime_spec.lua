@@ -1,7 +1,7 @@
 local Loader = require("tests.helpers.loader")
 
 -- The highlights' chime for one character, on one object
--- (Modules/Highlights/Highlights.lua), and its demo in the repository's version.
+-- (Modules/Highlights/Highlights.lua).
 
 describe("the highlights' chime", function()
 	local ns, Test, module
@@ -68,17 +68,5 @@ describe("the highlights' chime", function()
 		local source = file:read("*a")
 		file:close()
 		assert.is_truthy(source:find("CHIME = { key = %d+,"))
-	end)
-
-	it("plays now, or for this character on another object, from /ltm demo chime", function()
-		start("Someone-Else")
-		Test.RunSlashCommand("LOOTOMAN", "demo chime")
-		assert.equals(1, #sounds())
-		Test.RunSlashCommand("LOOTOMAN", "demo chime 1617 1618")
-		target(herb(1618))
-		assert.equals(2, #sounds())
-		-- Copper veins, by name.
-		Test.RunSlashCommand("LOOTOMAN", "demo chime copper")
-		assert.same({ [1731] = true, [2055] = true, [3763] = true, [103713] = true }, module.CHIME.objects)
 	end)
 end)

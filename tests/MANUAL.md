@@ -511,7 +511,6 @@ On WoW Forever, where the game has a loot history window (`GroupLootHistoryFrame
 - [ ] **In a fight.** Choose on a roll during a fight. *Expected:* it opens and fills; no errors, no blocked action.
 - [ ] **Exceptions on its rows.** With the detection on, right-click a marked name in it. *Expected:* as on the panels.
 - [ ] **Off.** Untick *Show the Loot Rolls Window After Your Choice*. *Expected:* no window at your choice.
-- [ ] **Its demo.** Out of a group, `/ltm demo lootrolls`. *Expected:* on either client, the window on four made-up drops of five heroes: the newest still rolled on (two heroes yet to choose), two won, the oldest all passed.
 
 ### Rolling in the Loot Rolls window
 
@@ -531,7 +530,6 @@ With *Hide the Game's Roll Frames* on, in a dungeon with group loot, on WoW Fore
 - [ ] **On retail.** Choose with our buttons. *Expected:* note whether the game's own *Loot Rolls* window opens too.
 - [ ] **Turning it off.** Untick it. *Expected:* the game's dialog *The game's roll frames come back after a reload. Reload now?*; *Reload* reloads, and the game's frames are back. The same when turning off *Show Who Rolled What* with it on.
 - [ ] **Hidden interface.** Alt+Z with the window open, then again. *Expected:* the window comes back with its rows.
-- [ ] **Its demo.** With it on, `/ltm demo lootrolls`. *Expected:* the newest made-up drop on top with buttons and a timer running for a minute; a click takes the buttons away and nothing goes to the game.
 
 ### Whether to need
 
@@ -593,7 +591,7 @@ On the Loot Rolls window's rows, with Forever Leveling BiS (WoW Forever) or Pawn
   - with the loot feed off: one line says so.
 - [ ] **debug junk.** `/ltm debug junk` with a gray item's link, a marked one, a suggested one (soulbound gear your class cannot use) and an ID you do not hold. *Expected:* the decision and why (gray, marked junk, marked not junk), the mark, the stacks in the bags, the suggestion rule or *no*, whether a quest wants it, the usable kind, and the prices; the same with junk management off.
 - [ ] **debug bags.** With a full reagent bag, `/ltm debug bags`. *Expected:* each bag with its kind, family and free slots; the totals; the look's three thresholds, the reagent one *reached* if it is on; the warning's text as the feed shows it.
-- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `loot`, `lootrolls`, `roll` and `rollhistory` among them; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll` out of a group: the loot rolls' demo plays (the checks under *The demo*).
+- [ ] **The demos.** `/ltm demo`. *Expected:* the demos listed, `loot`, `roll` and `rollhistory`; neither `/ltm help` nor `/ltm debug help` names them. `/ltm demo roll` out of a group: the loot rolls' demo plays (the checks under *The demo*).
 - [ ] **debug target.** On WoW Forever, point at a herb you can gather, one you cannot, a chest and nothing. *Expected:* the target's facts, its kind and why it sparkles or not, and the game settings the highlights hold (*held*); *no soft target* with nothing. On retail `debug target` is not a command (the debug list shows).
 
 ## Minimap icon

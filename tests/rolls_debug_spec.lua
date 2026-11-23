@@ -86,9 +86,7 @@ describe("the demos", function()
 		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
 		Loader.Start(ns)
 		assert.same({ "Demos, in the repository's version only:",
-			"/ltm demo chime [object IDs | copper]: play the highlights' chime, or make this character chime on those objects (copper veins) until /reload",
 			"/ltm demo loot <pieces>: made-up loot in the feed (alone: the pieces it takes)",
-			"/ltm demo lootrolls: the Loot Rolls window on made-up drops",
 			"/ltm demo roll: play the loot rolls' demo, with no group",
 			"/ltm demo rollhistory [full]: the roll history on a made-up history, full to its limits" }, printed(ns, "demo"))
 		for _, command in ipairs({ "help", "debug help" }) do
@@ -102,57 +100,6 @@ describe("the demos", function()
 		assert.is_nil(released.Rolls.DemoHistory)
 		assert.is_nil(released.Feed.Demo)
 		assert.is_nil(table.concat(printed(released, "demo"), "\n"):find("Demos", 1, true))
-	end)
-
-	it("show the Loot Rolls window on made-up drops with /ltm demo lootrolls", function()
-		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
-		local Test = ns.Compat.Test
-		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass", LOOT_ROLLS = "Loot Rolls" })
-		Test.SetItems({
-			[5191] = { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 },
-			[6460] = { name = "Cobrahn's Grasp", link = "|cff0070dd|Hitem:6460::::::::40|h[Cobrahn's Grasp]|h|r", quality = 3 },
-		})
-		Loader.Start(ns)
-		Test.RunSlashCommand("LOOTOMAN", "demo lootrolls")
-		for _ = 1, ns.Rolls.DemoHistory.TRIES do
-			Test.Advance(ns.Rolls.DemoHistory.WAIT)
-		end
-		local window = ns.Rolls.LiveWindow.Frame()
-		assert.same({ true, 4 }, { window:IsShown(), window.count })
-		assert.same({ "Rolling…", "All passed" }, { window.rows[1].item.status:GetText(), window.rows[4].item.status:GetText() })
-		assert.same({ true, false }, { window.rows[1].light:IsShown(), window.rows[4].light:IsShown() })
-		assert.matches(ns.Rolls.Demo.Heroes()[1].name, window.rows[1].panel.lines[1].text:GetText(), 1, true)
-		assert.same({}, ns.Rolls.History.Groups())
-		-- No buttons and no timer while the game's frames are shown.
-		assert.same({ false, false }, { window.rows[1].buttons[1]:IsShown(), window.rows[1].timer:IsShown() })
-	end)
-
-	it("give the newest drop of /ltm demo lootrolls buttons and a running timer with the game's frames hidden", function()
-		local ns = Loader.LoadAddon({ gameType = "camelot", debug = true })
-		local Test = ns.Compat.Test
-		Test.SetGlobalStrings({ NEED = "Need", GREED = "Greed", PASS = "Pass", LOOT_ROLLS = "Loot Rolls" })
-		Test.SetItems({
-			[5191] = { name = "Cruel Barb", link = "|cff0070dd|Hitem:5191::::::::40|h[Cruel Barb]|h|r", quality = 3 },
-		})
-		Loader.Start(ns)
-		ns.Storage:Set("Rolls", "hideGameFrames", true)
-		Test.RunSlashCommand("LOOTOMAN", "demo lootrolls")
-		for _ = 1, ns.Rolls.DemoHistory.TRIES do
-			Test.Advance(ns.Rolls.DemoHistory.WAIT)
-		end
-		local window = ns.Rolls.LiveWindow.Frame()
-		local newest = window.rows[1]
-		assert.same({ true, true, false }, { newest.buttons[1]:IsShown(), newest.timer:IsShown(), window.rows[2].buttons[1]:IsShown() })
-		local before = newest.timer:GetValue()
-		Test.Advance(ns.Rolls.DemoLootRolls.TIME / 2)
-		assert.is_true(newest.timer:GetValue() < before)
-		-- A choice does nothing in the game: the row loses its buttons, its
-		-- timer going on; no roll is left on top, so no line.
-		Test.Advance(ns.Rolls.LiveWindow.GUARD)
-		newest.buttons[1].scripts.OnClick(newest.buttons[1])
-		assert.is_nil(Test.state.rolledOn)
-		assert.same({ false, true, false }, { window.rows[1].buttons[1]:IsShown(), window.rows[1].timer:IsShown(), window.line:IsShown() })
-		assert.same({}, ns.Rolls.History.Groups())
 	end)
 
 	it("say so in the chat and keep the error in the journal when one fails", function()
